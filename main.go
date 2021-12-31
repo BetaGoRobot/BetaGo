@@ -61,7 +61,7 @@ func messageHan(ctx *khl.TextMessageContext) {
 		}
 	}
 
-	if strings.Contains(ctx.Common.Content, "傻逼") {
+	if strings.Contains(ctx.Common.Content, "傻逼") && ctx.Common.AuthorID != "938697103" {
 		ctx.Session.MessageCreate(&khl.MessageCreate{
 			MessageCreateBase: khl.MessageCreateBase{
 				TargetID: ctx.Common.TargetID,
