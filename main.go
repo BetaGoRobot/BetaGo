@@ -71,6 +71,7 @@ func messageHan(ctx *khl.TextMessageContext) {
 		})
 		ctx.Session.MessageDelete(ctx.Common.MsgID)
 	}
+
 	if time.Now().Unix()-LastSendGeartl.Unix() > 120 {
 		LastSendGeartl = time.Now()
 		userChatSession, _ := ctx.Session.UserChatCreate("2423931199")
