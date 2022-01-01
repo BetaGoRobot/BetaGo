@@ -11,9 +11,9 @@ jobs:
   build-push:
 
     runs-on: ubuntu-latest
-    env:
-     tag: $(date +%s)
+#     env:
+#      tag: $(date +%s)
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag kevinmatt/betago:$(tag) && docker push kevinmatt/betago:$(tag)
+      run: export tag=$(date +%s) docker build . --file Dockerfile --tag kevinmatt/betago:$tag && docker push kevinmatt/betago:$tag
