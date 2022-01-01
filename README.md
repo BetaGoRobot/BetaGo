@@ -2,6 +2,8 @@
 
 [![CodeQL代码扫描](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml)
 
+
+
 > 正在尝试实现的开黑啦机器人
 
 出于娱乐的意义，机器人名称BetaGo意为AlphaGo的迭代

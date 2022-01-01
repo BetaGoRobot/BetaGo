@@ -10,6 +10,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
     apk add go && \
     go build -o betaGo *.go 
 
+
 FROM alpine as runner
 
 ENV BOTAPI "1/MTA2Mjk=/Cw1HItHKZ9Q/wS7IIHnYUw=="
