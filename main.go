@@ -40,7 +40,7 @@ func messageHan(ctx *khl.TextMessageContext) {
 		ctx.Session.MessageCreate(&khl.MessageCreate{
 			MessageCreateBase: khl.MessageCreateBase{
 				TargetID: ctx.Common.TargetID,
-				Content:  "pong",
+				Content:  "pong(此消息仅你自己可见)",
 				Quote:    ctx.Common.MsgID,
 			},
 			TempTargetID: ctx.Common.AuthorID,
