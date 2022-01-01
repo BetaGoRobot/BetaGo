@@ -46,6 +46,7 @@ func messageHan(ctx *khl.TextMessageContext) {
 			TempTargetID: ctx.Common.AuthorID,
 		})
 	}
+
 	// 机器人被at时返回消息
 	if isInSlice("3508390651", ctx.Extra.Mention) {
 		NowTime := time.Now().Unix()
