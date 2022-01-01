@@ -43,6 +43,7 @@ func messageHan(ctx *khl.TextMessageContext) {
 				Content:  "pong",
 				Quote:    ctx.Common.MsgID,
 			},
+			TempTargetID: ctx.Common.AuthorID,
 		})
 	}
 	// 机器人被at时返回消息
