@@ -22,7 +22,7 @@ ENV BOTAPI=${BOTAPI}
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder  /data/betaGo /betaGo
-COPY --from=builder  /etc/localtime/ /etc/localtime/
+COPY --from=builder  /usr/share/zoneinfo/ /usr/share/zoneinfo
 
 WORKDIR /
 
