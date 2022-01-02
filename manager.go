@@ -41,19 +41,6 @@ func replyToMention(ctx *khl.TextMessageContext) {
 	}
 }
 
-func sendScheduledMessage(ctx *khl.TextMessageContext) {
-	if time.Now().Unix()-LastSendGeartl.Unix() > 120 {
-		LastSendGeartl = time.Now()
-		userChatSession, _ := ctx.Session.UserChatCreate("2423931199")
-		chatCode := userChatSession.Code
-		ctx.Session.DirectMessageCreate(&khl.DirectMessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Content: "你为什么还不上线，小胖。你上线了可以在频道里多发言吗？你不说话你就是傻逼，真的。",
-			}, ChatCode: chatCode,
-		})
-	}
-}
-
 func startUpMessage(session *khl.Session) (err error) {
 	currentIp, err := GetOutBoundIP()
 	if err != nil {
@@ -63,7 +50,7 @@ func startUpMessage(session *khl.Session) (err error) {
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
 			TargetID: "7419593543056418",
-			Content:  fmt.Sprintf("---------\n> Robot `BetaGo` is \n`online`\n IP:\t%s\n Time:\t%s", currentIp, time.Now().String()),
+			Content:  fmt.Sprintf("---------\n> Robot `BetaGo-Nightly` is \n`online`\n IP:\t%s\n Time:\t%s", currentIp, time.Now().String()),
 		}})
 	return
 }
@@ -77,7 +64,7 @@ func offlineMessage(session *khl.Session) (err error) {
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
 			TargetID: "7419593543056418",
-			Content:  fmt.Sprintf("---------\n> Robot `BetaGo` is \n`offline`\n IP:\t%s\n Time:\t%s", currentIp, time.Now().String()),
+			Content:  fmt.Sprintf("---------\n> Robot `BetaGo-Nightly` is \n`offline`\n IP:\t%s\n Time:\t%s", currentIp, time.Now().String()),
 		}})
 	return
 }
