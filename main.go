@@ -63,16 +63,7 @@ func messageHan(ctx *khl.TextMessageContext) {
 		}
 	}
 
-	if strings.Contains(ctx.Common.Content, "傻逼") && ctx.Common.AuthorID != "938697103" {
-		ctx.Session.MessageCreate(&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				TargetID: ctx.Common.TargetID,
-				Content:  fmt.Sprintf("%s 使用了侮辱词汇，消息已被撤回，我们不可以向他学习！", ctx.Extra.Author.Nickname),
-				Quote:    ctx.Common.MsgID,
-			},
-		})
-		ctx.Session.MessageDelete(ctx.Common.MsgID)
-	}
+	replaceDirtyWords(ctx)
 
 	if time.Now().Unix()-LastSendGeartl.Unix() > 120 {
 		LastSendGeartl = time.Now()
