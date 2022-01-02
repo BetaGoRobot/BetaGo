@@ -14,7 +14,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
 
 FROM alpine as runner
 
-ENV BOTAPI "${{ secrets.BOTAPI }}"
+ENV BOTAPI $BOTAPI
 COPY --from=builder  /data/ /data/ 
 WORKDIR /data/
 

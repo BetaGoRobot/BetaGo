@@ -18,14 +18,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build image
-        run: docker build . --file Dockerfile --tag $IMAGE_NAME
+        run: export BOTAPI="${{ secrets.DOCKER_ACCESS_TOKEN }}" && docker build . --file Dockerfile --tag $IMAGE_NAME
         # 登录到 dockerhub，使用 GitHub secrets 传入账号密码，密码被加密存储在 GitHub 服务器，添加方法见下图。
       - name: Log into registry
         run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u kevinmatt --password-stdin
 
       - name: Push image
         run: |
-          export BOTAPI="${{ secrets.DOCKER_ACCESS_TOKEN }}"
           IMAGE_ID=$IMAGE_NAME
 
           # 将所有的大写字母转为小写
