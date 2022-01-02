@@ -43,7 +43,7 @@ func replyToMention(ctx *khl.TextMessageContext) {
 
 func startUpMessage(session *khl.Session) (err error) {
 	currentIp, err := GetOutBoundIP()
-	currentTime := GetCurrentTime().String()
+	currentTime := GetCurrentTime()
 	if err != nil {
 		return
 	}
@@ -58,7 +58,7 @@ func startUpMessage(session *khl.Session) (err error) {
 
 func offlineMessage(session *khl.Session) (err error) {
 	currentIp, err := GetOutBoundIP()
-	currentTime := GetCurrentTime().String()
+	currentTime := GetCurrentTime()
 	if err != nil {
 		return
 	}
