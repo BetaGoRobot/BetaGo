@@ -2,7 +2,7 @@ name: Docker
 
 on:
   push:
-    branch: [ master ]
+    branches: [ master ]
 
 env:
   # 设置 docker 镜像名
