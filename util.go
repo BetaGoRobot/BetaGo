@@ -23,7 +23,6 @@ func GetOutBoundIP() (ip string, err error) {
 func GetCurrentTime() (localTime string) {
 	timeLocal, _ := time.LoadLocation("Asia/Shanghai")
 	time.Local = timeLocal
-
-	localTime = time.Now().Format("2006-01-02 15:04:05")
+	localTime = time.Now().Local().Format("2006-01-02 15:04:05")
 	return
 }
