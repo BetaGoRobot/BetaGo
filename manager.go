@@ -41,19 +41,6 @@ func replyToMention(ctx *khl.TextMessageContext) {
 	}
 }
 
-func sendScheduledMessage(ctx *khl.TextMessageContext) {
-	if time.Now().Unix()-LastSendGeartl.Unix() > 120 {
-		LastSendGeartl = time.Now()
-		userChatSession, _ := ctx.Session.UserChatCreate("2423931199")
-		chatCode := userChatSession.Code
-		ctx.Session.DirectMessageCreate(&khl.DirectMessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Content: "你为什么还不上线，小胖。你上线了可以在频道里多发言吗？你不说话你就是傻逼，真的。",
-			}, ChatCode: chatCode,
-		})
-	}
-}
-
 func startUpMessage(session *khl.Session) (err error) {
 	currentIp, err := GetOutBoundIP()
 	if err != nil {
