@@ -42,4 +42,5 @@ const (
 
 	// 取消频道置顶消息
 	ChannelTopMessageCancel = "unpinned_message"
+	//
 )
