@@ -43,6 +43,7 @@ func replyToMention(ctx *khl.TextMessageContext) {
 
 func startUpMessage(session *khl.Session) (err error) {
 	currentIp, err := GetOutBoundIP()
+	currentTime := GetCurrentTime().String()
 	if err != nil {
 		return
 	}
@@ -50,13 +51,14 @@ func startUpMessage(session *khl.Session) (err error) {
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
 			TargetID: "7419593543056418",
-			Content:  fmt.Sprintf("---------\n> Robot `BetaGo-Nightly` is \n`online`\n IP:\t%s\n Time:\t%s", currentIp, time.Unix(time.Now().Unix(), 0).Format("2006-01-02 15:04:05")),
+			Content:  fmt.Sprintf("---------\n> Robot `BetaGo-Nightly` is \n`online`\n IP:\t%s\n Time:\t%s", currentIp, currentTime),
 		}})
 	return
 }
 
 func offlineMessage(session *khl.Session) (err error) {
 	currentIp, err := GetOutBoundIP()
+	currentTime := GetCurrentTime().String()
 	if err != nil {
 		return
 	}
@@ -64,7 +66,7 @@ func offlineMessage(session *khl.Session) (err error) {
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
 			TargetID: "7419593543056418",
-			Content:  fmt.Sprintf("---------\n> Robot `BetaGo-Nightly` is \n`offline`\n IP:\t%s\n Time:\t%s", currentIp, time.Unix(time.Now().Unix(), 0).Format("2006-01-02 15:04:05")),
+			Content:  fmt.Sprintf("---------\n> Robot `BetaGo-Nightly` is \n`offline`\n IP:\t%s\n Time:\t%s", currentIp, currentTime),
 		}})
 	return
 }

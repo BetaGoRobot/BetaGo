@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 )
 
 // 获取机器人部署的当前ip
@@ -16,5 +17,12 @@ func GetOutBoundIP() (ip string, err error) {
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 	fmt.Println(localAddr.String())
 	ip = strings.Split(localAddr.String(), ":")[0]
+	return
+}
+
+func GetCurrentTime() (localTime time.Time) {
+	timeStr := time.Now().Format("2006-01-02 15:04:05")
+	location, _ := time.LoadLocation("local")
+	localTime, _ = time.ParseInLocation("2006-01-02 15:04:05", timeStr, location)
 	return
 }
