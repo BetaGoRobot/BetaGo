@@ -11,7 +11,5 @@ github.com/lonelyevil/khl/log_adapter/plog v0.0.19 h1:1RPXpMionNfigT5GXnE+muB29W
 github.com/lonelyevil/khl/log_adapter/plog v0.0.19/go.mod h1:uQcKxjJBRtTpkOH5suvgLdSf+KjjOUg9MblJD+CmwT4=
 github.com/phuslu/log v1.0.71 h1:ffGaGAy0PVjR2fYLvgtyBm8g5vPXV/9WGCeC9R+zKLE=
 github.com/phuslu/log v1.0.71/go.mod h1:kzJN3LRifrepxThMjufQwS7S35yFAB+jAV1qgA7eBW4=
-github.com/phuslu/log v1.0.76 h1:jb5ZFsqAYG4IItmYhEd7+DyUrCLAC0anl+MoYVPnjsc=
-github.com/phuslu/log v1.0.76/go.mod h1:kzJN3LRifrepxThMjufQwS7S35yFAB+jAV1qgA7eBW4=
 github.com/spaolacci/murmur3 v1.1.0 h1:7c1g84S4BPRrfL5Xrdp6fOJ206sU9y293DDHaoy0bLI=
 github.com/spaolacci/murmur3 v1.1.0/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
