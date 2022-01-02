@@ -36,11 +36,6 @@ jobs:
           # 从 tag 名字中替换 v 字符
           [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
 
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
-
-          echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
           # 设置镜像 id 和版本号
           docker tag $IMAGE_NAME $IMAGE_ID:nightly
           # 进行 push
