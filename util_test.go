@@ -1,7 +1,10 @@
 package main
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestGetCurrentTime(t *testing.T) {
-	GetCurrentTime()
+	fmt.Println(GetCurrentTime())
 }
