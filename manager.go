@@ -42,7 +42,7 @@ func replyToMention(ctx *khl.TextMessageContext) {
 }
 
 func startUpMessage(session *khl.Session) (err error) {
-	currentIp, err := GetOutBoundIP()
+	currentIp, err := externalIP()
 	if err != nil {
 		return
 	}
@@ -50,7 +50,7 @@ func startUpMessage(session *khl.Session) (err error) {
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
 			TargetID: "7419593543056418",
-			Content:  fmt.Sprintf("---------\n> Robot `BetaGo-Nightly` is \n`online`\n IP:\t%s\n Time:\t%s", currentIp, time.Now().String()),
+			Content:  fmt.Sprintf("---------\n> Robot `BetaGo-Nightly` is \n`online`\n IP:\t%s\n Time:\t%s", string(currentIp), time.Now().String()),
 		}})
 	return
 }
@@ -64,7 +64,7 @@ func offlineMessage(session *khl.Session) (err error) {
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
 			TargetID: "7419593543056418",
-			Content:  fmt.Sprintf("---------\n> Robot `BetaGo-Nightly` is \n`offline`\n IP:\t%s\n Time:\t%s", currentIp, time.Now().String()),
+			Content:  fmt.Sprintf("---------\n> Robot `BetaGo-Nightly` is \n`offline`\n IP:\t%s\n Time:\t%s", string(currentIp), time.Now().String()),
 		}})
 	return
 }
