@@ -42,7 +42,7 @@ func replyToMention(ctx *khl.TextMessageContext) {
 }
 
 func startUpMessage(session *khl.Session) (err error) {
-	currentIp, err := GetOutBoundIP()
+	currentIP, err := GetOutBoundIP()
 	if err != nil {
 		return
 	}
@@ -50,13 +50,13 @@ func startUpMessage(session *khl.Session) (err error) {
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
 			TargetID: "7419593543056418",
-			Content:  fmt.Sprintf("---------\n> Robot `BetaGo` is \n`online`\n IP:\t%s\n Time:\t%s", currentIp, GetCurrentTime()),
+			Content:  fmt.Sprintf("---------\n> Robot `BetaGo` is \n`online`\n IP:\t%s\n Time:\t%s", currentIP, GetCurrentTime()),
 		}})
 	return
 }
 
 func offlineMessage(session *khl.Session) (err error) {
-	currentIp, err := GetOutBoundIP()
+	currentIP, err := GetOutBoundIP()
 	if err != nil {
 		return
 	}
@@ -64,7 +64,7 @@ func offlineMessage(session *khl.Session) (err error) {
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
 			TargetID: "7419593543056418",
-			Content:  fmt.Sprintf("---------\n> Robot `BetaGo` is \n`offline`\n IP:\t%s\n Time:\t%s", currentIp, GetCurrentTime()),
+			Content:  fmt.Sprintf("---------\n> Robot `BetaGo` is \n`offline`\n IP:\t%s\n Time:\t%s", currentIP, GetCurrentTime()),
 		}})
 	return
 }
