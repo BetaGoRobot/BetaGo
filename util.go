@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// 获取机器人部署的当前ip
+//GetOutBoundIP 获取机器人部署的当前ip
 func GetOutBoundIP() (ip string, err error) {
 	conn, err := net.Dial("udp", "101.33.242.146:80")
 	if err != nil {
@@ -20,6 +20,7 @@ func GetOutBoundIP() (ip string, err error) {
 	return
 }
 
+//GetCurrentTime 获取当前时间
 func GetCurrentTime() (localTime string) {
 	timeLocal, _ := time.LoadLocation("Asia/Shanghai")
 	time.Local = timeLocal
