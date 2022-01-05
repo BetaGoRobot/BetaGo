@@ -2,32 +2,33 @@ name: Docker
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths-ignore:
-      - 'NeteaseCloudMusicApiWithGo/*'
-      - '.github/workflows/*'
-      - 'README.md'
+      - "NeteaseCloudMusicApiWithGo/*"
+      - ".github/workflows/*"
+      - "README.md"
   workflow_dispatch:
     inputs:
       name:
-        description: '触发用途'
+        description: "触发用途"
         required: true
-        default: '测试'
+        default: "测试"
 
 env:
   # 设置 docker 镜像名
   IMAGE_NAME: kevinmatt/betago
   ROBOT_NAME: BetaGo
+  TEST_CHAN_ID: "7419593543056418"
+  ROBOT_ID: "3508390651"
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
   push:
-  
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build image
-        run:  docker build --build-arg BOTAPI="${{ secrets.BOTAPI }}" . --file Dockerfile --tag $IMAGE_NAME
+        run: docker build --build-arg BOTAPI="${{ secrets.BOTAPI }}" . --file Dockerfile --tag $IMAGE_NAME
         # 登录到 dockerhub，使用 GitHub secrets 传入账号密码，密码被加密存储在 GitHub 服务器，添加方法见下图。
       - name: Log into registry
         run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u kevinmatt --password-stdin

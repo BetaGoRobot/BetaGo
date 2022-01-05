@@ -17,6 +17,8 @@ env:
   # 设置 docker 镜像名
   IMAGE_NAME: kevinmatt/betago
   ROBOT_NAME: BetaGo-Nightly
+  TEST_CHAN_ID: "7419593543056418"
+  ROBOT_ID: "3341771634"
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
