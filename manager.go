@@ -25,7 +25,7 @@ func replaceDirtyWords(ctx *khl.TextMessageContext) {
 
 // 机器人被at时返回消息
 func replyToMention(ctx *khl.TextMessageContext) {
-	if isInSlice("3341771634", ctx.Extra.Mention) {
+	if isInSlice(robotID, ctx.Extra.Mention) {
 		NowTime := time.Now().Unix()
 		if NowTime-LastMentionedTime.Unix() > 1 {
 			LastMentionedTime = time.Now()
