@@ -25,7 +25,7 @@ func replaceDirtyWords(ctx *khl.TextMessageContext) {
 
 // 机器人被at时返回消息
 func replyToMention(ctx *khl.TextMessageContext) {
-	if isInSlice("3508390651", ctx.Extra.Mention) {
+	if isInSlice("3341771634", ctx.Extra.Mention) {
 		NowTime := time.Now().Unix()
 		if NowTime-LastMentionedTime.Unix() > 1 {
 			LastMentionedTime = time.Now()
@@ -49,8 +49,8 @@ func startUpMessage(session *khl.Session) (err error) {
 	session.MessageCreate(&khl.MessageCreate{
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
-			TargetID: "7419593543056418",
-			Content:  fmt.Sprintf("---------\n> Robot `BetaGo` is \n`online`\n IP:\t%s\n Time:\t%s", currentIP, GetCurrentTime()),
+			TargetID: testChannelID,
+			Content:  fmt.Sprintf("---------\n> Robot `%s` is \n`online`\n IP:\t%s\n Time:\t%s---------", robotName, currentIP, GetCurrentTime()),
 		}})
 	return
 }
@@ -63,8 +63,18 @@ func offlineMessage(session *khl.Session) (err error) {
 	session.MessageCreate(&khl.MessageCreate{
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
-			TargetID: "7419593543056418",
-			Content:  fmt.Sprintf("---------\n> Robot `BetaGo` is \n`offline`\n IP:\t%s\n Time:\t%s", currentIP, GetCurrentTime()),
+			TargetID: testChannelID,
+			Content:  fmt.Sprintf("---------\n> Robot `%s` is \n`offline`\n IP:\t%s\n Time:\t%s---------", robotName, currentIP, GetCurrentTime()),
 		}})
 	return
+}
+
+func sendMessageToTestChannel(session *khl.Session, content string) {
+
+	session.MessageCreate(&khl.MessageCreate{
+		MessageCreateBase: khl.MessageCreateBase{
+			Type:     9,
+			TargetID: testChannelID,
+			Content:  content,
+		}})
 }

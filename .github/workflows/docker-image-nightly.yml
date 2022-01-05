@@ -2,33 +2,33 @@ name: Docker-nightly
 
 on:
   push:
-    branches: [ nightly ]
+    branches: [nightly]
+    paths-ignore:
+      - "NeteaseCloudMusicApiWithGo/*"
+      - ".github/workflows/*"
+      - "README.md"
   workflow_dispatch:
     inputs:
       name:
-        description: 'Person to greet'
+        description: "触发用途"
         required: true
-        default: 'Mona the Octocat'
-      home:
-        description: 'location'
-        required: false
-        default: 'The Octoverse'
-
+        default: "测试"
 env:
   # 设置 docker 镜像名
   IMAGE_NAME: kevinmatt/betago
-
+  ROBOT_NAME: BetaGo-Nightly
+  TEST_CHAN_ID: "7419593543056418"
+  ROBOT_ID: "3341771634"
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
   push:
-  
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Build image
-        run: docker build --build-arg BOTAPI="${{ secrets.BOTAPI_NIGHTLY }}" . --file Dockerfile --tag $IMAGE_NAME
-        # 登录到 dockerhub，使用 GitHub secrets 传入账号密码，密码被加密存储在 GitHub 服务器，添加方法见下图。
+        run: docker build --build-arg BOTAPI="${{ secrets.BOTAPI_NIGHTLY }}" --build-arg ROBOT_NAME=$ROBOT_NAME --build-arg  TEST_CHAN_ID=$TEST_CHAN_ID -build-arg ROBOT_ID=$ROBOT_ID. --file Dockerfile --tag $IMAGE_NAME
+        # 登录到 dockerhub，使用 GitHub secrets 传入账号密码，密码被加密存储在 GitHub 服务器
       - name: Log into registry
         run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u kevinmatt --password-stdin
 

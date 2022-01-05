@@ -12,23 +12,38 @@ import (
 	"github.com/phuslu/log"
 )
 
-func main() {
-	l := log.Logger{
-		Level:  log.TraceLevel,
-		Writer: &log.ConsoleWriter{},
+var robotName string
+var robotID string
+var globalSession = khl.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
+	Level:  log.TraceLevel,
+	Writer: &log.ConsoleWriter{},
+}))
+
+var testChannelID string
+
+func init() {
+	if robotName = os.Getenv("ROBOT_NAME"); robotName == "" {
+		robotName = "No RobotName Configured"
 	}
-	s := khl.New(os.Getenv("BOTAPI"), plog.NewLogger(&l))
-	s.AddHandler(messageHan)
-	s.Open()
-	startUpMessage(s)
+	if testChannelID = os.Getenv("TEST_CHAN_ID"); testChannelID == "" {
+	}
+	if robotID = os.Getenv("ROBOT_ID"); robotID == "" {
+		sendMessageToTestChannel(globalSession, fmt.Sprintf("> %s 机器人未配置ID！", robotName))
+	}
+	globalSession.AddHandler(messageHan)
+}
+
+func main() {
+	globalSession.Open()
+	startUpMessage(globalSession)
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt, syscall.SIGTERM)
 	<-sc
 	// Cleanly close down the KHL session.
-	offlineMessage(s)
-	s.Close()
+	offlineMessage(globalSession)
+	globalSession.Close()
 }
 
 func messageHan(ctx *khl.TextMessageContext) {
