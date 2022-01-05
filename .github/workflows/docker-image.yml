@@ -3,11 +3,21 @@ name: Docker
 on:
   push:
     branches: [ master ]
+    paths-ignore:
+      - 'NeteaseCloudMusicApiWithGo/*'
+      - '.github/workflows/*'
+      - 'README.md'
+  workflow_dispatch:
+    inputs:
+      name:
+        description: '触发用途'
+        required: true
+        default: '测试'
 
 env:
   # 设置 docker 镜像名
   IMAGE_NAME: kevinmatt/betago
-
+  ROBOT_NAME: BetaGo
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/

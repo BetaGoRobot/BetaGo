@@ -19,6 +19,7 @@ FROM scratch as runner
 ARG BOTAPI
 
 ENV BOTAPI=${BOTAPI}
+ENV ROBOT_NAME=${ROBOT_NAME}
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder  /data/betaGo /betaGo

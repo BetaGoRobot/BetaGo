@@ -12,6 +12,14 @@ import (
 	"github.com/phuslu/log"
 )
 
+var robotName string
+
+func init() {
+	if robotName = os.Getenv("RobotName"); robotName == "" {
+		robotName = "No RobotName Configured"
+	}
+}
+
 func main() {
 	l := log.Logger{
 		Level:  log.TraceLevel,
