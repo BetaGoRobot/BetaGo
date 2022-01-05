@@ -15,7 +15,7 @@ import (
 var robotName string
 
 func init() {
-	if robotName = os.Getenv("RobotName"); robotName == "" {
+	if robotName = os.Getenv("ROBOT_NAME"); robotName == "" {
 		robotName = "No RobotName Configured"
 	}
 }
