@@ -3,6 +3,16 @@ name: Docker-nightly
 on:
   push:
     branches: [ nightly ]
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Person to greet'
+        required: true
+        default: 'Mona the Octocat'
+      home:
+        description: 'location'
+        required: false
+        default: 'The Octoverse'
 
 env:
   # 设置 docker 镜像名
