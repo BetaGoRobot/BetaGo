@@ -50,7 +50,7 @@ func startUpMessage(session *khl.Session) (err error) {
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
 			TargetID: testChannelID,
-			Content:  fmt.Sprintf("---------\n> Robot `%s` is \n`online`\n IP:\t%s\n Time:\t%s---------", robotName, currentIP, GetCurrentTime()),
+			Content:  fmt.Sprintf("---------\n> Robot `%s` is \n`online`\n IP:\t%s\n Time:\t%s\n---------", robotName, currentIP, GetCurrentTime()),
 		}})
 	return
 }
@@ -64,7 +64,7 @@ func offlineMessage(session *khl.Session) (err error) {
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     9,
 			TargetID: testChannelID,
-			Content:  fmt.Sprintf("---------\n> Robot `%s` is \n`offline`\n IP:\t%s\n Time:\t%s---------", robotName, currentIP, GetCurrentTime()),
+			Content:  fmt.Sprintf("---------\n> Robot `%s` is \n`offline`\n IP:\t%s\n Time:\t%s\n---------", robotName, currentIP, GetCurrentTime()),
 		}})
 	return
 }
