@@ -70,8 +70,9 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 			&khl.MessageCreate{
 				MessageCreateBase: khl.MessageCreateBase{
 					Type:     messageType,
-					TargetID: testChannelID,
+					TargetID: ctx.Common.TargetID,
 					Content:  cardStr,
+					Quote:    ctx.Common.MsgID,
 				}})
 	}
 	return
