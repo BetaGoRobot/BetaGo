@@ -19,6 +19,8 @@ env:
   ROBOT_NAME: BetaGo-Nightly
   TEST_CHAN_ID: "7419593543056418"
   ROBOT_ID: "3341771634"
+  NETEASE_PHONE: "${{ secrets.NETEASE_PHONE }}"
+  NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/
@@ -27,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build image
-        run: docker build --build-arg BOTAPI="${{ secrets.BOTAPI_NIGHTLY }}" --build-arg ROBOT_NAME=$ROBOT_NAME --build-arg  TEST_CHAN_ID=$TEST_CHAN_ID --build-arg ROBOT_ID=$ROBOT_ID . --file Dockerfile --tag $IMAGE_NAME
+        run: docker build --build-arg BOTAPI="${{ secrets.BOTAPI_NIGHTLY }}" --build-arg ROBOT_NAME=$ROBOT_NAME --build-arg  TEST_CHAN_ID=$TEST_CHAN_ID --build-arg ROBOT_ID=$ROBOT_ID --build-arg NETEASE_PHONE=$NETEASE_PHONE  --build-arg NETEASE_PASSWORD=$NETEASE_PASSWORD . --file Dockerfile --tag $IMAGE_NAME
         # 登录到 dockerhub，使用 GitHub secrets 传入账号密码，密码被加密存储在 GitHub 服务器
       - name: Log into registry
         run: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u kevinmatt --password-stdin

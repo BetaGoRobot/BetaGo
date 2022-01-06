@@ -12,19 +12,16 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
     apk add -U tzdata && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     CGO_ENABLED=0 go build -ldflags="-w -s" -o betaGo *.go 
-WORKDIR /data/NeteaseCloudMusicApiWithGo
-
-RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o betaGO-netease *.go
 
 FROM scratch as runner
 
-ARG BOTAPI ROBOT_NAME ROBOT_NAME TEST_CHAN_ID
+ARG BOTAPI ROBOT_NAME ROBOT_NAME TEST_CHAN_ID NETEASE_PHONE NETEASE_PASSWORD
 
-ENV BOTAPI=${BOTAPI} ROBOT_NAME=${ROBOT_NAME} ROBOT_ID=${ROBOT_NAME} TEST_CHAN_ID=${TEST_CHAN_ID}
+ENV BOTAPI=${BOTAPI} ROBOT_NAME=${ROBOT_NAME} ROBOT_ID=${ROBOT_NAME} TEST_CHAN_ID=${TEST_CHAN_ID} NETEASE_PHONE=${NETEASE_PHONE} NETEASE_PASSWORD=${NETEASE_PASSWORD}
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder  /data/betaGo /betaGo
-COPY --from=builder  /data/NeteaseCloudMusicApiWithGo/betaGO-netease /betaGO-netease
+
 COPY --from=builder  /usr/share/zoneinfo/ /usr/share/zoneinfo
 
 WORKDIR /

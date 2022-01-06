@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -21,6 +23,50 @@ func replaceDirtyWords(ctx *khl.TextMessageContext) {
 		ctx.Session.MessageDelete(ctx.Common.MsgID)
 	}
 
+}
+
+var reg = regexp.MustCompile(`(?i)(\.search)\ (.*)`)
+
+func searchMusicByRobot(ctx *khl.TextMessageContext) {
+	message := ctx.Common.Content
+	if res := reg.FindStringSubmatch(message); res != nil && len(res) > 2 {
+		neaseCtx := NetEaseContext{}
+		err := neaseCtx.loginNetEase()
+		if err != nil {
+			log.Println("--------------", err.Error())
+			return
+		}
+		res, err := neaseCtx.searchMusicByKeyWord(res[2:])
+		if err != nil {
+			log.Println("--------------", err.Error())
+			return
+		}
+		modules := make([]interface{}, 0)
+		for _, song := range res {
+			modules = append(modules, cardMessageModule{
+				Type:  "audio",
+				Title: song.Name + " - " + song.ArtistName,
+				Src:   song.SongURL,
+				Cover: song.PicURL,
+			})
+		}
+		cardMessage := make(khl.CardMessage, 0)
+		cardMessage = append(cardMessage, &khl.CardMessageCard{Theme: khl.CardThemePrimary, Size: khl.CardSizeSm, Modules: modules})
+		cardStr, err := cardMessage.BuildMessage()
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
+		fmt.Println()
+		ctx.Session.MessageCreate(
+			&khl.MessageCreate{
+				MessageCreateBase: khl.MessageCreateBase{
+					Type:     10,
+					TargetID: testChannelID,
+					Content:  cardStr,
+				}})
+	}
+	return
 }
 
 // 机器人被at时返回消息

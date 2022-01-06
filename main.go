@@ -63,6 +63,7 @@ func messageHan(ctx *khl.TextMessageContext) {
 
 	replyToMention(ctx)
 	replaceDirtyWords(ctx)
+	searchMusicByRobot(ctx)
 	// sendScheduledMessage(ctx)
 }
 
