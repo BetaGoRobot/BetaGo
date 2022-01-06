@@ -35,6 +35,12 @@ jobs:
 
       - name: Push image
         run: |
+          current=`date "+%Y-%m-%d %H:%M:%S"`
+          timeStamp=`date -d "$current" +%s` 
+          #将current转换为时间戳，精确到毫秒  
+          currentTimeStamp=$((timeStamp*1000+`date "+%N"`/1000000)) 
+
+
           IMAGE_ID=$IMAGE_NAME
 
           # 将所有的大写字母转为小写
@@ -47,3 +53,6 @@ jobs:
           docker tag $IMAGE_NAME $IMAGE_NAME:latest
           # 进行 push
           docker push $IMAGE_NAME:latest
+
+          docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest-$currentTimeStamp
+          docker push $IMAGE_NAME:latest-$currentTimeStamp

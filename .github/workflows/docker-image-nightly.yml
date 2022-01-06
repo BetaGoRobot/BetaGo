@@ -22,8 +22,6 @@ env:
   NETEASE_PHONE: "${{ secrets.NETEASE_PHONE }}"
   NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
 jobs:
-  # Push image to GitHub Packages.
-  # See also https://docs.docker.com/docker-hub/builds/
   push:
     runs-on: ubuntu-latest
     steps:
@@ -36,6 +34,11 @@ jobs:
 
       - name: Push image
         run: |
+          current=`date "+%Y-%m-%d %H:%M:%S"`
+          timeStamp=`date -d "$current" +%s` 
+          #将current转换为时间戳，精确到毫秒  
+          currentTimeStamp=$((timeStamp*1000+`date "+%N"`/1000000)) 
+          
           IMAGE_ID=$IMAGE_NAME
 
           # 将所有的大写字母转为小写
@@ -51,3 +54,7 @@ jobs:
           docker tag $IMAGE_NAME $IMAGE_ID:nightly
           # 进行 push
           docker push $IMAGE_ID:nightly
+
+          docker tag $IMAGE_ID:nightly $IMAGE_ID:nightly-$currentTimeStamp
+          docker push $IMAGE_ID:nightly-$currentTimeStamp
+
