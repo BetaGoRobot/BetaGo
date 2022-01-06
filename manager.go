@@ -63,7 +63,7 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 				return
 			}
 		} else {
-			messageType = 1
+			messageType = 9
 			cardStr = "--------\n> (ins)没有找到你要搜索的歌曲哦，换一个关键词试试~(ins)\n\n--------------"
 		}
 		ctx.Session.MessageCreate(
