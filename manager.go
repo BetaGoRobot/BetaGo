@@ -41,27 +41,35 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 			log.Println("--------------", err.Error())
 			return
 		}
+
 		modules := make([]interface{}, 0)
-		for _, song := range res {
-			modules = append(modules, cardMessageModule{
-				Type:  "audio",
-				Title: song.Name + " - " + song.ArtistName,
-				Src:   song.SongURL,
-				Cover: song.PicURL,
-			})
-		}
 		cardMessage := make(khl.CardMessage, 0)
-		cardMessage = append(cardMessage, &khl.CardMessageCard{Theme: khl.CardThemePrimary, Size: khl.CardSizeSm, Modules: modules})
-		cardStr, err := cardMessage.BuildMessage()
-		if err != nil {
-			log.Println(err.Error())
-			return
+		var cardStr string
+		var messageType khl.MessageType
+		if len(res) != 0 {
+			messageType = 10
+			for _, song := range res {
+				modules = append(modules, cardMessageModule{
+					Type:  "audio",
+					Title: song.Name + " - " + song.ArtistName,
+					Src:   song.SongURL,
+					Cover: song.PicURL,
+				})
+			}
+			cardMessage = append(cardMessage, &khl.CardMessageCard{Theme: khl.CardThemePrimary, Size: khl.CardSizeSm, Modules: modules})
+			cardStr, err = cardMessage.BuildMessage()
+			if err != nil {
+				log.Println("-------------", err.Error())
+				return
+			}
+		} else {
+			messageType = 1
+			cardStr = "--------\n> (ins)没有找到你要搜索的歌曲哦，换一个关键词试试~(ins)\n\n--------------"
 		}
-		fmt.Println()
 		ctx.Session.MessageCreate(
 			&khl.MessageCreate{
 				MessageCreateBase: khl.MessageCreateBase{
-					Type:     10,
+					Type:     messageType,
 					TargetID: testChannelID,
 					Content:  cardStr,
 				}})
