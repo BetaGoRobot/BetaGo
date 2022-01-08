@@ -36,7 +36,7 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 			log.Println("--------------", err.Error())
 			return
 		}
-		res, err := neaseCtx.searchMusicByKeyWord(res[2:])
+		res, err := neaseCtx.searchMusicByKeyWord(strings.Split(res[2], " "))
 		if err != nil {
 			log.Println("--------------", err.Error())
 			return
