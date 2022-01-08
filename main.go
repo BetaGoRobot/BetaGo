@@ -7,6 +7,8 @@ import (
 	"strings"
 	"syscall"
 
+	_ "net/http/pprof"
+
 	"github.com/lonelyevil/khl"
 	"github.com/lonelyevil/khl/log_adapter/plog"
 	"github.com/phuslu/log"
@@ -15,7 +17,7 @@ import (
 var robotName string
 var robotID string
 var globalSession = khl.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
-	Level:  log.TraceLevel,
+	Level:  log.InfoLevel,
 	Writer: &log.ConsoleWriter{},
 }))
 
@@ -30,10 +32,16 @@ func init() {
 	if robotID = os.Getenv("ROBOT_ID"); robotID == "" {
 		sendMessageToTestChannel(globalSession, fmt.Sprintf("> %s 机器人未配置ID！", robotName))
 	}
+	init := NetEaseContext{}
+	err := init.loginNetEase()
+	if err != nil {
+		log.Error().Err(err).Msg("error in init loginNetease")
+	}
 	globalSession.AddHandler(messageHan)
 }
 
 func main() {
+	// go func() {
 	globalSession.Open()
 	startUpMessage(globalSession)
 	// Wait here until CTRL-C or other term signal is received.
@@ -44,27 +52,33 @@ func main() {
 	// Cleanly close down the KHL session.
 	offlineMessage(globalSession)
 	globalSession.Close()
+	// }()
+
+	// http.ListenAndServe("0.0.0.0:6060", nil)
 }
 
 func messageHan(ctx *khl.TextMessageContext) {
-	if ctx.Common.Type != khl.MessageTypeText || ctx.Extra.Author.Bot {
-		return
-	}
-	if strings.Contains(ctx.Common.Content, "ping") {
-		ctx.Session.MessageCreate(&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				TargetID: ctx.Common.TargetID,
-				Content:  "pong(此消息仅你自己可见)",
-				Quote:    ctx.Common.MsgID,
-			},
-			TempTargetID: ctx.Common.AuthorID,
-		})
-	}
+	go func() {
+		if ctx.Common.Type != khl.MessageTypeText || ctx.Extra.Author.Bot {
+			return
+		}
+		if strings.Contains(ctx.Common.Content, "ping") {
+			ctx.Session.MessageCreate(&khl.MessageCreate{
+				MessageCreateBase: khl.MessageCreateBase{
+					TargetID: ctx.Common.TargetID,
+					Content:  "pong(此消息仅你自己可见)",
+					Quote:    ctx.Common.MsgID,
+				},
+				TempTargetID: ctx.Common.AuthorID,
+			})
+		}
 
-	replyToMention(ctx)
-	replaceDirtyWords(ctx)
-	searchMusicByRobot(ctx)
-	// sendScheduledMessage(ctx)
+		replyToMention(ctx)
+		replaceDirtyWords(ctx)
+		searchMusicByRobot(ctx)
+		// sendScheduledMessage(ctx)
+	}()
+
 }
 
 // 判断机器人是否被at到

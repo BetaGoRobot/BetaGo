@@ -31,11 +31,6 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 	message := ctx.Common.Content
 	if res := reg.FindStringSubmatch(message); res != nil && len(res) > 2 {
 		neaseCtx := NetEaseContext{}
-		err := neaseCtx.loginNetEase()
-		if err != nil {
-			log.Println("--------------", err.Error())
-			return
-		}
 		res, err := neaseCtx.searchMusicByKeyWord(strings.Split(res[2], " "))
 		if err != nil {
 			log.Println("--------------", err.Error())
