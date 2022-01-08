@@ -9,6 +9,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"net"
 	"strings"
@@ -39,4 +40,13 @@ func GetCurrentTime() (localTime string) {
 // ForDebug 用于测试
 func ForDebug(test ...interface{}) {
 	return
+}
+func disableEscapeHtml(data []byte) ([]byte, error) {
+	bf := bytes.NewBuffer([]byte{})
+	jsonEncoder := json.NewEncoder(bf)
+	jsonEncoder.SetEscapeHTML(false)
+	if err := jsonEncoder.Encode(data); err != nil {
+		return nil, err
+	}
+	return bf.Bytes(), nil
 }

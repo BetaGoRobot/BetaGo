@@ -19,13 +19,13 @@ func (ctx *NetEaseContext) loginNetEase() (err error) {
 		log.Println("Empty NetEase account and password")
 		return
 	}
-	resp, err := GetWithCookieParams(
-		GetRequestInfo{
+	resp, err := PostWithParams(
+		NewGetRequestInfo{
 			URL:     NetEaseAPIBaseURL + "/login/cellphone",
 			cookies: nil,
-			params: map[string]string{
-				"phone":    os.Getenv("NETEASE_PHONE"),
-				"password": os.Getenv("NETEASE_PASSWORD"),
+			params: map[string][]string{
+				"phone":    {os.Getenv("NETEASE_PHONE")},
+				"password": {os.Getenv("NETEASE_PASSWORD")},
 			},
 		},
 	)
@@ -39,8 +39,8 @@ func (ctx *NetEaseContext) loginNetEase() (err error) {
 // getDailyRecommendID 获取当前账号日推
 func (ctx *NetEaseContext) getDailyRecommendID() (musicIDs map[string]string, err error) {
 	musicIDs = make(map[string]string)
-	resp, err := GetWithCookieParams(
-		GetRequestInfo{
+	resp, err := PostWithParams(
+		NewGetRequestInfo{
 			URL:     NetEaseAPIBaseURL + "/recommend/songs",
 			cookies: ctx.cookies,
 		},
@@ -74,11 +74,12 @@ func (ctx *NetEaseContext) getMusicURLByID(IDName map[string]string) (InfoList [
 		}
 		id += key
 	}
-	resp, err := GetWithCookieParams(GetRequestInfo{
-		URL:     NetEaseAPIBaseURL + "/song/url",
-		cookies: ctx.cookies,
-		params:  map[string]string{"id": id, "br": "320000"},
-	})
+	resp, err := PostWithParams(
+		NewGetRequestInfo{
+			URL:     NetEaseAPIBaseURL + "/song/url",
+			cookies: ctx.cookies,
+			params:  map[string][]string{"id": {id}, "br": {"320000"}},
+		})
 	if err != nil {
 		return
 	}
@@ -99,15 +100,16 @@ func (ctx *NetEaseContext) getMusicURLByID(IDName map[string]string) (InfoList [
 }
 
 func (ctx *NetEaseContext) searchMusicByKeyWord(keywords []string) (result []searchMusicRes, err error) {
-	resp, err := GetWithCookieParams(GetRequestInfo{
-		URL:     NetEaseAPIBaseURL + "/cloudsearch",
-		cookies: ctx.cookies,
-		params: map[string]string{
-			"limit":    "3",
-			"type":     "1",
-			"keywords": strings.Join(keywords, "%20"),
-		},
-	})
+	resp, err := PostWithParams(
+		NewGetRequestInfo{
+			URL:     NetEaseAPIBaseURL + "/cloudsearch",
+			cookies: ctx.cookies,
+			params: map[string][]string{
+				"limit":    {"3"},
+				"type":     {"1"},
+				"keywords": {strings.Join(keywords, " ")},
+			},
+		})
 	if err != nil {
 		return
 	}
@@ -119,7 +121,7 @@ func (ctx *NetEaseContext) searchMusicByKeyWord(keywords []string) (result []sea
 		_ = resp.Body.Close()
 	}()
 	searchMusic := searchMusic{}
-	json.Unmarshal(body, &searchMusic)
+	jsoniter.Unmarshal(body, &searchMusic)
 	for _, song := range searchMusic.Result.Songs {
 		var ArtistName string
 		for _, name := range song.Ar {
