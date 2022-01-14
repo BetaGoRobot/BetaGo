@@ -10,10 +10,12 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
     apk update && \
     apk add "go>=1.17" && \
     apk add -U tzdata && \
+    apk add upx &&\
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     go version &&\
-    CGO_ENABLED=0 go build -ldflags="-w -s" -o betaGo *.go 
-
+    CGO_ENABLED=0 go build -ldflags="-w -s" -o betaGo-source *.go &&\
+    upx -9 -o betaGo betaGo-source
+    
 FROM scratch as runner
 
 ARG BOTAPI ROBOT_NAME ROBOT_NAME TEST_CHAN_ID NETEASE_PHONE NETEASE_PASSWORD
