@@ -10,15 +10,8 @@ import (
 	"time"
 )
 
-// GetRequestInfo Get请求字段的结构体
-type GetRequestInfo struct {
-	URL     string
-	cookies []*http.Cookie
-	params  map[string]string
-}
-
-// NewGetRequestInfo 请求字段的结构体
-type NewGetRequestInfo struct {
+// RequestInfo 请求字段的结构体
+type RequestInfo struct {
 	URL     string
 	cookies []*http.Cookie
 	params  map[string][]string
@@ -28,7 +21,7 @@ type NewGetRequestInfo struct {
 //  @param info 传入的参数、url、cookie信息
 //  @return res
 //  @return err
-func GetWithCookieParams(info NewGetRequestInfo) (resp *http.Response, err error) {
+func GetWithCookieParams(info RequestInfo) (resp *http.Response, err error) {
 	var paramSlice = make([]string, 0)
 	for key, values := range info.params {
 		paramSlice = append(paramSlice, key+"="+strings.Join(values, "%20"))
@@ -58,7 +51,7 @@ func GetWithCookieParams(info NewGetRequestInfo) (resp *http.Response, err error
 //  @param info 传入的参数、url、cookie信息
 //  @return res
 //  @return err
-func GetWithParams(info NewGetRequestInfo) (resp *http.Response, err error) {
+func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
 	var paramSlice = make([]string, 0)
 	for key, values := range info.params {
 		paramSlice = append(paramSlice, key+"="+strings.Join(values, "%20"))
@@ -76,7 +69,7 @@ func GetWithParams(info NewGetRequestInfo) (resp *http.Response, err error) {
 }
 
 // PostWithParams 发送带Cookie Params的POST请求
-func PostWithParams(info NewGetRequestInfo) (resp *http.Response, err error) {
+func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
 	params := url.Values{}
 	for key, values := range info.params {
 		for index := range values {

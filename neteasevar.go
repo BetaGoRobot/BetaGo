@@ -50,5 +50,19 @@ type searchMusicRes struct {
 	PicURL     string
 }
 
+type GlobRecommendMusicRes struct {
+	Result []struct {
+		PicURL string `json:"picUrl"`
+		Song   struct {
+			Name    string `json:"name"`
+			ID      int    `json:"id"`
+			Artists []struct {
+				Name string `json:"name"`
+				ID   int    `json:"id"`
+			} `json:"artists"`
+		} `json:"song"`
+	} `json:"result"`
+}
+
 // NetEaseAPIBaseURL 网易云API基础URL
 const NetEaseAPIBaseURL = "http://localhost:3335"

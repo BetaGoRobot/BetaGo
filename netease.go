@@ -13,16 +13,16 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // loginNetEase 返回cookie
-//  @return cookies
+//  @receiver ctx
+//  @return err
 func (ctx *NetEaseContext) loginNetEase() (err error) {
 	if phoneNum, password := os.Getenv("NETEASE_PHONE"), os.Getenv("NETEASE_PASSWORD"); phoneNum == "" && password == "" {
 		log.Println("Empty NetEase account and password")
 		return
 	}
 	resp, err := PostWithParams(
-		NewGetRequestInfo{
-			URL:     NetEaseAPIBaseURL + "/login/cellphone",
-			cookies: nil,
+		RequestInfo{
+			URL: NetEaseAPIBaseURL + "/login/cellphone",
 			params: map[string][]string{
 				"phone":    {os.Getenv("NETEASE_PHONE")},
 				"password": {os.Getenv("NETEASE_PASSWORD")},
@@ -37,10 +37,13 @@ func (ctx *NetEaseContext) loginNetEase() (err error) {
 }
 
 // getDailyRecommendID 获取当前账号日推
+//  @receiver ctx
+//  @return musicIDs
+//  @return err
 func (ctx *NetEaseContext) getDailyRecommendID() (musicIDs map[string]string, err error) {
 	musicIDs = make(map[string]string)
 	resp, err := PostWithParams(
-		NewGetRequestInfo{
+		RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/recommend/songs",
 			cookies: ctx.cookies,
 		},
@@ -48,7 +51,6 @@ func (ctx *NetEaseContext) getDailyRecommendID() (musicIDs map[string]string, er
 	if err != nil {
 		return
 	}
-	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -66,6 +68,10 @@ func (ctx *NetEaseContext) getDailyRecommendID() (musicIDs map[string]string, er
 }
 
 // getMusicURLByID 依据ID获取URL/Name
+//  @receiver ctx
+//  @param IDName
+//  @return InfoList
+//  @return err
 func (ctx *NetEaseContext) getMusicURLByID(IDName map[string]string) (InfoList []musicInfo, err error) {
 	var id string
 	for key := range IDName {
@@ -75,7 +81,7 @@ func (ctx *NetEaseContext) getMusicURLByID(IDName map[string]string) (InfoList [
 		id += key
 	}
 	resp, err := PostWithParams(
-		NewGetRequestInfo{
+		RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/song/url",
 			cookies: ctx.cookies,
 			params:  map[string][]string{"id": {id}, "br": {"320000"}},
@@ -99,9 +105,14 @@ func (ctx *NetEaseContext) getMusicURLByID(IDName map[string]string) (InfoList [
 	return
 }
 
+// searchMusicByKeyWord
+//  @receiver ctx
+//  @param keywords
+//  @return result
+//  @return err
 func (ctx *NetEaseContext) searchMusicByKeyWord(keywords []string) (result []searchMusicRes, err error) {
 	resp, err := PostWithParams(
-		NewGetRequestInfo{
+		RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/cloudsearch",
 			cookies: ctx.cookies,
 			params: map[string][]string{
@@ -143,6 +154,54 @@ func (ctx *NetEaseContext) searchMusicByKeyWord(keywords []string) (result []sea
 			Name:       song.Name,
 			ArtistName: ArtistName,
 			PicURL:     song.Al.PicURL,
+			SongURL:    SongURL[0].URL,
+		})
+	}
+	return
+}
+
+func (ctx *NetEaseContext) getNewRecommendMusic() (res []searchMusicRes, err error) {
+	resp, err := PostWithParams(
+		RequestInfo{
+			URL: NetEaseAPIBaseURL + "/personalized/newsong",
+			params: map[string][]string{
+				"limit": {"3"},
+			},
+		},
+	)
+	if err != nil {
+		return
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+	music := &GlobRecommendMusicRes{}
+	json.Unmarshal(body, music)
+	for _, result := range music.Result {
+		var ArtistName string
+		for _, name := range result.Song.Artists {
+			if ArtistName != "" {
+				ArtistName += ","
+			}
+			ArtistName += name.Name
+		}
+		SongURL, errIn := ctx.getMusicURLByID(map[string]string{strconv.Itoa(result.Song.ID): result.Song.Name})
+		if err != nil {
+			err = errIn
+			return
+		}
+		if len(SongURL) == 0 {
+			continue
+		}
+		res = append(res, searchMusicRes{
+			ID:         strconv.Itoa(result.Song.ID),
+			Name:       result.Song.Name,
+			ArtistName: ArtistName,
+			PicURL:     result.PicURL,
 			SongURL:    SongURL[0].URL,
 		})
 	}

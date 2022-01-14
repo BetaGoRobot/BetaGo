@@ -37,13 +37,16 @@ func init() {
 	if err != nil {
 		log.Error().Err(err).Msg("error in init loginNetease")
 	}
+
 	globalSession.AddHandler(messageHan)
+	globalSession.AddHandler(receiveDirectMessage)
 }
 
 func main() {
 	// go func() {
 	globalSession.Open()
 	startUpMessage(globalSession)
+	go dailySend()
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
@@ -76,6 +79,7 @@ func messageHan(ctx *khl.TextMessageContext) {
 		replyToMention(ctx)
 		replaceDirtyWords(ctx)
 		searchMusicByRobot(ctx)
+		// scheduleEvent(ctx)
 		// sendScheduledMessage(ctx)
 	}()
 
