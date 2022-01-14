@@ -11,6 +11,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
     apk add "go>=1.17" && \
     apk add -U tzdata && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    go version &&\
     CGO_ENABLED=0 go build -ldflags="-w -s" -o betaGo *.go 
 
 FROM scratch as runner
