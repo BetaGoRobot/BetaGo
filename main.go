@@ -7,19 +7,17 @@ import (
 	"strings"
 	"syscall"
 
-	_ "net/http/pprof"
+	// _ "net/http/pprof"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/neteaseapi"
+	"github.com/BetaGoRobot/BetaGo/scheduletask"
 	"github.com/lonelyevil/khl"
-	"github.com/lonelyevil/khl/log_adapter/plog"
 	"github.com/phuslu/log"
 )
 
 var robotName string
 var robotID string
-var globalSession = khl.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
-	Level:  log.InfoLevel,
-	Writer: &log.ConsoleWriter{},
-}))
 
 var testChannelID string
 
@@ -30,34 +28,30 @@ func init() {
 	if testChannelID = os.Getenv("TEST_CHAN_ID"); testChannelID == "" {
 	}
 	if robotID = os.Getenv("ROBOT_ID"); robotID == "" {
-		sendMessageToTestChannel(globalSession, fmt.Sprintf("> %s 机器人未配置ID！", robotName))
+		sendMessageToTestChannel(betagovar.GlobalSession, fmt.Sprintf("> %s 机器人未配置ID！", robotName))
 	}
-	init := NetEaseContext{}
-	err := init.loginNetEase()
+	init := neteaseapi.NetEaseContext{}
+	err := init.LoginNetEase()
 	if err != nil {
 		log.Error().Err(err).Msg("error in init loginNetease")
 	}
 
-	globalSession.AddHandler(messageHan)
-	globalSession.AddHandler(receiveDirectMessage)
+	betagovar.GlobalSession.AddHandler(messageHan)
+	betagovar.GlobalSession.AddHandler(receiveDirectMessage)
 }
 
 func main() {
-	// go func() {
-	globalSession.Open()
-	startUpMessage(globalSession)
-	go dailySend()
+	betagovar.GlobalSession.Open()
+	startUpMessage(betagovar.GlobalSession)
+	go scheduletask.DailySend()
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt, syscall.SIGTERM)
 	<-sc
 	// Cleanly close down the KHL session.
-	offlineMessage(globalSession)
-	globalSession.Close()
-	// }()
-
-	// http.ListenAndServe("0.0.0.0:6060", nil)
+	offlineMessage(betagovar.GlobalSession)
+	betagovar.GlobalSession.Close()
 }
 
 func messageHan(ctx *khl.TextMessageContext) {
@@ -79,8 +73,6 @@ func messageHan(ctx *khl.TextMessageContext) {
 		replyToMention(ctx)
 		replaceDirtyWords(ctx)
 		searchMusicByRobot(ctx)
-		// scheduleEvent(ctx)
-		// sendScheduledMessage(ctx)
 	}()
 
 }
