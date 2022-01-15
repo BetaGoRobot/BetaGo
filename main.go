@@ -76,13 +76,3 @@ func messageHan(ctx *khl.TextMessageContext) {
 	}()
 
 }
-
-// 判断机器人是否被at到
-func isInSlice(target string, slice []string) bool {
-	for i := range slice {
-		if slice[i] == target {
-			return true
-		}
-	}
-	return false
-}

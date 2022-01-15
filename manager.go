@@ -9,6 +9,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
+	"github.com/BetaGoRobot/BetaGo/qqmusicapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/lonelyevil/khl"
 )
@@ -64,7 +65,48 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 			}
 		} else {
 			messageType = 9
-			cardStr = "--------\n> (ins)没有找到你要搜索的歌曲哦, 换一个关键词试试~(ins)\n\n--------------"
+			cardStr = "--------\n> (ins)网易云音乐源: 没有找到你要搜索的歌曲哦, 换一个关键词试试~(ins)\n\n--------------"
+		}
+		ctx.Session.MessageCreate(
+			&khl.MessageCreate{
+				MessageCreateBase: khl.MessageCreateBase{
+					Type:     messageType,
+					TargetID: ctx.Common.TargetID,
+					Content:  cardStr,
+					Quote:    ctx.Common.MsgID,
+				}})
+	}
+	if res := reg.FindStringSubmatch(message); res != nil && len(res) > 2 {
+		qqmusicCtx := qqmusicapi.QQmusicContext{}
+		res, err := qqmusicCtx.SearchMusic(strings.Split(res[2], " "))
+		if err != nil {
+			log.Println("--------------", err.Error())
+			return
+		}
+
+		modules := make([]interface{}, 0)
+		cardMessage := make(khl.CardMessage, 0)
+		var cardStr string
+		var messageType khl.MessageType
+		if len(res) != 0 {
+			messageType = 10
+			for _, song := range res {
+				modules = append(modules, betagovar.CardMessageModule{
+					Type:  "audio",
+					Title: song.Name + " - " + song.ArtistName,
+					Src:   song.SongURL,
+					Cover: song.PicURL,
+				})
+			}
+			cardMessage = append(cardMessage, &khl.CardMessageCard{Theme: khl.CardThemePrimary, Size: khl.CardSizeSm, Modules: modules})
+			cardStr, err = cardMessage.BuildMessage()
+			if err != nil {
+				log.Println("-------------", err.Error())
+				return
+			}
+		} else {
+			messageType = 9
+			cardStr = "--------\n> (ins)QQ音乐源: 没有找到你要搜索的歌曲哦, 换一个关键词试试~(ins)\n\n--------------"
 		}
 		ctx.Session.MessageCreate(
 			&khl.MessageCreate{
@@ -80,7 +122,7 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 
 // 机器人被at时返回消息
 func replyToMention(ctx *khl.TextMessageContext) {
-	if isInSlice(robotID, ctx.Extra.Mention) {
+	if utility.IsInSlice(robotID, ctx.Extra.Mention) {
 		NowTime := time.Now().Unix()
 		if NowTime-LastMentionedTime.Unix() > 1 {
 			LastMentionedTime = time.Now()

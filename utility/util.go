@@ -1,8 +1,6 @@
 package utility
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"net"
 	"strings"
@@ -34,12 +32,16 @@ func GetCurrentTime() (localTime string) {
 func ForDebug(test ...interface{}) {
 	return
 }
-func disableEscapeHtml(data []byte) ([]byte, error) {
-	bf := bytes.NewBuffer([]byte{})
-	jsonEncoder := json.NewEncoder(bf)
-	jsonEncoder.SetEscapeHTML(false)
-	if err := jsonEncoder.Encode(data); err != nil {
-		return nil, err
+
+// IsInSlice 判断机器人是否被at到
+//  @param target
+//  @param slice
+//  @return bool
+func IsInSlice(target string, slice []string) bool {
+	for i := range slice {
+		if slice[i] == target {
+			return true
+		}
 	}
-	return bf.Bytes(), nil
+	return false
 }

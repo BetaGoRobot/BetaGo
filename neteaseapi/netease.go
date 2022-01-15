@@ -101,7 +101,11 @@ func (ctx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (InfoList [
 	json.Unmarshal(body, &music)
 	for index := range music.Data {
 		ID := strconv.Itoa(music.Data[index].ID)
-		InfoList = append(InfoList, MusicInfo{ID: ID, Name: IDName[ID], URL: music.Data[index].URL})
+		InfoList = append(InfoList, MusicInfo{
+			ID:   ID,
+			Name: IDName[ID],
+			URL:  music.Data[index].URL,
+		})
 	}
 	return
 }
