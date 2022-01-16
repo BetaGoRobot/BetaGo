@@ -36,49 +36,17 @@ var (
 func searchMusicByRobot(ctx *khl.TextMessageContext) {
 	message := ctx.Common.Content
 	if res := reg.FindStringSubmatch(message); res != nil && len(res) > 2 {
+		// 使用网易云搜索
 		neaseCtx := neteaseapi.NetEaseContext{}
-		res, err := neaseCtx.SearchMusicByKeyWord(strings.Split(res[2], " "))
+		resNetease, err := neaseCtx.SearchMusicByKeyWord(strings.Split(res[2], " "))
 		if err != nil {
 			log.Println("--------------", err.Error())
 			return
 		}
 
-		modules := make([]interface{}, 0)
-		cardMessage := make(khl.CardMessage, 0)
-		var cardStr string
-		var messageType khl.MessageType
-		if len(res) != 0 {
-			messageType = 10
-			for _, song := range res {
-				modules = append(modules, betagovar.CardMessageModule{
-					Type:  "audio",
-					Title: song.Name + " - " + song.ArtistName,
-					Src:   song.SongURL,
-					Cover: song.PicURL,
-				})
-			}
-			cardMessage = append(cardMessage, &khl.CardMessageCard{Theme: khl.CardThemePrimary, Size: khl.CardSizeSm, Modules: modules})
-			cardStr, err = cardMessage.BuildMessage()
-			if err != nil {
-				log.Println("-------------", err.Error())
-				return
-			}
-		} else {
-			messageType = 9
-			cardStr = "--------\n> (ins)网易云音乐源: 没有找到你要搜索的歌曲哦, 换一个关键词试试~(ins)\n\n--------------"
-		}
-		ctx.Session.MessageCreate(
-			&khl.MessageCreate{
-				MessageCreateBase: khl.MessageCreateBase{
-					Type:     messageType,
-					TargetID: ctx.Common.TargetID,
-					Content:  cardStr,
-					Quote:    ctx.Common.MsgID,
-				}})
-	}
-	if res := reg.FindStringSubmatch(message); res != nil && len(res) > 2 {
+		// 使用QQ音乐搜索
 		qqmusicCtx := qqmusicapi.QQmusicContext{}
-		res, err := qqmusicCtx.SearchMusic(strings.Split(res[2], " "))
+		resQQmusic, err := qqmusicCtx.SearchMusic(strings.Split(res[2], " "))
 		if err != nil {
 			log.Println("--------------", err.Error())
 			return
@@ -88,16 +56,37 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 		cardMessage := make(khl.CardMessage, 0)
 		var cardStr string
 		var messageType khl.MessageType
-		if len(res) != 0 {
+		if len(resNetease) != 0 {
+			tempMap := make(map[string]byte, 0)
 			messageType = 10
-			for _, song := range res {
+			// 添加网易云搜索的结果
+			for _, song := range resNetease {
+				if _, ok := tempMap[song.Name+" - "+song.ArtistName]; ok {
+					continue
+				}
 				modules = append(modules, betagovar.CardMessageModule{
 					Type:  "audio",
 					Title: song.Name + " - " + song.ArtistName,
 					Src:   song.SongURL,
 					Cover: song.PicURL,
 				})
+				tempMap[song.Name+" - "+song.ArtistName] = 0
 			}
+
+			// 添加QQ音乐搜索的结果
+			for _, song := range resQQmusic {
+				if _, ok := tempMap[song.Name+" - "+song.ArtistName]; ok {
+					continue
+				}
+				modules = append(modules, betagovar.CardMessageModule{
+					Type:  "audio",
+					Title: song.Name + " - " + song.ArtistName,
+					Src:   song.SongURL,
+					Cover: song.PicURL,
+				})
+				tempMap[song.Name+" - "+song.ArtistName] = 0
+			}
+
 			cardMessage = append(cardMessage, &khl.CardMessageCard{Theme: khl.CardThemePrimary, Size: khl.CardSizeSm, Modules: modules})
 			cardStr, err = cardMessage.BuildMessage()
 			if err != nil {
@@ -106,7 +95,7 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 			}
 		} else {
 			messageType = 9
-			cardStr = "--------\n> (ins)QQ音乐源: 没有找到你要搜索的歌曲哦, 换一个关键词试试~(ins)\n\n--------------"
+			cardStr = "--------\n> (ins)没有找到你要搜索的歌曲哦, 换一个关键词试试~(ins)\n\n--------------"
 		}
 		ctx.Session.MessageCreate(
 			&khl.MessageCreate{
@@ -117,6 +106,7 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 					Quote:    ctx.Common.MsgID,
 				}})
 	}
+
 	return
 }
 
