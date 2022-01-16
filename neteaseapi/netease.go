@@ -121,7 +121,7 @@ func (ctx *NetEaseContext) SearchMusicByKeyWord(keywords []string) (result []Sea
 			URL:     NetEaseAPIBaseURL + "/cloudsearch",
 			Cookies: ctx.cookies,
 			Params: map[string][]string{
-				"limit":    {"3"},
+				"limit":    {"5"},
 				"type":     {"1"},
 				"keywords": {strings.Join(keywords, " ")},
 			},

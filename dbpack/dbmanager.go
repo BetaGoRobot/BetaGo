@@ -15,6 +15,26 @@ type khlNetease struct {
 	NetEasePassword string
 }
 
+type khlMusicDownload struct {
+	gorm.Model
+	SongID   string `gorm:"primaryKey;autoIncrement:false"`
+	Filepath string `gorm:"primaryKey;autoIncrement:false"`
+}
+
+func (music *khlMusicDownload) DownloadMusicDB() {
+	dsn := "host=localhost user=postgres password=heyuheng1.22.3 dbname=betago port=55433 sslmode=disable TimeZone=Asia/Shanghai"
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+	err = db.AutoMigrate(&khlMusicDownload{})
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+}
+
+// RegistAndBind 注册并绑定
+//  @param data
+//  @return err
 func RegistAndBind(data *khlNetease) (err error) {
 	dsn := "host=localhost user=postgres password=heyuheng1.22.3 dbname=betago port=55433 sslmode=disable TimeZone=Asia/Shanghai"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})

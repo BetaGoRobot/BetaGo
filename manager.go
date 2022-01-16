@@ -34,6 +34,7 @@ var (
 )
 
 func searchMusicByRobot(ctx *khl.TextMessageContext) {
+	// ctx.Session.AssetCreate()
 	message := ctx.Common.Content
 	if res := reg.FindStringSubmatch(message); res != nil && len(res) > 2 {
 		// 使用网易云搜索
