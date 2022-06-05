@@ -9,7 +9,7 @@ import (
 
 //GetOutBoundIP 获取机器人部署的当前ip
 func GetOutBoundIP() (ip string, err error) {
-	conn, err := net.Dial("udp", "101.33.242.146:80")
+	conn, err := net.Dial("udp", "101.132.154.52:80")
 	if err != nil {
 		fmt.Println(err)
 		return

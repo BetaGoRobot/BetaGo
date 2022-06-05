@@ -14,7 +14,7 @@ import (
 	"github.com/lonelyevil/khl"
 )
 
-func replaceDirtyWords(ctx *khl.TextMessageContext) {
+func replaceDirtyWords(ctx *khl.KmarkdownMessageContext) {
 	message := ctx.Common.Content
 	if strings.Contains(message, "傻") && strings.Contains(message, "逼") || strings.Contains(message, "傻逼") {
 		ctx.Session.MessageCreate(&khl.MessageCreate{
@@ -33,7 +33,7 @@ var (
 	reg = regexp.MustCompile(`(?i)(\.search)\ (.*)`)
 )
 
-func searchMusicByRobot(ctx *khl.TextMessageContext) {
+func searchMusicByRobot(ctx *khl.KmarkdownMessageContext) {
 	// ctx.Session.AssetCreate()
 	message := ctx.Common.Content
 	if res := reg.FindStringSubmatch(message); res != nil && len(res) > 2 {
@@ -57,7 +57,7 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 		cardMessage := make(khl.CardMessage, 0)
 		var cardStr string
 		var messageType khl.MessageType
-		if len(resNetease) != 0 {
+		if len(resNetease) != 0 || len(resQQmusic) != 0 {
 			tempMap := make(map[string]byte, 0)
 			messageType = 10
 			// 添加网易云搜索的结果
@@ -112,7 +112,7 @@ func searchMusicByRobot(ctx *khl.TextMessageContext) {
 }
 
 // 机器人被at时返回消息
-func replyToMention(ctx *khl.TextMessageContext) {
+func replyToMention(ctx *khl.KmarkdownMessageContext) {
 	if utility.IsInSlice(robotID, ctx.Extra.Mention) {
 		NowTime := time.Now().Unix()
 		if NowTime-LastMentionedTime.Unix() > 1 {

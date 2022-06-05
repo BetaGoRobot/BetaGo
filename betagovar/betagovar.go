@@ -27,6 +27,6 @@ type CardMessageTextModule struct {
 
 // GlobalSession 全局共享session
 var GlobalSession = khl.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
-	Level:  log.InfoLevel,
+	Level:  log.TraceLevel,
 	Writer: &log.ConsoleWriter{},
 }))
