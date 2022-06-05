@@ -13,4 +13,4 @@ RUN npm config set registry https://registry.npmmirror.com \
 
 EXPOSE 3300
 
-CMD ["cross-env","PORT=3300","node","/home/qqmusic/bin/www"]
+CMD ["cross-env","PORT=3300","QQ=1145073100","node","/home/qqmusic/bin/www"]

@@ -2,7 +2,9 @@ package qqmusicapi
 
 import (
 	"io/ioutil"
+	"log"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	jsoniter "github.com/json-iterator/go"
@@ -10,12 +12,24 @@ import (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-func (ctx *QQmusicContext) refreshLogin() {
-	httptool.PostWithParams(httptool.RequestInfo{
-		URL: qqmusicBaseURL + "/user/refresh",
-	})
+func autoRefreshLogin() {
+	for {
+		time.Sleep(time.Millisecond * 5)
+		httptool.PostWithParams(httptool.RequestInfo{
+			URL: qqmusicBaseURL + "/user/refresh",
+		})
+	}
 }
-
+func init() {
+	//获取存储的Cookie
+	_, err := httptool.PostWithParams(httptool.RequestInfo{
+		URL: qqmusicBaseURL + "/user/cookie",
+	})
+	if err != nil {
+		log.Println(err.Error())
+	}
+	go autoRefreshLogin()
+}
 func (ctx *QQmusicContext) SearchMusic(keywords []string) (result []SearchMusicRes, err error) {
 	resp, err := httptool.PostWithParams(
 		httptool.RequestInfo{
