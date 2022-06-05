@@ -86,7 +86,7 @@ func (ctx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (InfoList [
 		httptool.RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/song/url",
 			Cookies: ctx.cookies,
-			Params:  map[string][]string{"id": {id}, "br": {"320000"}},
+			Params:  map[string][]string{"id": {id}, "br": {"128000"}},
 		})
 	if err != nil {
 		return

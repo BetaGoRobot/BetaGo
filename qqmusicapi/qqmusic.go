@@ -80,7 +80,7 @@ func (ctx *QQmusicContext) GetMusicURLByID(mid, mediaMid string) (musicURL strin
 			URL: qqmusicBaseURL + "/song/url",
 			Params: map[string][]string{
 				"id":      {mid},
-				"type":    {"320"},
+				"type":    {"128"},
 				"mediaId": {mediaMid},
 			},
 		},
