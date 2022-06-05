@@ -72,9 +72,9 @@ func messageHan(ctx *khl.KmarkdownMessageContext) {
 			})
 		}
 
+		searchMusicByRobot(ctx)
 		replyToMention(ctx)
 		replaceDirtyWords(ctx)
-		searchMusicByRobot(ctx)
 	}()
 
 }
