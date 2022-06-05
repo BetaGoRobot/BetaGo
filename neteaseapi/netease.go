@@ -30,8 +30,9 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 			},
 		},
 	)
-	if err != nil {
-		return
+	if err != nil || resp.StatusCode != 200 {
+		log.Printf("%#v", resp)
+		os.Exit(-1)
 	}
 	ctx.cookies = resp.Cookies()
 	return

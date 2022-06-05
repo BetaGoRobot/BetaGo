@@ -65,4 +65,4 @@ type GlobRecommendMusicRes struct {
 }
 
 // NetEaseAPIBaseURL 网易云API基础URL
-const NetEaseAPIBaseURL = "http://localhost:3335"
+const NetEaseAPIBaseURL = "http://netease-api:3335"
