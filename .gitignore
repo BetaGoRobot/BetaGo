@@ -1,1 +1,4 @@
 .vscode/*
+test.env
+.env
+NeteaseCloudMusicApi

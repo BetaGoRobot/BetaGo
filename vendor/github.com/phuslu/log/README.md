@@ -1,6 +1,6 @@
 # phuslog - Structured Logging Made Easy
 
-[![go.dev][pkg-img]][pkg]
+[![godoc][godoc-img]][godoc]
 [![goreport][report-img]][report]
 [![build][build-img]][build]
 [![coverage][cov-img]][cov]
@@ -14,7 +14,7 @@
     - `IOWriter`, *io.Writer wrapper*
     - `ConsoleWriter`, *colorful & formatting*
     - `FileWriter`, *rotating & effective*
-    - `MultiWriter`, *multiple level dispatch*
+    - `MultiLevelWriter`, *multiple level dispatch*
     - `SyslogWriter`, *syslog server logging*
     - `JournalWriter`, *linux systemd logging*
     - `EventlogWriter`, *windows system event*
@@ -125,12 +125,16 @@ type FileWriter struct {
 	// EnsureFolder ensures the file directory creation before writing.
 	EnsureFolder bool
 
+	// Header specifies an optional header function of log file after rotation,
+	Header func(fileinfo os.FileInfo) []byte
+
 	// Cleaner specifies an optional cleanup function of log backups after rotation,
 	// if not set, the default behavior is to delete more than MaxBackups log files.
 	Cleaner func(filename string, maxBackups int, matches []os.FileInfo)
 }
 ```
 > Note: FileWriter implements log.Writer and io.Writer interfaces both, it is a drop-in replacement of [lumberjack][lumberjack].
+> FileWriter also creates a symlink to the current logging file, it requires administrator privileges on Windows.
 
 ## Getting Started
 
@@ -316,12 +320,21 @@ func main() {
 }
 ```
 
+### Random Sample Logger:
+
+To logging only 5% logs, use below idiom.
+```go
+if log.Fastrandn(100) < 5 {
+	log.Log().Msg("hello world")
+}
+```
+
 ### Multiple Dispatching Writer
 
-To log to different writers by different levels, use `MultiWriter`.
+To log to different writers by different levels, use `MultiLevelWriter`.
 
 ```go
-log.DefaultLogger.Writer = &log.MultiWriter{
+log.DefaultLogger.Writer = &log.MultiLevelWriter{
 	InfoWriter:    &log.FileWriter{Filename: "main.INFO", MaxSize: 100<<20},
 	WarnWriter:    &log.FileWriter{Filename: "main.WARNING", MaxSize: 100<<20},
 	ErrorWriter:   &log.FileWriter{Filename: "main.ERROR", MaxSize: 100<<20},
@@ -332,6 +345,32 @@ log.DefaultLogger.Writer = &log.MultiWriter{
 log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
 log.Warn().Int("number", 42).Str("foo", "bar").Msg("a warn log")
 log.Error().Int("number", 42).Str("foo", "bar").Msg("a error log")
+```
+
+### Multiple Entry Writer
+To log to different writers, use `MultiEntryWriter`.
+
+```go
+log.DefaultLogger.Writer = &log.MultiEntryWriter{
+	&log.ConsoleWriter{ColorOutput: true},
+	&log.FileWriter{Filename: "main.log", MaxSize: 100<<20},
+	&log.EventlogWriter{Source: ".NET Runtime", ID: 1000},
+}
+
+log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
+```
+
+### Multiple IO Writer
+
+To log to multiple io writers like `io.MultiWriter`, use below idiom. [![playground][play-multiio-img]][play-multiio]
+
+```go
+log.DefaultLogger.Writer = &log.MultiIOWriter{
+	os.Stdout,
+	&log.FileWriter{Filename: "main.log", MaxSize: 100<<20},
+}
+
+log.Info().Int("number", 42).Str("foo", "bar").Msg("a info log")
 ```
 
 ### Multiple Combined Logger:
@@ -482,6 +521,46 @@ func main() {
 }
 ```
 
+### GrcpGateway Interceptor
+
+Using wrapped loggers for grcp-gateway in go-grpc-middleware.
+
+```go
+package main
+
+import (
+	"context"
+	"testing"
+
+	grpcphuslog "github.com/grpc-ecosystem/go-grpc-middleware/providers/phuslog/v2"
+	"github.com/phuslu/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
+
+	middleware "github.com/grpc-ecosystem/go-grpc-middleware/v2"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/tags"
+)
+
+func Example_initialization() {
+	// Logger is used, allowing pre-definition of certain fields by the user.
+	logger := log.DefaultLogger.GrcpGateway()
+	// You can also add grpc LoggerV2 logger wrapper
+	grpclog.SetLoggerV2(log.DefaultLogger.Grpc(nil))
+	// Create a server, make sure we put the tags context before everything else.
+	_ = grpc.NewServer(
+		middleware.WithUnaryServerChain(
+			tags.UnaryServerInterceptor(),
+			logging.UnaryServerInterceptor(grpcphuslog.InterceptorLogger(logger)),
+		),
+		middleware.WithStreamServerChain(
+			tags.StreamServerInterceptor(),
+			logging.StreamServerInterceptor(grpcphuslog.InterceptorLogger(logger)),
+		),
+	)
+}
+```
+
 ### User-defined Data Structure
 
 To log with user-defined struct effectively, implements `MarshalObject`. [![playground][play-marshal-img]][play-marshal]
@@ -518,16 +597,44 @@ func main() {
 To add preserved `key:value` pairs to each entry, use `NewContext`. [![playground][play-context-img]][play-context]
 
 ```go
-ctx := log.NewContext(nil).Str("ctx_str", "a ctx str").Value()
+logger := log.Logger{
+	Level:   log.InfoLevel,
+	Context: log.NewContext(nil).Str("ctx", "some_ctx").Value(),
+}
 
-logger := log.Logger{Level: log.InfoLevel}
-logger.Debug().Context(ctx).Int("no0", 0).Msg("zero")
-logger.Info().Context(ctx).Int("no1", 1).Msg("first")
-logger.Info().Context(ctx).Int("no2", 2).Msg("second")
+logger.Debug().Int("no0", 0).Msg("zero")
+logger.Info().Int("no1", 1).Msg("first")
+logger.Info().Int("no2", 2).Msg("second")
 
 // Output:
-//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no1":1,"message":"first"}
-//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx_str":"a ctx str","no2":2,"message":"second"}
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx":"some_ctx","no1":1,"message":"first"}
+//   {"time":"2020-07-12T05:03:43.949Z","level":"info","ctx":"some_ctx","no2":2,"message":"second"}
+```
+
+You can make a copy of log and add contextual fields. [![playground][play-context-add-img]][play-context-add]
+
+```go
+package main
+
+import (
+	"github.com/phuslu/log"
+)
+
+func main() {
+	sublogger := log.DefaultLogger
+	sublogger.Level = log.InfoLevel
+	sublogger.Context = log.NewContext(nil).Str("ctx", "some_ctx").Value()
+
+	sublogger.Debug().Int("no0", 0).Msg("zero")
+	sublogger.Info().Int("no1", 1).Msg("first")
+	sublogger.Info().Int("no2", 2).Msg("second")
+	log.Debug().Int("no3", 3).Msg("no context")
+}
+
+// Output:
+//   {"time":"2021-06-14T06:36:42.904+02:00","level":"info","ctx":"some_ctx","no1":1,"message":"first"}
+//   {"time":"2021-06-14T06:36:42.905+02:00","level":"info","ctx":"some_ctx","no2":2,"message":"second"}
+//   {"time":"2021-06-14T06:36:42.906+02:00","level":"debug","no3":3,"message":"no context"}
 ```
 
 ### High Performance
@@ -680,23 +787,23 @@ func BenchmarkCallerPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkDisableZap-4         	84149790	       138 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZap-4          	 8281590	      1459 ns/op	     192 B/op	       1 allocs/op
-BenchmarkInterfaceZap-4       	 6159080	      1924 ns/op	     208 B/op	       2 allocs/op
-BenchmarkPrintfZap-4          	 6664330	      1846 ns/op	      96 B/op	       2 allocs/op
-BenchmarkCallerZap-4          	 3661080	      3280 ns/op	     440 B/op	       4 allocs/op
+BenchmarkDisableZap-4         	100000000	       111 ns/op	     192 B/op	       1 allocs/op
+BenchmarkNormalZap-4          	 9192708	      1258 ns/op	     192 B/op	       1 allocs/op
+BenchmarkInterfaceZap-4       	 7009218	      1746 ns/op	     208 B/op	       2 allocs/op
+BenchmarkPrintfZap-4          	 7389448	      1648 ns/op	      96 B/op	       2 allocs/op
+BenchmarkCallerZap-4          	 4112085	      2948 ns/op	     440 B/op	       4 allocs/op
 
-BenchmarkDisableZeroLog-4     	788723734	        14.7 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalZeroLog-4      	15282351	       768 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInterfaceZeroLog-4   	10396608	      1163 ns/op	      48 B/op	       1 allocs/op
-BenchmarkPrintfZeroLog-4      	 8954383	      1360 ns/op	      96 B/op	       2 allocs/op
-BenchmarkCallerZeroLog-4      	 3586092	      3563 ns/op	     264 B/op	       3 allocs/op
+BenchmarkDisableZeroLog-4     	940196673	        12.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalZeroLog-4      	16421583	       717 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfaceZeroLog-4   	11076124	      1075 ns/op	      48 B/op	       1 allocs/op
+BenchmarkPrintfZeroLog-4      	 9741673	      1233 ns/op	      96 B/op	       2 allocs/op
+BenchmarkCallerZeroLog-4      	 3882822	      3152 ns/op	     272 B/op	       4 allocs/op
 
-BenchmarkDisablePhusLog-4     	932239788	        13.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4      	25032302	       449 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInterfacePhusLog-4   	14000850	       837 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPrintfPhusLog-4      	13794639	       851 ns/op	      16 B/op	       1 allocs/op
-BenchmarkCallerPhusLog-4      	 8207911	      1434 ns/op	     216 B/op	       2 allocs/op
+BenchmarkDisablePhusLog-4     	1000000000	        11.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalPhusLog-4      	27455464	       426 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfacePhusLog-4   	14598555	       756 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPrintfPhusLog-4      	15283591	       796 ns/op	      16 B/op	       1 allocs/op
+BenchmarkCallerPhusLog-4      	 8991439	      1376 ns/op	     216 B/op	       2 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
@@ -823,8 +930,8 @@ func main() {
 ## Acknowledgment
 This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson] and [lumberjack][lumberjack].
 
-[pkg-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
-[pkg]: https://godoc.org/github.com/phuslu/log
+[godoc-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
+[godoc]: https://godocs.io/github.com/phuslu/log
 [report-img]: https://goreportcard.com/badge/github.com/phuslu/log
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
@@ -837,6 +944,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-simple]: https://play.golang.org/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-emTsJJKUGXZ-29BEB0?style=flat&logo=go
 [play-customize]: https://play.golang.org/p/emTsJJKUGXZ
+[play-multiio-img]: https://img.shields.io/badge/playground-bwo03SW0B3l-29BEB0?style=flat&logo=go
+[play-multiio]: https://play.golang.org/p/bwo03SW0B3l
 [play-combined-img]: https://img.shields.io/badge/playground-24d4eDIpDeR-29BEB0?style=flat&logo=go
 [play-combined]: https://play.golang.org/p/24d4eDIpDeR
 [play-file-img]: https://img.shields.io/badge/playground-nS--ILxFyhHM-29BEB0?style=flat&logo=go
@@ -848,6 +957,8 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [play-formatting]: https://play.golang.org/p/UmJmLxYXwRO
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://play.golang.org/p/oAVAo302faf
+[play-context-add-img]: https://img.shields.io/badge/playground-LuCghJxMPHI-29BEB0?style=flat&logo=go
+[play-context-add]: https://play.golang.org/p/LuCghJxMPHI
 [play-marshal-img]: https://img.shields.io/badge/playground-SoQdwQOaQR2-29BEB0?style=flat&logo=go
 [play-marshal]: https://play.golang.org/p/SoQdwQOaQR2
 [play-interceptor]: https://play.golang.org/p/upmVP5cO62Y

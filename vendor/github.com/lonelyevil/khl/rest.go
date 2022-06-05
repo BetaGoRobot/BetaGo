@@ -402,6 +402,44 @@ func (s *Session) ChannelRoleDelete(crd *ChannelRoleDelete) (err error) {
 	return err
 }
 
+// UserInVoiceChannel is a user in a voice channel
+type UserInVoiceChannel struct {
+	ID                   string                    `json:"id"`
+	GuildID              string                    `json:"guild_id"`
+	MasterID             string                    `json:"master_id"`
+	ParentID             string                    `json:"parent_id"`
+	UserID               string                    `json:"user_id"`
+	Name                 string                    `json:"name"`
+	Topic                string                    `json:"topic"`
+	Type                 ChannelType               `json:"type"`
+	Level                int                       `json:"level"`
+	SlowMode             int                       `json:"slow_mode"`
+	LimitAmount          int                       `json:"limit_amount"`
+	IsCategory           bool                      `json:"is_category"`
+	PermissionOverwrites []PermissionOverwrite     `json:"permission_overwrites"`
+	PermissionUsers      []UserPermissionOverwrite `json:"permission_users"`
+	PermissionSync       IntBool                   `json:"permission_sync"`
+}
+
+// ChannelUserGetJoinedChannel gets the user in voice channel
+func (s *Session) ChannelUserGetJoinedChannel(guildID, userID string, page *PageSetting) (us []*UserInVoiceChannel, meta *PageInfo, err error) {
+	var response []byte
+	u, _ := url.Parse(EndpointChannelUserGetJoinedChannel)
+	q := u.Query()
+	q.Set("guild_id", guildID)
+	q.Set("user_id", userID)
+	u.RawQuery = q.Encode()
+	response, meta, err = s.RequestWithPage("GET", u.String(), page)
+	if err != nil {
+		return nil, nil, err
+	}
+	err = json.Unmarshal(response, &us)
+	if err != nil {
+		return nil, nil, err
+	}
+	return us, meta, nil
+}
+
 // UserChatList returns a list of user chats that bot owns.
 //
 // Note: for User in TargetInfo, only ID, Username, Online, Avatar is filled
@@ -1250,6 +1288,61 @@ func (s *Session) InviteDelete(id *InviteDelete) (err error) {
 	return err
 }
 
+// BlacklistItem is one user in blacklist.
+type BlacklistItem struct {
+	UserID      string         `json:"user_id"`
+	CreatedTime MilliTimeStamp `json:"created_time"`
+	Remark      string         `json:"remark"`
+	User        *User          `json:"user"`
+}
+
+// BlacklistList lists the users in blacklist.
+//
+// FYI: https://developer.kaiheila.cn/doc/http/blacklist
+func (s *Session) BlacklistList(guildID string, page *PageSetting) (bi []*BlacklistItem, meta *PageInfo, err error) {
+	u, _ := url.Parse(EndpointBlacklistList)
+	q := u.Query()
+	q.Set("guild_id", guildID)
+	u.RawQuery = q.Encode()
+	var response []byte
+	response, meta, err = s.RequestWithPage("GET", u.String(), page)
+	if err != nil {
+		return nil, nil, err
+	}
+	err = json.Unmarshal(response, &bi)
+	if err != nil {
+		return nil, nil, err
+	}
+	return bi, meta, nil
+}
+
+// BlacklistCreate is the type for arguments of BlacklistCreate request.
+type BlacklistCreate struct {
+	GuildID    string `json:"guild_id"`
+	TargetID   string `json:"target_id"`
+	Remark     string `json:"remark,omitempty"`
+	DelMsgDays int    `json:"del_msg_days,omitempty"`
+}
+
+// BlacklistCreate adds user to blacklist
+//
+// FYI: https://developer.kaiheila.cn/doc/http/blacklist#%E5%8A%A0%E5%85%A5%E9%BB%91%E5%90%8D%E5%8D%95
+func (s *Session) BlacklistCreate(bc *BlacklistCreate) (err error) {
+	_, err = s.Request("POST", EndpointBlacklistCreate, bc)
+	return err
+}
+
+// BlacklistDelete removes user from blacklist
+//
+// FYI: https://developer.kaiheila.cn/doc/http/blacklist#%E7%A7%BB%E9%99%A4%E9%BB%91%E5%90%8D%E5%8D%95
+func (s *Session) BlacklistDelete(guildID, targetID string) (err error) {
+	_, err = s.Request("POST", EndpointBlacklistDelete, struct {
+		GuildID  string `json:"guild_id"`
+		TargetID string `json:"target_id"`
+	}{GuildID: guildID, TargetID: targetID})
+	return err
+}
+
 // UserMe returns the bot info.
 // FYI: https://developer.kaiheila.cn/doc/http/user#%E8%8E%B7%E5%8F%96%E5%BD%93%E5%89%8D%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF
 func (s *Session) UserMe() (u *User, err error) {
@@ -1302,6 +1395,119 @@ func UserViewWithGuildID(guildID string) UserViewOption {
 // UserOffline logout the bot.
 func (s *Session) UserOffline() error {
 	_, err := s.Request("POST", EndpointUserOffline, nil)
+	return err
+}
+
+// BadgeGuildUrl builds the url for guild badge.
+func (s *Session) BadgeGuildUrl(guildID string, style int) string {
+	u, _ := url.Parse(EndpointBadgeGuild)
+	q := u.Query()
+	q.Add("guild_id", guildID)
+	q.Add("style", strconv.Itoa(style))
+	u.RawQuery = q.Encode()
+	return u.String()
+}
+
+// GameType is an enum for Game's type.
+type GameType int
+
+// These are all GameType values.
+const (
+	GameTypeGame = iota
+	GameTypeVup
+	GameTypeProcess
+)
+
+// Game is a game item registered at khl.
+type Game struct {
+	ID          int64    `json:"id"`
+	Name        string   `json:"name"`
+	Type        GameType `json:"type"`
+	Options     string   `json:"options"`
+	KmhookAdmin bool     `json:"kmhook_admin"`
+	ProcessName []string `json:"process_name"`
+	ProductName []string `json:"product_name"`
+	Icon        string   `json:"icon"`
+}
+
+// GameList lists the games registered.
+func (s *Session) GameList(page *PageSetting) (gs []*Game, meta *PageInfo, err error) {
+	var resp []byte
+	resp, meta, err = s.RequestWithPage("GET", EndpointGame, page)
+	if err != nil {
+		return nil, nil, err
+	}
+	err = json.Unmarshal(resp, &gs)
+	if err != nil {
+		return nil, nil, err
+	}
+	return gs, meta, nil
+}
+
+// GameCreate is the type for arguments of GameCreate request.
+type GameCreate struct {
+	Name        string `json:"name"`
+	ProcessName string `json:"process_name,omitempty"`
+	Icon        string `json:"icon,omitempty"`
+}
+
+// GameCreate creates a new Game in khl.
+func (s *Session) GameCreate(gc *GameCreate) (g *Game, err error) {
+	var resp []byte
+	resp, err = s.Request("POST", EndpointGameCreate, gc)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(resp, &g)
+	if err != nil {
+		return nil, err
+	}
+	return g, nil
+}
+
+// GameUpdate is the type for arguments of GameUpdate request.
+type GameUpdate struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name,omitempty"`
+	Icon string `json:"icon,omitempty"`
+}
+
+// GameUpdate updates the Game info in khl
+func (s *Session) GameUpdate(gu *GameUpdate) (g *Game, err error) {
+	var resp []byte
+	resp, err = s.Request("POST", EndpointGameUpdate, gu)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(resp, &g)
+	if err != nil {
+		return nil, err
+	}
+	return g, nil
+}
+
+// GameDelete deletes the Game info in khl
+func (s *Session) GameDelete(id int64) (err error) {
+	_, err = s.Request("POST", EndpointGameDelete, struct {
+		ID int64 `json:"id"`
+	}{id})
+	return err
+}
+
+// GameActivity begins playing a game.
+func (s *Session) GameActivity(id int64) (err error) {
+	_, err = s.Request("POST", EndpointGameActivity, struct {
+		ID       int64 `json:"id"`
+		DataType int   `json:"data_type"`
+	}{ID: id, DataType: 1})
+	return err
+}
+
+// GameDeleteActivity stops playing a game.
+func (s *Session) GameDeleteActivity() (err error) {
+	_, err = s.Request("POST", EndpointGameDeleteActivity, struct {
+		DataType int `json:"data_type"`
+	}{1})
 	return err
 }
 
@@ -1425,7 +1631,7 @@ func (s *Session) request(method, url string, data interface{}, sequence int) (r
 	if r.Code != 0 {
 		addCaller(s.Logger.Error()).Int("code", r.Code).Str("error_msg", r.Message).Msg("api response error")
 		//s.log(LogError, "Api Response Error Code %d, Message %s", r.Code, r.Message)
-		return
+		return nil, newRestErrorFromGeneralResp(&r)
 	}
 	response = r.Data
 	return

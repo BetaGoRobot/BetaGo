@@ -15,6 +15,7 @@ var (
 	EndpointGuildMute     = urlJoin(EndpointAPI, "guild-mute")
 	EndpointChannel       = urlJoin(EndpointAPI, "channel")
 	EndpointChannelRole   = urlJoin(EndpointAPI, "channel-role")
+	EndpointChannelUser   = urlJoin(EndpointAPI, "channel-user")
 	EndpointMessage       = urlJoin(EndpointAPI, "message")
 	EndpointUserChat      = urlJoin(EndpointAPI, "user-chat")
 	EndpointDirectMessage = urlJoin(EndpointAPI, "direct-message")
@@ -25,6 +26,9 @@ var (
 	EndpointIntimacy      = urlJoin(EndpointAPI, "intimacy")
 	EndpointGuildEmoji    = urlJoin(EndpointAPI, "guild-emoji")
 	EndpointInvite        = urlJoin(EndpointAPI, "invite")
+	EndpointBlacklist     = urlJoin(EndpointAPI, "blacklist")
+	EndpointBadge         = urlJoin(EndpointAPI, "badge")
+	EndpointGame          = urlJoin(EndpointAPI, "game")
 
 	EndpointGuildList       = urlJoin(EndpointGuild, "list")
 	EndpointGuildView       = urlJoin(EndpointGuild, "view")
@@ -37,16 +41,17 @@ var (
 	EndpointGuildMuteDelete = urlJoin(EndpointGuildMute, "delete")
 
 	// EndpointChannelMessage is Deprecated.
-	EndpointChannelMessage    = urlJoin(EndpointChannel, "message")
-	EndpointChannelList       = urlJoin(EndpointChannel, "list")
-	EndpointChannelView       = urlJoin(EndpointChannel, "view")
-	EndpointChannelCreate     = urlJoin(EndpointChannel, "create")
-	EndpointChannelMoveUser   = urlJoin(EndpointChannel, "move-user")
-	EndpointChannelDelete     = urlJoin(EndpointChannel, "delete")
-	EndpointChannelRoleIndex  = urlJoin(EndpointChannelRole, "index")
-	EndpointChannelRoleCreate = urlJoin(EndpointChannelRole, "create")
-	EndpointChannelRoleUpdate = urlJoin(EndpointChannelRole, "update")
-	EndpointChannelRoleDelete = urlJoin(EndpointChannelRole, "delete")
+	EndpointChannelMessage              = urlJoin(EndpointChannel, "message")
+	EndpointChannelList                 = urlJoin(EndpointChannel, "list")
+	EndpointChannelView                 = urlJoin(EndpointChannel, "view")
+	EndpointChannelCreate               = urlJoin(EndpointChannel, "create")
+	EndpointChannelMoveUser             = urlJoin(EndpointChannel, "move-user")
+	EndpointChannelDelete               = urlJoin(EndpointChannel, "delete")
+	EndpointChannelRoleIndex            = urlJoin(EndpointChannelRole, "index")
+	EndpointChannelRoleCreate           = urlJoin(EndpointChannelRole, "create")
+	EndpointChannelRoleUpdate           = urlJoin(EndpointChannelRole, "update")
+	EndpointChannelRoleDelete           = urlJoin(EndpointChannelRole, "delete")
+	EndpointChannelUserGetJoinedChannel = urlJoin(EndpointChannelUser, "get-joined-channel")
 
 	EndpointMessageList           = urlJoin(EndpointMessage, "list")
 	EndpointMessageCreate         = urlJoin(EndpointMessage, "create")
@@ -95,6 +100,18 @@ var (
 	EndpointInviteList   = urlJoin(EndpointInvite, "list")
 	EndpointInviteCreate = urlJoin(EndpointInvite, "create")
 	EndpointInviteDelete = urlJoin(EndpointInvite, "delete")
+
+	EndpointBlacklistList   = urlJoin(EndpointBlacklist, "list")
+	EndpointBlacklistCreate = urlJoin(EndpointBlacklist, "create")
+	EndpointBlacklistDelete = urlJoin(EndpointBlacklist, "delete")
+
+	EndpointBadgeGuild = urlJoin(EndpointBadge, "guild")
+
+	EndpointGameCreate         = urlJoin(EndpointGame, "create")
+	EndpointGameUpdate         = urlJoin(EndpointGame, "update")
+	EndpointGameDelete         = urlJoin(EndpointGame, "delete")
+	EndpointGameActivity       = urlJoin(EndpointGame, "activity")
+	EndpointGameDeleteActivity = urlJoin(EndpointGame, "delete-activity")
 )
 
 // Must not be used elsewhere.
