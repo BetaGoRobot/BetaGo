@@ -4,3 +4,6 @@
 [submodule "qqmusicapi/qqmusic-api-service"]
 	path = qqmusicapi/qqmusic-api-service
 	url = https://github.com/jsososo/QQMusicApi.git
+[submodule "webhook"]
+	path = webhook
+	url = https://github.com/BetaGoRobot/BetaGo-webhook.git
