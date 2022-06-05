@@ -14,7 +14,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func autoRefreshLogin() {
 	for {
-		time.Sleep(time.Millisecond * 5)
+		time.Sleep(time.Minute * 5)
 		httptool.PostWithParams(httptool.RequestInfo{
 			URL: qqmusicBaseURL + "/user/refresh",
 		})
