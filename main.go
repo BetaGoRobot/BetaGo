@@ -22,6 +22,7 @@ var robotID string
 var testChannelID string
 
 func init() {
+	fmt.Println("TEst")
 	if robotName = os.Getenv("ROBOT_NAME"); robotName == "" {
 		robotName = "No RobotName Configured"
 	}
