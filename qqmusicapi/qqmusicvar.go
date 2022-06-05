@@ -1,7 +1,7 @@
 package qqmusicapi
 
 var (
-	qqmusicBaseURL    = "http://127.0.0.1:3300"
+	qqmusicBaseURL    = "http://qqmusic-api:3300"
 	qqmusicPicBaseURL = "https://y.gtimg.cn/music/photo_new/T002R300x300M000"
 )
 
