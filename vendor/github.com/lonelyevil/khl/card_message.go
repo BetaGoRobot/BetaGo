@@ -71,14 +71,15 @@ func (c CardMessageCard) MarshalJSON() ([]byte, error) {
 
 // AddModule adds Modules to a card and provides a runtime type check for CardMessageCard Modules.
 //
-// Allowed Modules: *CardMessageHeader, *CardMessageSection, *CardMessageImageGroup, *CardMessageActionGroup,
-// *CardMessageContext, *CardMessageDivider, *CardMessageFile, *CardMessageCountdown.
+// Allowed Modules: *CardMessageHeader, *CardMessageSection, *CardMessageImageGroup, *CardMessageContainer,
+// *CardMessageActionGroup, *CardMessageContext, *CardMessageDivider, *CardMessageFile, *CardMessageCountdown.
 func (c *CardMessageCard) AddModule(i ...interface{}) *CardMessageCard {
 	for _, item := range i {
 		switch v := item.(type) {
 		case *CardMessageHeader,
 			*CardMessageSection,
 			*CardMessageImageGroup,
+			*CardMessageContainer,
 			*CardMessageActionGroup,
 			*CardMessageContext,
 			*CardMessageDivider,
@@ -415,13 +416,12 @@ func (c CardMessageParagraph) MarshalJSON() ([]byte, error) {
 
 // AddField provides additional type-checking when adding elements to paragraph.
 //
-// Allowed elements: *CardMessageElementText, *CardMessageElementKMarkdown and *CardMessageContext
+// Allowed elements: *CardMessageElementText, *CardMessageElementKMarkdown
 func (c *CardMessageParagraph) AddField(i ...interface{}) *CardMessageParagraph {
 	for _, item := range i {
 		switch v := item.(type) {
 		case *CardMessageElementText,
-			*CardMessageElementKMarkdown,
-			*CardMessageContext:
+			*CardMessageElementKMarkdown:
 			c.Fields = append(c.Fields, v)
 		default:
 			panic(unsupportedCardType)

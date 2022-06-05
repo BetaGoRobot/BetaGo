@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -347,6 +349,25 @@ type EmojiItem struct {
 	Name string `json:"name"`
 }
 
+// IsEqual compares standard emoji string with khl's emoji representation.
+func (e *EmojiItem) IsEqual(s string) bool {
+	return e.Convert() == s
+}
+
+// Convert converts khl's emoji to standard emoji.
+func (e *EmojiItem) Convert() string {
+	if !strings.HasPrefix(e.ID, "[#") {
+		return e.ID
+	}
+	t := strings.TrimLeft(e.ID, "[#")
+	t = strings.TrimRight(t, ";]")
+	i, err := strconv.Atoi(t)
+	if err != nil {
+		return ""
+	}
+	return string([]rune{int32(i)})
+}
+
 // ChannelMessage is the struct for a message in a channel.
 type ChannelMessage struct {
 	MsgID       string   `json:"msg_id"`
@@ -370,7 +391,7 @@ type DetailedChannelMessage struct {
 	MentionHere bool                    `json:"mention_here"`
 	MentionRole []string                `json:"mention_role"`
 	Embeds      []map[string]string     `json:"embeds"`
-	Attachments []Attachment            `json:"attachments"`
+	Attachments *Attachment             `json:"attachments"`
 	Reactions   []ReactionItem          `json:"reactions"`
 	Quote       *DetailedChannelMessage `json:"quote"`
 	MentionInfo struct {

@@ -59,12 +59,18 @@ type Logger struct {
 	// Caller determines if adds the file:line of the "caller" key.
 	Caller int
 
+	// FullpathCaller determines whether to use full file path like /a/b/c/d.go:line as "caller" or not.
+	FullpathCaller bool
+
 	// TimeField defines the time filed name in output.  It uses "time" in if empty.
 	TimeField string
 
 	// TimeFormat specifies the time format in output. It uses time.RFC3339 with milliseconds if empty.
 	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
 	TimeFormat string
+
+	// Context specifies an optional context of logger.
+	Context Context
 
 	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
 	Writer Writer
@@ -85,7 +91,8 @@ func Trace() (e *Entry) {
 	}
 	e = DefaultLogger.header(TraceLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -97,7 +104,8 @@ func Debug() (e *Entry) {
 	}
 	e = DefaultLogger.header(DebugLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -109,7 +117,8 @@ func Info() (e *Entry) {
 	}
 	e = DefaultLogger.header(InfoLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -121,7 +130,8 @@ func Warn() (e *Entry) {
 	}
 	e = DefaultLogger.header(WarnLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -133,7 +143,8 @@ func Error() (e *Entry) {
 	}
 	e = DefaultLogger.header(ErrorLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -145,7 +156,8 @@ func Fatal() (e *Entry) {
 	}
 	e = DefaultLogger.header(FatalLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -157,7 +169,8 @@ func Panic() (e *Entry) {
 	}
 	e = DefaultLogger.header(PanicLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -166,7 +179,8 @@ func Panic() (e *Entry) {
 func Printf(format string, v ...interface{}) {
 	e := DefaultLogger.header(noLevel)
 	if DefaultLogger.Caller > 0 {
-		e.caller(runtime.Caller(DefaultLogger.Caller))
+		_, file, line, _ := runtime.Caller(DefaultLogger.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	e.Msgf(format, v...)
 }
@@ -178,7 +192,8 @@ func (l *Logger) Trace() (e *Entry) {
 	}
 	e = l.header(TraceLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -190,7 +205,8 @@ func (l *Logger) Debug() (e *Entry) {
 	}
 	e = l.header(DebugLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -202,7 +218,8 @@ func (l *Logger) Info() (e *Entry) {
 	}
 	e = l.header(InfoLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -214,7 +231,8 @@ func (l *Logger) Warn() (e *Entry) {
 	}
 	e = l.header(WarnLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -226,7 +244,8 @@ func (l *Logger) Error() (e *Entry) {
 	}
 	e = l.header(ErrorLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -238,7 +257,8 @@ func (l *Logger) Fatal() (e *Entry) {
 	}
 	e = l.header(FatalLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -250,7 +270,8 @@ func (l *Logger) Panic() (e *Entry) {
 	}
 	e = l.header(PanicLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -259,7 +280,8 @@ func (l *Logger) Panic() (e *Entry) {
 func (l *Logger) Log() (e *Entry) {
 	e = l.header(noLevel)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -271,7 +293,8 @@ func (l *Logger) WithLevel(level Level) (e *Entry) {
 	}
 	e = l.header(level)
 	if l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -287,7 +310,8 @@ func (l *Logger) Err(err error) (e *Entry) {
 	}
 	e = l.header(level)
 	if e != nil && l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	return
 }
@@ -301,7 +325,8 @@ func (l *Logger) SetLevel(level Level) {
 func (l *Logger) Printf(format string, v ...interface{}) {
 	e := l.header(noLevel)
 	if e != nil && l.Caller > 0 {
-		e.caller(runtime.Caller(l.Caller))
+		_, file, line, _ := runtime.Caller(l.Caller)
+		e.caller(file, line, DefaultLogger.FullpathCaller)
 	}
 	e.Msgf(format, v...)
 }
@@ -503,74 +528,11 @@ func (l *Logger) header(level Level) *Entry {
 	case PanicLevel:
 		e.buf = append(e.buf, ",\"level\":\"panic\""...)
 	}
-	return e
-}
-
-func (e *Entry) rfc3339(sec int64, nsec int32) {
-	var tmp [32]byte
-	var buf []byte
-	if timeOffset == 0 {
-		// "2006-01-02T15:04:05.999Z"
-		tmp[25] = '"'
-		tmp[24] = 'Z'
-		buf = tmp[:26]
-	} else {
-		// "2006-01-02T15:04:05.999Z07:00"
-		tmp[30] = '"'
-		tmp[29] = timeZone[5]
-		tmp[28] = timeZone[4]
-		tmp[27] = timeZone[3]
-		tmp[26] = timeZone[2]
-		tmp[25] = timeZone[1]
-		tmp[24] = timeZone[0]
-		buf = tmp[:31]
+	// context
+	if l.Context != nil {
+		e.buf = append(e.buf, l.Context...)
 	}
-	// date time
-	sec += 9223372028715321600 + timeOffset // unixToInternal + internalToAbsolute + timeOffset
-	year, month, day, _ := absDate(uint64(sec), true)
-	hour, minute, second := absClock(uint64(sec))
-	// year
-	a := year / 100 * 2
-	b := year % 100 * 2
-	tmp[0] = '"'
-	tmp[1] = smallsString[a]
-	tmp[2] = smallsString[a+1]
-	tmp[3] = smallsString[b]
-	tmp[4] = smallsString[b+1]
-	// month
-	month *= 2
-	tmp[5] = '-'
-	tmp[6] = smallsString[month]
-	tmp[7] = smallsString[month+1]
-	// day
-	day *= 2
-	tmp[8] = '-'
-	tmp[9] = smallsString[day]
-	tmp[10] = smallsString[day+1]
-	// hour
-	hour *= 2
-	tmp[11] = 'T'
-	tmp[12] = smallsString[hour]
-	tmp[13] = smallsString[hour+1]
-	// minute
-	minute *= 2
-	tmp[14] = ':'
-	tmp[15] = smallsString[minute]
-	tmp[16] = smallsString[minute+1]
-	// second
-	second *= 2
-	tmp[17] = ':'
-	tmp[18] = smallsString[second]
-	tmp[19] = smallsString[second+1]
-	// milli seconds
-	a = int(nsec) / 1000000
-	b = a % 100 * 2
-	tmp[20] = '.'
-	tmp[21] = byte('0' + a/100)
-	tmp[22] = smallsString[b]
-	tmp[23] = smallsString[b+1]
-	// append to e.buf
-	e.buf = append(e.buf, buf...)
+	return e
 }
 
 // Time append append t formated as string using time.RFC3339Nano.
@@ -580,8 +542,9 @@ func (e *Entry) Time(key string, t time.Time) *Entry {
 	}
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
-	e.buf = append(e.buf, '"', ':')
-	e.rfc3339(timewall(t))
+	e.buf = append(e.buf, '"', ':', '"')
+	e.buf = t.AppendFormat(e.buf, "2006-01-02T15:04:05.999Z07:00")
+	e.buf = append(e.buf, '"')
 	return e
 }
 
@@ -618,7 +581,9 @@ func (e *Entry) Times(key string, a []time.Time) *Entry {
 		if i != 0 {
 			e.buf = append(e.buf, ',')
 		}
-		e.rfc3339(timewall(t))
+		e.buf = append(e.buf, '"')
+		e.buf = t.AppendFormat(e.buf, time.RFC3339Nano)
+		e.buf = append(e.buf, '"')
 	}
 	e.buf = append(e.buf, ']')
 
@@ -1406,9 +1371,10 @@ func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 }
 
 // Caller adds the file:line of the "caller" key.
-func (e *Entry) Caller(depth int) *Entry {
+func (e *Entry) Caller(depth int, fullpath bool) *Entry {
 	if e != nil {
-		e.caller(runtime.Caller(depth))
+		_, file, line, _ := runtime.Caller(depth)
+		e.caller(file, line, fullpath)
 	}
 	return e
 }
@@ -1514,16 +1480,19 @@ func (e *Entry) Msgs(args ...interface{}) {
 	e.Msg("")
 }
 
-func (e *Entry) caller(_ uintptr, file string, line int, _ bool) {
-	var i int
-	for i = len(file) - 1; i >= 0; i-- {
-		if file[i] == '/' {
-			break
+func (e *Entry) caller(file string, line int, fullpath bool) {
+	if !fullpath {
+		var i int
+		for i = len(file) - 1; i >= 0; i-- {
+			if file[i] == '/' {
+				break
+			}
+		}
+		if i > 0 {
+			file = file[i+1:]
 		}
 	}
-	if i > 0 {
-		file = file[i+1:]
-	}
+
 	e.buf = append(e.buf, ",\"caller\":\""...)
 	e.buf = append(e.buf, file...)
 	e.buf = append(e.buf, ':')
@@ -1714,7 +1683,7 @@ func (e *Entry) Object(key string, obj ObjectMarshaler) *Entry {
 	e.buf = append(e.buf, ',', '"')
 	e.buf = append(e.buf, key...)
 	e.buf = append(e.buf, '"', ':')
-	if obj == nil {
+	if obj == nil || (*(*[2]uintptr)(unsafe.Pointer(&obj)))[1] == 0 {
 		e.buf = append(e.buf, "null"...)
 		return e
 	}
@@ -1731,13 +1700,21 @@ func (e *Entry) Object(key string, obj ObjectMarshaler) *Entry {
 	return e
 }
 
+// Func allows an anonymous func to run only if the entry is enabled.
+func (e *Entry) Func(f func(e *Entry)) *Entry {
+	if e != nil {
+		f(e)
+	}
+	return e
+}
+
 // EmbedObject marshals and Embeds an object that implement the ObjectMarshaler interface.
 func (e *Entry) EmbedObject(obj ObjectMarshaler) *Entry {
 	if e == nil {
 		return nil
 	}
 
-	if obj != nil {
+	if obj != nil && (*(*[2]uintptr)(unsafe.Pointer(&obj)))[1] != 0 {
 		obj.MarshalObject(e)
 	}
 	return e
@@ -1781,6 +1758,11 @@ func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 			e.IPAddr(key, v)
 		case net.IPNet:
 			e.IPPrefix(key, v)
+		case json.RawMessage:
+			e.buf = append(e.buf, ',', '"')
+			e.buf = append(e.buf, key...)
+			e.buf = append(e.buf, '"', ':')
+			e.buf = append(e.buf, v...)
 		case []bool:
 			e.Bools(key, v)
 		case []byte:
@@ -1867,6 +1849,11 @@ func (e *Entry) Fields(fields Fields) *Entry {
 			e.IPAddr(k, v)
 		case net.IPNet:
 			e.IPPrefix(k, v)
+		case json.RawMessage:
+			e.buf = append(e.buf, ',', '"')
+			e.buf = append(e.buf, k...)
+			e.buf = append(e.buf, '"', ':')
+			e.buf = append(e.buf, v...)
 		case []bool:
 			e.Bools(k, v)
 		case []byte:
@@ -1987,6 +1974,10 @@ func wlprintf(w Writer, level Level, format string, args ...interface{}) (int, e
 }
 
 func b2s(b []byte) string { return *(*string)(unsafe.Pointer(&b)) }
+
+//go:noescape
+//go:linkname now time.now
+func now() (sec int64, nsec int32, mono int64)
 
 //go:noescape
 //go:linkname absDate time.absDate
