@@ -23,7 +23,7 @@ func (ctx *QQmusicContext) SearchMusic(keywords []string) (result []SearchMusicR
 			Params: map[string][]string{
 				"key":      {strings.Join(keywords, " ")},
 				"pageNo":   {"1"},
-				"pageSize": {"5"},
+				"pageSize": {"3"},
 				"t":        {"0"},
 			},
 		},
