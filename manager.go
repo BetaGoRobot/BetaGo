@@ -67,7 +67,7 @@ func searchMusicByRobot(ctx *khl.KmarkdownMessageContext) {
 				}
 				modules = append(modules, betagovar.CardMessageModule{
 					Type:  "audio",
-					Title: "\n网易" + song.Name + " - " + song.ArtistName,
+					Title: "网易 - " + song.Name + " - " + song.ArtistName,
 					Src:   song.SongURL,
 					Cover: song.PicURL,
 				})
@@ -81,7 +81,7 @@ func searchMusicByRobot(ctx *khl.KmarkdownMessageContext) {
 				}
 				modules = append(modules, betagovar.CardMessageModule{
 					Type:  "audio",
-					Title: "\nQQ" + song.Name + " - " + song.ArtistName,
+					Title: "QQ - " + song.Name + " - " + song.ArtistName,
 					Src:   song.SongURL,
 					Cover: song.PicURL,
 				})
