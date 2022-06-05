@@ -1,3 +1,6 @@
+# github.com/TwiN/go-away v1.6.4
+## explicit; go 1.18
+github.com/TwiN/go-away
 # github.com/bits-and-blooms/bitset v1.2.2
 ## explicit; go 1.14
 github.com/bits-and-blooms/bitset

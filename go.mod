@@ -11,6 +11,7 @@ replace (
 )
 
 require (
+	github.com/TwiN/go-away v1.6.4
 	github.com/json-iterator/go v1.1.12
 	github.com/lonelyevil/khl v0.0.26
 	github.com/lonelyevil/khl/log_adapter/plog v0.0.26
