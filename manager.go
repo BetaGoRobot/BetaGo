@@ -136,6 +136,8 @@ func replyToMention(ctx *khl.KmarkdownMessageContext) {
 					msg.Content += "，运气不错呀！"
 				} else if point == 1 {
 					msg.Content += "，什么倒霉孩子"
+				} else if point == 6 {
+					msg.Content += "，运气爆棚哇！"
 				} else {
 					msg.Content += "，运气一般般啦~"
 				}
