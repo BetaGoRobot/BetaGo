@@ -16,7 +16,8 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
     upx -9 -o betaGo betaGo-source
     
 
-FROM alpine as runner
+# FROM alpine as runner
+FROM scratch as runner
 
 ARG BOTAPI ROBOT_NAME ROBOT_NAME ROBOT_ID TEST_CHAN_ID NETEASE_PHONE NETEASE_PASSWORD
 
