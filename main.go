@@ -7,8 +7,6 @@ import (
 	"strings"
 	"syscall"
 
-	// _ "net/http/pprof"
-
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/scheduletask"
@@ -72,9 +70,12 @@ func messageHan(ctx *khl.KmarkdownMessageContext) {
 			})
 		}
 
+		//! Step 1.搜索音乐
 		searchMusicByRobot(ctx)
+		//! Step 2.回复At信息
 		replyToMention(ctx)
-		replaceDirtyWords(ctx)
+		//! Step 3.移除脏话
+		removeDirtyWords(ctx)
 	}()
 
 }

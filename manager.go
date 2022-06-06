@@ -15,7 +15,7 @@ import (
 	"github.com/lonelyevil/khl"
 )
 
-func replaceDirtyWords(ctx *khl.KmarkdownMessageContext) {
+func removeDirtyWords(ctx *khl.KmarkdownMessageContext) {
 	message := ctx.Common.Content
 	if strings.Contains(message, "傻") && strings.Contains(message, "逼") || strings.Contains(message, "傻逼") || goaway.IsProfane(message) {
 		ctx.Session.MessageCreate(&khl.MessageCreate{
