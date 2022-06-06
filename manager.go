@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -121,16 +122,24 @@ func replyToMention(ctx *khl.KmarkdownMessageContext) {
 		NowTime := time.Now().Unix()
 		if NowTime-LastMentionedTime.Unix() > 10 {
 			LastMentionedTime = time.Now()
-			if content == "roll" {
-				ctx.Session.MessageCreate(
-					&khl.MessageCreate{
-						MessageCreateBase: khl.MessageCreateBase{
-							TargetID: ctx.Common.TargetID,
-							Content:  "你的点数是" + fmt.Sprintf("%d", rand.Intn(6)+1),
-							Quote:    ctx.Common.MsgID,
-						},
-						TempTargetID: ctx.Common.AuthorID,
-					})
+			if strings.Contains(content, "roll") {
+				point := rand.Intn(6) + 1
+				msg := &khl.MessageCreate{
+					MessageCreateBase: khl.MessageCreateBase{
+						TargetID: ctx.Common.TargetID,
+						Content:  "你的点数是" + strconv.Itoa(point),
+						Quote:    ctx.Common.MsgID,
+					},
+					TempTargetID: ctx.Common.AuthorID,
+				}
+				if point > 3 {
+					msg.Content += "，运气不错呀！"
+				} else if point == 1 {
+					msg.Content += "，什么倒霉孩子"
+				} else {
+					msg.Content += "，运气一般般啦~"
+				}
+				ctx.Session.MessageCreate(msg)
 			} else {
 				ctx.Session.MessageCreate(
 					&khl.MessageCreate{
