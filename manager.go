@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"regexp"
 	"strings"
 	"time"
@@ -115,18 +116,34 @@ func searchMusicByRobot(ctx *khl.KmarkdownMessageContext) {
 // 机器人被at时返回消息
 func replyToMention(ctx *khl.KmarkdownMessageContext) {
 	if utility.IsInSlice(robotID, ctx.Extra.Mention) {
+		//! 被At到
+		content := ctx.Common.Content
 		NowTime := time.Now().Unix()
-		if NowTime-LastMentionedTime.Unix() > 1 {
+		if NowTime-LastMentionedTime.Unix() > 10 {
 			LastMentionedTime = time.Now()
-			ctx.Session.MessageCreate(&khl.MessageCreate{
-				MessageCreateBase: khl.MessageCreateBase{
-					TargetID: ctx.Common.TargetID,
-					Content:  "@我干什么? 没事干了吗! (此消息仅你可见)",
-					Quote:    ctx.Common.MsgID,
-				},
-				TempTargetID: ctx.Common.AuthorID,
-			})
+			if content == "roll" {
+				ctx.Session.MessageCreate(
+					&khl.MessageCreate{
+						MessageCreateBase: khl.MessageCreateBase{
+							TargetID: ctx.Common.TargetID,
+							Content:  "你的点数是" + fmt.Sprintf("%d", rand.Intn(6)+1),
+							Quote:    ctx.Common.MsgID,
+						},
+						TempTargetID: ctx.Common.AuthorID,
+					})
+			} else {
+				ctx.Session.MessageCreate(
+					&khl.MessageCreate{
+						MessageCreateBase: khl.MessageCreateBase{
+							TargetID: ctx.Common.TargetID,
+							Content:  "@我干什么? 没事干了吗! (此消息仅你可见)",
+							Quote:    ctx.Common.MsgID,
+						},
+						TempTargetID: ctx.Common.AuthorID,
+					})
+			}
 		}
+
 	}
 }
 
