@@ -120,7 +120,7 @@ func replyToMention(ctx *khl.KmarkdownMessageContext) {
 		//! 被At到
 		content := ctx.Common.Content
 		NowTime := time.Now().Unix()
-		if NowTime-LastMentionedTime.Unix() > 10 {
+		if NowTime-LastMentionedTime.Unix() > 1 {
 			LastMentionedTime = time.Now()
 			if strings.Contains(content, "roll") {
 				point := rand.Intn(6) + 1
