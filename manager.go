@@ -130,7 +130,7 @@ func replyToMention(ctx *khl.KmarkdownMessageContext) {
 						Content:  "你的点数是" + strconv.Itoa(point),
 						Quote:    ctx.Common.MsgID,
 					},
-					TempTargetID: ctx.Common.AuthorID,
+					// TempTargetID: ctx.Common.AuthorID,
 				}
 				if point > 3 {
 					msg.Content += "，运气不错呀！"
