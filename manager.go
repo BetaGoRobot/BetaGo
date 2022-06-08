@@ -39,7 +39,7 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 			adminNotSolved bool
 		)
 		// 首先执行正则解析
-		slice := strings.Split(trueContent, " ")
+		slice := strings.Split(strings.Trim(trueContent, " "), " ")
 		// 判断指令类型
 		if len(slice) == 1 {
 			command = slice[0]
