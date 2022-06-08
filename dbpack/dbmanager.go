@@ -1,7 +1,9 @@
 package dbpack
 
 import (
+	"errors"
 	"log"
+	"strconv"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -22,14 +24,27 @@ type khlMusicDownload struct {
 }
 
 func (music *khlMusicDownload) DownloadMusicDB() {
-	dsn := "host=localhost user=postgres password=heyuheng1.22.3 dbname=betago port=55433 sslmode=disable TimeZone=Asia/Shanghai"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
-	err = db.AutoMigrate(&khlMusicDownload{})
+	db := GetDbConnection()
+	err := db.AutoMigrate(&khlMusicDownload{})
 	if err != nil {
 		log.Println(err.Error())
 	}
+}
 
+// CheckIsAdmin 检查是否是管理员
+//  @param userID
+//  @return isAdmin
+func CheckIsAdmin(userID string) (isAdmin bool) {
+	db := GetDbConnection()
+	userIDInt, _ := strconv.Atoi(userID)
+	res := db.Find(&Administrator{}, []int{userIDInt})
+	if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+		return false
+	}
+	if errors.Is(res.Error, nil) {
+		return true
+	}
+	return
 }
 
 // RegistAndBind 注册并绑定

@@ -1,4 +1,4 @@
-FROM alpine as builder
+FROM golang:1.18.3-alpine as builder
 
 COPY . /data/
 ENV GOPROXY https://goproxy.io,direct
@@ -8,7 +8,6 @@ WORKDIR /data/
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
     apk update && \
-    apk add "go>=1.17" && \
     apk add -U tzdata && \
     apk add upx &&\
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
@@ -24,6 +23,7 @@ ARG BOTAPI ROBOT_NAME ROBOT_NAME ROBOT_ID TEST_CHAN_ID NETEASE_PHONE NETEASE_PAS
 ENV BOTAPI=${BOTAPI} ROBOT_NAME=${ROBOT_NAME} ROBOT_ID=${ROBOT_ID} TEST_CHAN_ID=${TEST_CHAN_ID} NETEASE_PHONE=${NETEASE_PHONE} NETEASE_PASSWORD=${NETEASE_PASSWORD}
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
 COPY --from=builder  /data/betaGo /betaGo
 
 COPY --from=builder  /usr/share/zoneinfo/ /usr/share/zoneinfo

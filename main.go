@@ -70,13 +70,15 @@ func messageHan(ctx *khl.KmarkdownMessageContext) {
 				TempTargetID: ctx.Common.AuthorID,
 			})
 		}
+		//! Step 3.移除脏话
+		defer removeDirtyWords(ctx)
 
+		//! Step 0.检查是否是debug接口
+		addAdministrator(ctx)
 		//! Step 1.搜索音乐
 		searchMusicByRobot(ctx)
 		//! Step 2.回复At信息
 		replyToMention(ctx)
-		//! Step 3.移除脏话
-		removeDirtyWords(ctx)
 	}()
 
 }

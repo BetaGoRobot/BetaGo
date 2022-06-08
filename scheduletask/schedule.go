@@ -18,7 +18,7 @@ func HourlyGetSen() {
 			MessageCreateBase: khl.MessageCreateBase{
 				Type:     9,
 				TargetID: "3241026226723225",
-				Content:  "来自一言的句子:</br>" + yiyan.GetSen(),
+				Content:  "来自一言的句子: `" + yiyan.GetSen() + "`",
 			},
 		})
 	}
