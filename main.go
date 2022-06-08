@@ -59,13 +59,9 @@ func messageHan(ctx *khl.KmarkdownMessageContext) {
 		if ctx.Common.Type != khl.MessageTypeKMarkdown || ctx.Extra.Author.Bot {
 			return
 		}
-		//! Step 3.移除脏话
-		defer removeDirtyWords(ctx)
 
-		//! Step 0.检查是否是debug接口
+		defer removeDirtyWords(ctx)
 		commandHandler(ctx)
-		//! Step 1.搜索音乐
-		searchMusicByRobot(ctx)
 	}()
 
 }

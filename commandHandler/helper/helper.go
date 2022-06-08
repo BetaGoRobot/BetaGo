@@ -15,13 +15,15 @@ var adminCommandHelper = map[string]string{
 	"`removeAdmin`": "移除管理员 \n`@BetaGo` `removeAdmin <userID>`",
 	"`showAdmin`":   "显示所有管理员 \n`@BetaGo` `showAdmin`",
 	"`oneword`":     "获取一言 \n`@BetaGo` `oneword`",
+	"`searchMusic`": "搜索音乐 \n`@BetaGo` `searchMusic <musicName>`",
 }
 
 var userCommandHelper = map[string]string{
-	"`help`":    "查看帮助 \n`@BetaGo` `help`",
-	"`ping`":    "检查机器人是否运行正常 \n`@BetaGo` `ping`",
-	"`roll`":    "掷骰子 \n`@BetaGo` `roll`",
-	"`oneword`": "获取一言 \n`@BetaGo` `oneword`",
+	"`help`":        "查看帮助 \n`@BetaGo` `help`",
+	"`ping`":        "检查机器人是否运行正常 \n`@BetaGo` `ping`",
+	"`roll`":        "掷骰子 \n`@BetaGo` `roll`",
+	"`oneword`":     "获取一言 \n`@BetaGo` `oneword`",
+	"`searchMusic`": "搜索音乐 \n`@BetaGo` `searchMusic <musicName>`",
 }
 
 // AdminCommandHelperHandler 查看帮助

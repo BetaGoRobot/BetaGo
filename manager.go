@@ -8,14 +8,13 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 	"github.com/enescakir/emoji"
 
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
 	"github.com/BetaGoRobot/BetaGo/dbpack"
-	"github.com/BetaGoRobot/BetaGo/neteaseapi"
-	"github.com/BetaGoRobot/BetaGo/qqmusicapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	goaway "github.com/TwiN/go-away"
 	"github.com/lonelyevil/khl"
@@ -35,24 +34,20 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	if trueContent != "" {
 		// 内容非空，解析命令
 		var (
-			command, parameter string
-			adminNotSolved     bool
+			command        string
+			parameters     []string
+			adminNotSolved bool
 		)
 		// 首先执行正则解析
-		res := reMatch.FindAllStringSubmatch(trueContent, -1)
+		slice := strings.Split(trueContent, " ")
 		// 判断指令类型
-		switch len(res) {
-		case 0:
-			// 单指令
-			command = trueContent
-		case 1:
-			// 含参指令
-			command = res[0][1]
-			parameter = res[0][2]
-		default:
-			// 异常指令
-			return
+		if len(slice) == 1 {
+			command = slice[0]
+		} else {
+			command = slice[1]
+			parameters = slice[2:]
 		}
+
 		var err error
 		// 进入指令执行逻辑,首先判断是否为Admin
 		if dbpack.CheckIsAdmin(ctx.Common.AuthorID) {
@@ -62,16 +57,20 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 				err = helper.AdminCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 				adminNotSolved = true
 			case "addAdmin":
-				userID, userName, found := strings.Cut(parameter, " ")
-				if found {
+				if len(parameters) == 2 {
+					userID, userName := parameters[0], parameters[1]
 					err = admin.AddAdminHandler(userID, userName, ctx.Common.MsgID, ctx.Common.TargetID)
 				} else {
 					err = fmt.Errorf("请输入正确的用户ID和用户名格式")
 				}
 				adminNotSolved = true
 			case "removeAdmin":
-				targetUserID := parameter
-				err = admin.RemoveAdminHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
+				if len(parameters) == 1 {
+					targetUserID := parameters[0]
+					err = admin.RemoveAdminHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
+				} else {
+					err = fmt.Errorf("请输入正确的用户ID和用户名格式")
+				}
 				adminNotSolved = true
 			case "showAdmin":
 				err = admin.ShowAdminHandler(ctx.Common.TargetID, ctx.Common.MsgID)
@@ -94,6 +93,8 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 				helper.PingHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 			case "oneword":
 				err = roll.OneWordHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+			case "searchMusic":
+				err = music.SearchMusicByRobot(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters)
 			default:
 				err = fmt.Errorf("未知的指令`%s`, 尝试使用command `help`来获取可用的命令列表", command)
 			}
@@ -123,114 +124,6 @@ func removeDirtyWords(ctx *khl.KmarkdownMessageContext) {
 var (
 	reg = regexp.MustCompile(`(?i)(\.search)\ (.*)`)
 )
-
-func searchMusicByRobot(ctx *khl.KmarkdownMessageContext) {
-	// ctx.Session.AssetCreate()
-	message := ctx.Common.Content
-	if res := reg.FindStringSubmatch(message); res != nil && len(res) > 2 {
-		// 使用网易云搜索
-		neaseCtx := neteaseapi.NetEaseContext{}
-		resNetease, err := neaseCtx.SearchMusicByKeyWord(strings.Split(res[2], " "))
-		if err != nil {
-			log.Println("--------------", err.Error())
-			return
-		}
-
-		// 使用QQ音乐搜索
-		qqmusicCtx := qqmusicapi.QQmusicContext{}
-		resQQmusic, err := qqmusicCtx.SearchMusic(strings.Split(res[2], " "))
-		if err != nil {
-			log.Println("--------------", err.Error())
-			return
-		}
-
-		var (
-			modulesNetese = make([]interface{}, 0)
-			modulesQQ     = make([]interface{}, 0)
-		)
-		cardMessage := make(khl.CardMessage, 0)
-		var cardStr string
-		var messageType khl.MessageType
-		if len(resNetease) != 0 || len(resQQmusic) != 0 {
-			tempMap := make(map[string]byte, 0)
-			messageType = 10
-			// 添加网易云搜索的结果
-			for _, song := range resNetease {
-				if _, ok := tempMap[song.Name+" - "+song.ArtistName]; ok {
-					continue
-				}
-				modulesNetese = append(modulesNetese, khl.CardMessageFile{
-					Type:  khl.CardMessageFileTypeAudio,
-					Src:   song.SongURL,
-					Title: song.Name + " - " + song.ArtistName,
-					Cover: song.PicURL,
-				})
-				tempMap[song.Name+" - "+song.ArtistName] = 0
-			}
-			modulesNetese = append([]interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
-						Content: emoji.Headphone.String() + "网易云音乐-搜索结果" + emoji.MagnifyingGlassTiltedLeft.String(),
-						Emoji:   false,
-					},
-				},
-			}, modulesNetese...)
-			tempMap = make(map[string]byte)
-			// 添加QQ音乐搜索的结果
-			for _, song := range resQQmusic {
-				if _, ok := tempMap[song.Name+" - "+song.ArtistName]; ok {
-					continue
-				}
-				modulesQQ = append(modulesQQ, khl.CardMessageFile{
-					Type:  khl.CardMessageFileTypeAudio,
-					Src:   song.SongURL,
-					Title: song.Name + " - " + song.ArtistName,
-					Cover: song.PicURL,
-				})
-				tempMap[song.Name+" - "+song.ArtistName] = 0
-			}
-			modulesQQ = append([]interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
-						Content: emoji.MusicalNote.String() + "QQ音乐-搜索结果" + emoji.MagnifyingGlassTiltedLeft.String(),
-						Emoji:   false,
-					},
-				},
-			}, modulesQQ...)
-
-			cardMessage = append(cardMessage,
-				&khl.CardMessageCard{
-					Theme:   khl.CardThemePrimary,
-					Size:    khl.CardSizeSm,
-					Modules: modulesNetese,
-				},
-				&khl.CardMessageCard{
-					Theme:   khl.CardThemePrimary,
-					Size:    khl.CardSizeSm,
-					Modules: modulesQQ,
-				},
-			)
-			cardStr, err = cardMessage.BuildMessage()
-			if err != nil {
-				log.Println("-------------", err.Error())
-				return
-			}
-		} else {
-			messageType = 9
-			cardStr = "--------\n> (ins)没有找到你要搜索的歌曲哦, 换一个关键词试试~(ins)\n\n--------------"
-		}
-		ctx.Session.MessageCreate(
-			&khl.MessageCreate{
-				MessageCreateBase: khl.MessageCreateBase{
-					Type:     messageType,
-					TargetID: ctx.Common.TargetID,
-					Content:  cardStr,
-					Quote:    ctx.Common.MsgID,
-				}})
-	}
-
-	return
-}
 
 func startUpMessage(session *khl.Session) (err error) {
 	currentIP, err := utility.GetOutBoundIP()
