@@ -77,8 +77,8 @@ func messageHan(ctx *khl.KmarkdownMessageContext) {
 		adminCommand(ctx)
 		//! Step 1.搜索音乐
 		searchMusicByRobot(ctx)
-		//! Step 2.回复At信息
-		replyToMention(ctx)
+		// //! Step 2.回复At信息
+		// replyToMention(ctx)
 	}()
 
 }

@@ -35,16 +35,25 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 	if !utility.IsInSlice(robotID, ctx.Extra.Mention) {
 		return
 	}
-	reRes := reMatch.FindAllStringSubmatch(ctx.Common.Content, -1)
+	var (
+		command, parameter string
+	)
+	content := strings.Trim(ctx.Common.Content[strings.LastIndex(ctx.Common.Content, `)`)+1:], " ")
+	reRes := reMatch.FindAllStringSubmatch(content, -1)
 	if len(reRes) == 0 {
+		command = content
+	} else if len(reRes[0]) >= 3 {
+		command = reRes[0][1]
+		parameter = reRes[0][2]
+	} else {
 		return
 	}
 	if dbpack.CheckIsAdmin(ctx.Common.AuthorID) {
 		// 确认为管理员再执行
 		var commandResStr string
-		switch reRes[0][1] {
+		switch command {
 		case "addAdmin":
-			userID, userName, _ := strings.Cut(reRes[0][2], " ")
+			userID, userName, _ := strings.Cut(parameter, " ")
 			userIDInt, _ := strconv.Atoi(userID)
 			// 先检验是否存在
 			if dbpack.GetDbConnection().Table("betago.administrators").Where("user_id = ?", userIDInt).Find(&dbpack.Administrator{}).RowsAffected != 0 {
@@ -67,10 +76,10 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 			if dbRes.Error != nil {
 				return
 			}
-			commandResStr = fmt.Sprintf("%s 已被设置为管理员, 让我们祝贺这个B~", userName)
+			commandResStr = fmt.Sprintf("%s 已被设置为管理员, 让我们祝贺这个B~ (met)%s(met)", userName, userID)
 		case "showAdmin":
 			admins := make([]*dbpack.Administrator, 0)
-			dbpack.GetDbConnection().Table("betago.administrators").Find(admins)
+			dbpack.GetDbConnection().Table("betago.administrators").Find(&admins)
 			for _, admin := range admins {
 				commandResStr += fmt.Sprintf("%s\n", admin.UserName)
 			}
@@ -89,9 +98,8 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 			MessageCreateBase: khl.MessageCreateBase{
 				Type:     khl.MessageTypeKMarkdown,
 				TargetID: ctx.Common.TargetID,
-				Content: `指令执行成功---->
-				` + commandResStr,
-				Quote: ctx.Common.MsgID,
+				Content:  `指令执行成功---->` + "\n" + commandResStr,
+				Quote:    ctx.Common.MsgID,
 			},
 		})
 	}
