@@ -145,12 +145,12 @@ func startUpMessage(session *khl.Session) (err error) {
 				khl.CardMessageSection{
 					Text: khl.CardMessageElementKMarkdown{
 						Content: strings.Join([]string{
-							"Name: \t**", robotName, "**\n",
-							"CurrentTime: \t**", time.Now().Format("2006-01-02 15:04:05"), "**\n",
-							"IP: \t**", currentIP, "**\n",
-							"Commit-Message: \t**", betagovar.CommitMessage, "**\n",
-							"Commit-Page: \t**", betagovar.HTMLURL, "**\n",
-							"LeaveYourCommentHere: \t**", betagovar.CommentsURL, "**\n"},
+							"Name\n: \t**", robotName, "**\n",
+							"CurrentTime\n: \t**", time.Now().Format("2006-01-02 15:04:05"), "**\n",
+							"IP\n: \t**", currentIP, "**\n",
+							"Message\n: \t**", betagovar.CommitMessage, "**\n",
+							"Commit-Page\b: \t[CommitPage](", betagovar.HTMLURL, ")\n",
+							"LeaveYourCommentHere\b: \t[CommentPage](", betagovar.CommentsURL, ")\n"},
 							""),
 					},
 				},
@@ -188,12 +188,12 @@ func offlineMessage(session *khl.Session) (err error) {
 				khl.CardMessageSection{
 					Text: khl.CardMessageElementKMarkdown{
 						Content: strings.Join([]string{
-							"Name: \t**", robotName, "**\n",
-							"CurrentTime: \t**", time.Now().Format("2006-01-02 15:04:05"), "**\n",
-							"IP: \t**", currentIP, "**\n",
-							"Commit-Message: \t**", betagovar.CommitMessage, "**\n",
-							"Commit-Page: \t**", betagovar.HTMLURL, "**\n",
-							"LeaveYourCommentHere: \t**", betagovar.CommentsURL, "**\n"},
+							"Name\n: \t**", robotName, "**\n",
+							"CurrentTime\n: \t**", time.Now().Format("2006-01-02 15:04:05"), "**\n",
+							"IP\n: \t**", currentIP, "**\n",
+							"Message\n: \t**", betagovar.CommitMessage, "**\n",
+							"Commit-Page\b: \t[CommitPage](", betagovar.HTMLURL, ")\n",
+							"LeaveYourCommentHere\b: \t[CommentPage](", betagovar.CommentsURL, ")\n"},
 							""),
 					},
 				},
