@@ -17,6 +17,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/qqmusicapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	goaway "github.com/TwiN/go-away"
+	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/khl"
 )
 
@@ -33,12 +34,12 @@ func debugInterfaceHandler(ctx *khl.KmarkdownMessageContext) {
 	}
 }
 
-func adminCommand(ctx *khl.KmarkdownMessageContext) {
+func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	// 判断是否被at到
 	if !utility.IsInSlice(robotID, ctx.Extra.Mention) {
 		return
 	}
-	// 示例中，由于用户发送的命令的RawContent格式为(met)id(met) <command> <parameters>
+	// 示例中，由于用户发送的命令的Content格式为(met)id(met) <command> <parameters>
 	// 针对解析的判断逻辑，首先判断是否为空字符串，若为空发送help信息
 	// ? 解析出不包含at信息的实际内容
 	trueContent := strings.Trim(ctx.Common.Content[strings.LastIndex(ctx.Common.Content, `)`)+1:], " ")
@@ -80,17 +81,49 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 				err = admin.RemoveAdminHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
 			case "showAdmin":
 				err = admin.ShowAdminHandler(ctx.Common.TargetID, ctx.Common.MsgID)
+			default:
+				err = fmt.Errorf("未知的指令")
 			}
 			if err != nil {
-				sendErrorInfo(err)
+				sendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
 			}
 		}
 	}
 
 }
 
-func sendErrorInfo(err error) {
-
+func sendErrorInfo(targetID, QuoteID, authorID string, err error) {
+	cardMessageStr, err := khl.CardMessage{
+		&khl.CardMessageCard{
+			Theme: "secondary",
+			Color: "red",
+			Size:  "lg",
+			Modules: []interface{}{
+				khl.CardMessageHeader{
+					Text: khl.CardMessageElementText{
+						Content: "Command Error" + emoji.Warning.String(),
+						Emoji:   true,
+					},
+				},
+				khl.CardMessageElementKMarkdown{
+					Content: err.Error(),
+				},
+			},
+		},
+	}.BuildMessage()
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
+		MessageCreateBase: khl.MessageCreateBase{
+			Type:     khl.MessageTypeCard,
+			TargetID: targetID,
+			Content:  cardMessageStr,
+			Quote:    QuoteID,
+		},
+		TempTargetID: authorID,
+	})
 }
 
 func removeDirtyWords(ctx *khl.KmarkdownMessageContext) {

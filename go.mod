@@ -12,6 +12,7 @@ replace (
 
 require (
 	github.com/TwiN/go-away v1.6.4
+	github.com/enescakir/emoji v1.0.0
 	github.com/json-iterator/go v1.1.12
 	github.com/lonelyevil/khl v0.0.26
 	github.com/lonelyevil/khl/log_adapter/plog v0.0.26
@@ -33,9 +34,9 @@ require (
 	github.com/jackc/pgtype v1.11.0 // indirect
 	github.com/jackc/pgx/v4 v4.16.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.4 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/text v0.3.7 // indirect
 )
