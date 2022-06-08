@@ -45,14 +45,18 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 	} else if len(reRes[0]) >= 3 {
 		command = reRes[0][1]
 		parameter = reRes[0][2]
+	} else if content == "" {
+		return
 	} else {
 		return
 	}
+	var successFlag bool
 	if dbpack.CheckIsAdmin(ctx.Common.AuthorID) {
 		// 确认为管理员再执行
 		var commandResStr string
 		switch command {
 		case "addAdmin":
+			successFlag = true
 			userID, userName, _ := strings.Cut(parameter, " ")
 			userIDInt, _ := strconv.Atoi(userID)
 			// 先检验是否存在
@@ -78,12 +82,14 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 			}
 			commandResStr = fmt.Sprintf("%s 已被设置为管理员, 让我们祝贺这个B~ (met)%s(met)", userName, userID)
 		case "showAdmin":
+			successFlag = true
 			admins := make([]*dbpack.Administrator, 0)
 			dbpack.GetDbConnection().Table("betago.administrators").Find(&admins)
 			for _, admin := range admins {
 				commandResStr += fmt.Sprintf("%s\n", admin.UserName)
 			}
 		default:
+			successFlag = false
 			ctx.Session.MessageCreate(&khl.MessageCreate{
 				MessageCreateBase: khl.MessageCreateBase{
 					Type:     9,
@@ -93,15 +99,17 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 				},
 			})
 		}
-		// 在频道中发送成功消息
-		ctx.Session.MessageCreate(&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     khl.MessageTypeKMarkdown,
-				TargetID: ctx.Common.TargetID,
-				Content:  `指令执行成功---->` + "\n" + commandResStr,
-				Quote:    ctx.Common.MsgID,
-			},
-		})
+		if successFlag {
+			// 在频道中发送成功消息
+			ctx.Session.MessageCreate(&khl.MessageCreate{
+				MessageCreateBase: khl.MessageCreateBase{
+					Type:     khl.MessageTypeKMarkdown,
+					TargetID: ctx.Common.TargetID,
+					Content:  `指令执行成功---->` + "\n" + commandResStr,
+					Quote:    ctx.Common.MsgID,
+				},
+			})
+		}
 	}
 }
 
