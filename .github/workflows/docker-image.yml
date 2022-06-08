@@ -20,6 +20,8 @@ env:
   ROBOT_NAME: BetaGo
   TEST_CHAN_ID: "7419593543056418"
   ROBOT_ID: "3508390651"
+  NETEASE_PHONE: "${{ secrets.NETEASE_PHONE }}"
+  NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
 jobs:
   # Push image to GitHub Packages.
   # See also https://docs.docker.com/docker-hub/builds/

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
@@ -44,8 +45,8 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 		if len(slice) == 1 {
 			command = slice[0]
 		} else {
-			command = slice[1]
-			parameters = slice[2:]
+			command = slice[0]
+			parameters = slice[1:]
 		}
 
 		var err error
@@ -143,7 +144,14 @@ func startUpMessage(session *khl.Session) (err error) {
 				},
 				khl.CardMessageSection{
 					Text: khl.CardMessageElementKMarkdown{
-						Content: "Name: \t**" + robotName + "**\n" + "CurrentTime: \t**" + time.Now().Format("2006-01-02 15:04:05") + "**\n" + "IP: \t**" + currentIP + "**",
+						Content: strings.Join([]string{
+							"Name: \t**", robotName, "**\n",
+							"CurrentTime: \t**", time.Now().Format("2006-01-02 15:04:05"), "**\n",
+							"IP: \t**", currentIP, "**\n",
+							"Commit-Message: \t**", betagovar.CommitMessage, "**\n",
+							"Commit-Page: \t**", betagovar.HTMLURL, "**\n",
+							"LeaveYourCommentHere: \t**", betagovar.CommentsURL, "**\n"},
+							""),
 					},
 				},
 			},
@@ -179,7 +187,14 @@ func offlineMessage(session *khl.Session) (err error) {
 				},
 				khl.CardMessageSection{
 					Text: khl.CardMessageElementKMarkdown{
-						Content: "Name: \t**" + robotName + "**\n" + "CurrentTime: \t**" + time.Now().Format("2006-01-02 15:04:05") + "**\n" + "IP: \t**" + currentIP + "**",
+						Content: strings.Join([]string{
+							"Name: \t**", robotName, "**\n",
+							"CurrentTime: \t**", time.Now().Format("2006-01-02 15:04:05"), "**\n",
+							"IP: \t**", currentIP, "**\n",
+							"Commit-Message: \t**", betagovar.CommitMessage, "**\n",
+							"Commit-Page: \t**", betagovar.HTMLURL, "**\n",
+							"LeaveYourCommentHere: \t**", betagovar.CommentsURL, "**\n"},
+							""),
 					},
 				},
 			},

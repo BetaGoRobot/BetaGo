@@ -43,3 +43,11 @@ var GlobalSession = khl.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
 	Level:  log.TraceLevel,
 	Writer: &log.ConsoleWriter{},
 }))
+
+// var
+//  @param CommitMessage
+var (
+	CommitMessage = os.Getenv("COM_MES")
+	HTMLURL       = os.Getenv("HTML_URL")
+	CommentsURL   = os.Getenv("COM_URL")
+)
