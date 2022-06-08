@@ -51,10 +51,10 @@ func CheckIsAdmin(userID string) (isAdmin bool) {
 func GetAdminLevel(userID string) int {
 	db := GetDbConnection()
 	userIDInt, _ := strconv.Atoi(userID)
-	admin := &Administrator{
+	admin := Administrator{
 		UserID: int64(userIDInt),
 	}
-	res := db.Table("betago.administrators").Find(admin)
+	res := db.Table("betago.administrators").First(&admin, "user_id = ?", userID)
 	if res.RowsAffected == 0 {
 		// 不存在该管理员，返回预设值-1
 		return -1

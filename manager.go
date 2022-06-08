@@ -102,7 +102,7 @@ func helperHandler(targetID, quoteID, authorID string) (err error) {
 	var modules []interface{}
 	modules = append(modules, khl.CardMessageSection{
 		Text: khl.CardMessageParagraph{
-			Cols: 0,
+			Cols: 2,
 			Fields: []interface{}{
 				khl.CardMessageElementKMarkdown{
 					Content: "指令名称",
@@ -116,7 +116,7 @@ func helperHandler(targetID, quoteID, authorID string) (err error) {
 	for command, helper := range commandHelper {
 		modules = append(modules, khl.CardMessageSection{
 			Text: khl.CardMessageParagraph{
-				Cols: 0,
+				Cols: 2,
 				Fields: []interface{}{
 					khl.CardMessageElementKMarkdown{
 						Content: command,
@@ -140,7 +140,7 @@ func helperHandler(targetID, quoteID, authorID string) (err error) {
 
 	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
 		MessageCreateBase: khl.MessageCreateBase{
-			Type:     khl.MessageTypeKMarkdown,
+			Type:     khl.MessageTypeCard,
 			TargetID: targetID,
 			Content:  cardMessageStr,
 			Quote:    quoteID,
@@ -226,7 +226,7 @@ func adminRemoveHandler(userID, targetUserID, QuoteID, TargetID string) (err err
 		err = fmt.Errorf("UserID=%s 不是管理员，无法删除", targetUserID)
 		return
 	}
-	if dbpack.GetAdminLevel(userID) <= dbpack.GetAdminLevel(targetUserID) {
+	if userLevel, targetLevel := dbpack.GetAdminLevel(userID), dbpack.GetAdminLevel(targetUserID); userLevel <= targetLevel {
 		// 等级不足，无权限操作
 		err = fmt.Errorf("您的等级小于或等于目标用户，无权限操作")
 		return
