@@ -28,7 +28,7 @@ func init() {
 // GetDbConnection  returns the db connection
 //  @return *gorm.DB
 func GetDbConnection() *gorm.DB {
-	dsn := "host=localhost user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+	dsn := "host=betago-pg user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "betago.",
