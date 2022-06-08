@@ -87,7 +87,7 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 				targetUserID := parameter
 				err = adminRemoveHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
 			case "showAdmin":
-				//TODO
+				err = adminShowHandler(ctx.Common.TargetID, ctx.Common.MsgID)
 			}
 			if err != nil {
 				sendErrorInfo(err)
@@ -97,6 +97,69 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 
 }
 
+func adminShowHandler(targetID, quoteID string) (err error) {
+	admins := make([]dbpack.Administrator, 0)
+	dbpack.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level desc")
+	modules := make([]interface{}, 0)
+	modules = append(modules,
+		khl.CardMessageSection{
+			Text: khl.CardMessageParagraph{
+				Cols: 3,
+				Fields: []interface{}{
+					khl.CardMessageElementKMarkdown{
+						Content: "用户名",
+					},
+					khl.CardMessageElementKMarkdown{
+						Content: "用户ID",
+					},
+					khl.CardMessageElementKMarkdown{
+						Content: "管理等级",
+					},
+				},
+			},
+		})
+	for _, admin := range admins {
+		modules = append(modules,
+			khl.CardMessageSection{
+				Text: khl.CardMessageParagraph{
+					Cols: 3,
+					Fields: []interface{}{
+						khl.CardMessageElementKMarkdown{
+							Content: admin.UserName,
+						},
+						khl.CardMessageElementKMarkdown{
+							Content: strconv.Itoa(int(admin.UserID)),
+						},
+						khl.CardMessageElementKMarkdown{
+							Content: strconv.Itoa(int(admin.Level)),
+						},
+					},
+				},
+			},
+		)
+	}
+	cardMessageStr, err := khl.CardMessage{
+		&khl.CardMessageCard{
+			Theme:   "secondary",
+			Size:    "lg",
+			Modules: modules,
+		},
+	}.BuildMessage()
+	if err != nil {
+		return
+	}
+	betagovar.GlobalSession.MessageCreate(
+		&khl.MessageCreate{
+			MessageCreateBase: khl.MessageCreateBase{
+				Type:     khl.MessageTypeCard,
+				TargetID: targetID,
+				Content:  cardMessageStr,
+				Quote:    quoteID,
+			},
+		},
+	)
+	return
+}
 func helperHandler(targetID, quoteID, authorID string) (err error) {
 	// 帮助信息
 	var modules []interface{}
