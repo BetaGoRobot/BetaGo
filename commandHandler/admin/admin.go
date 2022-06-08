@@ -24,13 +24,13 @@ func ShowAdminHandler(targetID, quoteID string) (err error) {
 				Cols: 3,
 				Fields: []interface{}{
 					khl.CardMessageElementKMarkdown{
-						Content: "用户名",
+						Content: "**用户名**",
 					},
 					khl.CardMessageElementKMarkdown{
-						Content: "用户ID",
+						Content: "**用户ID**",
 					},
 					khl.CardMessageElementKMarkdown{
-						Content: "管理等级",
+						Content: "**管理等级**",
 					},
 				},
 			},
@@ -42,7 +42,7 @@ func ShowAdminHandler(targetID, quoteID string) (err error) {
 					Cols: 3,
 					Fields: []interface{}{
 						khl.CardMessageElementKMarkdown{
-							Content: admin.UserName,
+							Content: fmt.Sprintf(`(met)%d(met)`, admin.UserID),
 						},
 						khl.CardMessageElementKMarkdown{
 							Content: strconv.Itoa(int(admin.UserID)),

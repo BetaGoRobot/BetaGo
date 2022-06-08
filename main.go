@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
@@ -59,16 +58,6 @@ func messageHan(ctx *khl.KmarkdownMessageContext) {
 	go func() {
 		if ctx.Common.Type != khl.MessageTypeKMarkdown || ctx.Extra.Author.Bot {
 			return
-		}
-		if strings.Contains(ctx.Common.Content, "ping") {
-			ctx.Session.MessageCreate(&khl.MessageCreate{
-				MessageCreateBase: khl.MessageCreateBase{
-					TargetID: ctx.Common.TargetID,
-					Content:  "pong(此消息仅你自己可见)",
-					Quote:    ctx.Common.MsgID,
-				},
-				TempTargetID: ctx.Common.AuthorID,
-			})
 		}
 		//! Step 3.移除脏话
 		defer removeDirtyWords(ctx)

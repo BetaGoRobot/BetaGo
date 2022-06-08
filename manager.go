@@ -11,13 +11,15 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
+
+	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
 	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/qqmusicapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	goaway "github.com/TwiN/go-away"
-	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/khl"
 )
 
@@ -35,7 +37,7 @@ func debugInterfaceHandler(ctx *khl.KmarkdownMessageContext) {
 }
 
 func commandHandler(ctx *khl.KmarkdownMessageContext) {
-	// 判断是否被at到
+	// 判断是否被at到,且消息不是引用/回复
 	if !utility.IsInSlice(robotID, ctx.Extra.Mention) {
 		return
 	}
@@ -47,6 +49,7 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 		// 内容非空，解析命令
 		var (
 			command, parameter string
+			adminSolved        bool
 		)
 		// 首先执行正则解析
 		res := reMatch.FindAllStringSubmatch(trueContent, -1)
@@ -63,13 +66,13 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 			// 异常指令
 			return
 		}
+		var err error
 		// 进入指令执行逻辑,首先判断是否为Admin
 		if dbpack.CheckIsAdmin(ctx.Common.AuthorID) {
 			// 是Admin，判断指令
-			var err error
 			switch command {
 			case "help":
-				err = helper.CommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+				err = helper.AdminCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 			case "addAdmin":
 				userID, userName, found := strings.Cut(parameter, " ")
 				if found {
@@ -81,49 +84,35 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 				err = admin.RemoveAdminHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
 			case "showAdmin":
 				err = admin.ShowAdminHandler(ctx.Common.TargetID, ctx.Common.MsgID)
+			case "ping":
+				helper.PingHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 			default:
-				err = fmt.Errorf("未知的指令")
+				adminSolved = true
 			}
 			if err != nil {
-				sendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
+				errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
+			}
+		}
+		// 非管理员命令
+		if adminSolved {
+			switch command {
+			case "help":
+				err = helper.UserCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+			case "roll":
+				err = roll.RandRollHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+			case "ping":
+				helper.PingHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+			case "oneword":
+				err = roll.OneWordHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+			default:
+				err = fmt.Errorf("未知的指令`%s`, 尝试使用command `help`来获取可用的命令列表", command)
+			}
+			if err != nil {
+				errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
 			}
 		}
 	}
 
-}
-
-func sendErrorInfo(targetID, QuoteID, authorID string, err error) {
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
-			Theme: "secondary",
-			Color: "red",
-			Size:  "lg",
-			Modules: []interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
-						Content: "Command Error" + emoji.Warning.String(),
-						Emoji:   true,
-					},
-				},
-				khl.CardMessageElementKMarkdown{
-					Content: err.Error(),
-				},
-			},
-		},
-	}.BuildMessage()
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
-			Type:     khl.MessageTypeCard,
-			TargetID: targetID,
-			Content:  cardMessageStr,
-			Quote:    QuoteID,
-		},
-		TempTargetID: authorID,
-	})
 }
 
 func removeDirtyWords(ctx *khl.KmarkdownMessageContext) {

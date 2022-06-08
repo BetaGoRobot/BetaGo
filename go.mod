@@ -1,6 +1,6 @@
 module github.com/BetaGoRobot/BetaGo
 
-go 1.17
+go 1.18
 
 replace (
 	github.com/BetaGoRobot/BetaGo/betagovar => ./betagovar
