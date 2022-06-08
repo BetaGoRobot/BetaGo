@@ -287,7 +287,7 @@ func startUpMessage(session *khl.Session) (err error) {
 	session.MessageCreate(
 		&khl.MessageCreate{
 			MessageCreateBase: khl.MessageCreateBase{
-				Type:     9,
+				Type:     khl.MessageTypeCard,
 				TargetID: testChannelID,
 				Content:  cardMessage,
 			},
