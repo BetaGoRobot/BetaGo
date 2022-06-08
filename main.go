@@ -74,7 +74,7 @@ func messageHan(ctx *khl.KmarkdownMessageContext) {
 		defer removeDirtyWords(ctx)
 
 		//! Step 0.检查是否是debug接口
-		addAdministrator(ctx)
+		adminCommand(ctx)
 		//! Step 1.搜索音乐
 		searchMusicByRobot(ctx)
 		//! Step 2.回复At信息

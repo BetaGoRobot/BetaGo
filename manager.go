@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -17,7 +16,6 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	goaway "github.com/TwiN/go-away"
 	"github.com/lonelyevil/khl"
-	"gorm.io/gorm"
 )
 
 var reMatch = regexp.MustCompile(`^(?P<command>\w+)\s+(?P<parameter>.*)$`)
@@ -33,51 +31,67 @@ func debugInterfaceHandler(ctx *khl.KmarkdownMessageContext) {
 	}
 }
 
-func addAdministrator(ctx *khl.KmarkdownMessageContext) {
-	res := reMatch.FindAllStringSubmatch(ctx.Common.Content, -1)
-	if len(res) == 0 {
+func adminCommand(ctx *khl.KmarkdownMessageContext) {
+	if !utility.IsInSlice(robotID, ctx.Extra.Mention) {
+		return
+	}
+	reRes := reMatch.FindAllStringSubmatch(ctx.Common.Content, -1)
+	if len(reRes) == 0 {
 		return
 	}
 	if dbpack.CheckIsAdmin(ctx.Common.AuthorID) {
 		// 确认为管理员再执行
-		userID, userName, _ := strings.Cut(res[0][2], " ")
-		userIDInt, _ := strconv.Atoi(userID)
-		// 先检验是否存在
-		if !errors.Is(dbpack.GetDbConnection().Table("betago.administrators").Where("user_id = ?", userIDInt).Find(&dbpack.Administrator{}).Error, gorm.ErrRecordNotFound) {
-			// 存在则不处理，返回信息
+		var commandResStr string
+		switch reRes[0][1] {
+		case "addAdmin":
+			userID, userName, _ := strings.Cut(reRes[0][2], " ")
+			userIDInt, _ := strconv.Atoi(userID)
+			// 先检验是否存在
+			if dbpack.GetDbConnection().Table("betago.administrators").Where("user_id = ?", userIDInt).Find(&dbpack.Administrator{}).RowsAffected != 0 {
+				// 存在则不处理，返回信息
+				ctx.Session.MessageCreate(&khl.MessageCreate{
+					MessageCreateBase: khl.MessageCreateBase{
+						Type:     9,
+						TargetID: ctx.Common.TargetID,
+						Content:  fmt.Sprintf("%s 已经为管理员, 无需处理~", userName),
+						Quote:    ctx.Common.MsgID,
+					},
+				})
+			}
+
+			dbRes := dbpack.GetDbConnection().Table("betago.administrators").Create(&dbpack.Administrator{
+				UserID:   int64(userIDInt),
+				UserName: userName,
+				Level:    1,
+			})
+			if dbRes.Error != nil {
+				return
+			}
+			commandResStr = fmt.Sprintf("%s 已被设置为管理员, 让我们祝贺这个B~", userName)
+		case "showAdmin":
+			admins := make([]*dbpack.Administrator, 0)
+			dbpack.GetDbConnection().Table("betago.administrators").Find(admins)
+			for _, admin := range admins {
+				commandResStr += fmt.Sprintf("%s\n", admin.UserName)
+			}
+		default:
 			ctx.Session.MessageCreate(&khl.MessageCreate{
 				MessageCreateBase: khl.MessageCreateBase{
 					Type:     9,
 					TargetID: ctx.Common.TargetID,
-					Content:  fmt.Sprintf("%s 已经为管理员, 无需处理", userName),
+					Content:  "该指令暂不支持",
 					Quote:    ctx.Common.MsgID,
 				},
 			})
 		}
-
-		dbRes := dbpack.GetDbConnection().Table("betago.administrators").Create(&dbpack.Administrator{
-			UserID:   int64(userIDInt),
-			UserName: userName,
-			Level:    1,
-		})
-		if dbRes.Error != nil {
-			return
-		}
-		// // 向用户发送被设置为管理员的消息
-		// ctx.Session.DirectMessageCreate(&khl.DirectMessageCreate{
-		// 	MessageCreateBase: khl.MessageCreateBase{
-		// 		Content: "你已被设置为Betago机器人的管理员\n你可以执行以下指令：addAdmin <用户ID> <用户名> -- 添加管理员",
-		// 	},
-		// 	ChatCode: userID,
-		// })
-
 		// 在频道中发送成功消息
 		ctx.Session.MessageCreate(&khl.MessageCreate{
 			MessageCreateBase: khl.MessageCreateBase{
-				Type:     9,
+				Type:     khl.MessageTypeKMarkdown,
 				TargetID: ctx.Common.TargetID,
-				Content:  fmt.Sprintf("%s 已被设置为管理员, 让我们祝贺这个B~", userName),
-				Quote:    ctx.Common.MsgID,
+				Content: `指令执行成功---->
+				` + commandResStr,
+				Quote: ctx.Common.MsgID,
 			},
 		})
 	}

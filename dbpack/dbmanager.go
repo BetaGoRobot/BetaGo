@@ -1,7 +1,6 @@
 package dbpack
 
 import (
-	"errors"
 	"log"
 	"strconv"
 
@@ -38,13 +37,10 @@ func CheckIsAdmin(userID string) (isAdmin bool) {
 	db := GetDbConnection()
 	userIDInt, _ := strconv.Atoi(userID)
 	res := db.Find(&Administrator{}, []int{userIDInt})
-	if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+	if res.RowsAffected == 0 {
 		return false
 	}
-	if errors.Is(res.Error, nil) {
-		return true
-	}
-	return
+	return true
 }
 
 // RegistAndBind 注册并绑定

@@ -17,6 +17,10 @@ type Administrator struct {
 	Level    int64  `json:"level"`
 }
 
+var (
+	isTest = os.Getenv("IS_TEST")
+)
+
 func init() {
 	// try get db conn
 	if GetDbConnection() == nil {
@@ -28,7 +32,12 @@ func init() {
 // GetDbConnection  returns the db connection
 //  @return *gorm.DB
 func GetDbConnection() *gorm.DB {
-	dsn := "host=betago-pg user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+	var dsn string
+	if isTest == "true" {
+		dsn = "host=localhost user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+	} else {
+		dsn = "host=betago-pg user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			TablePrefix:   "betago.",

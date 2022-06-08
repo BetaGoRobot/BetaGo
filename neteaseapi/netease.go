@@ -13,6 +13,10 @@ import (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+var (
+	isTest = os.Getenv("IS_TEST")
+)
+
 // LoginNetEase 返回cookie
 //  @receiver ctx
 //  @return err
@@ -32,6 +36,9 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 	)
 	if err != nil || resp.StatusCode != 200 {
 		log.Printf("%#v", resp)
+		if isTest == "true" {
+			return
+		}
 		os.Exit(-1)
 	}
 	ctx.cookies = resp.Cookies()

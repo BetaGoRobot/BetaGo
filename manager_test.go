@@ -7,7 +7,7 @@ import (
 )
 
 func Test_addAdministrator(t *testing.T) {
-	addAdministrator(&khl.KmarkdownMessageContext{
+	adminCommand(&khl.KmarkdownMessageContext{
 		EventHandlerCommonContext: &khl.EventHandlerCommonContext{
 			Session: &khl.Session{},
 			Common: &khl.EventDataGeneral{
