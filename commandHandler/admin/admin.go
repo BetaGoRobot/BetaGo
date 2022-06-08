@@ -16,7 +16,7 @@ import (
 //  @return err
 func ShowAdminHandler(targetID, quoteID string) (err error) {
 	admins := make([]dbpack.Administrator, 0)
-	dbpack.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level desc")
+	dbpack.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level DESC")
 	modules := make([]interface{}, 0)
 	modules = append(modules,
 		khl.CardMessageSection{

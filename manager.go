@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"math/rand"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -216,50 +214,6 @@ func searchMusicByRobot(ctx *khl.KmarkdownMessageContext) {
 	return
 }
 
-// 机器人被at时返回消息
-func replyToMention(ctx *khl.KmarkdownMessageContext) {
-	if utility.IsInSlice(robotID, ctx.Extra.Mention) {
-		//! 被At到
-		content := ctx.Common.Content
-		NowTime := time.Now().Unix()
-		if NowTime-LastMentionedTime.Unix() > 1 {
-			LastMentionedTime = time.Now()
-			if strings.Contains(content, "roll") {
-				point := rand.Intn(6) + 1
-				msg := &khl.MessageCreate{
-					MessageCreateBase: khl.MessageCreateBase{
-						TargetID: ctx.Common.TargetID,
-						Content:  "你的点数是" + strconv.Itoa(point),
-						Quote:    ctx.Common.MsgID,
-					},
-					// TempTargetID: ctx.Common.AuthorID,
-				}
-				if point > 3 {
-					msg.Content += "，运气不错呀！"
-				} else if point == 1 {
-					msg.Content += "，什么倒霉孩子"
-				} else if point == 6 {
-					msg.Content += "，运气爆棚哇！"
-				} else {
-					msg.Content += "，运气一般般啦~"
-				}
-				ctx.Session.MessageCreate(msg)
-			} else {
-				ctx.Session.MessageCreate(
-					&khl.MessageCreate{
-						MessageCreateBase: khl.MessageCreateBase{
-							TargetID: ctx.Common.TargetID,
-							Content:  "@我干什么? 没事干了吗! (此消息仅你可见)",
-							Quote:    ctx.Common.MsgID,
-						},
-						TempTargetID: ctx.Common.AuthorID,
-					})
-			}
-		}
-
-	}
-}
-
 func startUpMessage(session *khl.Session) (err error) {
 	currentIP, err := utility.GetOutBoundIP()
 	if err != nil {
@@ -272,13 +226,13 @@ func startUpMessage(session *khl.Session) (err error) {
 			Modules: []interface{}{
 				khl.CardMessageHeader{
 					Text: khl.CardMessageElementText{
-						Content: emoji.OnArrow.String() + "Online Notifacation" + emoji.Information.String(),
+						Content: emoji.DesertIsland.String() + "Online Notifacation" + emoji.Information.String(),
 						Emoji:   false,
 					},
 				},
 				khl.CardMessageSection{
 					Text: khl.CardMessageElementKMarkdown{
-						Content: "Name: " + robotName + "\n" + "CurrentTime: " + time.Now().Format("2006-01-02 15:04:05") + "\n" + "IP: " + currentIP,
+						Content: "Name: \t**" + robotName + "**\n" + "CurrentTime: \t**" + time.Now().Format("2006-01-02 15:04:05") + "**\n" + "IP: \t**" + currentIP + "**",
 					},
 				},
 			},
@@ -301,12 +255,34 @@ func offlineMessage(session *khl.Session) (err error) {
 	if err != nil {
 		return
 	}
-	session.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
-			Type:     9,
-			TargetID: testChannelID,
-			Content:  fmt.Sprintf("---------\n> Robot `%s` is \n`offline`\n IP:\t%s\n Time:\t%s\n---------", robotName, currentIP, utility.GetCurrentTime()),
-		}})
+	cardMessage, err := khl.CardMessage{
+		&khl.CardMessageCard{
+			Theme: "info",
+			Size:  "lg",
+			Modules: []interface{}{
+				khl.CardMessageHeader{
+					Text: khl.CardMessageElementText{
+						Content: emoji.DesertIsland.String() + "Offline Notifacation" + emoji.Information.String(),
+						Emoji:   false,
+					},
+				},
+				khl.CardMessageSection{
+					Text: khl.CardMessageElementKMarkdown{
+						Content: "Name: \t**" + robotName + "**\n" + "CurrentTime: \t**" + time.Now().Format("2006-01-02 15:04:05") + "**\n" + "IP: \t**" + currentIP + "**",
+					},
+				},
+			},
+		},
+	}.BuildMessage()
+	session.MessageCreate(
+		&khl.MessageCreate{
+			MessageCreateBase: khl.MessageCreateBase{
+				Type:     khl.MessageTypeCard,
+				TargetID: testChannelID,
+				Content:  cardMessage,
+			},
+		},
+	)
 	return
 }
 
@@ -321,9 +297,5 @@ func sendMessageToTestChannel(session *khl.Session, content string) {
 }
 
 func receiveDirectMessage(ctx *khl.DirectMessageReactionAddContext) {
-	log.Println("-----------Test")
-}
-
-func replayToDirectMessage(ctx *khl.KmarkdownMessageContext) {
 	log.Println("-----------Test")
 }
