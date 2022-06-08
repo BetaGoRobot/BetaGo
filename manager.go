@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
 	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/qqmusicapi"
@@ -19,15 +21,6 @@ import (
 )
 
 var reMatch = regexp.MustCompile(`^(?P<command>\w+)\s+(?P<parameter>.*)$`)
-
-var commandHelper = map[string]string{
-	"help":        "查看帮助 \n`@BetaGo help`",
-	"ping":        "检查机器人是否运行正常 \n`@BetaGo ping`",
-	"roll":        "掷骰子 \n`@BetaGo roll`",
-	"addAdmin":    "添加管理员 \n`@BetaGo addAdmin <userID> <userName>`",
-	"removeAdmin": "移除管理员 \n`@BetaGo removeAdmin <userID>`",
-	"showAdmin":   "显示所有管理员 \n`@BetaGo showAdmin`",
-}
 
 func debugInterfaceHandler(ctx *khl.KmarkdownMessageContext) {
 	message := ctx.Common.Content
@@ -45,7 +38,6 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 	if !utility.IsInSlice(robotID, ctx.Extra.Mention) {
 		return
 	}
-
 	// 示例中，由于用户发送的命令的RawContent格式为(met)id(met) <command> <parameters>
 	// 针对解析的判断逻辑，首先判断是否为空字符串，若为空发送help信息
 	// ? 解析出不包含at信息的实际内容
@@ -76,18 +68,18 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 			var err error
 			switch command {
 			case "help":
-				err = helperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+				err = helper.CommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 			case "addAdmin":
 				userID, userName, found := strings.Cut(parameter, " ")
 				if found {
-					err = adminAddHandler(userID, userName, ctx.Common.MsgID, ctx.Common.TargetID)
+					err = admin.AddAdminHandler(userID, userName, ctx.Common.MsgID, ctx.Common.TargetID)
 				}
 				err = fmt.Errorf("请输入正确的用户ID和用户名格式")
 			case "removeAdmin":
 				targetUserID := parameter
-				err = adminRemoveHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
+				err = admin.RemoveAdminHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
 			case "showAdmin":
-				err = adminShowHandler(ctx.Common.TargetID, ctx.Common.MsgID)
+				err = admin.ShowAdminHandler(ctx.Common.TargetID, ctx.Common.MsgID)
 			}
 			if err != nil {
 				sendErrorInfo(err)
@@ -97,233 +89,8 @@ func adminCommand(ctx *khl.KmarkdownMessageContext) {
 
 }
 
-func adminShowHandler(targetID, quoteID string) (err error) {
-	admins := make([]dbpack.Administrator, 0)
-	dbpack.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level desc")
-	modules := make([]interface{}, 0)
-	modules = append(modules,
-		khl.CardMessageSection{
-			Text: khl.CardMessageParagraph{
-				Cols: 3,
-				Fields: []interface{}{
-					khl.CardMessageElementKMarkdown{
-						Content: "用户名",
-					},
-					khl.CardMessageElementKMarkdown{
-						Content: "用户ID",
-					},
-					khl.CardMessageElementKMarkdown{
-						Content: "管理等级",
-					},
-				},
-			},
-		})
-	for _, admin := range admins {
-		modules = append(modules,
-			khl.CardMessageSection{
-				Text: khl.CardMessageParagraph{
-					Cols: 3,
-					Fields: []interface{}{
-						khl.CardMessageElementKMarkdown{
-							Content: admin.UserName,
-						},
-						khl.CardMessageElementKMarkdown{
-							Content: strconv.Itoa(int(admin.UserID)),
-						},
-						khl.CardMessageElementKMarkdown{
-							Content: strconv.Itoa(int(admin.Level)),
-						},
-					},
-				},
-			},
-		)
-	}
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
-			Theme:   "secondary",
-			Size:    "lg",
-			Modules: modules,
-		},
-	}.BuildMessage()
-	if err != nil {
-		return
-	}
-	betagovar.GlobalSession.MessageCreate(
-		&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     khl.MessageTypeCard,
-				TargetID: targetID,
-				Content:  cardMessageStr,
-				Quote:    quoteID,
-			},
-		},
-	)
-	return
-}
-func helperHandler(targetID, quoteID, authorID string) (err error) {
-	// 帮助信息
-	var modules []interface{}
-	modules = append(modules, khl.CardMessageSection{
-		Text: khl.CardMessageParagraph{
-			Cols: 2,
-			Fields: []interface{}{
-				khl.CardMessageElementKMarkdown{
-					Content: "**指令名称**",
-				},
-				khl.CardMessageElementKMarkdown{
-					Content: "**指令功能**",
-				},
-			},
-		},
-	})
-	for command, helper := range commandHelper {
-		modules = append(modules, khl.CardMessageSection{
-			Text: khl.CardMessageParagraph{
-				Cols: 2,
-				Fields: []interface{}{
-					khl.CardMessageElementKMarkdown{
-						Content: command,
-					},
-					khl.CardMessageElementKMarkdown{
-						Content: helper,
-					},
-				},
-			},
-		})
-	}
-	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
-		Theme:   "secondary",
-		Size:    "lg",
-		Modules: modules,
-	}}.BuildMessage()
-	if err != nil {
-		err = fmt.Errorf("building cardMessage error %s", err.Error())
-		return
-	}
-
-	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
-			Type:     khl.MessageTypeCard,
-			TargetID: targetID,
-			Content:  cardMessageStr,
-			Quote:    quoteID,
-		},
-		TempTargetID: authorID,
-	})
-	return
-}
-
 func sendErrorInfo(err error) {
 
-}
-
-// adminAddHandler 增加管理员
-//  @param userID
-//  @param userName
-//  @param QuoteID
-func adminAddHandler(userID, userName, QuoteID, TargetID string) (err error) {
-	// 先检验是否存在
-	if dbpack.GetDbConnection().Table("betago.administrators").Where("user_id = ?", utility.MustAtoI(userID)).Find(&dbpack.Administrator{}).RowsAffected != 0 {
-		// 存在则不处理，返回信息
-		betagovar.GlobalSession.MessageCreate(
-			&khl.MessageCreate{
-				MessageCreateBase: khl.MessageCreateBase{
-					Type:     9,
-					TargetID: TargetID,
-					Content:  fmt.Sprintf("%s 已经为管理员, 无需处理~", userName),
-					Quote:    QuoteID,
-				},
-			},
-		)
-	}
-	// 创建管理员
-	dbRes := dbpack.GetDbConnection().Table("betago.administrators").
-		Create(
-			&dbpack.Administrator{
-				UserID:   int64(utility.MustAtoI(userID)),
-				UserName: userName,
-				Level:    1,
-			},
-		)
-	if dbRes.Error != nil {
-		return dbRes.Error
-	}
-
-	var cardModules []interface{}
-	cardModules = append(cardModules,
-		khl.CardMessageHeader{
-			Text: khl.CardMessageElementText{
-				Content: "指令执行成功~~",
-				Emoji:   false,
-			},
-		},
-		khl.CardMessageSection{
-			Text: khl.CardMessageElementKMarkdown{
-				Content: fmt.Sprintf("%s 已被设置为管理员, 让我们祝贺这个B~ (met)%s(met)", userName, userID),
-			},
-		},
-	)
-
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
-			Theme:   "secondary",
-			Size:    "lg",
-			Modules: cardModules,
-		},
-	}.BuildMessage()
-
-	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
-			Type:     khl.MessageTypeCard,
-			TargetID: TargetID,
-			Content:  cardMessageStr,
-			Quote:    QuoteID,
-		},
-	})
-	return
-}
-
-func adminRemoveHandler(userID, targetUserID, QuoteID, TargetID string) (err error) {
-	// 先判断目标用户是否为管理员
-	if !dbpack.CheckIsAdmin(targetUserID) {
-		err = fmt.Errorf("UserID=%s 不是管理员，无法删除", targetUserID)
-		return
-	}
-	if userLevel, targetLevel := dbpack.GetAdminLevel(userID), dbpack.GetAdminLevel(targetUserID); userLevel <= targetLevel {
-		// 等级不足，无权限操作
-		err = fmt.Errorf("您的等级小于或等于目标用户，无权限操作")
-		return
-	}
-	// 删除管理员
-	dbpack.GetDbConnection().Table("betago.administrators").Delete(&dbpack.Administrator{UserID: int64(utility.MustAtoI(targetUserID))})
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
-			Theme: "secondary",
-			Size:  "lg",
-			Modules: []interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
-						Content: "指令执行成功~~",
-						Emoji:   false,
-					},
-				},
-				khl.CardMessageSection{
-					Text: khl.CardMessageElementKMarkdown{
-						Content: fmt.Sprintf("(met)%s(met), 这个B很不幸的被(met)%s(met)取消了管理员资格~ ", targetUserID, userID),
-					},
-				},
-			},
-		},
-	}.BuildMessage()
-	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
-			Type:     khl.MessageTypeCard,
-			TargetID: TargetID,
-			Content:  cardMessageStr,
-			Quote:    QuoteID,
-		},
-	})
-	return
 }
 
 func removeDirtyWords(ctx *khl.KmarkdownMessageContext) {
