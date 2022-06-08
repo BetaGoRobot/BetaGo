@@ -45,6 +45,23 @@ func CheckIsAdmin(userID string) (isAdmin bool) {
 	return true
 }
 
+// GetAdminLevel 获取管理员等级
+//  @param userID
+//  @return level
+func GetAdminLevel(userID string) int {
+	db := GetDbConnection()
+	userIDInt, _ := strconv.Atoi(userID)
+	admin := &Administrator{
+		UserID: int64(userIDInt),
+	}
+	res := db.Table("betago.administrators").Find(admin)
+	if res.RowsAffected == 0 {
+		// 不存在该管理员，返回预设值-1
+		return -1
+	}
+	return int(admin.Level)
+}
+
 // RegistAndBind 注册并绑定
 //  @param data
 //  @return err

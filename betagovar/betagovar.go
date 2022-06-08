@@ -25,6 +25,19 @@ type CardMessageTextModule struct {
 	} `json:"text"`
 }
 
+// CardMessageColModule  khl cardmessage Col
+type CardMessageColModule struct {
+	Type string `json:"type"`
+	Text []struct {
+		Type   string `json:"type"`
+		Cols   int    `json:"cols"`
+		Fields []struct {
+			Type    string `json:"type"`
+			Content string `json:"content"`
+		}
+	}
+}
+
 // GlobalSession 全局共享session
 var GlobalSession = khl.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
 	Level:  log.TraceLevel,

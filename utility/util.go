@@ -3,6 +3,7 @@ package utility
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -44,4 +45,15 @@ func IsInSlice(target string, slice []string) bool {
 		}
 	}
 	return false
+}
+
+// MustAtoI 将字符串转换为int
+//  @param str
+//  @return int
+func MustAtoI(str string) int {
+	i, err := strconv.Atoi(str)
+	if err != nil {
+		return i
+	}
+	return i
 }

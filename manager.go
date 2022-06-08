@@ -20,6 +20,15 @@ import (
 
 var reMatch = regexp.MustCompile(`^(?P<command>\w+)\s+(?P<parameter>.*)$`)
 
+var commandHelper = map[string]string{
+	"help":        "查看帮助 @BetaGo help",
+	"ping":        "检查机器人是否运行正常 @BetaGo ping",
+	"roll":        "掷骰子 @BetaGo roll",
+	"addAdmin":    "添加管理员 @BetaGo addAdmin <userID> <userName>",
+	"removeAdmin": "移除管理员 @BetaGo removeAdmin <userID>",
+	"showAdmin":   "显示所有管理员 @BetaGo showAdmin",
+}
+
 func debugInterfaceHandler(ctx *khl.KmarkdownMessageContext) {
 	message := ctx.Common.Content
 
@@ -32,85 +41,226 @@ func debugInterfaceHandler(ctx *khl.KmarkdownMessageContext) {
 }
 
 func adminCommand(ctx *khl.KmarkdownMessageContext) {
+	// 判断是否被at到
 	if !utility.IsInSlice(robotID, ctx.Extra.Mention) {
 		return
 	}
-	var (
-		command, parameter string
-	)
-	content := strings.Trim(ctx.Common.Content[strings.LastIndex(ctx.Common.Content, `)`)+1:], " ")
-	reRes := reMatch.FindAllStringSubmatch(content, -1)
-	if len(reRes) == 0 {
-		command = content
-	} else if len(reRes[0]) >= 3 {
-		command = reRes[0][1]
-		parameter = reRes[0][2]
-	} else if content == "" {
-		return
-	} else {
+
+	// 示例中，由于用户发送的命令的RawContent格式为(met)id(met) <command> <parameters>
+	// 针对解析的判断逻辑，首先判断是否为空字符串，若为空发送help信息
+	// ? 解析出不包含at信息的实际内容
+	trueContent := strings.Trim(ctx.Common.Content[strings.LastIndex(ctx.Common.Content, `)`)+1:], " ")
+	if trueContent != "" {
+		// 内容非空，解析命令
+		var (
+			command, parameter string
+		)
+		// 首先执行正则解析
+		res := reMatch.FindAllStringSubmatch(trueContent, -1)
+		// 判断指令类型
+		switch len(res) {
+		case 0:
+			// 单指令
+			command = trueContent
+		case 1:
+			// 含参指令
+			command = res[0][1]
+			parameter = res[0][2]
+		default:
+			// 异常指令
+			return
+		}
+		// 进入指令执行逻辑,首先判断是否为Admin
+		if dbpack.CheckIsAdmin(ctx.Common.AuthorID) {
+			// 是Admin，判断指令
+			var err error
+			switch command {
+			case "help":
+				err = helperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+			case "addAdmin":
+				userID, userName, found := strings.Cut(parameter, " ")
+				if found {
+					err = adminAddHandler(userID, userName, ctx.Common.MsgID, ctx.Common.TargetID)
+				}
+				err = fmt.Errorf("请输入正确的用户ID和用户名格式")
+			case "removeAdmin":
+				targetUserID := parameter
+				err = adminRemoveHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
+			case "showAdmin":
+				//TODO
+			}
+			if err != nil {
+				sendErrorInfo(err)
+			}
+		}
+	}
+
+}
+
+func helperHandler(targetID, quoteID, authorID string) (err error) {
+	// 帮助信息
+	var modules []interface{}
+	modules = append(modules, khl.CardMessageSection{
+		Text: khl.CardMessageParagraph{
+			Cols: 0,
+			Fields: []interface{}{
+				khl.CardMessageElementKMarkdown{
+					Content: "指令名称",
+				},
+				khl.CardMessageElementKMarkdown{
+					Content: "指令功能",
+				},
+			},
+		},
+	})
+	for command, helper := range commandHelper {
+		modules = append(modules, khl.CardMessageSection{
+			Text: khl.CardMessageParagraph{
+				Cols: 0,
+				Fields: []interface{}{
+					khl.CardMessageElementKMarkdown{
+						Content: command,
+					},
+					khl.CardMessageElementKMarkdown{
+						Content: helper,
+					},
+				},
+			},
+		})
+	}
+	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
+		Theme:   "secondary",
+		Size:    "lg",
+		Modules: modules,
+	}}.BuildMessage()
+	if err != nil {
+		err = fmt.Errorf("building cardMessage error %s", err.Error())
 		return
 	}
-	var successFlag bool
-	if dbpack.CheckIsAdmin(ctx.Common.AuthorID) {
-		// 确认为管理员再执行
-		var commandResStr string
-		switch command {
-		case "addAdmin":
-			successFlag = true
-			userID, userName, _ := strings.Cut(parameter, " ")
-			userIDInt, _ := strconv.Atoi(userID)
-			// 先检验是否存在
-			if dbpack.GetDbConnection().Table("betago.administrators").Where("user_id = ?", userIDInt).Find(&dbpack.Administrator{}).RowsAffected != 0 {
-				// 存在则不处理，返回信息
-				ctx.Session.MessageCreate(&khl.MessageCreate{
-					MessageCreateBase: khl.MessageCreateBase{
-						Type:     9,
-						TargetID: ctx.Common.TargetID,
-						Content:  fmt.Sprintf("%s 已经为管理员, 无需处理~", userName),
-						Quote:    ctx.Common.MsgID,
-					},
-				})
-			}
 
-			dbRes := dbpack.GetDbConnection().Table("betago.administrators").Create(&dbpack.Administrator{
-				UserID:   int64(userIDInt),
-				UserName: userName,
-				Level:    1,
-			})
-			if dbRes.Error != nil {
-				return
-			}
-			commandResStr = fmt.Sprintf("%s 已被设置为管理员, 让我们祝贺这个B~ (met)%s(met)", userName, userID)
-		case "showAdmin":
-			successFlag = true
-			admins := make([]*dbpack.Administrator, 0)
-			dbpack.GetDbConnection().Table("betago.administrators").Find(&admins)
-			for _, admin := range admins {
-				commandResStr += fmt.Sprintf("%s\n", admin.UserName)
-			}
-		default:
-			successFlag = false
-			ctx.Session.MessageCreate(&khl.MessageCreate{
+	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
+		MessageCreateBase: khl.MessageCreateBase{
+			Type:     khl.MessageTypeKMarkdown,
+			TargetID: targetID,
+			Content:  cardMessageStr,
+			Quote:    quoteID,
+		},
+		TempTargetID: authorID,
+	})
+	return
+}
+
+func sendErrorInfo(err error) {
+
+}
+
+// adminAddHandler 增加管理员
+//  @param userID
+//  @param userName
+//  @param QuoteID
+func adminAddHandler(userID, userName, QuoteID, TargetID string) (err error) {
+	// 先检验是否存在
+	if dbpack.GetDbConnection().Table("betago.administrators").Where("user_id = ?", utility.MustAtoI(userID)).Find(&dbpack.Administrator{}).RowsAffected != 0 {
+		// 存在则不处理，返回信息
+		betagovar.GlobalSession.MessageCreate(
+			&khl.MessageCreate{
 				MessageCreateBase: khl.MessageCreateBase{
 					Type:     9,
-					TargetID: ctx.Common.TargetID,
-					Content:  "该指令暂不支持",
-					Quote:    ctx.Common.MsgID,
+					TargetID: TargetID,
+					Content:  fmt.Sprintf("%s 已经为管理员, 无需处理~", userName),
+					Quote:    QuoteID,
 				},
-			})
-		}
-		if successFlag {
-			// 在频道中发送成功消息
-			ctx.Session.MessageCreate(&khl.MessageCreate{
-				MessageCreateBase: khl.MessageCreateBase{
-					Type:     khl.MessageTypeKMarkdown,
-					TargetID: ctx.Common.TargetID,
-					Content:  `指令执行成功---->` + "\n" + commandResStr,
-					Quote:    ctx.Common.MsgID,
-				},
-			})
-		}
+			},
+		)
 	}
+	// 创建管理员
+	dbRes := dbpack.GetDbConnection().Table("betago.administrators").
+		Create(
+			&dbpack.Administrator{
+				UserID:   int64(utility.MustAtoI(userID)),
+				UserName: userName,
+				Level:    1,
+			},
+		)
+	if dbRes.Error != nil {
+		return dbRes.Error
+	}
+
+	var cardModules []interface{}
+	cardModules = append(cardModules,
+		khl.CardMessageHeader{
+			Text: khl.CardMessageElementText{
+				Content: "指令执行成功~~",
+				Emoji:   false,
+			},
+		},
+		khl.CardMessageSection{
+			Text: khl.CardMessageElementKMarkdown{
+				Content: fmt.Sprintf("%s 已被设置为管理员, 让我们祝贺这个B~ (met)%s(met)", userName, userID),
+			},
+		},
+	)
+
+	cardMessageStr, err := khl.CardMessage{
+		&khl.CardMessageCard{
+			Theme:   "secondary",
+			Size:    "lg",
+			Modules: cardModules,
+		},
+	}.BuildMessage()
+
+	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
+		MessageCreateBase: khl.MessageCreateBase{
+			Type:     khl.MessageTypeCard,
+			TargetID: TargetID,
+			Content:  cardMessageStr,
+			Quote:    QuoteID,
+		},
+	})
+	return
+}
+
+func adminRemoveHandler(userID, targetUserID, QuoteID, TargetID string) (err error) {
+	// 先判断目标用户是否为管理员
+	if !dbpack.CheckIsAdmin(targetUserID) {
+		err = fmt.Errorf("UserID=%s 不是管理员，无法删除", targetUserID)
+		return
+	}
+	if dbpack.GetAdminLevel(userID) <= dbpack.GetAdminLevel(targetUserID) {
+		// 等级不足，无权限操作
+		err = fmt.Errorf("您的等级小于或等于目标用户，无权限操作")
+		return
+	}
+	// 删除管理员
+	dbpack.GetDbConnection().Table("betago.administrators").Delete(&dbpack.Administrator{UserID: int64(utility.MustAtoI(targetUserID))})
+	cardMessageStr, err := khl.CardMessage{
+		&khl.CardMessageCard{
+			Theme: "secondary",
+			Size:  "lg",
+			Modules: []interface{}{
+				khl.CardMessageHeader{
+					Text: khl.CardMessageElementText{
+						Content: "指令执行成功~~",
+						Emoji:   false,
+					},
+				},
+				khl.CardMessageSection{
+					Text: khl.CardMessageElementKMarkdown{
+						Content: fmt.Sprintf("(met)%s(met), 这个B很不幸的被(met)%s(met)取消了管理员资格~ ", targetUserID, userID),
+					},
+				},
+			},
+		},
+	}.BuildMessage()
+	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
+		MessageCreateBase: khl.MessageCreateBase{
+			Type:     khl.MessageTypeCard,
+			TargetID: TargetID,
+			Content:  cardMessageStr,
+			Quote:    QuoteID,
+		},
+	})
+	return
 }
 
 func removeDirtyWords(ctx *khl.KmarkdownMessageContext) {
