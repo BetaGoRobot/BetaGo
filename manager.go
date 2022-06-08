@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 	"github.com/enescakir/emoji"
@@ -23,17 +22,6 @@ import (
 )
 
 var reMatch = regexp.MustCompile(`^(?P<command>\w+)\s+(?P<parameter>.*)$`)
-
-func debugInterfaceHandler(ctx *khl.KmarkdownMessageContext) {
-	message := ctx.Common.Content
-
-	if strings.Contains(message, "debug") && ctx.Common.AuthorID == "938697103" {
-		command := strings.Index(message, "debug")
-		switch command {
-
-		}
-	}
-}
 
 func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	// 判断是否被at到,且消息不是引用/回复
@@ -156,7 +144,10 @@ func searchMusicByRobot(ctx *khl.KmarkdownMessageContext) {
 			return
 		}
 
-		modules := make([]interface{}, 0)
+		var (
+			modulesNetese = make([]interface{}, 0)
+			modulesQQ     = make([]interface{}, 0)
+		)
 		cardMessage := make(khl.CardMessage, 0)
 		var cardStr string
 		var messageType khl.MessageType
@@ -168,30 +159,57 @@ func searchMusicByRobot(ctx *khl.KmarkdownMessageContext) {
 				if _, ok := tempMap[song.Name+" - "+song.ArtistName]; ok {
 					continue
 				}
-				modules = append(modules, betagovar.CardMessageModule{
-					Type:  "audio",
-					Title: "网易 - " + song.Name + " - " + song.ArtistName,
+				modulesNetese = append(modulesNetese, khl.CardMessageFile{
+					Type:  khl.CardMessageFileTypeAudio,
 					Src:   song.SongURL,
+					Title: song.Name + " - " + song.ArtistName,
 					Cover: song.PicURL,
 				})
 				tempMap[song.Name+" - "+song.ArtistName] = 0
 			}
-
+			modulesNetese = append([]interface{}{
+				khl.CardMessageHeader{
+					Text: khl.CardMessageElementText{
+						Content: emoji.Headphone.String() + "网易云音乐-搜索结果" + emoji.MagnifyingGlassTiltedLeft.String(),
+						Emoji:   false,
+					},
+				},
+			}, modulesNetese...)
+			tempMap = make(map[string]byte)
 			// 添加QQ音乐搜索的结果
 			for _, song := range resQQmusic {
 				if _, ok := tempMap[song.Name+" - "+song.ArtistName]; ok {
 					continue
 				}
-				modules = append(modules, betagovar.CardMessageModule{
-					Type:  "audio",
-					Title: "QQ - " + song.Name + " - " + song.ArtistName,
+				modulesQQ = append(modulesQQ, khl.CardMessageFile{
+					Type:  khl.CardMessageFileTypeAudio,
 					Src:   song.SongURL,
+					Title: song.Name + " - " + song.ArtistName,
 					Cover: song.PicURL,
 				})
 				tempMap[song.Name+" - "+song.ArtistName] = 0
 			}
+			modulesQQ = append([]interface{}{
+				khl.CardMessageHeader{
+					Text: khl.CardMessageElementText{
+						Content: emoji.MusicalNote.String() + "QQ音乐-搜索结果" + emoji.MagnifyingGlassTiltedLeft.String(),
+						Emoji:   false,
+					},
+				},
+			}, modulesQQ...)
 
-			cardMessage = append(cardMessage, &khl.CardMessageCard{Theme: khl.CardThemePrimary, Size: khl.CardSizeSm, Modules: modules})
+			cardMessage = append(cardMessage,
+				&khl.CardMessageCard{
+					Theme:   khl.CardThemePrimary,
+					Size:    khl.CardSizeSm,
+					Modules: modulesNetese,
+				},
+				&khl.CardMessageCard{
+					Theme:   khl.CardThemePrimary,
+					Size:    khl.CardSizeSm,
+					Modules: modulesQQ,
+				},
+			)
 			cardStr, err = cardMessage.BuildMessage()
 			if err != nil {
 				log.Println("-------------", err.Error())

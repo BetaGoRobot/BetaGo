@@ -14,8 +14,14 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 var (
-	isTest = os.Getenv("IS_TEST")
+	IsTest = os.Getenv("IS_TEST")
 )
+
+func init() {
+	if IsTest == "true" {
+		NetEaseAPIBaseURL = "http://localhost:3335"
+	}
+}
 
 // LoginNetEase 返回cookie
 //  @receiver ctx
@@ -25,6 +31,7 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 		log.Println("Empty NetEase account and password")
 		return
 	}
+
 	resp, err := httptool.PostWithParams(
 		httptool.RequestInfo{
 			URL: NetEaseAPIBaseURL + "/login/cellphone",
@@ -36,9 +43,6 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 	)
 	if err != nil || resp.StatusCode != 200 {
 		log.Printf("%#v", resp)
-		if isTest == "true" {
-			return
-		}
 		os.Exit(-1)
 	}
 	ctx.cookies = resp.Cookies()

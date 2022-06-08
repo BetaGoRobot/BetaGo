@@ -7,11 +7,17 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/httptool"
+	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	jsoniter "github.com/json-iterator/go"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+func init() {
+	if neteaseapi.IsTest == "true" {
+		qqmusicBaseURL = "http://localhost:3300"
+	}
+}
 func autoRefreshLogin() {
 	for {
 		time.Sleep(time.Minute * 5)
