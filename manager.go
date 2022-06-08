@@ -12,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
+	"github.com/enescakir/emoji"
 
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
@@ -264,12 +265,34 @@ func startUpMessage(session *khl.Session) (err error) {
 	if err != nil {
 		return
 	}
-	session.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
-			Type:     9,
-			TargetID: testChannelID,
-			Content:  fmt.Sprintf("---------\n> Robot `%s` is \n`online`\n IP:\t%s\n Time:\t%s\n---------", robotName, currentIP, utility.GetCurrentTime()),
-		}})
+	cardMessage, err := khl.CardMessage{
+		&khl.CardMessageCard{
+			Theme: "info",
+			Size:  "lg",
+			Modules: []interface{}{
+				khl.CardMessageHeader{
+					Text: khl.CardMessageElementText{
+						Content: emoji.OnArrow.String() + "Online Notifacation" + emoji.Information.String(),
+						Emoji:   false,
+					},
+				},
+				khl.CardMessageSection{
+					Text: khl.CardMessageElementKMarkdown{
+						Content: "Name: " + robotName + "\n" + "CurrentTime: " + time.Now().Format("2006-01-02 15:04:05") + "\n" + "IP: " + currentIP,
+					},
+				},
+			},
+		},
+	}.BuildMessage()
+	session.MessageCreate(
+		&khl.MessageCreate{
+			MessageCreateBase: khl.MessageCreateBase{
+				Type:     9,
+				TargetID: testChannelID,
+				Content:  cardMessage,
+			},
+		},
+	)
 	return
 }
 
