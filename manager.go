@@ -49,7 +49,7 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 		// 内容非空，解析命令
 		var (
 			command, parameter string
-			adminSolved        bool
+			adminNotSolved     bool
 		)
 		// 首先执行正则解析
 		res := reMatch.FindAllStringSubmatch(trueContent, -1)
@@ -73,28 +73,31 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 			switch command {
 			case "help":
 				err = helper.AdminCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+				adminNotSolved = true
 			case "addAdmin":
 				userID, userName, found := strings.Cut(parameter, " ")
 				if found {
 					err = admin.AddAdminHandler(userID, userName, ctx.Common.MsgID, ctx.Common.TargetID)
+				} else {
+					err = fmt.Errorf("请输入正确的用户ID和用户名格式")
 				}
-				err = fmt.Errorf("请输入正确的用户ID和用户名格式")
+				adminNotSolved = true
 			case "removeAdmin":
 				targetUserID := parameter
 				err = admin.RemoveAdminHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
+				adminNotSolved = true
 			case "showAdmin":
 				err = admin.ShowAdminHandler(ctx.Common.TargetID, ctx.Common.MsgID)
-			case "ping":
-				helper.PingHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+				adminNotSolved = true
 			default:
-				adminSolved = true
+				adminNotSolved = false
 			}
 			if err != nil {
 				errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
 			}
 		}
 		// 非管理员命令
-		if adminSolved {
+		if !adminNotSolved {
 			switch command {
 			case "help":
 				err = helper.UserCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)

@@ -36,9 +36,10 @@ func (music *khlMusicDownload) DownloadMusicDB() {
 func CheckIsAdmin(userID string) (isAdmin bool) {
 	db := GetDbConnection()
 	userIDInt, _ := strconv.Atoi(userID)
-	res := db.Table("betago.administrators").Find(&Administrator{
+	admin := Administrator{
 		UserID: int64(userIDInt),
-	})
+	}
+	res := db.Table("betago.administrators").Where("user_id = ?", userIDInt).Find(&admin)
 	if res.RowsAffected == 0 {
 		return false
 	}
