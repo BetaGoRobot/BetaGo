@@ -2,7 +2,6 @@ package httptool
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -63,8 +62,8 @@ func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
 	if err != nil {
 		return
 	}
-	data, err := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(data))
+	// data, err := ioutil.ReadAll(resp.Body)
+	// fmt.Println(string(data))
 	return
 }
 

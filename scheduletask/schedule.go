@@ -6,14 +6,29 @@ import (
 
 	betagovar "github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
+	"github.com/BetaGoRobot/BetaGo/yiyan"
 	"github.com/lonelyevil/khl"
 )
 
-// DailySend 每日发送歌曲推荐
-func DailySend() {
+// HourlyGetSen 每小时发送
+func HourlyGetSen() {
 	for {
 		time.Sleep(time.Hour)
-		if string(time.Now().Local().Format("15")) == "08" {
+		betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
+			MessageCreateBase: khl.MessageCreateBase{
+				Type:     9,
+				TargetID: "3241026226723225",
+				Content:  "来自一言的句子:</br>" + yiyan.GetSen(),
+			},
+		})
+	}
+}
+
+// DailyRecommand 每日发送歌曲推荐
+func DailyRecommand() {
+	for {
+		time.Sleep(time.Minute * 5)
+		if time.Now().Local().Format("15") == "08" {
 			neaseCtx := neteaseapi.NetEaseContext{}
 			res, err := neaseCtx.GetNewRecommendMusic()
 			if err != nil {
@@ -42,7 +57,14 @@ func DailySend() {
 						Cover: song.PicURL,
 					})
 				}
-				cardMessage = append(cardMessage, &khl.CardMessageCard{Theme: khl.CardThemePrimary, Size: khl.CardSizeSm, Modules: modules})
+				cardMessage = append(
+					cardMessage,
+					&khl.CardMessageCard{
+						Theme:   khl.CardThemePrimary,
+						Size:    khl.CardSizeSm,
+						Modules: modules,
+					},
+				)
 				cardStr, err = cardMessage.BuildMessage()
 				if err != nil {
 					fmt.Println("-------------", err.Error())

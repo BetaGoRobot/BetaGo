@@ -42,7 +42,8 @@ func init() {
 func main() {
 	betagovar.GlobalSession.Open()
 	startUpMessage(betagovar.GlobalSession)
-	go scheduletask.DailySend()
+	go scheduletask.DailyRecommand()
+	go scheduletask.HourlyGetSen()
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
