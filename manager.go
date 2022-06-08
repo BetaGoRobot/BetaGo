@@ -105,10 +105,10 @@ func helperHandler(targetID, quoteID, authorID string) (err error) {
 			Cols: 2,
 			Fields: []interface{}{
 				khl.CardMessageElementKMarkdown{
-					Content: "指令名称",
+					Content: "**指令名称**",
 				},
 				khl.CardMessageElementKMarkdown{
-					Content: "指令功能",
+					Content: "**指令功能**",
 				},
 			},
 		},
