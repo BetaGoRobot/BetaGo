@@ -7,15 +7,17 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
-
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/lonelyevil/khl"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	// 判断是否被at到,且消息不是引用/回复
@@ -91,12 +93,7 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 			case "searchMusic":
 				err = music.SearchMusicByRobot(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters)
 			case "getuser":
-				userInfo, err := utility.GetUserInfo(parameters[0], ctx.Extra.GuildID)
-				if err != nil {
-					err = fmt.Errorf("%+v,%s", userInfo, err.Error())
-				} else {
-					err = fmt.Errorf("%+v", userInfo)
-				}
+				err = helper.GetUserInfoHandler(parameters[0], ctx.Extra.GuildID, ctx.Common.TargetID, ctx.Common.MsgID)
 			default:
 				err = fmt.Errorf("未知的指令`%s`, 尝试使用command `help`来获取可用的命令列表", command)
 			}

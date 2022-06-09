@@ -27,6 +27,7 @@ func init() {
 //  @receiver ctx
 //  @return err
 func (ctx *NetEaseContext) LoginNetEase() (err error) {
+	return nil
 	if phoneNum, password := os.Getenv("NETEASE_PHONE"), os.Getenv("NETEASE_PASSWORD"); phoneNum == "" && password == "" {
 		log.Println("Empty NetEase account and password")
 		return
