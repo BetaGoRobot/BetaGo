@@ -5,8 +5,8 @@ import (
 	"time"
 
 	betagovar "github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
-	"github.com/BetaGoRobot/BetaGo/yiyan"
 	"github.com/lonelyevil/khl"
 )
 
@@ -14,13 +14,7 @@ import (
 func HourlyGetSen() {
 	for {
 		time.Sleep(time.Hour)
-		betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     9,
-				TargetID: "3241026226723225",
-				Content:  "来自一言的句子: `" + yiyan.GetSen() + "`",
-			},
-		})
+		roll.OneWordHandler("3241026226723225", "", "")
 	}
 }
 

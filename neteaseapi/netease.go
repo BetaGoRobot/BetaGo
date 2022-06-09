@@ -27,7 +27,6 @@ func init() {
 //  @receiver ctx
 //  @return err
 func (ctx *NetEaseContext) LoginNetEase() (err error) {
-	return nil
 	if phoneNum, password := os.Getenv("NETEASE_PHONE"), os.Getenv("NETEASE_PASSWORD"); phoneNum == "" && password == "" {
 		log.Println("Empty NetEase account and password")
 		return
@@ -44,7 +43,6 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 	)
 	if err != nil || resp.StatusCode != 200 {
 		log.Printf("%#v", resp)
-		os.Exit(-1)
 	}
 	ctx.cookies = resp.Cookies()
 	return
@@ -56,7 +54,7 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 //  @return err
 func (ctx *NetEaseContext) GetDailyRecommendID() (musicIDs map[string]string, err error) {
 	musicIDs = make(map[string]string)
-	resp, err := httptool.PostWithParams(
+	resp, err := httptool.PostWithParamsWithTimestamp(
 		httptool.RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/recommend/songs",
 			Cookies: ctx.cookies,
@@ -94,7 +92,7 @@ func (ctx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (InfoList [
 		}
 		id += key
 	}
-	resp, err := httptool.PostWithParams(
+	resp, err := httptool.PostWithParamsWithTimestamp(
 		httptool.RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/song/url",
 			Cookies: ctx.cookies,
@@ -129,7 +127,7 @@ func (ctx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (InfoList [
 //  @return result
 //  @return err
 func (ctx *NetEaseContext) SearchMusicByKeyWord(keywords []string) (result []SearchMusicRes, err error) {
-	resp, err := httptool.PostWithParams(
+	resp, err := httptool.PostWithParamsWithTimestamp(
 		httptool.RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/cloudsearch",
 			Cookies: ctx.cookies,
@@ -183,7 +181,7 @@ func (ctx *NetEaseContext) SearchMusicByKeyWord(keywords []string) (result []Sea
 //  @return res
 //  @return err
 func (ctx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicRes, err error) {
-	resp, err := httptool.PostWithParams(
+	resp, err := httptool.PostWithParamsWithTimestamp(
 		httptool.RequestInfo{
 			URL: NetEaseAPIBaseURL + "/personalized/newsong",
 			Params: map[string][]string{

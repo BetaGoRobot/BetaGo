@@ -67,8 +67,8 @@ func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
 	return
 }
 
-// PostWithParams 发送带Cookie Params的POST请求
-func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
+// PostWithParamsWithTimestamp 发送带Cookie Params的POST请求
+func PostWithParamsWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
 	params := url.Values{}
 	for key, values := range info.Params {
 		for index := range values {
@@ -76,6 +76,28 @@ func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
 		}
 	}
 	params.Set("timestamp", fmt.Sprintf("%d", time.Now().UnixNano()))
+
+	// body := ioutil.NopCloser(strings.NewReader(params.Encode()))
+	resp, err = http.PostForm(info.URL+"?timestamp="+fmt.Sprint(time.Now().UnixNano()), params)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	return
+}
+
+// PostWithParams WithTimestamp 发送带Cookie Params的POST请求
+//  @param info
+//  @return resp
+//  @return err
+func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
+	params := url.Values{}
+	for key, values := range info.Params {
+		for index := range values {
+			params.Add(key, values[index])
+		}
+	}
 
 	// body := ioutil.NopCloser(strings.NewReader(params.Encode()))
 	resp, err = http.PostForm(info.URL+"?timestamp="+fmt.Sprint(time.Now().UnixNano()), params)

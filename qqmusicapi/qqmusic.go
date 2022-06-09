@@ -21,14 +21,14 @@ func init() {
 func autoRefreshLogin() {
 	for {
 		time.Sleep(time.Minute * 5)
-		httptool.PostWithParams(httptool.RequestInfo{
+		httptool.PostWithParamsWithTimestamp(httptool.RequestInfo{
 			URL: qqmusicBaseURL + "/user/refresh",
 		})
 	}
 }
 func init() {
 	//获取存储的Cookie
-	_, err := httptool.PostWithParams(httptool.RequestInfo{
+	_, err := httptool.PostWithParamsWithTimestamp(httptool.RequestInfo{
 		URL: qqmusicBaseURL + "/user/cookie",
 	})
 	if err != nil {
@@ -37,7 +37,7 @@ func init() {
 	go autoRefreshLogin()
 }
 func (ctx *QQmusicContext) SearchMusic(keywords []string) (result []SearchMusicRes, err error) {
-	resp, err := httptool.PostWithParams(
+	resp, err := httptool.PostWithParamsWithTimestamp(
 		httptool.RequestInfo{
 			URL: qqmusicBaseURL + "/search",
 			Params: map[string][]string{
@@ -95,7 +95,7 @@ func (ctx *QQmusicContext) SearchMusic(keywords []string) (result []SearchMusicR
 //  @return err
 func (ctx *QQmusicContext) GetMusicURLByID(mid, mediaMid string) (musicURL string, err error) {
 
-	resp, err := httptool.PostWithParams(
+	resp, err := httptool.PostWithParamsWithTimestamp(
 		httptool.RequestInfo{
 			URL: qqmusicBaseURL + "/song/url",
 			Params: map[string][]string{
