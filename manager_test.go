@@ -24,3 +24,6 @@ func Test_addAdministrator(t *testing.T) {
 		Extra: khl.EventCustomMessage{},
 	})
 }
+
+func Test_clickEventHandler(t *testing.T) {
+}

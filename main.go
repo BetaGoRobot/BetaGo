@@ -22,9 +22,40 @@ func init() {
 	if err != nil {
 		log.Error().Err(err).Msg("error in init loginNetease")
 	}
-
 	betagovar.GlobalSession.AddHandler(messageHan)
+	betagovar.GlobalSession.AddHandler(clickEventHandler)
 	betagovar.GlobalSession.AddHandler(receiveDirectMessage)
+}
+
+func test() {
+	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
+		Theme: khl.CardThemeSecondary,
+		Size:  khl.CardSizeLg,
+		Modules: []interface{}{
+			khl.CardMessageSection{
+				Mode: khl.CardMessageSectionModeRight,
+				Text: khl.CardMessageElementText{
+					Content: "这是一个测试",
+				},
+				Accessory: khl.CardMessageElementButton{
+					Theme: khl.CardThemeInfo,
+					Value: "clickTest",
+					Click: "return-val",
+					Text:  "测试按钮",
+				},
+			},
+		},
+	}}.BuildMessage()
+	if err != nil {
+		log.Printf("error in test: %v", err)
+	}
+	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
+		MessageCreateBase: khl.MessageCreateBase{
+			Type:     khl.MessageTypeCard,
+			TargetID: "7419593543056418",
+			Content:  cardMessageStr,
+		},
+	})
 }
 
 // CheckEnv  检查环境变量
@@ -41,6 +72,7 @@ func CheckEnv() {
 func main() {
 	CheckEnv()
 	betagovar.GlobalSession.Open()
+	test()
 	notifier.StartUpMessage(betagovar.GlobalSession)
 	go scheduletask.DailyRecommand()
 	go scheduletask.HourlyGetSen()

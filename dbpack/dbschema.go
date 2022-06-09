@@ -3,6 +3,7 @@ package dbpack
 import (
 	"log"
 	"os"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -17,6 +18,16 @@ type Administrator struct {
 	Level    int64  `json:"level"`
 }
 
+// CommandInfo is the struct of command info
+type CommandInfo struct {
+	CommandName     string    `json:"command_name" gorm:"primaryKey;autoIncrement:false"`
+	CommandDesc     string    `json:"command_desc"`
+	CommandParamLen int       `json:"command_param_len"`
+	CommandType     string    `json:"command_type"`
+	CreatedAt       time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt       time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+}
+
 var (
 	isTest = os.Getenv("IS_TEST")
 )
@@ -26,6 +37,13 @@ func init() {
 	if GetDbConnection() == nil {
 		log.Println("get db connection error")
 		os.Exit(-1)
+	}
+
+	// migrate
+	db := GetDbConnection()
+	err := db.AutoMigrate(&Administrator{}, &CommandInfo{})
+	if err != nil {
+		log.Println(err.Error())
 	}
 }
 

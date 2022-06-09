@@ -13,11 +13,39 @@ import (
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/lonelyevil/khl"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+func clickEventHandler(ctx *khl.MessageButtonClickContext) {
+	var err error
+	clickValue := ctx.Extra.Value
+	isAdmin := dbpack.CheckIsAdmin(ctx.Extra.UserID)
+	switch clickValue {
+	case strings.ToUpper("showAdmin"):
+		if isAdmin {
+			err = admin.ShowAdminHandler(ctx.Extra.TargetID, "")
+		}
+	case strings.ToUpper("help"):
+		if isAdmin {
+			err = helper.AdminCommandHelperHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
+		} else {
+			err = helper.UserCommandHelperHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
+		}
+	case strings.ToUpper("roll"):
+		err = roll.RandRollHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
+	case strings.ToUpper("oneword"):
+		err = roll.OneWordHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
+	default:
+		err = fmt.Errorf("非法操作" + emoji.Warning.String())
+	}
+	if err != nil {
+		errorsender.SendErrorInfo(ctx.Extra.TargetID, "", ctx.Extra.UserID, err)
+	}
+}
 
 func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	// 判断是否被at到,且消息不是引用/回复

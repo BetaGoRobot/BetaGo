@@ -1,10 +1,10 @@
 package dbpack
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -63,46 +63,32 @@ func GetAdminLevel(userID string) int {
 	return int(admin.Level)
 }
 
-// RegistAndBind 注册并绑定
-//  @param data
-//  @return err
-func RegistAndBind(data *khlNetease) (err error) {
-	dsn := "host=localhost user=postgres password=heyuheng1.22.3 dbname=betago port=55433 sslmode=disable TimeZone=Asia/Shanghai"
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
+// GetCommandInfo 获取命令信息
+//  @param command
+//  @return info
+func GetCommandInfo(command string) (commandInfoList []*CommandInfo, err error) {
+	db := GetDbConnection()
+	command = "`" + command + "`"
+	commandInfoList = []*CommandInfo{
+		{
+			CommandName: command,
+		},
 	}
-
-	// 迁移 schema
-	err = db.AutoMigrate(&khlNetease{})
-	if err != nil {
-		log.Println(err.Error())
-	}
-	res := db.Save(data)
-	if res.Error != nil {
-		err = res.Error
+	res := db.Table("betago.command_infos").Where("command_name = ?", command).Find(&commandInfoList)
+	if res.RowsAffected == 0 {
+		err = fmt.Errorf("command %s not found", command)
 		return
 	}
-	res = db.Create(data)
-	if res.Error != nil {
-		err = res.Error
+	return
+}
+
+// GetCommandInfoWithOpt 获取命令信息
+//  @param option
+//  @return info
+func GetCommandInfoWithOpt(optionf string) (commandInfoList []*CommandInfo, err error) {
+	if GetDbConnection().Table("betago.command_infos").Where(optionf).Find(&commandInfoList).RowsAffected == 0 {
+		err = fmt.Errorf("option %s  not found", optionf)
 		return
 	}
-	// // Create
-	// db.Create(&Product{Code: "D42", Price: 100})
-
-	// // Read
-	// var product Product
-	// db.First(&product, 1)                 // 根据整形主键查找
-	// db.First(&product, "code = ?", "D42") // 查找 code 字段值为 D42 的记录
-
-	// // Update - 将 product 的 price 更新为 200
-	// db.Model(&product).Update("Price", 200)
-	// // Update - 更新多个字段
-	// db.Model(&product).Updates(Product{Price: 200, Code: "F42"}) // 仅更新非零值字段
-	// db.Model(&product).Updates(map[string]interface{}{"Price": 200, "Code": "F42"})
-
-	// // Delete - 删除 product
-	// db.Delete(&product, 1)
 	return
 }
