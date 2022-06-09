@@ -14,6 +14,7 @@ import (
 //  @return err
 func OneWordHandler(targetID, quoteID, authorID string) (err error) {
 	// 构建CardMessage
+	poemMap := yiyan.GetPoem()
 	cardMessageStr, err := khl.CardMessage{
 		&khl.CardMessageCard{
 			Theme: "info",
@@ -27,7 +28,7 @@ func OneWordHandler(targetID, quoteID, authorID string) (err error) {
 				},
 				khl.CardMessageSection{
 					Text: khl.CardMessageElementText{
-						Content: yiyan.GetSen(),
+						Content: poemMap["content"].(string) + "\n" + poemMap["author"].(string) + " --《" + poemMap["origin"].(string) + "》",
 						Emoji:   true,
 					},
 				},
