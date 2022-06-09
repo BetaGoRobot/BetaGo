@@ -6,6 +6,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/lonelyevil/khl"
 )
 
 //GetOutBoundIP 获取机器人部署的当前ip
@@ -56,4 +59,16 @@ func MustAtoI(str string) int {
 		return i
 	}
 	return i
+}
+
+// GetUserInfo 获取用户信息
+//  @param userID
+//  @param guildID
+//  @return userInfo
+func GetUserInfo(userID, guildID string) (userInfo *khl.User, err error) {
+	userInfo, err = betagovar.GlobalSession.UserView(userID, khl.UserViewWithGuildID(guildID))
+	if err != nil {
+		return
+	}
+	return
 }

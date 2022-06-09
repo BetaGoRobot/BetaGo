@@ -50,4 +50,13 @@ var (
 	CommitMessage = os.Getenv("COM_MES")
 	HTMLURL       = os.Getenv("HTML_URL")
 	CommentsURL   = os.Getenv("COM_URL")
+	RobotName     = os.Getenv("ROBOT_NAME")
+	RobotID       = os.Getenv("ROBOT_ID")
+	TestChanID    = os.Getenv("TEST_CHAN_ID")
 )
+
+func init() {
+	if RobotName = os.Getenv("ROBOT_NAME"); RobotName == "" {
+		RobotName = "No RobotName Configured"
+	}
+}
