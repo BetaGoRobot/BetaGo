@@ -21,8 +21,8 @@ func HourlyGetSen() {
 // DailyRecommand 每日发送歌曲推荐
 func DailyRecommand() {
 	for {
-		time.Sleep(time.Minute * 5)
-		if time.Now().Local().Format("15") == "08" {
+		time.Sleep(time.Hour)
+		if time.Now().UTC().Format("15") == "00" {
 			neaseCtx := neteaseapi.NetEaseContext{}
 			res, err := neaseCtx.GetNewRecommendMusic()
 			if err != nil {

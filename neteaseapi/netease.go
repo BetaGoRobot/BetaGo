@@ -14,6 +14,8 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 var (
+
+	// IsTest 是否测试环境
 	IsTest = os.Getenv("IS_TEST")
 )
 
