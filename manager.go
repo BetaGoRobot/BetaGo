@@ -133,6 +133,43 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 
 }
 
+func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
+	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Extra.ChannelID)
+	if err != nil {
+		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+	}
+	guildInfo, err := utility.GetGuildInfo(ctx.Extra.ChannelID)
+	if err != nil {
+		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+	}
+	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
+		Theme: khl.CardThemeInfo,
+		Size:  khl.CardSizeLg,
+		Modules: []interface{}{
+			khl.CardMessageHeader{
+				Text: khl.CardMessageElementText{
+					Content: "`" + userInfo.Nickname + "`悄悄加入了语音频道`" + guildInfo.ID + "`",
+					Emoji:   false,
+				},
+			},
+		},
+	}}.BuildMessage()
+	if err != nil {
+		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+	}
+	_, err = betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
+		MessageCreateBase: khl.MessageCreateBase{
+			Type:     khl.MessageTypeCard,
+			TargetID: ctx.Common.TargetID,
+			Content:  cardMessageStr,
+			Quote:    ctx.Extra.UserID,
+		},
+	})
+	if err != nil {
+		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+	}
+}
+
 func sendMessageToTestChannel(session *khl.Session, content string) {
 
 	session.MessageCreate(&khl.MessageCreate{

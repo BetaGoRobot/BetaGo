@@ -74,6 +74,18 @@ func GetUserInfo(userID, guildID string) (userInfo *khl.User, err error) {
 	return
 }
 
+// GetGuildInfo 获取公会信息
+//  @param guildID
+//  @return guildInfo
+//  @return err
+func GetGuildInfo(guildID string) (guildInfo *khl.Guild, err error) {
+	guildInfo, err = betagovar.GlobalSession.GuildView(guildID)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // Struct2Map  将结构体转换为map
 //  @param obj
 //  @return map
