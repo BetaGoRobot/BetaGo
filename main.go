@@ -25,7 +25,7 @@ func init() {
 	betagovar.GlobalSession.AddHandler(messageHan)
 	betagovar.GlobalSession.AddHandler(clickEventHandler)
 	betagovar.GlobalSession.AddHandler(receiveDirectMessage)
-	betagovar.GlobalSession.AddHandler()
+	betagovar.GlobalSession.AddHandler(channelJoinedHandler)
 }
 
 func test() {
