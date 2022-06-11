@@ -39,6 +39,8 @@ func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 		err = roll.RandRollHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
 	case strings.ToUpper("oneword"):
 		err = roll.OneWordHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
+	case strings.ToUpper("ping"):
+		helper.PingHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
 	default:
 		err = fmt.Errorf("非法操作" + emoji.Warning.String())
 	}
