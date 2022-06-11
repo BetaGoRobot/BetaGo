@@ -20,6 +20,8 @@ import (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+const NotifierChan = "8583973157097178"
+
 func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 	var err error
 	clickValue := ctx.Extra.Value
@@ -136,22 +138,21 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 }
 
 func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
-	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Extra.ChannelID)
+	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
 	if err != nil {
-		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+		errorsender.SendErrorInfo(NotifierChan, "", userInfo.ID, err)
 	}
-	guildInfo, err := utility.GetGuildInfo(ctx.Extra.ChannelID)
+	guildInfo, err := utility.GetGuildInfo(ctx.Common.TargetID)
 	if err != nil {
-		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+		errorsender.SendErrorInfo(NotifierChan, "", userInfo.ID, err)
 	}
 	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
 		Theme: khl.CardThemeInfo,
 		Size:  khl.CardSizeLg,
 		Modules: []interface{}{
-			khl.CardMessageHeader{
-				Text: khl.CardMessageElementText{
-					Content: "`" + userInfo.Nickname + "`悄悄加入了语音频道`" + guildInfo.ID + "`",
-					Emoji:   false,
+			khl.CardMessageSection{
+				Text: khl.CardMessageElementKMarkdown{
+					Content: "`" + userInfo.Nickname + "`悄悄加入了语音频道`" + guildInfo.Name + "`" + "(met)" + userInfo.ID + "(met)",
 				},
 			},
 		},
@@ -162,13 +163,12 @@ func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 	_, err = betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     khl.MessageTypeCard,
-			TargetID: ctx.Common.TargetID,
+			TargetID: NotifierChan,
 			Content:  cardMessageStr,
-			Quote:    ctx.Extra.UserID,
 		},
 	})
 	if err != nil {
-		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+		errorsender.SendErrorInfo(NotifierChan, "", "", err)
 	}
 }
 
