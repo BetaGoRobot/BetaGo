@@ -86,6 +86,18 @@ func GetGuildInfo(guildID string) (guildInfo *khl.Guild, err error) {
 	return
 }
 
+// GetChannnelInfo  获取频道信息
+//  @param channelID
+//  @return channelInfo
+//  @return err
+func GetChannnelInfo(channelID string) (channelInfo *khl.Channel, err error) {
+	channelInfo, err = betagovar.GlobalSession.ChannelView(channelID)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // Struct2Map  将结构体转换为map
 //  @param obj
 //  @return map
