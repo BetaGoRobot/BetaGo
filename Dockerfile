@@ -1,17 +1,11 @@
-FROM golang:1.18.3-alpine as builder
+FROM kevinmatt/betago-alpine-golang:1.18.3 as builder
 
 COPY . /data/
-ENV GOPROXY https://goproxy.io,direct
-ENV GO111MODULE="auto"
+
 WORKDIR /data/
 
 
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
-    apk update && \
-    apk add -U tzdata && \
-    apk add upx &&\
-    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s" -o betaGo-source *.go &&\
+RUN CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s" -o betaGo-source *.go &&\
     upx -9 -o betaGo betaGo-source
     
 
