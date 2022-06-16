@@ -3,3 +3,4 @@ test.env
 .env
 NeteaseCloudMusicApi
 
+debug_bin

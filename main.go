@@ -95,5 +95,4 @@ func messageHan(ctx *khl.KmarkdownMessageContext) {
 		defer wordcontrol.RemoveDirtyWords(ctx)
 		commandHandler(ctx)
 	}()
-
 }

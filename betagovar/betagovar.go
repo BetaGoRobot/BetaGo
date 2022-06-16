@@ -8,6 +8,14 @@ import (
 	"github.com/phuslu/log"
 )
 
+const (
+	// BetaGoUpdateChanID  发送更新消息的频道ID
+	BetaGoUpdateChanID = "8937461610423450"
+
+	// NotifierChanID 发送消息的频道ID
+	NotifierChanID = "8583973157097178"
+)
+
 // CardMessageModule khl cardmessage
 type CardMessageModule struct {
 	Type  string `json:"type"`

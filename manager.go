@@ -20,8 +20,6 @@ import (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-const NotifierChan = "8583973157097178"
-
 func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 	var err error
 	clickValue := ctx.Extra.Value
@@ -140,11 +138,11 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
 	if err != nil {
-		errorsender.SendErrorInfo(NotifierChan, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 	}
 	channelInfo, err := utility.GetChannnelInfo(ctx.Extra.ChannelID)
 	if err != nil {
-		errorsender.SendErrorInfo(NotifierChan, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 	}
 	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
 		Theme: khl.CardThemeInfo,
@@ -163,12 +161,12 @@ func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 	_, err = betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     khl.MessageTypeCard,
-			TargetID: NotifierChan,
+			TargetID: betagovar.NotifierChanID,
 			Content:  cardMessageStr,
 		},
 	})
 	if err != nil {
-		errorsender.SendErrorInfo(NotifierChan, "", "", err)
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
 	}
 }
 

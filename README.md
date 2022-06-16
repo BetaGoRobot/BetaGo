@@ -1,9 +1,10 @@
 # BetaGo
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/BetaGoRobot/BetaGo)](https://goreportcard.com/report/github.com/BetaGoRobot/BetaGo) 
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/BetaGoRobot/BetaGo)](https://goreportcard.com/report/github.com/BetaGoRobot/BetaGo) [![CodeQL代码扫描](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml)[![Docker](https://github.com/BetaGoRobot/BetaGo/actions/workflows/docker-image.yml/badge.svg)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/docker-image.yml)
+[![CodeQL代码扫描](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml)
 
-
+[![Docker](https://github.com/BetaGoRobot/BetaGo/actions/workflows/docker-image.yml/badge.svg)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/docker-image.yml)
 
 > 正在尝试实现的开黑啦机器人
 
