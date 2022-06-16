@@ -39,12 +39,10 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, keyword []string) (e
 		modulesNetese = make([]interface{}, 0)
 		modulesQQ     = make([]interface{}, 0)
 		cardStr       string
-		messageType   khl.MessageType
 	)
 
 	if len(resNetease) != 0 || len(resQQmusic) != 0 {
 		tempMap := make(map[string]byte, 0)
-		messageType = khl.MessageTypeCard
 		// 添加网易云搜索的结果
 		for _, song := range resNetease {
 			if _, ok := tempMap[song.Name+" - "+song.ArtistName]; ok {
@@ -108,14 +106,13 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, keyword []string) (e
 			return
 		}
 	} else {
-		messageType = khl.MessageTypeKMarkdown
 		err = fmt.Errorf("没有找到你要搜索的歌曲, 换一个关键词试试~")
 		return
 	}
 	betagovar.GlobalSession.MessageCreate(
 		&khl.MessageCreate{
 			MessageCreateBase: khl.MessageCreateBase{
-				Type:     messageType,
+				Type:     khl.MessageTypeCard,
 				TargetID: targetID,
 				Content:  cardStr,
 				Quote:    quoteID,
