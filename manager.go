@@ -150,7 +150,7 @@ func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 		Modules: []interface{}{
 			khl.CardMessageSection{
 				Text: khl.CardMessageElementKMarkdown{
-					Content: "`" + userInfo.Nickname + "`悄悄加入了语音频道`" + channelInfo.Name + "`" + "(met)" + userInfo.ID + "(met)",
+					Content: "`" + userInfo.Nickname + "`悄悄加入了语音频道`" + channelInfo.Name + "`",
 				},
 			},
 		},
