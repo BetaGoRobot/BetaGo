@@ -1,7 +1,5 @@
 FROM node:12.18.3-alpine
 
-USER root
-
 WORKDIR /home/qqmusic
 
 COPY . .
