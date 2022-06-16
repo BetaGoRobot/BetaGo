@@ -22,6 +22,8 @@ type musicList struct {
 		URL string `json:"url"`
 	} `json:"data"`
 }
+
+// MusicInfo 网易云音乐信息
 type MusicInfo struct {
 	ID   string
 	URL  string
@@ -42,6 +44,8 @@ type searchMusic struct {
 		} `json:"songs"`
 	} `json:"result"`
 }
+
+// SearchMusicRes  搜索音乐返回结果
 type SearchMusicRes struct {
 	ID         string
 	Name       string
@@ -50,6 +54,7 @@ type SearchMusicRes struct {
 	PicURL     string
 }
 
+// GlobRecommendMusicRes  推荐音乐返回结果
 type GlobRecommendMusicRes struct {
 	Result []struct {
 		PicURL string `json:"picUrl"`

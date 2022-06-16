@@ -36,6 +36,12 @@ func init() {
 	}
 	go autoRefreshLogin()
 }
+
+// SearchMusic  搜索音乐
+//  @receiver ctx
+//  @param keywords
+//  @return result
+//  @return err
 func (ctx *QQmusicContext) SearchMusic(keywords []string) (result []SearchMusicRes, err error) {
 	resp, err := httptool.PostWithParamsWithTimestamp(
 		httptool.RequestInfo{
