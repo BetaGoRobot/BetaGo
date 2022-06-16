@@ -1,10 +1,9 @@
 # BetaGo
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/BetaGoRobot/BetaGo)](https://goreportcard.com/report/github.com/BetaGoRobot/BetaGo) 
-
 [![CodeQL代码扫描](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml)
-
 [![Docker](https://github.com/BetaGoRobot/BetaGo/actions/workflows/docker-image.yml/badge.svg)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/docker-image.yml)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/51a1e51f15aa447f91ef48f33ac0fd4b)](https://www.codacy.com/gh/BetaGoRobot/BetaGo/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=BetaGoRobot/BetaGo&amp;utm_campaign=Badge_Grade)
 
 > 正在尝试实现的开黑啦机器人
 
