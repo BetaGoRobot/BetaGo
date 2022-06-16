@@ -1,5 +1,6 @@
 # BetaGo
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/1a93257b46184347ad890b96a6e3e04b)](https://app.codacy.com/gh/BetaGoRobot/BetaGo?utm_source=github.com&utm_medium=referral&utm_content=BetaGoRobot/BetaGo&utm_campaign=Badge_Grade_Settings)
 [![Go Report Card](https://goreportcard.com/badge/github.com/BetaGoRobot/BetaGo)](https://goreportcard.com/report/github.com/BetaGoRobot/BetaGo) 
 
 [![CodeQL代码扫描](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml)
