@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
@@ -136,14 +137,30 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 }
 
 func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
+
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		return
 	}
 	channelInfo, err := utility.GetChannnelInfo(ctx.Extra.ChannelID)
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		return
 	}
+	// !频道日志记录
+	newChanLog := &dbpack.ChannelLog{
+		UserID:      userInfo.ID,
+		UserName:    userInfo.Username,
+		ChannelID:   channelInfo.ID,
+		ChannelName: channelInfo.Name,
+		JoinedTime:  ctx.Extra.JoinedAt.ToTime(),
+		LeftTime:    time.Time{},
+	}
+	if err = newChanLog.AddJoinedRecord(); err != nil {
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+	}
+
 	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
 		Theme: khl.CardThemeInfo,
 		Size:  khl.CardSizeLg,
@@ -157,6 +174,7 @@ func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 	}}.BuildMessage()
 	if err != nil {
 		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+		return
 	}
 	_, err = betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
 		MessageCreateBase: khl.MessageCreateBase{
@@ -167,6 +185,33 @@ func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 	})
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
+	}
+}
+
+func channelLeftHandler(ctx *khl.GuildChannelMemberDeleteContext) {
+	// 离开频道时，记录频道信息
+	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
+	if err != nil {
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		return
+	}
+	channelInfo, err := utility.GetChannnelInfo(ctx.Extra.ChannelID)
+	if err != nil {
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		return
+	}
+
+	// !频道日志记录
+	newChanLog := &dbpack.ChannelLog{
+		UserID:      userInfo.ID,
+		UserName:    userInfo.Username,
+		ChannelID:   channelInfo.ID,
+		ChannelName: channelInfo.Name,
+		JoinedTime:  time.Time{},
+		LeftTime:    ctx.Extra.ExitedAt.ToTime(),
+	}
+	if err = newChanLog.UpdateLeftTime(); err != nil {
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 	}
 }
 

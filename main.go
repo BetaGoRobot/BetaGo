@@ -26,6 +26,7 @@ func init() {
 	betagovar.GlobalSession.AddHandler(clickEventHandler)
 	betagovar.GlobalSession.AddHandler(receiveDirectMessage)
 	betagovar.GlobalSession.AddHandler(channelJoinedHandler)
+	betagovar.GlobalSession.AddHandler(channelLeftHandler)
 }
 
 // CheckEnv  检查环境变量

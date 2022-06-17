@@ -92,3 +92,21 @@ func GetCommandInfoWithOpt(optionf string) (commandInfoList []*CommandInfo, err 
 	}
 	return
 }
+
+// AddJoinedRecord 添加加入记录
+//  @receiver cl
+//  @return error
+func (cl *ChannelLog) AddJoinedRecord() error {
+	return GetDbConnection().Table("betago.channel_logs").Create(&cl).Error
+}
+
+// UpdateLeftTime 更新离开时间
+//  @receiver cl
+//  @return error
+func (cl *ChannelLog) UpdateLeftTime() error {
+	FirstRow := &ChannelLog{}
+	if err := GetDbConnection().Table("betago.channel_logs").Where("channel_id = ? and user_id = ? and is_update = ?", cl.ChannelID, cl.UserID, false).Order("joined_time desc").First(FirstRow).Error; err != nil {
+		return err
+	}
+	return GetDbConnection().Table("betago.channel_logs").Where("channel_id = ? and user_id = ? and is_update = ? and joined_time = ?", cl.ChannelID, cl.UserID, false, FirstRow.JoinedTime).Update("left_time", cl.LeftTime).Update("is_update", true).Error
+}

@@ -28,6 +28,17 @@ type CommandInfo struct {
 	UpdatedAt       time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
+// ChannelLog  is the struct of channel log
+type ChannelLog struct {
+	UserID      string    `json:"user_id"`
+	UserName    string    `json:"user_name"`
+	ChannelID   string    `json:"channel_id"`
+	ChannelName string    `json:"channel_name"`
+	JoinedTime  time.Time `json:"joined_time"`
+	LeftTime    time.Time `json:"left_time"`
+	ISUpdate    bool      `json:"is_update"`
+}
+
 var (
 	isTest = os.Getenv("IS_TEST")
 )
@@ -41,7 +52,7 @@ func init() {
 
 	// migrate
 	db := GetDbConnection()
-	err := db.AutoMigrate(&Administrator{}, &CommandInfo{})
+	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLog{})
 	if err != nil {
 		log.Println(err.Error())
 	}
