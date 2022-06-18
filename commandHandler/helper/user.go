@@ -12,7 +12,13 @@ import (
 //  @param userID
 //  @param guildID
 //  @return err
-func GetUserInfoHandler(userID, guildID, targetID, quoteID string) (err error) {
+func GetUserInfoHandler(targetID, quoteID, authorID string, guildID string, args ...string) (err error) {
+	var userID string
+	if len(args) == 1 {
+		userID = args[0]
+	} else {
+		return fmt.Errorf("参数错误")
+	}
 	if userID == "" {
 		return fmt.Errorf("userID is empty")
 	}

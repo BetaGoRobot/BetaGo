@@ -12,7 +12,7 @@ import (
 //  @param quoteID
 //  @param authorID
 //  @return err
-func OneWordHandler(targetID, quoteID, authorID string) (err error) {
+func OneWordHandler(targetID, quoteID, authorID string, args ...string) (err error) {
 	// 构建CardMessage
 	poemMap := yiyan.GetPoem()
 	cardMessageStr, err := khl.CardMessage{

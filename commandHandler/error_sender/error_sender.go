@@ -44,6 +44,6 @@ func SendErrorInfo(targetID, QuoteID, authorID string, err error) {
 			Content:  cardMessageStr,
 			Quote:    QuoteID,
 		},
-		TempTargetID: authorID,
+		// TempTargetID: authorID,
 	})
 }

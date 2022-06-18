@@ -3,6 +3,7 @@ package roll
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/enescakir/emoji"
@@ -14,17 +15,43 @@ import (
 //  @param quoteID 引用ID
 //  @param authorID 发送者ID
 //  @return err 错误信息
-func RandRollHandler(targetID, quoteID, authorID string) (err error) {
-	point := rand.Intn(6) + 1
-	var extraStr string
-	if point > 3 {
-		extraStr = "运气不错呀！"
-	} else if point == 1 {
-		extraStr = "什么倒霉蛋！"
-	} else if point == 6 {
-		extraStr = "运气爆棚哇！"
+func RandRollHandler(targetID, quoteID, authorID string, args ...string) (err error) {
+	var (
+		min, max int
+	)
+	if len(args) == 0 {
+		// 如果没有参数，使用默认range[1,7)
+		min = 1
+		max = 6
+
+	} else if len(args) == 2 {
+		// 如果有参数，使用自定义range
+		min, err = strconv.Atoi(args[0])
+		if err != nil {
+			return err
+		}
+		max, err = strconv.Atoi(args[1])
+		if err != nil {
+			return err
+		}
+		if max <= min {
+			return fmt.Errorf("参数错误，max必须大于min")
+		}
 	} else {
+		return fmt.Errorf("参数错误~")
+	}
+	point := rand.Intn(max-min+1) + min
+	var extraStr string
+	if point == max {
+		extraStr = "最佳运气！" + emoji.BeerMug.String()
+	} else if point > (max-min)*2/3+min {
+		extraStr = "运气爆棚哇！"
+	} else if point > (max-min)/3+min {
+		extraStr = "运气不错呀！"
+	} else if point > min {
 		extraStr = "运气一般般~"
+	} else if point == min {
+		extraStr = "什么倒霉蛋！"
 	}
 	cardMessageStr, err := khl.CardMessage{
 		&khl.CardMessageCard{
@@ -39,7 +66,7 @@ func RandRollHandler(targetID, quoteID, authorID string) (err error) {
 				},
 				khl.CardMessageSection{
 					Text: khl.CardMessageElementKMarkdown{
-						Content: fmt.Sprintf("(met)%s(met) %s你掷出了 **%d**\n%s", authorID, emoji.ClinkingGlasses.String(), point, extraStr),
+						Content: fmt.Sprintf("范围 `[%d,%d]` (met)%s(met) %s你掷出了 **%d**\n%s", min, max, authorID, emoji.ClinkingGlasses.String(), point, extraStr),
 					},
 				},
 			},

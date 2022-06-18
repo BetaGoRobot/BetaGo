@@ -16,20 +16,20 @@ import (
 //  @param quoteID
 //  @param authorID
 //  @return err
-func SearchMusicByRobot(targetID, quoteID, authorID string, keyword []string) (err error) {
-	if len(keyword) == 0 {
+func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err error) {
+	if len(args) == 0 {
 		return fmt.Errorf("搜索关键词不能为空")
 	}
 	// 使用网易云搜索
 	neaseCtx := neteaseapi.NetEaseContext{}
-	resNetease, err := neaseCtx.SearchMusicByKeyWord(keyword)
+	resNetease, err := neaseCtx.SearchMusicByKeyWord(args)
 	if err != nil {
 		return
 	}
 
 	// 使用QQ音乐搜索
 	qqmusicCtx := qqmusicapi.QQmusicContext{}
-	resQQmusic, err := qqmusicCtx.SearchMusic(keyword)
+	resQQmusic, err := qqmusicCtx.SearchMusic(args)
 	if err != nil {
 		return
 	}

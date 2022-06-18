@@ -9,9 +9,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/cal"
+	command_context "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -21,6 +21,10 @@ import (
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+func clickEventAsyncHandler(ctx *khl.MessageButtonClickContext) {
+	go clickEventHandler(ctx)
+}
 
 func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 	var err error
@@ -61,14 +65,15 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	// 示例中，由于用户发送的命令的Content格式为(met)id(met) <command> <parameters>
 	// 针对解析的判断逻辑，首先判断是否为空字符串，若为空发送help信息
 	// ? 解析出不包含at信息的实际内容
-	trueContent := strings.Trim(ctx.Common.Content[strings.LastIndex(ctx.Common.Content, `)`)+1:], " ")
+	trueContent := strings.TrimSpace(strings.Replace(ctx.Common.Content, "(met)"+betagovar.RobotID+"(met)", "", 1))
 	if trueContent != "" {
 		// 内容非空，解析命令
 		var (
-			command     string
-			parameters  []string
-			adminSolved bool
-			slice       = strings.Split(strings.Trim(trueContent, " "), " ")
+			command    string
+			parameters []string
+			slice      = strings.Split(strings.Trim(trueContent, " "), " ")
+			err        error
+			commandCtx *command_context.CommandContext
 		)
 		// 判断指令类型
 		if len(slice) == 1 {
@@ -78,70 +83,45 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 			parameters = slice[1:]
 		}
 		command = strings.ToUpper(command)
-		var err error
-		// 进入指令执行逻辑,首先判断是否为Admin
-		if dbpack.CheckIsAdmin(ctx.Common.AuthorID) {
-			// 是Admin，判断指令
-			switch command {
-			case "HELP":
-				err = helper.AdminCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-				adminSolved = true
-			case "ADDADMIN":
-				if len(parameters) == 2 {
-					userID, userName := parameters[0], parameters[1]
-					err = admin.AddAdminHandler(userID, userName, ctx.Common.MsgID, ctx.Common.TargetID)
-				} else {
-					err = fmt.Errorf("请输入正确的用户ID和用户名格式")
-				}
-				adminSolved = true
-			case "REMOVEADMIN":
-				if len(parameters) == 1 {
-					targetUserID := parameters[0]
-					err = admin.RemoveAdminHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
-				} else {
-					err = fmt.Errorf("请输入正确的用户ID和用户名格式")
-				}
-				adminSolved = true
-			case "SHOWADMIN":
-				err = admin.ShowAdminHandler(ctx.Common.TargetID, ctx.Common.MsgID)
-				adminSolved = true
-			default:
-				adminSolved = false
-			}
-			if err != nil {
-				errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
-			}
-		}
-		// 非管理员命令
-		if !adminSolved {
-			switch command {
-			case "HELP":
-				err = helper.UserCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-			case "ROLL":
-				err = roll.RandRollHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-			case "PING":
-				helper.PingHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-			case "ONEWORD":
-				err = roll.OneWordHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-			case "SEARCHMUSIC":
-				err = music.SearchMusicByRobot(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters)
-			case "GETUSER":
-				err = helper.GetUserInfoHandler(parameters[0], ctx.Extra.GuildID, ctx.Common.TargetID, ctx.Common.MsgID)
-			case "SHOWCAL":
-				err = cal.ShowCalHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, ctx.Extra.GuildID)
-			default:
-				err = fmt.Errorf("未知的指令`%s`, 尝试使用command `help`来获取可用的命令列表", command)
-			}
-			if err != nil {
-				errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
-			}
-		}
-	}
 
+		commandCtx = commandCtx.Init(ctx.EventHandlerCommonContext)
+		commandCtx.InitExtra(ctx)
+		switch command {
+		case "HELP":
+			err = commandCtx.HelpHandler(parameters...)
+		case "ADDADMIN":
+			err = commandCtx.AdminAddHandler(parameters...)
+		case "REMOVEADMIN":
+			err = commandCtx.AdminRemoveHandler(parameters...)
+		case "SHOWADMIN":
+			err = commandCtx.AdminShowHandler()
+		case "ROLL":
+			err = commandCtx.RollDiceHandler(parameters...)
+		case "PING":
+			commandCtx.PingHandler()
+		case "ONEWORD":
+			err = commandCtx.OneWordHandler(parameters...)
+		case "SEARCHMUSIC":
+			err = commandCtx.SearchMusicHandler(parameters...)
+		case "GETUSER":
+			err = commandCtx.GetUserInfoHandler(parameters...)
+		case "SHOWCAL":
+			err = commandCtx.ShowCalHandler(parameters...)
+		default:
+			err = fmt.Errorf(emoji.Warning.String()+"未知指令 `%s`", command)
+		}
+		if err != nil {
+			errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
+		}
+
+	}
+}
+
+func channelJoinedAsyncHandler(ctx *khl.GuildChannelMemberAddContext) {
+	go channelJoinedHandler(ctx)
 }
 
 func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
-
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
@@ -192,6 +172,9 @@ func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 	}
 }
 
+func channelLeftAsyncHandler(ctx *khl.GuildChannelMemberDeleteContext) {
+	go channelLeftHandler(ctx)
+}
 func channelLeftHandler(ctx *khl.GuildChannelMemberDeleteContext) {
 	// 离开频道时，记录频道信息
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
@@ -18,23 +19,44 @@ import (
 
 // ShowCalHandler 显示时间分布
 //  @param userID
-func ShowCalHandler(targetID, msgID, authorID, guildID string) (err error) {
-	userInfo, err := utility.GetUserInfo(authorID, guildID)
-	if err != nil {
-		return
+func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (err error) {
+	var (
+		userInfo      *khl.User
+		cardContainer khl.CardMessageContainer
+	)
+	if args != nil {
+		// 含参数，则获取参数中用户的时间分布
+		for _, arg := range args {
+			userID := strings.Trim(arg, "(met)")
+			userInfo, err = utility.GetUserInfo(userID, guildID)
+			if err != nil {
+				return
+			}
+			cardContainer = append(cardContainer,
+				khl.CardMessageElementImage{
+					Src:  DrawPieChart(GetUserChannelTimeMap(userID), userInfo.Nickname),
+					Size: string(khl.CardSizeLg),
+				},
+			)
+		}
+	} else {
+		// 无参数，则获取当前用户的时间分布
+		userInfo, err = utility.GetUserInfo(authorID, guildID)
+		if err != nil {
+			return
+		}
+		cardContainer = append(cardContainer,
+			khl.CardMessageElementImage{
+				Src:  DrawPieChart(GetUserChannelTimeMap(authorID), userInfo.Nickname),
+				Size: string(khl.CardSizeLg),
+			},
+		)
 	}
-	cosURL := DrawPieChart(GetUserChannelTimeMap(authorID), userInfo.Nickname)
 	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
 		Theme: khl.CardThemeInfo,
 		Size:  khl.CardSizeLg,
 		Modules: []interface{}{
-			khl.CardMessageContainer{
-				{
-					Src:    cosURL,
-					Size:   string(khl.CardSizeLg),
-					Circle: false,
-				},
-			},
+			cardContainer,
 		},
 	}}.BuildMessage()
 	if err != nil {
@@ -77,34 +99,9 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 // DrawPieChart 获取频道的时间分布
 //  @return {}
 func DrawPieChart(inputMap map[string]time.Duration, userName string) string {
-	// TODO: Replace with suitable method
-	// pie := charts.NewPie()
-	// pie.SetGlobalOptions(charts.WithTitleOpts(opts.Title{Title: "频道时间分布", Subtitle: userName}))
-	// data := make([]opts.PieData, 0)
-	// totalTime := time.Duration(0)
-	// for _, v := range inputMap {
-	// 	totalTime += v
-	// }
-	// for k, v := range inputMap {
-	// 	data = append(data, opts.PieData{
-	// 		Name:  k,
-	// 		Value: float64(v.Nanoseconds()) / float64(totalTime.Nanoseconds()),
-	// 	})
-	// }
-	// pie.AddSeries("频道时间分布", data).SetSeriesOptions(
-	// 	charts.WithLabelOpts(
-	// 		opts.Label{
-	// 			Show:      true,
-	// 			Formatter: "{b}\n{c}\n{@rate}",
-	// 		},
-	// 	),
-	// 	charts.WithPieChartOpts(
-	// 		opts.PieChart{
-	// 			Radius: []string{"40%", "75%"},
-	// 		},
-	// 	),
-	// )
-	// TODO: Above
+	if len(inputMap) == 0 {
+		return ""
+	}
 	values := make([]chart.Value, 0)
 	var totalTime time.Duration
 	for _, v := range inputMap {

@@ -15,7 +15,40 @@ import (
 //  @param quoteID
 //  @param authorID
 //  @return err
-func AdminCommandHelperHandler(targetID, quoteID, authorID string) (err error) {
+func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...string) (err error) {
+	if len(args) == 1 {
+		commandInfo := dbpack.CommandInfo{}
+		var cardMessageStr string
+		if dbpack.GetDbConnection().Table("betago.command_infos").Where("command_name = ?", "`"+strings.ToUpper(args[0])+"`").Find(&commandInfo).RowsAffected == 0 {
+			return fmt.Errorf("没有找到指令: %s", args[0])
+		}
+		cardMessageStr, err = khl.CardMessage{&khl.CardMessageCard{
+			Theme: "info",
+			Size:  khl.CardSizeLg,
+			Modules: []interface{}{
+				&khl.CardMessageSection{
+					Mode: khl.CardMessageSectionModeLeft,
+					Text: &khl.CardMessageElementKMarkdown{
+						Content: commandInfo.CommandName + ": " + commandInfo.CommandDesc,
+					},
+				},
+			},
+		}}.BuildMessage()
+		if err != nil {
+			return err
+		}
+		_, err = betagovar.GlobalSession.MessageCreate(
+			&khl.MessageCreate{
+				MessageCreateBase: khl.MessageCreateBase{
+					Type:     khl.MessageTypeCard,
+					TargetID: targetID,
+					Content:  cardMessageStr,
+					Quote:    quoteID,
+				},
+			},
+		)
+		return
+	}
 	// title := "嗨，你可以使用的指令如下:"
 	// !对无参数指令，使用Button展示
 	var commandInfoList []*dbpack.CommandInfo
@@ -131,7 +164,7 @@ func getShortDesc(fullDesc string) (short string) {
 //  @param quoteID
 //  @param authorID
 //  @return err
-func UserCommandHelperHandler(targetID, quoteID, authorID string) (err error) {
+func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string) (err error) {
 	// 帮助信息
 
 	// !对无参数指令，使用Button展示

@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "runtime/pprof"
+
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/notifier"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/wordcontrol"
@@ -23,10 +25,11 @@ func init() {
 		log.Error().Err(err).Msg("error in init loginNetease")
 	}
 	betagovar.GlobalSession.AddHandler(messageHan)
-	betagovar.GlobalSession.AddHandler(clickEventHandler)
+	betagovar.GlobalSession.AddHandler(clickEventAsyncHandler)
 	betagovar.GlobalSession.AddHandler(receiveDirectMessage)
-	betagovar.GlobalSession.AddHandler(channelJoinedHandler)
-	betagovar.GlobalSession.AddHandler(channelLeftHandler)
+	betagovar.GlobalSession.AddHandler(channelJoinedAsyncHandler)
+	betagovar.GlobalSession.AddHandler(channelLeftAsyncHandler)
+
 }
 
 // CheckEnv  检查环境变量
