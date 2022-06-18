@@ -38,6 +38,7 @@ func UploadFileToCos(filePath string) (linkURL string) {
 	uploadRes, _, err := client.Object.Upload(context.Background(), uploadName, filePath, nil)
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
+		return
 	}
 	return uploadRes.Location
 }
