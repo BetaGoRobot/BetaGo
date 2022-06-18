@@ -11,7 +11,7 @@ RUN CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s" -o betaGo-source ./*.go 
     
 
 # # FROM alpine as runner
-FROM alpine as runner
+FROM scratch as runner
 
 ARG BOTAPI ROBOT_NAME ROBOT_NAME ROBOT_ID TEST_CHAN_ID NETEASE_PHONE NETEASE_PASSWORD COS_SECRET_ID COS_SECRET_KEY COS_BASE_URL COS_BUCKET_REGION_URL
 
