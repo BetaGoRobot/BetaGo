@@ -8,6 +8,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/cal"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
@@ -42,6 +43,8 @@ func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 		err = roll.OneWordHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
 	case strings.ToUpper("ping"):
 		helper.PingHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
+	case "SHOWCAL":
+		err = cal.ShowCalHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID, ctx.Extra.GuildID)
 	default:
 		err = fmt.Errorf("非法操作" + emoji.Warning.String())
 	}
@@ -62,12 +65,11 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	if trueContent != "" {
 		// 内容非空，解析命令
 		var (
-			command        string
-			parameters     []string
-			adminNotSolved bool
+			command     string
+			parameters  []string
+			adminSolved bool
+			slice       = strings.Split(strings.Trim(trueContent, " "), " ")
 		)
-		// 首先执行正则解析
-		slice := strings.Split(strings.Trim(trueContent, " "), " ")
 		// 判断指令类型
 		if len(slice) == 1 {
 			command = slice[0]
@@ -75,56 +77,58 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 			command = slice[0]
 			parameters = slice[1:]
 		}
-
+		command = strings.ToUpper(command)
 		var err error
 		// 进入指令执行逻辑,首先判断是否为Admin
 		if dbpack.CheckIsAdmin(ctx.Common.AuthorID) {
 			// 是Admin，判断指令
 			switch command {
-			case "help":
+			case "HELP":
 				err = helper.AdminCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-				adminNotSolved = true
-			case "addAdmin":
+				adminSolved = true
+			case "ADDADMIN":
 				if len(parameters) == 2 {
 					userID, userName := parameters[0], parameters[1]
 					err = admin.AddAdminHandler(userID, userName, ctx.Common.MsgID, ctx.Common.TargetID)
 				} else {
 					err = fmt.Errorf("请输入正确的用户ID和用户名格式")
 				}
-				adminNotSolved = true
-			case "removeAdmin":
+				adminSolved = true
+			case "REMOVEADMIN":
 				if len(parameters) == 1 {
 					targetUserID := parameters[0]
 					err = admin.RemoveAdminHandler(ctx.Common.AuthorID, targetUserID, ctx.Common.MsgID, ctx.Common.TargetID)
 				} else {
 					err = fmt.Errorf("请输入正确的用户ID和用户名格式")
 				}
-				adminNotSolved = true
-			case "showAdmin":
+				adminSolved = true
+			case "SHOWADMIN":
 				err = admin.ShowAdminHandler(ctx.Common.TargetID, ctx.Common.MsgID)
-				adminNotSolved = true
+				adminSolved = true
 			default:
-				adminNotSolved = false
+				adminSolved = false
 			}
 			if err != nil {
 				errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
 			}
 		}
 		// 非管理员命令
-		if !adminNotSolved {
+		if !adminSolved {
 			switch command {
-			case "help":
+			case "HELP":
 				err = helper.UserCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-			case "roll":
+			case "ROLL":
 				err = roll.RandRollHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-			case "ping":
+			case "PING":
 				helper.PingHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-			case "oneword":
+			case "ONEWORD":
 				err = roll.OneWordHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-			case "searchMusic":
+			case "SEARCHMUSIC":
 				err = music.SearchMusicByRobot(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters)
-			case "getuser":
+			case "GETUSER":
 				err = helper.GetUserInfoHandler(parameters[0], ctx.Extra.GuildID, ctx.Common.TargetID, ctx.Common.MsgID)
+			case "SHOWCAL":
+				err = cal.ShowCalHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, ctx.Extra.GuildID)
 			default:
 				err = fmt.Errorf("未知的指令`%s`, 尝试使用command `help`来获取可用的命令列表", command)
 			}

@@ -2,15 +2,41 @@ package utility
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/golang/freetype/truetype"
 	"github.com/lonelyevil/khl"
 )
+
+// GlowSansSC  字体类型,未来荧黑
+var GlowSansSC *truetype.Font
+
+func init() {
+	InitGlowSansSCFontType()
+}
+
+// InitGlowSansSCFontType 初始化字体类型
+func InitGlowSansSCFontType() {
+	fontFile := filepath.Join(betagovar.FontPath, "Microsoft Yahei.ttf")
+	fontBytes, err := ioutil.ReadFile(fontFile)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	GlowSansSC, err = truetype.Parse(fontBytes)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+}
 
 //GetOutBoundIP 获取机器人部署的当前ip
 func GetOutBoundIP() (ip string, err error) {
@@ -67,7 +93,11 @@ func MustAtoI(str string) int {
 //  @param guildID
 //  @return userInfo
 func GetUserInfo(userID, guildID string) (userInfo *khl.User, err error) {
-	userInfo, err = betagovar.GlobalSession.UserView(userID, khl.UserViewWithGuildID(guildID))
+	if guildID != "" {
+		userInfo, err = betagovar.GlobalSession.UserView(userID, khl.UserViewWithGuildID(guildID))
+	} else {
+		userInfo, err = betagovar.GlobalSession.UserView(userID)
+	}
 	if err != nil {
 		return
 	}

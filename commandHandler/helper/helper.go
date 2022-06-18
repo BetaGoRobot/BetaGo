@@ -46,7 +46,7 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string) (err error) {
 				Theme: khl.CardThemeSuccess,
 				Value: strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")),
 				Click: string(khl.CardMessageElementButtonClickReturnVal),
-				Text:  strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")),
+				Text:  strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")) + ">" + getShortDesc(commandInfo.CommandDesc),
 			},
 		)
 	}
@@ -121,6 +121,11 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string) (err error) {
 	return
 }
 
+func getShortDesc(fullDesc string) (short string) {
+	short, _, _ = strings.Cut(fullDesc, " ")
+	return
+}
+
 // UserCommandHelperHandler 查看帮助
 //  @param targetID
 //  @param quoteID
@@ -158,7 +163,7 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string) (err error) {
 				Theme: khl.CardThemeSuccess,
 				Value: strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")),
 				Click: string(khl.CardMessageElementButtonClickReturnVal),
-				Text:  strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")),
+				Text:  strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")) + ">" + getShortDesc(commandInfo.CommandDesc),
 			},
 		)
 	}

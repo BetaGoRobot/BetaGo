@@ -14,6 +14,12 @@ const (
 
 	// NotifierChanID 发送消息的频道ID
 	NotifierChanID = "8583973157097178"
+
+	// ImagePath 图片存储路径
+	ImagePath = "/data/images"
+
+	// FontPath  字体存储路径
+	FontPath = "/data/fonts"
 )
 
 // CardMessageModule khl cardmessage

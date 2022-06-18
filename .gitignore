@@ -4,3 +4,5 @@ test.env
 NeteaseCloudMusicApi
 
 debug_bin
+betago.zip
+local-build.sh
