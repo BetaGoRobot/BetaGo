@@ -7,12 +7,8 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/cal"
 	command_context "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/enescakir/emoji"
@@ -27,28 +23,33 @@ func clickEventAsyncHandler(ctx *khl.MessageButtonClickContext) {
 }
 
 func clickEventHandler(ctx *khl.MessageButtonClickContext) {
-	var err error
-	clickValue := ctx.Extra.Value
-	isAdmin := dbpack.CheckIsAdmin(ctx.Extra.UserID)
-	switch clickValue {
+	var (
+		err        error
+		command    = ctx.Extra.Value
+		commandCtx = &command_context.CommandContext{
+			Common: &command_context.CommandCommonContext{
+				TargetID: ctx.Extra.TargetID,
+				AuthorID: ctx.Extra.UserID,
+				MsgID:    "",
+			},
+			Extra: &command_context.CommandExtraContext{
+				GuildID: ctx.Extra.GuildID,
+			},
+		}
+	)
+	switch command {
 	case "SHOWADMIN":
-		if isAdmin {
-			err = admin.ShowAdminHandler(ctx.Extra.TargetID, "")
-		}
+		err = commandCtx.AdminShowHandler()
 	case "HELP":
-		if isAdmin {
-			err = helper.AdminCommandHelperHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
-		} else {
-			err = helper.UserCommandHelperHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
-		}
+		err = commandCtx.HelpHandler()
 	case "ROLL":
-		err = roll.RandRollHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
+		err = commandCtx.RollDiceHandler()
 	case "ONEWORD":
-		err = roll.OneWordHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
+		err = commandCtx.OneWordHandler()
 	case "PING":
-		helper.PingHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
+		commandCtx.PingHandler()
 	case "SHOWCAL":
-		err = cal.ShowCalHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID, ctx.Extra.GuildID)
+		err = commandCtx.ShowCalHandler()
 	default:
 		err = fmt.Errorf("非法操作" + emoji.Warning.String())
 	}
@@ -66,15 +67,23 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	// 针对解析的判断逻辑，首先判断是否为空字符串，若为空发送help信息
 	// ? 解析出不包含at信息的实际内容
 	trueContent := strings.TrimSpace(strings.Replace(ctx.Common.Content, "(met)"+betagovar.RobotID+"(met)", "", 1))
+	var (
+		err        error
+		commandCtx = command_context.CommandContext{
+			Common: &command_context.CommandCommonContext{},
+			Extra:  &command_context.CommandExtraContext{},
+		}
+	)
+	commandCtx.Init(ctx.EventHandlerCommonContext)
+	commandCtx.InitExtra(ctx)
 	if trueContent != "" {
 		// 内容非空，解析命令
 		var (
 			command    string
 			parameters []string
 			slice      = strings.Split(strings.Trim(trueContent, " "), " ")
-			err        error
-			commandCtx *command_context.CommandContext
 		)
+
 		// 判断指令类型
 		if len(slice) == 1 {
 			command = slice[0]
@@ -84,8 +93,6 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 		}
 		command = strings.ToUpper(command)
 
-		commandCtx = commandCtx.Init(ctx.EventHandlerCommonContext)
-		commandCtx.InitExtra(ctx)
 		switch command {
 		case "HELP":
 			err = commandCtx.HelpHandler(parameters...)
@@ -110,10 +117,12 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 		default:
 			err = fmt.Errorf(emoji.Warning.String()+"未知指令 `%s`", command)
 		}
-		if err != nil {
-			errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
-		}
-
+	} else {
+		// 内容为空，发送help信息
+		err = commandCtx.HelpHandler()
+	}
+	if err != nil {
+		errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
 	}
 }
 

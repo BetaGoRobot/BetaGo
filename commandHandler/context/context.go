@@ -35,10 +35,22 @@ func (ctx *CommandContext) IsAdmin() bool {
 	return dbpack.CheckIsAdmin(ctx.Common.AuthorID)
 }
 
+// // Init is a init function for command.
+// //  @receiver ctx
+// func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) *CommandContext {
+// 	return &CommandContext{
+// 		Common: &CommandCommonContext{
+// 			TargetID: khlCtx.Common.TargetID,
+// 			AuthorID: khlCtx.Common.AuthorID,
+// 			MsgID:    khlCtx.Common.MsgID,
+// 		},
+// 	}
+// }
+
 // Init is a init function for command.
 //  @receiver ctx
-func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) *CommandContext {
-	return &CommandContext{
+func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) {
+	*ctx = CommandContext{
 		Common: &CommandCommonContext{
 			TargetID: khlCtx.Common.TargetID,
 			AuthorID: khlCtx.Common.AuthorID,

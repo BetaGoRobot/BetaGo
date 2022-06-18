@@ -125,7 +125,7 @@ func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err er
 	}
 	var succStr string
 	for _, userID := range succUserID {
-		succStr += fmt.Sprintf(`(met)%s(met) 已被设置为管理员\n`, userID)
+		succStr += fmt.Sprintf("(met)%s(met) 已被设置为管理员\n", userID)
 	}
 	cardMessageStr, err := khl.CardMessage{
 		&khl.CardMessageCard{
@@ -209,7 +209,7 @@ func RemoveAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err
 
 	var succStr string
 	for _, userID := range succUserID {
-		succStr += fmt.Sprintf(`(met)%s(met) 管理员已被移除\n`, userID)
+		succStr += fmt.Sprintf("(met)%s(met) 管理员已被移除\n", userID)
 	}
 	cardMessageStr, err := khl.CardMessage{
 		&khl.CardMessageCard{

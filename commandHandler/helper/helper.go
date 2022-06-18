@@ -61,6 +61,12 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 		modules = []interface{}{
 			khl.CardMessageHeader{
 				Text: khl.CardMessageElementText{
+					Content: "遇到什么问题了吗？看看下面的命令指南吧~" + emoji.SmilingFaceWithHalo.String(),
+					Emoji:   true,
+				},
+			},
+			khl.CardMessageHeader{
+				Text: khl.CardMessageElementText{
 					Content: string(emoji.ComputerMouse) + "无参数指令:",
 					Emoji:   true,
 				},
@@ -74,7 +80,7 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 		if count%4 == 0 {
 			modules = append(modules, khl.CardMessageActionGroup{})
 		}
-		modules[count/4+1] = append(modules[count/4+1].(khl.CardMessageActionGroup),
+		modules[count/4+2] = append(modules[count/4+2].(khl.CardMessageActionGroup),
 			khl.CardMessageElementButton{
 				Theme: khl.CardThemeSuccess,
 				Value: strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")),
@@ -86,14 +92,14 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 
 	// !对有参指令，使用文本展示
 	commandInfoList = make([]*dbpack.CommandInfo, 0)
-	if dbpack.GetDbConnection().Table("betago.command_infos").Where("command_param_len!=0").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
+	if dbpack.GetDbConnection().Table("betago.command_infos").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("no command info found")
 		return
 	}
 	modules = append(modules,
 		khl.CardMessageHeader{
 			Text: khl.CardMessageElementText{
-				Content: string(emoji.ComputerMouse) + "含参数指令:",
+				Content: emoji.Keyboard.String() + "含参数指令:",
 				Emoji:   true,
 			},
 		},
@@ -155,8 +161,8 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 }
 
 func getShortDesc(fullDesc string) (short string) {
-	short, _, _ = strings.Cut(fullDesc, "**\n")
-	return
+	short, _, _ = strings.Cut(strings.Trim(fullDesc, "\n"), "\n")
+	return strings.Trim(short, "**")
 }
 
 // UserCommandHelperHandler 查看帮助
@@ -235,14 +241,14 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 
 	// !对有参指令，使用文本展示
 	commandInfoList = make([]*dbpack.CommandInfo, 0)
-	if dbpack.GetDbConnection().Table("betago.command_infos").Where("command_param_len!=0 and command_type='user'").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
+	if dbpack.GetDbConnection().Table("betago.command_infos").Where("command_type='user'").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("no command info found")
 		return
 	}
 	modules = append(modules,
 		khl.CardMessageHeader{
 			Text: khl.CardMessageElementText{
-				Content: string(emoji.ComputerMouse) + "含参数指令:",
+				Content: emoji.Keyboard.String() + "含参数指令:",
 				Emoji:   true,
 			},
 		},
