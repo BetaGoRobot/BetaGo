@@ -129,8 +129,8 @@ func DrawPieChart(inputMap map[string]time.Duration, userName string) string {
 	// TODO: 绘制频道时间饼状图
 	pie := chart.PieChart{
 		Title:  userName + "的频道时间分布",
-		Width:  512,
-		Height: 512,
+		Width:  256,
+		Height: 256,
 		Canvas: chart.Style{
 			FontColor: chart.ColorWhite,
 		},

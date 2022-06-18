@@ -27,21 +27,21 @@ func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 	clickValue := ctx.Extra.Value
 	isAdmin := dbpack.CheckIsAdmin(ctx.Extra.UserID)
 	switch clickValue {
-	case strings.ToUpper("showAdmin"):
+	case "SHOWADMIN":
 		if isAdmin {
 			err = admin.ShowAdminHandler(ctx.Extra.TargetID, "")
 		}
-	case strings.ToUpper("help"):
+	case "HELP":
 		if isAdmin {
 			err = helper.AdminCommandHelperHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
 		} else {
 			err = helper.UserCommandHelperHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
 		}
-	case strings.ToUpper("roll"):
+	case "ROLL":
 		err = roll.RandRollHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
-	case strings.ToUpper("oneword"):
+	case "ONEWORD":
 		err = roll.OneWordHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
-	case strings.ToUpper("ping"):
+	case "PING":
 		helper.PingHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID)
 	case "SHOWCAL":
 		err = cal.ShowCalHandler(ctx.Extra.TargetID, "", ctx.Extra.UserID, ctx.Extra.GuildID)
