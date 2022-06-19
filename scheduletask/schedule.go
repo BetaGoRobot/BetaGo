@@ -5,7 +5,7 @@ import (
 	"time"
 
 	betagovar "github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
+	command_context "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/lonelyevil/khl"
 )
@@ -14,7 +14,13 @@ import (
 func HourlyGetSen() {
 	for {
 		time.Sleep(time.Hour)
-		roll.OneWordHandler("3241026226723225", "", "")
+		commandCtx := &command_context.CommandContext{
+			Common: &command_context.CommandCommonContext{
+				TargetID: "3241026226723225",
+			},
+			Extra: &command_context.CommandExtraContext{},
+		}
+		commandCtx.GetHitokotoHandler()
 	}
 }
 

@@ -54,12 +54,11 @@ type CardMessageColModule struct {
 
 // GlobalSession 全局共享session
 var GlobalSession = khl.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
-	Level:  log.TraceLevel,
+	Level:  log.InfoLevel,
 	Writer: &log.ConsoleWriter{},
 }))
 
-// var
-//  @param CommitMessage
+// 环境变量
 var (
 	CommitMessage = os.Getenv("COM_MES")
 	HTMLURL       = os.Getenv("HTML_URL")
@@ -67,6 +66,7 @@ var (
 	RobotName     = os.Getenv("ROBOT_NAME")
 	RobotID       = os.Getenv("ROBOT_ID")
 	TestChanID    = os.Getenv("TEST_CHAN_ID")
+	BetaGoTest    = os.Getenv("IS_TEST") == "true"
 )
 
 func init() {

@@ -58,6 +58,9 @@ func StartUpMessage(session *khl.Session) (err error) {
 			},
 		)
 	}()
+	if betagovar.BetaGoTest {
+		return
+	}
 	go func() { // StartUp for info:
 		cardMessage, _ := khl.CardMessage{
 			&khl.CardMessageCard{
