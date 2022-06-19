@@ -87,9 +87,9 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 	var chanDiv = make(map[string]time.Duration)
 	for _, log := range logs {
 		if _, ok := chanDiv[log.ChannelID]; !ok {
-			chanDiv[log.ChannelName] = log.LeftTime.Sub(log.JoinedTime)
+			chanDiv[log.ChannelName] += log.LeftTime.Sub(log.JoinedTime)
 		} else {
-			chanDiv[log.ChannelName] = log.LeftTime.Sub(log.JoinedTime)
+			chanDiv[log.ChannelName] += log.LeftTime.Sub(log.JoinedTime)
 		}
 	}
 

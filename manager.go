@@ -45,7 +45,7 @@ func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 	case "ROLL":
 		err = commandCtx.RollDiceHandler()
 	case "ONEWORD":
-		err = commandCtx.OneWordHandler()
+		err = commandCtx.GetHitokotoHandler()
 	case "PING":
 		commandCtx.PingHandler()
 	case "SHOWCAL":
@@ -107,7 +107,7 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 		case "PING":
 			commandCtx.PingHandler()
 		case "ONEWORD":
-			err = commandCtx.OneWordHandler(parameters...)
+			err = commandCtx.GetHitokotoHandler(parameters...)
 		case "SEARCHMUSIC":
 			err = commandCtx.SearchMusicHandler(parameters...)
 		case "GETUSER":

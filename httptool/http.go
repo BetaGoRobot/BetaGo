@@ -46,11 +46,11 @@ func GetWithCookieParams(info RequestInfo) (resp *http.Response, err error) {
 	return
 }
 
-// GetWithParams 发送带cookie和params的请求
+// GetWithParamsWithTimestamp 发送带cookie和params的请求
 //  @param info 传入的参数、url、cookie信息
 //  @return res
 //  @return err
-func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
+func GetWithParamsWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
 	var paramSlice = make([]string, 0)
 	for key, values := range info.Params {
 		paramSlice = append(paramSlice, key+"="+strings.Join(values, "%20"))
@@ -62,8 +62,26 @@ func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
 	if err != nil {
 		return
 	}
-	// data, err := ioutil.ReadAll(resp.Body)
-	// fmt.Println(string(data))
+	return
+}
+
+// GetWithParams 发送带cookie和params的请求
+//  @param info 传入的参数、url、cookie信息
+//  @return res
+//  @return err
+func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
+	var paramSlice = make([]string, 0)
+	for key, values := range info.Params {
+		for index := range values {
+			paramSlice = append(paramSlice, key+"="+values[index])
+		}
+	}
+	rawURL := strings.Join([]string{info.URL, strings.Join(paramSlice, "&")}, "?")
+	//创建client
+	resp, err = http.Get(rawURL)
+	if err != nil {
+		return
+	}
 	return
 }
 
@@ -100,7 +118,7 @@ func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
 	}
 
 	// body := ioutil.NopCloser(strings.NewReader(params.Encode()))
-	resp, err = http.PostForm(info.URL+"?timestamp="+fmt.Sprint(time.Now().UnixNano()), params)
+	resp, err = http.PostForm(info.URL, params)
 	if err != nil {
 		log.Println(err.Error())
 		return

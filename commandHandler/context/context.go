@@ -4,8 +4,10 @@ import (
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/cal"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/hitokoto"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
+
 	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/lonelyevil/khl"
 )
@@ -34,18 +36,6 @@ type CommandExtraContext struct {
 func (ctx *CommandContext) IsAdmin() bool {
 	return dbpack.CheckIsAdmin(ctx.Common.AuthorID)
 }
-
-// // Init is a init function for command.
-// //  @receiver ctx
-// func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) *CommandContext {
-// 	return &CommandContext{
-// 		Common: &CommandCommonContext{
-// 			TargetID: khlCtx.Common.TargetID,
-// 			AuthorID: khlCtx.Common.AuthorID,
-// 			MsgID:    khlCtx.Common.MsgID,
-// 		},
-// 	}
-// }
 
 // Init is a init function for command.
 //  @receiver ctx
@@ -121,14 +111,6 @@ func (ctx *CommandContext) PingHandler() {
 	helper.PingHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 }
 
-// OneWordHandler is a function for command.
-//  @receiver ctx
-//  @param parameters
-//  @return error
-func (ctx *CommandContext) OneWordHandler(parameters ...string) error {
-	return roll.OneWordHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...)
-}
-
 // SearchMusicHandler  is a function for command.
 //  @receiver ctx
 //  @param parameters
@@ -151,4 +133,12 @@ func (ctx *CommandContext) GetUserInfoHandler(parameters ...string) error {
 //  @return error
 func (ctx *CommandContext) ShowCalHandler(parameters ...string) error {
 	return cal.ShowCalHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, ctx.Extra.GuildID, parameters...)
+}
+
+// GetHitokotoHandler is a function for command.
+//  @receiver ctx
+//  @param parameters
+//  @return error
+func (ctx *CommandContext) GetHitokotoHandler(parameters ...string) error {
+	return hitokoto.GetHitokotoHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...)
 }
