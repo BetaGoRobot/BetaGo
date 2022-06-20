@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	_ "runtime/pprof"
+	_ "net/http/pprof"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/notifier"
