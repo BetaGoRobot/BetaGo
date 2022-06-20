@@ -276,5 +276,6 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) str
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
 		return ""
 	}
+	defer os.Remove(filePath)
 	return cosmanager.UploadFileToCos(filePath)
 }
