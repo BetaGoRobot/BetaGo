@@ -1,4 +1,4 @@
-FROM kevinmatt/betago-alpine-golang:1.18.3 as builder
+FROM ccr.ccs.tencentyun.com/kevinmatt/betago-alpine-golang:1.18.3 as builder
 
 COPY betago.zip /data/
 
