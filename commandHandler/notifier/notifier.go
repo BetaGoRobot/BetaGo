@@ -36,7 +36,7 @@ func StartUpMessage(session *khl.Session) (err error) {
 							Content: strings.Join(
 								[]string{
 									"Name: \t**", betagovar.RobotName, "**\n",
-									"Time: \t**", time.Now().Format("2006-01-02 15:04:05"), "**\n",
+									"Time: \t**", time.Now().Local().Format("2006-01-02 15:04:05"), "**\n",
 									"IP: \t**", currentIP, "**\n",
 									"Message: \t**", betagovar.CommitMessage, "**\n",
 									"Commit-Page: \t[CommitPage](", betagovar.HTMLURL, ")\n",
