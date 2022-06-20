@@ -76,7 +76,13 @@ func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
 			paramSlice = append(paramSlice, key+"="+values[index])
 		}
 	}
-	rawURL := strings.Join([]string{info.URL, strings.Join(paramSlice, "&")}, "?")
+	var rawURL string
+	if len(paramSlice) > 0 {
+		rawURL = strings.Join([]string{info.URL, strings.Join(paramSlice, "&")}, "?")
+	} else {
+		rawURL = info.URL
+	}
+	
 	//创建client
 	resp, err = http.Get(rawURL)
 	if err != nil {
