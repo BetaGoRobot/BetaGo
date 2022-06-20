@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -30,6 +31,10 @@ func init() {
 	betagovar.GlobalSession.AddHandler(channelJoinedAsyncHandler)
 	betagovar.GlobalSession.AddHandler(channelLeftAsyncHandler)
 
+	go func() {
+		// pprof监控
+		http.ListenAndServe(":6060", nil)
+	}()
 }
 
 // CheckEnv  检查环境变量
