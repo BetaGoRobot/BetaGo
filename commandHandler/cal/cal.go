@@ -3,7 +3,6 @@ package cal
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -150,9 +149,13 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 			if err != nil {
 				return
 			}
+			URL, err := DrawPieChartWithAPI(GetUserChannelTimeMap(authorID), userInfo.Nickname)
+			if err != nil {
+				return err
+			}
 			cardContainer = append(cardContainer,
 				khl.CardMessageElementImage{
-					Src:  DrawPieChartWithAPI(GetUserChannelTimeMap(userID), userInfo.Nickname),
+					Src:  URL,
 					Size: string(khl.CardSizeLg),
 				},
 			)
@@ -163,9 +166,13 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 		if err != nil {
 			return
 		}
+		URL, err := DrawPieChartWithAPI(GetUserChannelTimeMap(authorID), userInfo.Nickname)
+		if err != nil {
+			return err
+		}
 		cardContainer = append(cardContainer,
 			khl.CardMessageElementImage{
-				Src:  DrawPieChartWithAPI(GetUserChannelTimeMap(authorID), userInfo.Nickname),
+				Src:  URL,
 				Size: string(khl.CardSizeLg),
 			},
 		)
@@ -218,7 +225,7 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 //  @param inputMap
 //  @param userName
 //  @return string
-func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) string {
+func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (string, error) {
 	apiURL := "https://image-charts.com/chart?"
 	ctx := &DrawPieAPICtx{
 		Ct: "p3",
@@ -251,31 +258,24 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) str
 	apiURL += ctx.BuildRequestURL()
 	resp, err := httptool.GetWithParams(httptool.RequestInfo{URL: apiURL})
 	if err != nil {
-		log.Fatal(err)
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
-		return ""
+		return "", err
 	}
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil || resp.StatusCode != 200 {
-		log.Fatal(err)
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
-		return ""
+		err = fmt.Errorf("Request Error with status code `%d`", resp.StatusCode)
+		return "", err
 	}
 	defer resp.Body.Close()
 	filePath := filepath.Join(betagovar.ImagePath, time.Now().Format(time.RFC3339)+"_"+userName+"_chtime.png")
 	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		log.Fatal(err)
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
-		return ""
+		return "", err
 	}
 	defer f.Close()
 	_, err = f.Write(data)
 	if err != nil {
-		log.Fatal(err)
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
-		return ""
+		return "", err
 	}
 	defer os.Remove(filePath)
-	return cosmanager.UploadFileToCos(filePath)
+	return cosmanager.UploadFileToCos(filePath), err
 }
