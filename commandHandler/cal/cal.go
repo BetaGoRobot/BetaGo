@@ -149,7 +149,7 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 			if err != nil {
 				return
 			}
-			URL, err := DrawPieChartWithAPI(GetUserChannelTimeMap(authorID), userInfo.Nickname)
+			URL, err := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
 			if err != nil {
 				return err
 			}
@@ -166,7 +166,7 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 		if err != nil {
 			return
 		}
-		URL, err := DrawPieChartWithAPI(GetUserChannelTimeMap(authorID), userInfo.Nickname)
+		URL, err := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
 		if err != nil {
 			return err
 		}
