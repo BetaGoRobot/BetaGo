@@ -2,7 +2,7 @@ name: Docker
 
 on:
   push:
-    branches: [test-action]
+    branches: [master]
     paths-ignore:
       - "NeteaseCloudMusicApiWithGo/*"
       - ".github/workflows/*"
