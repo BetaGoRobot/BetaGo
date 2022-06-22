@@ -29,11 +29,12 @@ jobs:
   push:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-
+      - uses: nick-fields/retry@v2
       - name: Log into registry
-        run: | 
-          echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login ccr.ccs.tencentyun.com -u 100016072032 --password-stdin
+        with:
+          timeout_minutes: 3
+          max_attempts: 3
+          command: echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login ccr.ccs.tencentyun.com -u 100016072032 --password-stdin
 
       - name: Build image
         run:  |
