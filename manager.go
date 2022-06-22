@@ -24,7 +24,6 @@ func clickEventAsyncHandler(ctx *khl.MessageButtonClickContext) {
 
 func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 	var (
-		err        error
 		command    = ctx.Extra.Value
 		commandCtx = &command_context.CommandContext{
 			Common: &command_context.CommandCommonContext{
@@ -39,22 +38,19 @@ func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 	)
 	switch command {
 	case "SHOWADMIN":
-		err = commandCtx.AdminShowHandler()
+		commandCtx.AdminShowHandler()
 	case "HELP":
-		err = commandCtx.HelpHandler()
+		commandCtx.HelpHandler()
 	case "ROLL":
-		err = commandCtx.RollDiceHandler()
+		commandCtx.RollDiceHandler()
 	case "ONEWORD":
-		err = commandCtx.GetHitokotoHandler()
+		commandCtx.GetHitokotoHandler()
 	case "PING":
 		commandCtx.PingHandler()
 	case "SHOWCAL":
-		err = commandCtx.ShowCalHandler()
+		commandCtx.ShowCalHandler()
 	default:
-		err = fmt.Errorf("非法操作" + emoji.Warning.String())
-	}
-	if err != nil {
-		errorsender.SendErrorInfo(ctx.Extra.TargetID, "", ctx.Extra.UserID, err)
+		commandCtx.ErrorSenderHandler(fmt.Errorf("非法操作" + emoji.Warning.String()))
 	}
 }
 
@@ -68,7 +64,6 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	// ? 解析出不包含at信息的实际内容
 	trueContent := strings.TrimSpace(strings.Replace(ctx.Common.Content, "(met)"+betagovar.RobotID+"(met)", "", 1))
 	var (
-		err        error
 		commandCtx = command_context.CommandContext{
 			Common: &command_context.CommandCommonContext{},
 			Extra:  &command_context.CommandExtraContext{},
@@ -92,37 +87,33 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 			parameters = slice[1:]
 		}
 		command = strings.ToUpper(command)
-
 		switch command {
 		case "HELP":
-			err = commandCtx.HelpHandler(parameters...)
+			commandCtx.HelpHandler(parameters...)
 		case "ADDADMIN":
-			err = commandCtx.AdminAddHandler(parameters...)
+			commandCtx.AdminAddHandler(parameters...)
 		case "REMOVEADMIN":
-			err = commandCtx.AdminRemoveHandler(parameters...)
+			commandCtx.AdminRemoveHandler(parameters...)
 		case "SHOWADMIN":
-			err = commandCtx.AdminShowHandler()
+			commandCtx.AdminShowHandler()
 		case "ROLL":
-			err = commandCtx.RollDiceHandler(parameters...)
+			commandCtx.RollDiceHandler(parameters...)
 		case "PING":
 			commandCtx.PingHandler()
 		case "ONEWORD":
-			err = commandCtx.GetHitokotoHandler(parameters...)
+			commandCtx.GetHitokotoHandler(parameters...)
 		case "SEARCHMUSIC":
-			err = commandCtx.SearchMusicHandler(parameters...)
+			commandCtx.SearchMusicHandler(parameters...)
 		case "GETUSER":
-			err = commandCtx.GetUserInfoHandler(parameters...)
+			commandCtx.GetUserInfoHandler(parameters...)
 		case "SHOWCAL":
-			err = commandCtx.ShowCalHandler(parameters...)
+			commandCtx.ShowCalHandler(parameters...)
 		default:
-			err = fmt.Errorf(emoji.Warning.String()+"未知指令 `%s`", command)
+			commandCtx.ErrorSenderHandler(fmt.Errorf(emoji.QuestionMark.String()+"未知指令 `%s`", command))
 		}
 	} else {
 		// 内容为空，发送help信息
-		err = commandCtx.HelpHandler()
-	}
-	if err != nil {
-		errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
+		commandCtx.HelpHandler()
 	}
 }
 
