@@ -2,7 +2,7 @@ name: Docker
 
 on:
   push:
-    branches: [master]
+    branches: [test-action]
     paths-ignore:
       - "NeteaseCloudMusicApiWithGo/*"
       - ".github/workflows/*"
@@ -37,14 +37,16 @@ jobs:
           retry_wait_seconds: 15
           command: | 
             echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login ccr.ccs.tencentyun.com -u 100016072032 --password-stdin
-        
-
+  Build:
+    runs-on: ubuntu-latest
+    steps:
       - name: Build image
         run:  |
           zip -r -0 betago.zip .
           DOCKER_BUILDKIT=1 docker build --build-arg BOTAPI="${{ secrets.BOTAPI }}" --build-arg ROBOT_NAME=$ROBOT_NAME --build-arg  TEST_CHAN_ID=$TEST_CHAN_ID --build-arg ROBOT_ID=$ROBOT_ID --build-arg NETEASE_PHONE=$NETEASE_PHONE  --build-arg NETEASE_PASSWORD=$NETEASE_PASSWORD --build-arg COS_SECRET_ID=${{ secrets.COS_SECRET_ID }} --build-arg COS_SECRET_KEY=${{ secrets.COS_SECRET_KEY }} --build-arg COS_BUCKET_REGION_URL=${{ secrets.COS_BUCKET_REGION_URL }} --build-arg COS_BASE_URL=${{ secrets.COS_BASE_URL }} . --file Dockerfile --tag $IMAGE_NAME
-      
-
+  Push:
+    runs-on: ubuntu-latest
+    steps:
       - name: Push image
         run: |
           current=`date "+%Y-%m-%d %H:%M:%S"`
