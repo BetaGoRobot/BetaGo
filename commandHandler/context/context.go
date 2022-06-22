@@ -87,6 +87,7 @@ func (ctx *CommandContext) InitExtra(khlCtx interface{}) *CommandContext {
 func (ctx *CommandContext) HelpHandler(parameters ...string) {
 	if ctx.IsAdmin() {
 		ctx.ErrorSenderHandler(helper.AdminCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...))
+		return
 	}
 	ctx.ErrorSenderHandler(helper.UserCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...))
 }
