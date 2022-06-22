@@ -15,7 +15,6 @@ on:
         default: "测试"
 
 env:
-  # 设置 docker 镜像名
   IMAGE_NAME: kevinmatt/betago
   ROBOT_NAME: BetaGo
   TEST_CHAN_ID: "7419593543056418"
@@ -24,11 +23,9 @@ env:
   NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
   TENCENT_HEADER: ccr.ccs.tencentyun.com
 jobs:
-  Login:
+  Build_Push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
       - name: Log into registry
         uses: nick-fields/retry@v2
         with:
@@ -37,28 +34,21 @@ jobs:
           retry_wait_seconds: 15
           command: | 
             echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login ccr.ccs.tencentyun.com -u 100016072032 --password-stdin
-  Build:
-    needs: Login
-    runs-on: ubuntu-latest
-    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Build image
         run:  |
           zip -r -0 betago.zip .
           DOCKER_BUILDKIT=1 docker build --build-arg BOTAPI="${{ secrets.BOTAPI }}" --build-arg ROBOT_NAME=$ROBOT_NAME --build-arg  TEST_CHAN_ID=$TEST_CHAN_ID --build-arg ROBOT_ID=$ROBOT_ID --build-arg NETEASE_PHONE=$NETEASE_PHONE  --build-arg NETEASE_PASSWORD=$NETEASE_PASSWORD --build-arg COS_SECRET_ID=${{ secrets.COS_SECRET_ID }} --build-arg COS_SECRET_KEY=${{ secrets.COS_SECRET_KEY }} --build-arg COS_BUCKET_REGION_URL=${{ secrets.COS_BUCKET_REGION_URL }} --build-arg COS_BASE_URL=${{ secrets.COS_BASE_URL }} . --file Dockerfile --tag $IMAGE_NAME
-  Push:
-    needs: Build
-    runs-on: ubuntu-latest
-    steps:
       - name: Push image
-        run: |
+        run:  |
           current=`date "+%Y-%m-%d %H:%M:%S"`
           timeStamp=`date -d "$current" +%s` 
           #将current转换为时间戳，精确到毫秒  
           currentTimeStamp=$((timeStamp*1000+`date "+%N"`/1000000)) 
 
-
           IMAGE_ID=$IMAGE_NAME
-
+          
           # 将所有的大写字母转为小写
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
 
@@ -68,12 +58,10 @@ jobs:
           # 设置镜像 id 和版本号
           docker tag $IMAGE_NAME $IMAGE_NAME:latest
           # 进行 push
-          # docker push $IMAGE_NAME:latest
-
-          # docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest-$currentTimeStamp
-          # docker push $IMAGE_NAME:latest-$currentTimeStamp
           
           docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest 
           docker push $TENCENT_HEADER/$IMAGE_NAME:latest
           docker tag $TENCENT_HEADER/$IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
           docker push $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
+      
+          
