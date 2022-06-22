@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
-	command_context "github.com/BetaGoRobot/BetaGo/commandHandler/context"
+	comcontext "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -25,13 +24,13 @@ func clickEventAsyncHandler(ctx *khl.MessageButtonClickContext) {
 func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 	var (
 		command    = ctx.Extra.Value
-		commandCtx = &command_context.CommandContext{
-			Common: &command_context.CommandCommonContext{
+		commandCtx = &comcontext.CommandContext{
+			Common: &comcontext.CommandCommonContext{
 				TargetID: ctx.Extra.TargetID,
 				AuthorID: ctx.Extra.UserID,
 				MsgID:    "",
 			},
-			Extra: &command_context.CommandExtraContext{
+			Extra: &comcontext.CommandExtraContext{
 				GuildID: ctx.Extra.GuildID,
 			},
 		}
@@ -62,31 +61,9 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	// 示例中，由于用户发送的命令的Content格式为(met)id(met) <command> <parameters>
 	// 针对解析的判断逻辑，首先判断是否为空字符串，若为空发送help信息
 	// ? 解析出不包含at信息的实际内容
-	trueContent := strings.TrimSpace(strings.Replace(ctx.Common.Content, "(met)"+betagovar.RobotID+"(met)", "", 1))
-	var (
-		commandCtx = command_context.CommandContext{
-			Common: &command_context.CommandCommonContext{},
-			Extra:  &command_context.CommandExtraContext{},
-		}
-	)
-	commandCtx.Init(ctx.EventHandlerCommonContext)
-	commandCtx.InitExtra(ctx)
-	if trueContent != "" {
-		// 内容非空，解析命令
-		var (
-			command    string
-			parameters []string
-			slice      = strings.Split(strings.Trim(trueContent, " "), " ")
-		)
-
-		// 判断指令类型
-		if len(slice) == 1 {
-			command = slice[0]
-		} else {
-			command = slice[0]
-			parameters = slice[1:]
-		}
-		command = strings.ToUpper(command)
+	command, parameters := utility.GetCommandWithParameters(ctx.Common.Content)
+	commandCtx := comcontext.GetNewCommandCtx().Init(ctx.EventHandlerCommonContext).InitExtra(ctx)
+	if command != "" {
 		switch command {
 		case "HELP":
 			commandCtx.HelpHandler(parameters...)

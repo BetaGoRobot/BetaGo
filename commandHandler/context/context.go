@@ -39,9 +39,18 @@ func (ctx *CommandContext) IsAdmin() bool {
 	return dbpack.CheckIsAdmin(ctx.Common.AuthorID)
 }
 
+// GetNewCommandCtx  is a function for command.
+//  @return *CommandContext
+func GetNewCommandCtx() *CommandContext {
+	return &CommandContext{
+		Common: &CommandCommonContext{},
+		Extra:  &CommandExtraContext{},
+	}
+}
+
 // Init is a init function for command.
 //  @receiver ctx
-func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) {
+func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) *CommandContext {
 	*ctx = CommandContext{
 		Common: &CommandCommonContext{
 			TargetID: khlCtx.Common.TargetID,
@@ -49,13 +58,14 @@ func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) {
 			MsgID:    khlCtx.Common.MsgID,
 		},
 	}
+	return ctx
 }
 
 // InitExtra is a init function for command.
 //  @receiver ctx
 //  @param khlCtx
 //  @return *CommandContext
-func (ctx *CommandContext) InitExtra(khlCtx interface{}) {
+func (ctx *CommandContext) InitExtra(khlCtx interface{}) *CommandContext {
 	switch khlCtx.(type) {
 	case *khl.KmarkdownMessageContext:
 		khlCtx := khlCtx.(*khl.KmarkdownMessageContext)
@@ -67,9 +77,8 @@ func (ctx *CommandContext) InitExtra(khlCtx interface{}) {
 		ctx.Extra = &CommandExtraContext{
 			GuildID: khlCtx.Extra.GuildID,
 		}
-	default:
-		return
 	}
+	return ctx
 }
 
 // HelpHandler is a function for command.
