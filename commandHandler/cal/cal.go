@@ -16,6 +16,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/lonelyevil/khl"
+	"github.com/wcharczuk/go-chart/v2"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
 )
@@ -151,7 +152,11 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 			}
 			URL, err := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
 			if err != nil {
-				return err
+				// 尝试使用本地绘图
+				URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+				if err != nil {
+					return err
+				}
 			}
 			cardContainer = append(cardContainer,
 				khl.CardMessageElementImage{
@@ -168,7 +173,11 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 		}
 		URL, err := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
 		if err != nil {
-			return err
+			// 尝试使用本地绘图
+			URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+			if err != nil {
+				return err
+			}
 		}
 		cardContainer = append(cardContainer,
 			khl.CardMessageElementImage{
@@ -217,11 +226,10 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 			chanDiv[log.ChannelName] += log.LeftTime.Sub(log.JoinedTime)
 		}
 	}
-
 	return chanDiv
 }
 
-// DrawPieChartWithAPI 获取频道的时间分布
+// DrawPieChartWithAPI 本地获取频道的时间分布
 //  @param inputMap
 //  @param userName
 //  @return string
@@ -277,5 +285,55 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (st
 		return "", err
 	}
 	defer os.Remove(filePath)
+	return cosmanager.UploadFileToCos(filePath), err
+}
+
+// DrawPieChartWithLocal 本地获取频道的时间分布
+//  @return {}
+func DrawPieChartWithLocal(inputMap map[string]time.Duration, userName string) (string, error) {
+	if len(inputMap) == 0 {
+		return "", fmt.Errorf("No Data Found")
+	}
+	values := make([]chart.Value, 0)
+	var totalTime time.Duration
+	for _, v := range inputMap {
+		totalTime += v
+	}
+	for k, v := range inputMap {
+		timeConv, _ := time.ParseDuration(fmt.Sprintf("%.1fs", v.Seconds()))
+		values = append(values, chart.Value{
+			Style: chart.Style{
+				FontSize:            10,
+				TextHorizontalAlign: 2,
+				TextVerticalAlign:   4,
+				TextWrap:            3,
+				TextLineSpacing:     1,
+				TextRotationDegrees: 0,
+				FontColor:           chart.ColorBlack,
+			},
+			Label: k + " " + timeConv.String() + " " + fmt.Sprintf("%.2f", float64(v)/float64(totalTime)*100) + "%",
+			Value: float64(timeConv),
+		})
+	}
+	// TODO: 绘制频道时间饼状图
+	pie := chart.PieChart{
+		Title:  userName + "的频道时间分布",
+		Width:  256,
+		Height: 256,
+		Canvas: chart.Style{
+			FontColor: chart.ColorWhite,
+		},
+		SliceStyle: chart.Style{
+			FontColor: chart.ColorWhite,
+		},
+		Font:   utility.GlowSansSC,
+		Values: values,
+	}
+	fileName := time.Now().Format(time.RFC3339) + "_" + userName + "_chtime.png"
+	filePath := filepath.Join(betagovar.ImagePath, fileName)
+	f, _ := os.Create(filePath)
+	defer f.Close()
+	err := pie.Render(chart.PNG, f)
+
 	return cosmanager.UploadFileToCos(filePath), err
 }

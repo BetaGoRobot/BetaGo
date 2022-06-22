@@ -56,6 +56,13 @@ func init() {
 	if err != nil {
 		log.Println(err.Error())
 	}
+	sqlDb, err := db.DB()
+	if err != nil {
+		log.Panicln(" get sql db error")
+	}
+	sqlDb.SetMaxIdleConns(2)
+	sqlDb.SetMaxOpenConns(5)
+	sqlDb.SetConnMaxLifetime(time.Minute * 10)
 }
 
 // GetDbConnection  returns the db connection
