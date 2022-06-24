@@ -27,13 +27,15 @@ func init() {
 		log.Println("error in init loginNetease", err)
 	}
 	go func() {
-		time.Sleep(time.Minute * 15)
-		NetEaseGCtx.RefreshLogin()
-		if NetEaseGCtx.CheckIfLogin() {
-			NetEaseGCtx.SaveCookie()
-		} else {
-			log.Println("error in refresh login")
-			NetEaseGCtx.LoginNetEase()
+		for {
+			time.Sleep(time.Minute * 15)
+			NetEaseGCtx.RefreshLogin()
+			if NetEaseGCtx.CheckIfLogin() {
+				NetEaseGCtx.SaveCookie()
+			} else {
+				log.Println("error in refresh login")
+				NetEaseGCtx.LoginNetEase()
+			}
 		}
 	}()
 }
