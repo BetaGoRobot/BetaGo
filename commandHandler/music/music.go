@@ -21,8 +21,7 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 		return fmt.Errorf("搜索关键词不能为空")
 	}
 	// 使用网易云搜索
-	neaseCtx := neteaseapi.NetEaseContext{}
-	resNetease, err := neaseCtx.SearchMusicByKeyWord(args)
+	resNetease, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(args)
 	if err != nil {
 		return
 	}

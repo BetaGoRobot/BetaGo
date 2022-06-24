@@ -12,19 +12,12 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/notifier"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/wordcontrol"
-	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/scheduletask"
 	"github.com/lonelyevil/khl"
-	"github.com/phuslu/log"
 )
 
 func init() {
 
-	initNetease := neteaseapi.NetEaseContext{}
-	err := initNetease.LoginNetEase()
-	if err != nil {
-		log.Error().Err(err).Msg("error in init loginNetease")
-	}
 	betagovar.GlobalSession.AddHandler(messageHan)
 	betagovar.GlobalSession.AddHandler(clickEventAsyncHandler)
 	betagovar.GlobalSession.AddHandler(receiveDirectMessage)

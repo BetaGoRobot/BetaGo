@@ -29,8 +29,7 @@ func DailyRecommand() {
 	for {
 		time.Sleep(time.Hour)
 		if time.Now().UTC().Format("15") == "00" {
-			neaseCtx := neteaseapi.NetEaseContext{}
-			res, err := neaseCtx.GetNewRecommendMusic()
+			res, err := neteaseapi.NetEaseGCtx.GetNewRecommendMusic()
 			if err != nil {
 				fmt.Println("--------------", err.Error())
 				return

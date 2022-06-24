@@ -1,6 +1,24 @@
 package neteaseapi
 
-import "net/http"
+import (
+	"net/http"
+	"os"
+)
+
+var (
+
+	// IsTest 是否测试环境
+	IsTest = os.Getenv("IS_TEST")
+)
+
+// LoginStatusStruct  登录状态
+type LoginStatusStruct struct {
+	Data struct {
+		Code    int                    `json:"code"`
+		Account map[string]interface{} `json:"account"`
+		Profile map[string]interface{} `json:"profile"`
+	} `json:"data"`
+}
 
 // NetEaseContext 网易云API调用封装
 type NetEaseContext struct {
@@ -71,3 +89,6 @@ type GlobRecommendMusicRes struct {
 
 // NetEaseAPIBaseURL 网易云API基础URL
 var NetEaseAPIBaseURL = "http://netease-api:3335"
+
+// NetEaseGCtx 网易云全局API调用封装
+var NetEaseGCtx = &NetEaseContext{}

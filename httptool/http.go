@@ -1,6 +1,7 @@
 package httptool
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net/http"
@@ -82,7 +83,7 @@ func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
 	} else {
 		rawURL = info.URL
 	}
-	
+
 	//创建client
 	resp, err = http.Get(rawURL)
 	if err != nil {
@@ -91,23 +92,29 @@ func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
 	return
 }
 
-// PostWithParamsWithTimestamp 发送带Cookie Params的POST请求
-func PostWithParamsWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
-	params := url.Values{}
+// PostWithTimestamp 发送带Cookie Params的POST请求
+func PostWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
+	FormData := url.Values{}
 	for key, values := range info.Params {
 		for index := range values {
-			params.Add(key, values[index])
+			FormData.Add(key, values[index])
 		}
 	}
-	params.Set("timestamp", fmt.Sprintf("%d", time.Now().UnixNano()))
+	req, err := http.NewRequest(http.MethodPost, info.URL+"?timestamp="+fmt.Sprint(time.Now().UnixNano()), strings.NewReader(FormData.Encode()))
+	if err != nil {
+		return
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	//添加Cookies
+	for index := range info.Cookies {
+		req.AddCookie(info.Cookies[index])
+	}
 
-	// body := ioutil.NopCloser(strings.NewReader(params.Encode()))
-	resp, err = http.PostForm(info.URL+"?timestamp="+fmt.Sprint(time.Now().UnixNano()), params)
+	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
 		log.Println(err.Error())
 		return
 	}
-
 	return
 }
 
@@ -116,15 +123,22 @@ func PostWithParamsWithTimestamp(info RequestInfo) (resp *http.Response, err err
 //  @return resp
 //  @return err
 func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
-	params := url.Values{}
+	var paramSlice = make([]byte, 0)
+	req, err := http.NewRequest(http.MethodPost, info.URL, bytes.NewReader([]byte(paramSlice)))
+	if err != nil {
+		return
+	}
+	req.PostForm = url.Values{}
 	for key, values := range info.Params {
 		for index := range values {
-			params.Add(key, values[index])
+			req.PostForm.Add(key, values[index])
 		}
 	}
-
-	// body := ioutil.NopCloser(strings.NewReader(params.Encode()))
-	resp, err = http.PostForm(info.URL, params)
+	//添加Cookies
+	for index := range info.Cookies {
+		req.AddCookie(info.Cookies[index])
+	}
+	resp, _ = http.DefaultClient.Do(req)
 	if err != nil {
 		log.Println(err.Error())
 		return
