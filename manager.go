@@ -65,24 +65,42 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	commandCtx := comcontext.GetNewCommandCtx().Init(ctx.EventHandlerCommonContext).InitExtra(ctx)
 	if command != "" {
 		switch command {
+		case betagovar.ShortCommandHelp:
+			fallthrough
 		case "HELP":
 			commandCtx.HelpHandler(parameters...)
+		case betagovar.ShortCommandAddAdmin:
+			fallthrough
 		case "ADDADMIN":
 			commandCtx.AdminAddHandler(parameters...)
+		case betagovar.ShortCommandRemoveAdmin:
+			fallthrough
 		case "REMOVEADMIN":
 			commandCtx.AdminRemoveHandler(parameters...)
+		case betagovar.ShortCommandShowAdmin:
+			fallthrough
 		case "SHOWADMIN":
 			commandCtx.AdminShowHandler()
+		case betagovar.ShortCommandRoll:
+			fallthrough
 		case "ROLL":
 			commandCtx.RollDiceHandler(parameters...)
+		case betagovar.ShortCommandPing:
+			fallthrough
 		case "PING":
 			commandCtx.PingHandler()
+		case betagovar.ShortCommandHitokoto:
+			fallthrough
 		case "ONEWORD":
 			commandCtx.GetHitokotoHandler(parameters...)
+		case betagovar.ShortCommandMusic:
+			fallthrough
 		case "SEARCHMUSIC":
 			commandCtx.SearchMusicHandler(parameters...)
 		case "GETUSER":
 			commandCtx.GetUserInfoHandler(parameters...)
+		case betagovar.ShortCommandShowCal:
+			fallthrough
 		case "SHOWCAL":
 			commandCtx.ShowCalHandler(parameters...)
 		default:
