@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/lonelyevil/khl"
 )
@@ -16,8 +15,8 @@ import (
 //  @param quoteID
 //  @return err
 func ShowAdminHandler(targetID, quoteID string) (err error) {
-	admins := make([]dbpack.Administrator, 0)
-	dbpack.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level DESC")
+	admins := make([]utility.Administrator, 0)
+	utility.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level DESC")
 	modules := make([]interface{}, 0)
 	modules = append(modules,
 		khl.CardMessageSection{
@@ -94,7 +93,7 @@ func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err er
 		for _, arg := range args {
 			userID := strings.Trim(arg, "(met)")
 			// 先检验是否存在
-			if dbpack.GetDbConnection().Table("betago.administrators").Where("user_id = ?", utility.MustAtoI(userID)).Find(&dbpack.Administrator{}).RowsAffected != 0 {
+			if utility.GetDbConnection().Table("betago.administrators").Where("user_id = ?", utility.MustAtoI(userID)).Find(&utility.Administrator{}).RowsAffected != 0 {
 				// 存在则不处理，返回信息
 				return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 已经是管理员了`, userID))
 			}
@@ -103,9 +102,9 @@ func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err er
 				return err
 			}
 			// 创建管理员
-			dbRes := dbpack.GetDbConnection().Table("betago.administrators").
+			dbRes := utility.GetDbConnection().Table("betago.administrators").
 				Create(
-					&dbpack.Administrator{
+					&utility.Administrator{
 						UserID:   int64(utility.MustAtoI(userID)),
 						UserName: userInfo.Nickname,
 						Level:    1,
@@ -182,21 +181,21 @@ func RemoveAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err
 		for _, arg := range args {
 			userID := strings.Trim(arg, "(met)")
 			// 先检验是否存在
-			if !dbpack.CheckIsAdmin(userID) {
+			if !utility.CheckIsAdmin(userID) {
 				// 不存在则不处理，返回信息
 				return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, userID))
 			}
 			// 等级校验
-			if userLevel, targetLevel := dbpack.GetAdminLevel(authorID), dbpack.GetAdminLevel(userID); userLevel <= targetLevel && userID != authorID {
+			if userLevel, targetLevel := utility.GetAdminLevel(authorID), utility.GetAdminLevel(userID); userLevel <= targetLevel && userID != authorID {
 				// 等级不足，无权限操作
 				err = fmt.Errorf("您的等级小于或等于目标用户，无权限操作")
 				return
 			}
 			// 删除管理员
-			dbRes := dbpack.GetDbConnection().Table("betago.administrators").
+			dbRes := utility.GetDbConnection().Table("betago.administrators").
 				Where("user_id = ?", utility.MustAtoI(userID)).
 				Unscoped().
-				Delete(&dbpack.Administrator{})
+				Delete(&utility.Administrator{})
 			if dbRes.Error != nil {
 				ec.Collect(dbRes.Error)
 				continue

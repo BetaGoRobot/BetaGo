@@ -1,11 +1,16 @@
 package errorsender
 
 import (
-	"log"
-
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/enescakir/emoji"
+	"github.com/heyuhengmatt/zaplog"
 	"github.com/lonelyevil/khl"
+)
+
+var (
+	zapLogger   = utility.ZapLogger
+	sugerLogger = utility.SugerLogger
 )
 
 // SendErrorInfo 发送错误信息
@@ -34,7 +39,7 @@ func SendErrorInfo(targetID, QuoteID, authorID string, err error) {
 		},
 	}.BuildMessage()
 	if err != nil {
-		log.Println(err.Error())
+		zapLogger.Error("SendErrorInfo", zaplog.Error(err))
 		return
 	}
 	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{

@@ -3,15 +3,20 @@ package hitokoto
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/httptool"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/enescakir/emoji"
+	"github.com/heyuhengmatt/zaplog"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/lonelyevil/khl"
 )
 
+var (
+	zapLogger   = utility.ZapLogger
+	sugerLogger = utility.SugerLogger
+)
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const (
@@ -118,7 +123,7 @@ func GetHitokoto(field ...string) (hitokotoRes RespBody, err error) {
 		},
 	})
 	if err != nil {
-		log.Println("error with req to ", yiyanURL, err.Error())
+		zapLogger.Error("获取一言失败", zaplog.Error(err))
 		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
@@ -127,7 +132,7 @@ func GetHitokoto(field ...string) (hitokotoRes RespBody, err error) {
 	}
 	defer resp.Body.Close()
 	if err = json.Unmarshal(body, &hitokotoRes); err != nil {
-		log.Println("error when unmarshal into map", err.Error())
+		zapLogger.Error("获取一言失败", zaplog.Error(err))
 		return
 	}
 	return

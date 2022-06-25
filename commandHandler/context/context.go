@@ -10,7 +10,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 
-	"github.com/BetaGoRobot/BetaGo/dbpack"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/lonelyevil/khl"
 )
 
@@ -36,7 +36,7 @@ type CommandExtraContext struct {
 //  @receiver ctx
 //  @return bool
 func (ctx *CommandContext) IsAdmin() bool {
-	return dbpack.CheckIsAdmin(ctx.Common.AuthorID)
+	return utility.CheckIsAdmin(ctx.Common.AuthorID)
 }
 
 // GetNewCommandCtx  is a function for command.

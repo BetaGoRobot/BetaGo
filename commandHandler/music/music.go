@@ -2,13 +2,19 @@ package music
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/qqmusicapi"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/enescakir/emoji"
+	"github.com/heyuhengmatt/zaplog"
 	"github.com/lonelyevil/khl"
+)
+
+var (
+	zapLogger   = utility.ZapLogger
+	sugerLogger = utility.SugerLogger
 )
 
 // SearchMusicByRobot  搜索音乐
@@ -101,7 +107,7 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 		)
 		cardStr, err = cardMessage.BuildMessage()
 		if err != nil {
-			log.Println("-------------", err.Error())
+			zapLogger.Error("构建消息失败", zaplog.Error(err))
 			return
 		}
 	} else {

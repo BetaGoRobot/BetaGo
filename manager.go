@@ -8,7 +8,6 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	comcontext "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
-	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
@@ -128,7 +127,7 @@ func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 		return
 	}
 	// !频道日志记录
-	newChanLog := &dbpack.ChannelLog{
+	newChanLog := &utility.ChannelLog{
 		UserID:      userInfo.ID,
 		UserName:    userInfo.Username,
 		ChannelID:   channelInfo.ID,
@@ -184,7 +183,7 @@ func channelLeftHandler(ctx *khl.GuildChannelMemberDeleteContext) {
 	}
 
 	// !频道日志记录
-	newChanLog := &dbpack.ChannelLog{
+	newChanLog := &utility.ChannelLog{
 		UserID:      userInfo.ID,
 		UserName:    userInfo.Username,
 		ChannelID:   channelInfo.ID,

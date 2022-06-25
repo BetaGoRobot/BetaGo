@@ -12,8 +12,6 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
-	"github.com/BetaGoRobot/BetaGo/cosmanager"
-	"github.com/BetaGoRobot/BetaGo/dbpack"
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/lonelyevil/khl"
 	"github.com/wcharczuk/go-chart/v2"
@@ -211,13 +209,13 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 //  @param userID
 //  @return map
 func GetUserChannelTimeMap(userID string) map[string]time.Duration {
-	logs := make([]*dbpack.ChannelLog, 0)
+	logs := make([]*utility.ChannelLog, 0)
 	userInfo, err := utility.GetUserInfo(userID, "")
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 		return nil
 	}
-	dbpack.GetDbConnection().Table("betago.channel_logs").Where("user_id = ? and is_update = ?", userInfo.ID, true).Find(&logs)
+	utility.GetDbConnection().Table("betago.channel_logs").Where("user_id = ? and is_update = ?", userInfo.ID, true).Find(&logs)
 	var chanDiv = make(map[string]time.Duration)
 	for _, log := range logs {
 		if _, ok := chanDiv[log.ChannelID]; !ok {
@@ -285,7 +283,11 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (st
 		return "", err
 	}
 	defer os.Remove(filePath)
-	return cosmanager.UploadFileToCos(filePath), err
+	fileURL, err := utility.UploadFileToCos(filePath)
+	if err != nil {
+		return "", err
+	}
+	return fileURL, err
 }
 
 // DrawPieChartWithLocal 本地获取频道的时间分布
@@ -335,5 +337,9 @@ func DrawPieChartWithLocal(inputMap map[string]time.Duration, userName string) (
 	defer f.Close()
 	err := pie.Render(chart.PNG, f)
 
-	return cosmanager.UploadFileToCos(filePath), err
+	fileURL, err := utility.UploadFileToCos(filePath)
+	if err != nil {
+		return "", err
+	}
+	return fileURL, err
 }

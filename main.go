@@ -13,11 +13,17 @@ import (
 	"github.com/BetaGoRobot/BetaGo/commandHandler/notifier"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/wordcontrol"
 	"github.com/BetaGoRobot/BetaGo/scheduletask"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/lonelyevil/khl"
 )
 
-func init() {
+var (
+	zapLogger   = utility.ZapLogger
+	sugerLogger = utility.SugerLogger
+)
 
+func init() {
+	utility.InitLogger()
 	betagovar.GlobalSession.AddHandler(messageHan)
 	betagovar.GlobalSession.AddHandler(clickEventAsyncHandler)
 	betagovar.GlobalSession.AddHandler(receiveDirectMessage)

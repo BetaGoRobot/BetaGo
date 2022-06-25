@@ -2,9 +2,10 @@ package httptool
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
 	"testing"
+
+	"github.com/heyuhengmatt/zaplog"
 )
 
 const NetEaseAPIBaseURL = "http://localhost:3335"
@@ -18,10 +19,10 @@ func TestPostWithParamsWithTimestamp(t *testing.T) {
 		},
 	})
 	if err != nil || resp.StatusCode != 200 {
-		log.Printf("%#v", resp)
+		zapLogger.Error("登录失败", zaplog.Error(err))
 	}
 	data, _ := ioutil.ReadAll(resp.Body)
-	log.Println(string(data))
+	zapLogger.Error("登录成功", zaplog.Error(err), zaplog.String("data", string(data)))
 	resp, err = PostWithTimestamp(
 		RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/login/status",
@@ -30,8 +31,8 @@ func TestPostWithParamsWithTimestamp(t *testing.T) {
 		},
 	)
 	if err != nil || resp.StatusCode != 200 {
-		log.Printf("%#v", resp)
+		zapLogger.Error("获取登录状态失败", zaplog.Error(err))
 	}
 	data, _ = ioutil.ReadAll(resp.Body)
-	log.Println(string(data))
+	zapLogger.Info("获取登录状态成功", zaplog.String("data", string(data)))
 }

@@ -14,6 +14,7 @@ require (
 	github.com/TwiN/go-away v1.6.4
 	github.com/enescakir/emoji v1.0.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
+	github.com/heyuhengmatt/zaplog v0.1.2
 	github.com/json-iterator/go v1.1.12
 	github.com/lonelyevil/khl v0.0.26
 	github.com/lonelyevil/khl/log_adapter/plog v0.0.26
@@ -44,7 +45,11 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mozillazg/go-httpheader v0.2.1 // indirect
+	go.uber.org/atomic v1.9.0 // indirect
+	go.uber.org/multierr v1.8.0 // indirect
+	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/image v0.0.0-20200927104501-e162460cd6b5 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )

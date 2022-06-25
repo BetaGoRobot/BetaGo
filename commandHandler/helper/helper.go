@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/dbpack"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/khl"
 )
@@ -17,9 +17,9 @@ import (
 //  @return err
 func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...string) (err error) {
 	if len(args) == 1 {
-		commandInfo := dbpack.CommandInfo{}
+		commandInfo := utility.CommandInfo{}
 		var cardMessageStr string
-		if dbpack.GetDbConnection().Table("betago.command_infos").Where("command_name = ?", "`"+strings.ToUpper(args[0])+"`").Find(&commandInfo).RowsAffected == 0 {
+		if utility.GetDbConnection().Table("betago.command_infos").Where("command_name = ?", "`"+strings.ToUpper(args[0])+"`").Find(&commandInfo).RowsAffected == 0 {
 			return fmt.Errorf("没有找到指令: %s", args[0])
 		}
 		cardMessageStr, err = khl.CardMessage{&khl.CardMessageCard{
@@ -51,8 +51,8 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 	}
 	// title := "嗨，你可以使用的指令如下:"
 	// !对无参数指令，使用Button展示
-	var commandInfoList []*dbpack.CommandInfo
-	if dbpack.GetDbConnection().Table("betago.command_infos").Where("command_param_len=0").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
+	var commandInfoList []*utility.CommandInfo
+	if utility.GetDbConnection().Table("betago.command_infos").Where("command_param_len=0").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("no command info found")
 		return
 	}
@@ -91,8 +91,8 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 	}
 
 	// !对有参指令，使用文本展示
-	commandInfoList = make([]*dbpack.CommandInfo, 0)
-	if dbpack.GetDbConnection().Table("betago.command_infos").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
+	commandInfoList = make([]*utility.CommandInfo, 0)
+	if utility.GetDbConnection().Table("betago.command_infos").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("no command info found")
 		return
 	}
@@ -173,9 +173,9 @@ func getShortDesc(fullDesc string) (short string) {
 func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string) (err error) {
 	// 帮助信息
 	if len(args) == 1 {
-		commandInfo := dbpack.CommandInfo{}
+		commandInfo := utility.CommandInfo{}
 		var cardMessageStr string
-		if dbpack.GetDbConnection().Table("betago.command_infos").Where("command_name = ? and command_type = ?", "`"+strings.ToUpper(args[0])+"`", "user").Find(&commandInfo).RowsAffected == 0 {
+		if utility.GetDbConnection().Table("betago.command_infos").Where("command_name = ? and command_type = ?", "`"+strings.ToUpper(args[0])+"`", "user").Find(&commandInfo).RowsAffected == 0 {
 			return fmt.Errorf("没有找到指令: %s", args[0])
 		}
 		cardMessageStr, err = khl.CardMessage{&khl.CardMessageCard{
@@ -206,8 +206,8 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 		return
 	}
 	// !对无参数指令，使用Button展示
-	var commandInfoList []*dbpack.CommandInfo
-	if dbpack.GetDbConnection().Table("betago.command_infos").Where("command_param_len=0 and command_type='user'").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
+	var commandInfoList []*utility.CommandInfo
+	if utility.GetDbConnection().Table("betago.command_infos").Where("command_param_len=0 and command_type='user'").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("no command info found")
 		return
 	}
@@ -240,8 +240,8 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 	}
 
 	// !对有参指令，使用文本展示
-	commandInfoList = make([]*dbpack.CommandInfo, 0)
-	if dbpack.GetDbConnection().Table("betago.command_infos").Where("command_type='user'").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
+	commandInfoList = make([]*utility.CommandInfo, 0)
+	if utility.GetDbConnection().Table("betago.command_infos").Where("command_type='user'").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("no command info found")
 		return
 	}

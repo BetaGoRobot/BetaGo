@@ -3,11 +3,17 @@ package httptool
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/BetaGoRobot/BetaGo/utility"
+)
+
+var (
+	zapLogger   = utility.ZapLogger
+	sugerLogger = utility.SugerLogger
 )
 
 // RequestInfo 请求字段的结构体
@@ -112,7 +118,7 @@ func PostWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
 
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
-		log.Println(err.Error())
+		zapLogger.Error(err.Error())
 		return
 	}
 	return
@@ -140,7 +146,7 @@ func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
 	}
 	resp, _ = http.DefaultClient.Do(req)
 	if err != nil {
-		log.Println(err.Error())
+		zapLogger.Error(err.Error())
 		return
 	}
 
