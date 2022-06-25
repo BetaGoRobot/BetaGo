@@ -2,6 +2,7 @@ package utility
 
 import "github.com/heyuhengmatt/zaplog"
 
+// var  ZapLog日志变量
 var (
 	ZapLogger   *zaplog.ZapLogger
 	SugerLogger *zaplog.ZapLoggerSugar

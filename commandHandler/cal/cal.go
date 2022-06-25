@@ -273,7 +273,7 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (st
 	}
 	defer resp.Body.Close()
 	filePath := filepath.Join(betagovar.ImagePath, time.Now().Format(time.RFC3339)+"_"+userName+"_chtime.png")
-	f, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, 0666)
+	f, _ := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
 	if err != nil {
 		return "", err
 	}
@@ -333,7 +333,7 @@ func DrawPieChartWithLocal(inputMap map[string]time.Duration, userName string) (
 	}
 	fileName := time.Now().Format(time.RFC3339) + "_" + userName + "_chtime.png"
 	filePath := filepath.Join(betagovar.ImagePath, fileName)
-	f, _ := os.Create(filePath)
+	f, _ := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
 	defer f.Close()
 	err := pie.Render(chart.PNG, f)
 

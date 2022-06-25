@@ -8,9 +8,10 @@ import (
 	"github.com/lonelyevil/khl"
 )
 
+// var  zapLogger = zaplog.New("errorsender")
 var (
-	zapLogger   = utility.ZapLogger
-	sugerLogger = utility.SugerLogger
+	ZapLogger   = utility.ZapLogger
+	SugerLogger = utility.SugerLogger
 )
 
 // SendErrorInfo 发送错误信息
@@ -39,7 +40,7 @@ func SendErrorInfo(targetID, QuoteID, authorID string, err error) {
 		},
 	}.BuildMessage()
 	if err != nil {
-		zapLogger.Error("SendErrorInfo", zaplog.Error(err))
+		ZapLogger.Error("SendErrorInfo", zaplog.Error(err))
 		return
 	}
 	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{

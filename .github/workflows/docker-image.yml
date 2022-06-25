@@ -34,11 +34,12 @@ jobs:
           retry_wait_seconds: 15
           command: | 
             echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login ccr.ccs.tencentyun.com -u 100016072032 --password-stdin
+            echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u kevinmatt --password-stdin
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build image
         run:  |
-          zip -r -0 betago.zip .
+          zip -r -9 betago.zip . -x ".git/*" -x  "qqmusicapi/qqmusic-api-service/*" -x "neteaseapi/netease-api-service/*"
           DOCKER_BUILDKIT=1 docker build --build-arg BOTAPI="${{ secrets.BOTAPI }}" --build-arg ROBOT_NAME=$ROBOT_NAME --build-arg  TEST_CHAN_ID=$TEST_CHAN_ID --build-arg ROBOT_ID=$ROBOT_ID --build-arg NETEASE_PHONE=$NETEASE_PHONE  --build-arg NETEASE_PASSWORD=$NETEASE_PASSWORD --build-arg COS_SECRET_ID=${{ secrets.COS_SECRET_ID }} --build-arg COS_SECRET_KEY=${{ secrets.COS_SECRET_KEY }} --build-arg COS_BUCKET_REGION_URL=${{ secrets.COS_BUCKET_REGION_URL }} --build-arg COS_BASE_URL=${{ secrets.COS_BASE_URL }} . --file scripts/Dockerfile --tag $IMAGE_NAME
       - name: Push image
         run:  |
