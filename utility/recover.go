@@ -38,6 +38,13 @@ func removeSensitiveInfo(stack []byte) string {
 			break
 		}
 		if b == '\n' {
+			if leftIndex, rightIndex := strings.Index(string(buf), "("), strings.Index(string(buf), ")"); leftIndex+1 != rightIndex {
+				if leftIndex != -1 && rightIndex != -1 {
+					temp := buf[:leftIndex+1]
+					temp = append(temp, buf[rightIndex:]...)
+					buf = temp
+				}
+			}
 			newD := strings.Split(string(buf), " ")
 			newD = strings.Split(string(strings.Join(newD[:len(newD)-1], "")), "/")
 			if len(newD) > 1 {
