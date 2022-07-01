@@ -38,7 +38,7 @@ func StartUpMessage(session *khl.Session) (err error) {
 									"Name: \t**", betagovar.RobotName, "**\n",
 									"Time: \t**", time.Now().Local().Format("2006-01-02 15:04:05"), "**\n",
 									"IP: \t**", currentIP, "**\n",
-									"Message: \t**", betagovar.CommitMessage, "**\n",
+									"Message: \t**" + betagovar.CommitMessage + "**\n",
 									"Commit-Page: \t[CommitPage](", betagovar.HTMLURL, ")\n",
 									"LeaveYourCommentHere: \t[CommentPage](", betagovar.CommentsURL, ")\n",
 								},
@@ -78,7 +78,7 @@ func StartUpMessage(session *khl.Session) (err error) {
 							Content: strings.Join(
 								[]string{
 									"Time: \t**", time.Now().Format("2006-01-02 15:04:05"), "**\n",
-									"更新内容: \t**", betagovar.CommitMessage, "**\n",
+									"更新内容: \t**" + betagovar.CommitMessage + "**\n",
 									"Commit-Page: \t[CommitPage](", betagovar.HTMLURL, ")\n",
 								},
 								""),
