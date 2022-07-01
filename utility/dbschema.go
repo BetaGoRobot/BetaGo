@@ -42,6 +42,9 @@ type ChannelLog struct {
 
 var (
 	isTest = os.Getenv("IS_TEST")
+
+	// globalDBConn  is the global db connection
+	globalDBConn *gorm.DB
 )
 
 func init() {
@@ -69,6 +72,9 @@ func init() {
 // GetDbConnection  returns the db connection
 //  @return *gorm.DB
 func GetDbConnection() *gorm.DB {
+	if globalDBConn != nil {
+		return globalDBConn
+	}
 	var dsn string
 	if isTest == "true" {
 		dsn = "host=localhost user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai"
@@ -85,5 +91,6 @@ func GetDbConnection() *gorm.DB {
 		ZapLogger.Error("get db connection error", zaplog.Error(err))
 		return nil
 	}
-	return db
+	globalDBConn = db
+	return globalDBConn
 }
