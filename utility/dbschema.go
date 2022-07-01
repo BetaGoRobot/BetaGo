@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/heyuhengmatt/zaplog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -77,9 +78,9 @@ func GetDbConnection() *gorm.DB {
 	}
 	var dsn string
 	if isTest == "true" {
-		dsn = "host=localhost user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+		dsn = "host=localhost user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
 	} else {
-		dsn = "host=betago-pg user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+		dsn = "host=betago-pg user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
