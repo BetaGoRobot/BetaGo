@@ -63,7 +63,6 @@ func main() {
 }
 
 func messageHan(ctx *khl.KmarkdownMessageContext) {
-	defer utility.CollectPanic()
 	go func() {
 		if ctx.Common.Type != khl.MessageTypeKMarkdown || ctx.Extra.Author.Bot {
 			return
