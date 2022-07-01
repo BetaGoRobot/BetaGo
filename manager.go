@@ -21,6 +21,7 @@ func clickEventAsyncHandler(ctx *khl.MessageButtonClickContext) {
 }
 
 func clickEventHandler(ctx *khl.MessageButtonClickContext) {
+	defer utility.CollectPanic()
 	var (
 		command    = ctx.Extra.Value
 		commandCtx = &comcontext.CommandContext{
@@ -116,6 +117,7 @@ func channelJoinedAsyncHandler(ctx *khl.GuildChannelMemberAddContext) {
 }
 
 func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
+	defer utility.CollectPanic()
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
@@ -170,6 +172,7 @@ func channelLeftAsyncHandler(ctx *khl.GuildChannelMemberDeleteContext) {
 	go channelLeftHandler(ctx)
 }
 func channelLeftHandler(ctx *khl.GuildChannelMemberDeleteContext) {
+	defer utility.CollectPanic()
 	// 离开频道时，记录频道信息
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
 	if err != nil {

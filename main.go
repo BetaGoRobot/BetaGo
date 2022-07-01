@@ -29,7 +29,6 @@ func init() {
 	betagovar.GlobalSession.AddHandler(receiveDirectMessage)
 	betagovar.GlobalSession.AddHandler(channelJoinedAsyncHandler)
 	betagovar.GlobalSession.AddHandler(channelLeftAsyncHandler)
-
 	go func() {
 		// pprof监控
 		http.ListenAndServe(":6060", nil)
@@ -64,6 +63,7 @@ func main() {
 }
 
 func messageHan(ctx *khl.KmarkdownMessageContext) {
+	defer utility.CollectPanic()
 	go func() {
 		if ctx.Common.Type != khl.MessageTypeKMarkdown || ctx.Extra.Author.Bot {
 			return

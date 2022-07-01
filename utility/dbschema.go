@@ -41,6 +41,11 @@ type ChannelLog struct {
 	ISUpdate    bool      `json:"is_update"`
 }
 
+// AlertList  is the struct of alert config
+type AlertList struct {
+	EmailAddress string
+}
+
 var (
 	isTest = os.Getenv("IS_TEST")
 
@@ -57,10 +62,11 @@ func init() {
 
 	// migrate
 	db := GetDbConnection()
-	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLog{})
+	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLog{}, &AlertList{})
 	if err != nil {
 		ZapLogger.Error("init", zaplog.Error(err))
 	}
+	getReceieverEmailList()
 	sqlDb, err := db.DB()
 	if err != nil {
 		log.Panicln(" get sql db error")

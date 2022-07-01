@@ -15,6 +15,7 @@ require (
 	github.com/enescakir/emoji v1.0.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/heyuhengmatt/zaplog v0.1.2
+	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
 	github.com/lonelyevil/khl v0.0.26
 	github.com/lonelyevil/khl/log_adapter/plog v0.0.26

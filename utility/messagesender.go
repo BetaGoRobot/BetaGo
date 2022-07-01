@@ -89,3 +89,44 @@ func SendMessage(targetID, QuoteID, authorID string, message string) {
 		},
 	)
 }
+
+// SendMessageWithTitle 发送消息
+//  @param targetID 目标ID
+//  @param QuoteID 引用ID
+//  @param authorID 作者ID
+//  @param message
+func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string) {
+	cardMessageStr, err := khl.CardMessage{
+		&khl.CardMessageCard{
+			Theme: "danger",
+			Size:  "lg",
+			Modules: []interface{}{
+				khl.CardMessageHeader{
+					Text: khl.CardMessageElementText{
+						Content: title,
+						Emoji:   true,
+					},
+				},
+				khl.CardMessageSection{
+					Text: khl.CardMessageElementKMarkdown{
+						Content: message,
+					},
+				},
+			},
+		},
+	}.BuildMessage()
+	if err != nil {
+		ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		return
+	}
+	betagovar.GlobalSession.MessageCreate(
+		&khl.MessageCreate{
+			MessageCreateBase: khl.MessageCreateBase{
+				Type:     khl.MessageTypeCard,
+				TargetID: targetID,
+				Content:  cardMessageStr,
+				Quote:    QuoteID,
+			},
+		},
+	)
+}
