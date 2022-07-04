@@ -215,7 +215,7 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 		return nil
 	}
-	utility.GetDbConnection().Table("betago.channel_logs").Where("user_id = ? and is_update = ?", userInfo.ID, true).Find(&logs)
+	utility.GetDbConnection().Table("betago.channel_logs").Where("user_id = ? and is_update = ? and left_time + interval '24 hours' > ?", userInfo.ID, true, time.Now()).Find(&logs)
 	var chanDiv = make(map[string]time.Duration)
 	for _, log := range logs {
 		if _, ok := chanDiv[log.ChannelID]; !ok {
@@ -236,7 +236,7 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (st
 	ctx := &DrawPieAPICtx{
 		Ct: "p3",
 		Title: DrawChartTitle{
-			Text: userName + "的频道时间分布",
+			Text: userName + "的频道时间分布(Last 24h)",
 			Size: 40,
 		},
 		Label: DrawChartLabel{
