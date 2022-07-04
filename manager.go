@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -9,7 +8,6 @@ import (
 	comcontext "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/lonelyevil/khl"
 )
@@ -21,7 +19,6 @@ func clickEventAsyncHandler(ctx *khl.MessageButtonClickContext) {
 }
 
 func clickEventHandler(ctx *khl.MessageButtonClickContext) {
-	defer utility.CollectPanic(ctx.Extra, ctx.Extra.TargetID, "", ctx.Extra.UserID)
 	var (
 		command    = ctx.Extra.Value
 		commandCtx = &comcontext.CommandContext{
@@ -35,24 +32,7 @@ func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 			},
 		}
 	)
-	switch command {
-	case "SHOWADMIN":
-		commandCtx.AdminShowHandler()
-	case "HELP":
-		commandCtx.HelpHandler()
-	case "ROLL":
-		commandCtx.RollDiceHandler()
-	case "ONEWORD":
-		commandCtx.GetHitokotoHandler()
-	case "PING":
-		commandCtx.PingHandler()
-	case "SHOWCAL":
-		commandCtx.ShowCalHandler()
-	case "TRYPANIC":
-		panic("Test Panic")
-	default:
-		commandCtx.ErrorSenderHandler(fmt.Errorf("非法操作" + emoji.Warning.String()))
-	}
+	commandCtx.ContextHandler(command)
 }
 
 func commandHandler(ctx *khl.KmarkdownMessageContext) {
@@ -66,51 +46,10 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	command, parameters := utility.GetCommandWithParameters(ctx.Common.Content)
 	commandCtx := comcontext.GetNewCommandCtx().Init(ctx.EventHandlerCommonContext).InitExtra(ctx)
 	if command != "" {
-		switch command {
-		case betagovar.ShortCommandHelp:
-			fallthrough
-		case "HELP":
-			commandCtx.HelpHandler(parameters...)
-		case betagovar.ShortCommandAddAdmin:
-			fallthrough
-		case "ADDADMIN":
-			commandCtx.AdminAddHandler(parameters...)
-		case betagovar.ShortCommandRemoveAdmin:
-			fallthrough
-		case "REMOVEADMIN":
-			commandCtx.AdminRemoveHandler(parameters...)
-		case betagovar.ShortCommandShowAdmin:
-			fallthrough
-		case "SHOWADMIN":
-			commandCtx.AdminShowHandler()
-		case betagovar.ShortCommandRoll:
-			fallthrough
-		case "ROLL":
-			commandCtx.RollDiceHandler(parameters...)
-		case betagovar.ShortCommandPing:
-			fallthrough
-		case "PING":
-			commandCtx.PingHandler()
-		case betagovar.ShortCommandHitokoto:
-			fallthrough
-		case "ONEWORD":
-			commandCtx.GetHitokotoHandler(parameters...)
-		case betagovar.ShortCommandMusic:
-			fallthrough
-		case "SEARCHMUSIC":
-			commandCtx.SearchMusicHandler(parameters...)
-		case "GETUSER":
-			commandCtx.GetUserInfoHandler(parameters...)
-		case betagovar.ShortCommandShowCal:
-			fallthrough
-		case "SHOWCAL":
-			commandCtx.ShowCalHandler(parameters...)
-		default:
-			commandCtx.ErrorSenderHandler(fmt.Errorf(emoji.QuestionMark.String()+"未知指令 `%s`", command))
-		}
+		commandCtx.ContextHandler(command, parameters...)
 	} else {
 		// 内容为空，发送help信息
-		commandCtx.HelpHandler()
+		commandCtx.ContextHandler(comcontext.CommandContextTypeHelper)
 	}
 }
 

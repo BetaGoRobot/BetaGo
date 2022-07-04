@@ -10,14 +10,15 @@ import (
 //  @param targetID
 //  @param qouteID
 //  @param authorID
-func PingHandler(targetID, quoteID, authorID string) {
+func PingHandler(TargetID, QuoteID, AuthorID string, parameters ...string) error {
 	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
 		MessageCreateBase: khl.MessageCreateBase{
 			Type:     khl.MessageTypeKMarkdown,
-			TargetID: targetID,
+			TargetID: TargetID,
 			Content:  emoji.WavingHand.String() + "pong~",
-			Quote:    quoteID,
+			Quote:    QuoteID,
 		},
-		TempTargetID: authorID,
+		TempTargetID: AuthorID,
 	})
+	return nil
 }

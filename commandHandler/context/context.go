@@ -1,12 +1,17 @@
 package context
 
 import (
+	"fmt"
+	"strings"
+
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/cal"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/hitokoto"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
+	"github.com/enescakir/emoji"
 
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 
@@ -38,6 +43,23 @@ type CommandExtraContext struct {
 func (ctx *CommandContext) IsAdmin() bool {
 	return utility.CheckIsAdmin(ctx.Common.AuthorID)
 }
+
+// CommandContextFunc is a function for command.
+//  @param TargetID
+//  @param MsgID
+//  @param AuthorID
+//  @param parameters
+//  @return error
+type CommandContextFunc func(TargetID, MsgID, AuthorID string, parameters ...string) error
+
+// CommandContextWithGuildIDFunc is a function for command.
+//  @param targetID
+//  @param quoteID
+//  @param authorID
+//  @param guildID
+//  @param args
+//  @return error
+type CommandContextWithGuildIDFunc func(targetID, quoteID, authorID string, guildID string, args ...string) error
 
 // GetNewCommandCtx  is a function for command.
 //  @return *CommandContext
@@ -81,90 +103,91 @@ func (ctx *CommandContext) InitExtra(khlCtx interface{}) *CommandContext {
 	return ctx
 }
 
-// HelpHandler is a function for command.
-//  @receiver ctx
-//  @return error
-func (ctx *CommandContext) HelpHandler(parameters ...string) {
-	if ctx.IsAdmin() {
-		ctx.ErrorSenderHandler(helper.AdminCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...))
-		return
-	}
-	ctx.ErrorSenderHandler(helper.UserCommandHelperHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...))
-}
-
-// AdminAddHandler is a function for command.
-//  @receiver ctx
-//  @param parameters
-//  @return string
-func (ctx *CommandContext) AdminAddHandler(parameters ...string) {
-	ctx.ErrorSenderHandler(admin.AddAdminHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...))
-}
-
-// AdminRemoveHandler is a function for command.
-//  @receiver ctx
-//  @param parameters
-//  @return error
-func (ctx *CommandContext) AdminRemoveHandler(parameters ...string) {
-	ctx.ErrorSenderHandler(admin.RemoveAdminHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...))
-}
-
-// AdminShowHandler is a function for command.
-//  @receiver ctx
-//  @return error
-func (ctx *CommandContext) AdminShowHandler() {
-	ctx.ErrorSenderHandler(admin.ShowAdminHandler(ctx.Common.TargetID, ctx.Common.MsgID))
-}
-
-// RollDiceHandler  is a function for command.
-//  @receiver ctx
-//  @return error
-func (ctx *CommandContext) RollDiceHandler(parameters ...string) {
-	ctx.ErrorSenderHandler(roll.RandRollHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...))
-}
-
-// PingHandler is a function for command.
-//  @receiver ctx
-func (ctx *CommandContext) PingHandler() {
-	helper.PingHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
-}
-
-// SearchMusicHandler  is a function for command.
-//  @receiver ctx
-//  @param parameters
-func (ctx *CommandContext) SearchMusicHandler(parameters ...string) {
-	ctx.ErrorSenderHandler(music.SearchMusicByRobot(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...))
-}
-
-// GetUserInfoHandler is a function for command.
-//  @receiver ctx
-//  @param guildID
-//  @param parameters
-//  @return error
-func (ctx *CommandContext) GetUserInfoHandler(parameters ...string) {
-	ctx.ErrorSenderHandler(helper.GetUserInfoHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, ctx.Extra.GuildID, parameters...))
-}
-
-// ShowCalHandler is a function for command.
-//  @receiver ctx
-//  @param parameters
-//  @return error
-func (ctx *CommandContext) ShowCalHandler(parameters ...string) {
-	ctx.ErrorSenderHandler(cal.ShowCalHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, ctx.Extra.GuildID, parameters...))
-}
-
-// GetHitokotoHandler is a function for command.
-//  @receiver ctx
-//  @param parameters
-//  @return error
-func (ctx *CommandContext) GetHitokotoHandler(parameters ...string) {
-	ctx.ErrorSenderHandler(hitokoto.GetHitokotoHandler(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...))
-}
-
 // ErrorSenderHandler is a function for command.
 //  @receiver ctx
 //  @param err
 func (ctx *CommandContext) ErrorSenderHandler(err error) {
 	if err != nil {
 		errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
+	}
+}
+
+// ErrorSenderHandlerNew  is a function for command.
+//  @receiver ctx
+//  @param err
+func (ctx *CommandContext) ErrorSenderHandlerNew(ctxFunc interface{}, parameters ...string) {
+	var err error
+	if realFunc, ok := ctxFunc.(CommandContextFunc); ok {
+		err = realFunc(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...)
+	}
+	if realFunc, ok := ctxFunc.(CommandContextWithGuildIDFunc); ok {
+		err = realFunc(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, ctx.Extra.GuildID, parameters...)
+	}
+	if err != nil {
+		errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
+	}
+}
+
+// ContextHandler is a function for command.
+//  @receiver ctx
+//  @param Command
+//  @param parameters
+func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) {
+	defer utility.CollectPanic(ctx, ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+	var ctxFunc CommandContextFunc
+	var ctxGuildFunc CommandContextWithGuildIDFunc
+	switch strings.ToUpper(Command) {
+	case betagovar.ShortCommandHelp:
+		fallthrough
+	case CommandContextTypeHelper:
+		if ctx.IsAdmin() {
+			ctxFunc = helper.AdminCommandHelperHandler
+		} else {
+			ctxFunc = helper.UserCommandHelperHandler
+		}
+	case betagovar.ShortCommandAddAdmin:
+		fallthrough
+	case CommandContextTypeAddAdmin:
+		ctxFunc = admin.AddAdminHandler
+	case betagovar.ShortCommandRemoveAdmin:
+		fallthrough
+	case CommandContextTypeRemoveAdmin:
+		ctxFunc = admin.RemoveAdminHandler
+	case betagovar.ShortCommandShowAdmin:
+		fallthrough
+	case CommandContextTypeShowAdmin:
+		ctxFunc = admin.ShowAdminHandler
+	case betagovar.ShortCommandRoll:
+		fallthrough
+	case CommandContextTypeRoll:
+		ctxFunc = roll.RandRollHandler
+	case betagovar.ShortCommandPing:
+		fallthrough
+	case CommandContextTypePing:
+		ctxFunc = helper.PingHandler
+	case betagovar.ShortCommandHitokoto:
+		fallthrough
+	case CommandContextTypeHitokoto:
+		ctxFunc = hitokoto.GetHitokotoHandler
+	case betagovar.ShortCommandMusic:
+		fallthrough
+	case CommandContextTypeMusic:
+		ctxFunc = music.SearchMusicByRobot
+	case CommandContextTypeUser:
+		ctxGuildFunc = helper.GetUserInfoHandler
+	case betagovar.ShortCommandShowCal:
+		fallthrough
+	case CommandContextTypeCal:
+		ctxGuildFunc = cal.ShowCalHandler
+	case CommandContextTypeTryPanic:
+		panic("try panic")
+	default:
+		ctx.ErrorSenderHandler(fmt.Errorf(emoji.QuestionMark.String()+"未知指令 `%s`", Command))
+	}
+	if ctxFunc != nil {
+		ctx.ErrorSenderHandlerNew(ctxFunc, parameters...)
+	}
+	if ctxGuildFunc != nil {
+		ctx.ErrorSenderHandlerNew(ctxGuildFunc, parameters...)
 	}
 }

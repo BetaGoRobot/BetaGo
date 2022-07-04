@@ -20,7 +20,7 @@ func HourlyGetSen() {
 			},
 			Extra: &command_context.CommandExtraContext{},
 		}
-		commandCtx.GetHitokotoHandler()
+		commandCtx.ContextHandler("hitokoto")
 	}
 }
 

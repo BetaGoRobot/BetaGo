@@ -14,7 +14,7 @@ import (
 //  @param targetID
 //  @param quoteID
 //  @return err
-func ShowAdminHandler(targetID, quoteID string) (err error) {
+func ShowAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
 	admins := make([]utility.Administrator, 0)
 	utility.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level DESC")
 	modules := make([]interface{}, 0)
@@ -36,13 +36,17 @@ func ShowAdminHandler(targetID, quoteID string) (err error) {
 			},
 		})
 	for _, admin := range admins {
+		info, err := utility.GetUserInfo(strconv.Itoa(int(admin.UserID)), "")
+		if err != nil {
+			return err
+		}
 		modules = append(modules,
 			khl.CardMessageSection{
 				Text: khl.CardMessageParagraph{
 					Cols: 3,
 					Fields: []interface{}{
 						khl.CardMessageElementKMarkdown{
-							Content: fmt.Sprintf(`(met)%d(met)`, admin.UserID),
+							Content: fmt.Sprintf("`%s`", info.Nickname),
 						},
 						khl.CardMessageElementKMarkdown{
 							Content: strconv.Itoa(int(admin.UserID)),
@@ -69,9 +73,9 @@ func ShowAdminHandler(targetID, quoteID string) (err error) {
 		&khl.MessageCreate{
 			MessageCreateBase: khl.MessageCreateBase{
 				Type:     khl.MessageTypeCard,
-				TargetID: targetID,
+				TargetID: TargetID,
 				Content:  cardMessageStr,
-				Quote:    quoteID,
+				Quote:    QuoteID,
 			},
 		},
 	)

@@ -1,7 +1,7 @@
 package betagovar
 
 // var 短命令参数
-var (
+const (
 	ShortCommandShowCal     = "SC"
 	ShortCommandShowAdmin   = "SA"
 	ShortCommandAddAdmin    = "AA"
@@ -11,5 +11,4 @@ var (
 	ShortCommandRoll        = "R"
 	ShortCommandHitokoto    = "HI"
 	ShortCommandMusic       = "M"
-	ShortCommandAdmin       = "A"
 )
