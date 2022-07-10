@@ -15,7 +15,7 @@ import (
 // Administrator is the struct of administrator
 type Administrator struct {
 	gorm.Model
-	UserID   int64  `json:"user_id"`
+	UserID   int64  `json:"user_id" gorm:"primaryKey"`
 	UserName string `json:"user_name"`
 	Level    int64  `json:"level"`
 }
@@ -32,7 +32,7 @@ type CommandInfo struct {
 
 // ChannelLog  is the struct of channel log
 type ChannelLog struct {
-	UserID      string    `json:"user_id"`
+	UserID      string    `json:"user_id" gorm:"primaryKey"`
 	UserName    string    `json:"user_name"`
 	ChannelID   string    `json:"channel_id"`
 	ChannelName string    `json:"channel_name"`
@@ -54,6 +54,7 @@ var (
 )
 
 func init() {
+	InitLogger()
 	// try get db conn
 	if GetDbConnection() == nil {
 		ZapLogger.Error("get db connection error")

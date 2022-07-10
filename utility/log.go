@@ -10,6 +10,10 @@ var (
 
 // InitLogger 初始化日志
 func InitLogger() {
-	ZapLogger = zaplog.NewLogger("/data/log/betago")
-	SugerLogger = zaplog.NewSugarLogger(ZapLogger)
+	if ZapLogger == nil {
+		ZapLogger = zaplog.NewLogger("/data/log/betago")
+	}
+	if SugerLogger == nil {
+		SugerLogger = zaplog.NewSugarLogger(ZapLogger)
+	}
 }
