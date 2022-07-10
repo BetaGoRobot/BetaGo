@@ -2,12 +2,14 @@ package goaway
 
 // DefaultFalsePositives is a list of words that may wrongly trigger the DefaultProfanities
 var DefaultFalsePositives = []string{
+	"analy", // analysis, analytics
 	"arsenal",
 	"assassin",
 	"assaying", // was saying
 	"assert",
 	"assign",
 	"assimil",
+	"assist",
 	"associat",
 	"assum", // assuming, assumption, assumed
 	"assur", // assurance
@@ -15,6 +17,7 @@ var DefaultFalsePositives = []string{
 	"basement",
 	"bass",
 	"cass", // cassie, cassandra, carcass
+	"butter", // butter, butterfly
 	"butthe",
 	"canvass",
 	"circum",
@@ -38,6 +41,8 @@ var DefaultFalsePositives = []string{
 	"horniman",
 	"hotwater",
 	"identit",
+	"kassa", // kassandra
+	"kassi", // kassie, kassidy
 	"lass", // class
 	"leafage",
 	"libshitz",

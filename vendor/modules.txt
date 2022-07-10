@@ -1,4 +1,4 @@
-# github.com/TwiN/go-away v1.6.4
+# github.com/TwiN/go-away v1.6.7
 ## explicit; go 1.18
 github.com/TwiN/go-away
 # github.com/bits-and-blooms/bitset v1.2.2
@@ -17,8 +17,8 @@ github.com/enescakir/emoji
 ## explicit
 github.com/golang/freetype/raster
 github.com/golang/freetype/truetype
-# github.com/google/go-querystring v1.0.0
-## explicit
+# github.com/google/go-querystring v1.1.0
+## explicit; go 1.10
 github.com/google/go-querystring/query
 # github.com/gorilla/websocket v1.5.0
 ## explicit; go 1.12
@@ -66,13 +66,13 @@ github.com/jordan-wright/email
 # github.com/json-iterator/go v1.1.12
 ## explicit; go 1.12
 github.com/json-iterator/go
-# github.com/lonelyevil/khl v0.0.26
+# github.com/lonelyevil/khl v0.0.27
 ## explicit; go 1.16
 github.com/lonelyevil/khl
-# github.com/lonelyevil/khl/log_adapter/plog v0.0.26
+# github.com/lonelyevil/khl/log_adapter/plog v0.0.27
 ## explicit; go 1.16
 github.com/lonelyevil/khl/log_adapter/plog
-# github.com/mitchellh/mapstructure v1.4.3
+# github.com/mitchellh/mapstructure v1.5.0
 ## explicit; go 1.14
 github.com/mitchellh/mapstructure
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
@@ -81,10 +81,10 @@ github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.2
 ## explicit; go 1.12
 github.com/modern-go/reflect2
-# github.com/mozillazg/go-httpheader v0.2.1
-## explicit
+# github.com/mozillazg/go-httpheader v0.3.1
+## explicit; go 1.11
 github.com/mozillazg/go-httpheader
-# github.com/phuslu/log v1.0.77
+# github.com/phuslu/log v1.0.80
 ## explicit; go 1.13
 github.com/phuslu/log
 # github.com/tencentyun/cos-go-sdk-v5 v0.7.35
@@ -110,10 +110,10 @@ go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
-# golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
+# golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
 ## explicit; go 1.17
 golang.org/x/crypto/pbkdf2
-# golang.org/x/image v0.0.0-20200927104501-e162460cd6b5
+# golang.org/x/image v0.0.0-20220617043117-41969df76e82
 ## explicit; go 1.12
 golang.org/x/image/draw
 golang.org/x/image/font
@@ -137,10 +137,10 @@ golang.org/x/text/width
 # gopkg.in/natefinch/lumberjack.v2 v2.0.0
 ## explicit
 gopkg.in/natefinch/lumberjack.v2
-# gorm.io/driver/postgres v1.3.7
+# gorm.io/driver/postgres v1.3.8
 ## explicit; go 1.14
 gorm.io/driver/postgres
-# gorm.io/gorm v1.23.5
+# gorm.io/gorm v1.23.8
 ## explicit; go 1.14
 gorm.io/gorm
 gorm.io/gorm/callbacks

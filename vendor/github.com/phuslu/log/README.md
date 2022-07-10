@@ -22,7 +22,7 @@
 * Third-party Logger Interceptor
     - `Logger.Std`, *(std)log*
     - `Logger.Grpc`, *grpclog.LoggerV2*
-    - `Logger.Logr`, *logr.Logger*
+    - `Logger.GrpcGatewayLogger`, *grpcgateway.Logger*
 * Useful utility function
     - `Goid()`, *the goroutine id matches stack trace*
     - `NewXID()`, *create a tracing id*
@@ -51,13 +51,14 @@ type Logger struct {
 	Level Level
 
 	// Caller determines if adds the file:line of the "caller" key.
+	// If Caller is negative, adds the full /path/to/file:line of the "caller" key.
 	Caller int
 
 	// TimeField defines the time filed name in output.  It uses "time" in if empty.
 	TimeField string
 
 	// TimeFormat specifies the time format in output. It uses RFC3339 with millisecond if empty.
-	// If set with `TimeFormatUnix`, `TimeFormatUnixMs`, times are formated as UNIX timestamp.
+	// If set with `TimeFormatUnix/TimeFormatUnixMs/TimeFormatUnixWithMs`, timestamps are formated.
 	TimeFormat string
 
 	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
@@ -179,9 +180,19 @@ func main() {
 	}
 
 	log.Info().Str("foo", "bar").Msgf("hello %s", "world")
+
+	logger := log.Logger{
+		Level:      log.InfoLevel,
+		TimeField:  "ts",
+		TimeFormat: log.TimeFormatUnixWithMs,
+	}
+
+	logger.Log().Str("foo", "bar").Msg("")
 }
 
-// Output: {"date":"2019-07-04","level":"info","caller":"prog.go:16","foo":"bar","message":"hello world"}
+// Output:
+//    {"date":"2019-07-04","level":"info","caller":"prog.go:16","foo":"bar","message":"hello world"}
+//    {"ts":1257894000.000,"foo":"bar"}
 ```
 
 ### Pretty Console Writer
@@ -303,6 +314,54 @@ func main() {
 					total += matches[i].Size()
 					if total > 5*1024*1024*1024 {
 						os.Remove(filepath.Join(dir, matches[i].Name()))
+					}
+				}
+			},
+		},
+	}
+
+	runner := cron.New(cron.WithLocation(time.UTC))
+	runner.AddFunc("0 * * * *", func() { logger.Writer.(*log.FileWriter).Rotate() })
+	go runner.Run()
+
+	for {
+		time.Sleep(time.Second)
+		logger.Info().Msg("hello world")
+	}
+}
+```
+
+### Rotating File Writer with compression
+
+To rotating log file hourly and compressing after rotation, use `FileWriter.Cleaner`.
+```go
+package main
+
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"time"
+
+	"github.com/phuslu/log"
+	"github.com/robfig/cron/v3"
+)
+
+func main() {
+	logger := log.Logger{
+		Level: log.ParseLevel("info"),
+		Writer: &log.FileWriter{
+			Filename: "main.log",
+			MaxSize:  500 * 1024 * 1024,
+			Cleaner:  func(filename string, maxBackups int, matches []os.FileInfo) {
+				var dir = filepath.Dir(filename)
+				for i, fi := range matches {
+					filename := filepath.Join(dir, fi.Name())
+					switch {
+					case i > maxBackups:
+						os.Remove(filename)
+					case !strings.HasSuffix(filename, ".gz"):
+						go exec.Command("gzip", filename).Run()
 					}
 				}
 			},
@@ -488,16 +547,15 @@ logger.Writer.(io.Closer).Close()
 
 > Note: To flush data and quit safely, call `AsyncWriter.Close()` explicitly.
 
-### StdLog & Logr & Grpc Interceptor
+### StdLog & Grpc Interceptor
 
-Using wrapped loggers for stdlog/grpc/logr. [![playground][play-interceptor-img]][play-interceptor]
+Using wrapped loggers for stdlog/grpc. [![playground][play-interceptor-img]][play-interceptor]
 
 ```go
 package main
 
 import (
 	stdLog "log"
-	"github.com/go-logr/logr"
 	"github.com/phuslu/log"
 	"google.golang.org/grpc/grpclog"
 )
@@ -513,11 +571,6 @@ func main() {
 	var grpclog grpclog.LoggerV2 = log.DefaultLogger.Grpc(ctx)
 	grpclog.Infof("hello %s", "grpclog Infof message")
 	grpclog.Errorf("hello %s", "grpclog Errorf message")
-
-	var logrLog logr.Logger = log.DefaultLogger.Logr(ctx)
-	logrLog = logrLog.WithName("a_named_logger").WithValues("a_key", "a_value")
-	logrLog.Info("hello", "foo", "bar", "number", 42)
-	logrLog.Error(errors.New("this is a error"), "hello", "foo", "bar", "number", 42)
 }
 ```
 
@@ -787,23 +840,23 @@ func BenchmarkCallerPhusLog(b *testing.B) {
 ```
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkDisableZap-4         	100000000	       111 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZap-4          	 9192708	      1258 ns/op	     192 B/op	       1 allocs/op
-BenchmarkInterfaceZap-4       	 7009218	      1746 ns/op	     208 B/op	       2 allocs/op
-BenchmarkPrintfZap-4          	 7389448	      1648 ns/op	      96 B/op	       2 allocs/op
-BenchmarkCallerZap-4          	 4112085	      2948 ns/op	     440 B/op	       4 allocs/op
+BenchmarkDisableZap-4         	72864122	       155.3 ns/op	     192 B/op	       1 allocs/op
+BenchmarkNormalZap-4          	 9489657	      1301 ns/op	     192 B/op	       1 allocs/op
+BenchmarkInterfaceZap-4       	 6692570	      1779 ns/op	     208 B/op	       2 allocs/op
+BenchmarkPrintfZap-4          	 6956133	      1704 ns/op	      96 B/op	       2 allocs/op
+BenchmarkCallerZap-4          	 3169976	      3855 ns/op	     424 B/op	       3 allocs/op
 
-BenchmarkDisableZeroLog-4     	940196673	        12.4 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalZeroLog-4      	16421583	       717 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInterfaceZeroLog-4   	11076124	      1075 ns/op	      48 B/op	       1 allocs/op
-BenchmarkPrintfZeroLog-4      	 9741673	      1233 ns/op	      96 B/op	       2 allocs/op
-BenchmarkCallerZeroLog-4      	 3882822	      3152 ns/op	     272 B/op	       4 allocs/op
+BenchmarkDisableZeroLog-4     	970189784	        12.13 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalZeroLog-4      	16062643	       746.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfaceZeroLog-4   	10577792	      1126 ns/op	      48 B/op	       1 allocs/op
+BenchmarkPrintfZeroLog-4      	 9281743	      1341 ns/op	      96 B/op	       2 allocs/op
+BenchmarkCallerZeroLog-4      	 3067664	      3848 ns/op	     272 B/op	       4 allocs/op
 
-BenchmarkDisablePhusLog-4     	1000000000	        11.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4      	27455464	       426 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInterfacePhusLog-4   	14598555	       756 ns/op	       0 B/op	       0 allocs/op
-BenchmarkPrintfPhusLog-4      	15283591	       796 ns/op	      16 B/op	       1 allocs/op
-BenchmarkCallerPhusLog-4      	 8991439	      1376 ns/op	     216 B/op	       2 allocs/op
+BenchmarkDisablePhusLog-4     	1000000000	        11.51 ns/op	       0 B/op	       0 allocs/op
+BenchmarkNormalPhusLog-4      	29821248	       419.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkInterfacePhusLog-4   	14412892	       819.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPrintfPhusLog-4      	13294568	       880.2 ns/op	      16 B/op	       1 allocs/op
+BenchmarkCallerPhusLog-4      	 8059633	      1464 ns/op	     216 B/op	       2 allocs/op
 ```
 This library uses the following special techniques to achieve better performance,
 1. handwriting time formatting
@@ -931,7 +984,7 @@ func main() {
 This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson] and [lumberjack][lumberjack].
 
 [godoc-img]: http://img.shields.io/badge/godoc-reference-5272B4.svg
-[godoc]: https://godocs.io/github.com/phuslu/log
+[godoc]: https://pkg.go.dev/github.com/phuslu/log
 [report-img]: https://goreportcard.com/badge/github.com/phuslu/log
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
@@ -941,27 +994,27 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [stability-img]: https://img.shields.io/badge/stability-stable-green.svg
 [high-performance]: https://github.com/phuslu/log#high-performance
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
-[play-simple]: https://play.golang.org/p/NGV25aBKmYH
+[play-simple]: https://go.dev/play/p/NGV25aBKmYH
 [play-customize-img]: https://img.shields.io/badge/playground-emTsJJKUGXZ-29BEB0?style=flat&logo=go
-[play-customize]: https://play.golang.org/p/emTsJJKUGXZ
-[play-multiio-img]: https://img.shields.io/badge/playground-bwo03SW0B3l-29BEB0?style=flat&logo=go
-[play-multiio]: https://play.golang.org/p/bwo03SW0B3l
+[play-customize]: https://go.dev/play/p/emTsJJKUGXZ
+[play-multiio-img]: https://img.shields.io/badge/playground-MH--J3Je--KEq-29BEB0?style=flat&logo=go
+[play-multiio]: https://go.dev/play/p/MH-J3Je-KEq
 [play-combined-img]: https://img.shields.io/badge/playground-24d4eDIpDeR-29BEB0?style=flat&logo=go
-[play-combined]: https://play.golang.org/p/24d4eDIpDeR
-[play-file-img]: https://img.shields.io/badge/playground-nS--ILxFyhHM-29BEB0?style=flat&logo=go
-[play-file]: https://play.golang.org/p/nS-ILxFyhHM
+[play-combined]: https://go.dev/play/p/24d4eDIpDeR
+[play-file-img]: https://img.shields.io/badge/playground-__tqZqJla1IE-29BEB0?style=flat&logo=go
+[play-file]: https://go.dev/play/p/_tqZqJla1IE
 [play-pretty-img]: https://img.shields.io/badge/playground-SCcXG33esvI-29BEB0?style=flat&logo=go
-[play-pretty]: https://play.golang.org/p/SCcXG33esvI
+[play-pretty]: https://go.dev/play/p/SCcXG33esvI
 [pretty-img]: https://user-images.githubusercontent.com/195836/101993218-cda82380-3cf3-11eb-9aa2-b8b1c832a72e.png
 [play-formatting-img]: https://img.shields.io/badge/playground-UmJmLxYXwRO-29BEB0?style=flat&logo=go
-[play-formatting]: https://play.golang.org/p/UmJmLxYXwRO
+[play-formatting]: https://go.dev/play/p/UmJmLxYXwRO
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
-[play-context]: https://play.golang.org/p/oAVAo302faf
+[play-context]: https://go.dev/play/p/oAVAo302faf
 [play-context-add-img]: https://img.shields.io/badge/playground-LuCghJxMPHI-29BEB0?style=flat&logo=go
-[play-context-add]: https://play.golang.org/p/LuCghJxMPHI
+[play-context-add]: https://go.dev/play/p/LuCghJxMPHI
 [play-marshal-img]: https://img.shields.io/badge/playground-SoQdwQOaQR2-29BEB0?style=flat&logo=go
-[play-marshal]: https://play.golang.org/p/SoQdwQOaQR2
-[play-interceptor]: https://play.golang.org/p/upmVP5cO62Y
+[play-marshal]: https://go.dev/play/p/SoQdwQOaQR2
+[play-interceptor]: https://go.dev/play/p/upmVP5cO62Y
 [play-interceptor-img]: https://img.shields.io/badge/playground-upmVP5cO62Y-29BEB0?style=flat&logo=go
 [benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark
 [zerolog]: https://github.com/rs/zerolog
