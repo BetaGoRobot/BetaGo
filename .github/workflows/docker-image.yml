@@ -89,9 +89,13 @@ jobs:
 
             # 设置镜像 id 和版本号
             docker tag $IMAGE_NAME $IMAGE_NAME:latest
-            # 进行 push
             
-            docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest 
-            docker push $TENCENT_HEADER/$IMAGE_NAME:latest
-            docker tag $TENCENT_HEADER/$IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
-            docker push $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
+            # 进行 push
+            docker push $IMAGE_NAME:latest
+            docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest-$currentTimeStamp
+            docker push $IMAGE_NAME:latest-$currentTimeStamp
+
+            # docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest 
+            # docker push $TENCENT_HEADER/$IMAGE_NAME:latest
+            # docker tag $TENCENT_HEADER/$IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
+            # docker push $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
