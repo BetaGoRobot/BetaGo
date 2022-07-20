@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -148,13 +149,14 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 			if err != nil {
 				return
 			}
-			URL, err := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
-			if err != nil {
+			URL, tmpErr := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+			if tmpErr != nil {
 				// 尝试使用本地绘图
 				URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
 				if err != nil {
 					return err
 				}
+				errorsender.SendErrorInfo(targetID, msgID, authorID, tmpErr)
 			}
 			cardContainer = append(cardContainer,
 				khl.CardMessageElementImage{
@@ -169,13 +171,14 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 		if err != nil {
 			return
 		}
-		URL, err := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
-		if err != nil {
+		URL, tmpErr := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+		if tmpErr != nil {
 			// 尝试使用本地绘图
 			URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
 			if err != nil {
 				return err
 			}
+			errorsender.SendErrorInfo(targetID, msgID, authorID, tmpErr)
 		}
 		cardContainer = append(cardContainer,
 			khl.CardMessageElementImage{
@@ -215,26 +218,24 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 		return nil
 	}
-	utility.GetDbConnection().Table("betago.channel_logs").Where("user_id = ? and is_update = ?", userInfo.ID, true).Order("left_time desc").Find(&logs)
+	utility.GetDbConnection().Table("betago.channel_logs").Where("user_id = ? and is_update = ?", userInfo.ID, true).Order("left_time desc").Find(&logs).Limit(1000)
 	var chanDiv = make(map[string]time.Duration)
 	var totalTime time.Duration
 	for _, log := range logs {
 		timeCost := log.LeftTime.Sub(log.JoinedTime)
-		if _, ok := chanDiv[log.ChannelID]; !ok {
-			chanDiv[log.ChannelName] += timeCost
-		} else {
-			chanDiv[log.ChannelName] += timeCost
+		if timeCost < time.Minute*10 {
+			// 10分钟以内的数据忽略
+			continue
 		}
-		if totalTime+timeCost >= time.Second*3600*24 {
-			if len(chanDiv) == 1 {
-				chanDiv[log.ChannelName] = time.Hour * 24
-			} else {
-				chanDiv[log.ChannelName] = (time.Second*3600*24 - totalTime)
-			}
+		chanDiv[log.ChannelName] += timeCost
+		if totalTime+timeCost >= time.Hour*24 {
+			chanDiv[log.ChannelName] += (time.Hour*24 - totalTime)
 			break
 		}
 		totalTime += timeCost
 	}
+	a := totalTime.Hours()
+	fmt.Println(a)
 	return chanDiv
 }
 
@@ -248,28 +249,53 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (st
 		Ct: "p3",
 		Title: DrawChartTitle{
 			Text: userName + "的频道时间分布(Last 24h)",
-			Size: 40,
+			Size: 35,
 		},
 		Label: DrawChartLabel{
 			Text: []string{},
-			Size: 30,
+			Size: 25,
 		},
 		Legend: DrawChartLegend{
 			Text:     []string{},
-			Size:     20,
-			Position: "r",
+			Size:     15,
+			Position: "t",
 		},
-		Size: "812x812",
+		Size: "600x600",
 		// IsDivided: true,
 	}
-	var totalTime time.Duration
-	for _, v := range inputMap {
-		totalTime += v
-	}
+	var (
+		totalTime time.Duration
+		tmpSlice  = make([]struct {
+			k string
+			v time.Duration
+		}, 0)
+	)
+
 	for k, v := range inputMap {
-		timeConv, _ := time.ParseDuration(fmt.Sprintf("%.1fs", v.Seconds()))
-		ctx.Label.Text = append(ctx.Label.Text, k+"\n"+timeConv.String()+"\n"+fmt.Sprintf("%.2f", float64(v)/float64(totalTime)*100)+"%")
-		ctx.Legend.Text = append(ctx.Legend.Text, k)
+		totalTime += v
+		tmpSlice = append(tmpSlice, struct {
+			k string
+			v time.Duration
+		}{k, v})
+	}
+	sort.Slice(tmpSlice, func(i, j int) bool {
+		return tmpSlice[i].v > tmpSlice[j].v
+	})
+	for _, item := range tmpSlice {
+		k := item.k
+		v := item.v
+		tmp := fmt.Sprintf("%.1fm", v.Minutes())
+		timeConv, _ := time.ParseDuration(tmp)
+		percent := float64(v) / float64(totalTime) * 100
+		percentStr := fmt.Sprintf("%.2f", float64(v)/float64(totalTime)*100) + "%"
+		timeConvWithPercent := timeConv.String() + "\n" + percentStr
+		if percent >= 10 {
+			// %5实质为最大1个小时的值
+			ctx.Label.Text = append(ctx.Label.Text, k+"\n"+timeConvWithPercent)
+		} else {
+			ctx.Label.Text = append(ctx.Label.Text, percentStr)
+		}
+		ctx.Legend.Text = append(ctx.Legend.Text, k+"-"+percentStr)
 		ctx.Data = append(ctx.Data, fmt.Sprintf("%.1f", float64(v)/float64(totalTime)*100))
 	}
 	apiURL += ctx.BuildRequestURL()
@@ -312,36 +338,46 @@ func DrawPieChartWithLocal(inputMap map[string]time.Duration, userName string) (
 	for _, v := range inputMap {
 		totalTime += v
 	}
+	tmpSlice := make([]struct {
+		k string
+		v time.Duration
+	}, 0)
 	for k, v := range inputMap {
-		timeConv, _ := time.ParseDuration(fmt.Sprintf("%.1fs", v.Seconds()))
-		values = append(values, chart.Value{
-			Style: chart.Style{
-				FontSize:            10,
-				TextHorizontalAlign: 2,
-				TextVerticalAlign:   4,
-				TextWrap:            3,
-				TextLineSpacing:     1,
-				TextRotationDegrees: 0,
-				FontColor:           chart.ColorBlack,
-			},
-			Label: k + " " + timeConv.String() + " " + fmt.Sprintf("%.2f", float64(v)/float64(totalTime)*100) + "%",
-			Value: float64(timeConv),
-		})
+		tmpSlice = append(tmpSlice, struct {
+			k string
+			v time.Duration
+		}{k, v})
 	}
+	sort.Slice(tmpSlice, func(i, j int) bool {
+		return tmpSlice[i].v > tmpSlice[j].v
+	})
+	for _, item := range tmpSlice {
+		timeConv, _ := time.ParseDuration(fmt.Sprintf("%.1fs", item.v.Seconds()))
+		values = append(values,
+			chart.Value{
+				Style: chart.Style{
+					FontSize:            30,
+					TextHorizontalAlign: 2,
+					TextVerticalAlign:   4,
+					TextWrap:            1,
+					TextLineSpacing:     1,
+					TextRotationDegrees: 0,
+					FontColor:           chart.ColorBlack,
+				},
+				Label: item.k + " " + timeConv.String(),
+				Value: float64(float64(item.v) / float64(totalTime) * 100),
+			})
+	}
+
 	// TODO: 绘制频道时间饼状图
-	pie := chart.PieChart{
+	pie := chart.BarChart{
 		Title:  userName + "的频道时间分布",
-		Width:  256,
-		Height: 256,
-		Canvas: chart.Style{
-			FontColor: chart.ColorWhite,
-		},
-		SliceStyle: chart.Style{
-			FontColor: chart.ColorWhite,
-		},
-		Font:   utility.GlowSansSC,
-		Values: values,
+		Width:  512,
+		Height: 512,
+		Font:   utility.MicrosoftYaHei,
+		Bars:   values,
 	}
+
 	fileName := time.Now().Format(time.RFC3339) + "_" + userName + "_chtime.png"
 	filePath := filepath.Join(betagovar.ImagePath, fileName)
 	f, _ := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)

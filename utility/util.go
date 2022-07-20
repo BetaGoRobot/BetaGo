@@ -16,8 +16,8 @@ import (
 	"github.com/lonelyevil/khl"
 )
 
-// GlowSansSC  字体类型,未来荧黑
-var GlowSansSC *truetype.Font
+// MicrosoftYaHei  字体类型,未来荧黑
+var MicrosoftYaHei *truetype.Font
 
 func init() {
 	InitGlowSansSCFontType()
@@ -31,7 +31,7 @@ func InitGlowSansSCFontType() {
 		log.Println(err)
 		return
 	}
-	GlowSansSC, err = truetype.Parse(fontBytes)
+	MicrosoftYaHei, err = truetype.Parse(fontBytes)
 	if err != nil {
 		log.Println(err)
 		return
