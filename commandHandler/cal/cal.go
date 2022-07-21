@@ -287,7 +287,7 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (st
 		tmp := fmt.Sprintf("%.1fm", v.Minutes())
 		timeConv, _ := time.ParseDuration(tmp)
 		percent := float64(v) / float64(totalTime) * 100
-		percentStr := fmt.Sprintf("%.2f", float64(v)/float64(totalTime)*100) + "%"
+		percentStr := fmt.Sprintf("%.1f", float64(v)/float64(totalTime)*100) + "%"
 		timeConvWithPercent := timeConv.String() + "\n" + percentStr
 		if percent >= 10 {
 			// %5实质为最大1个小时的值
