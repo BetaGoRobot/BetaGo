@@ -61,15 +61,24 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 			})
 			tempMap[song.Name+" - "+song.ArtistName] = 0
 		}
-		modulesNetese = append([]interface{}{
-			khl.CardMessageHeader{
-				Text: khl.CardMessageElementText{
-					Content: emoji.Headphone.String() + "网易云音乐-搜索结果" + emoji.MagnifyingGlassTiltedLeft.String(),
-					Emoji:   false,
+		if len(resNetease) != 0 {
+			modulesNetese = append([]interface{}{
+				khl.CardMessageHeader{
+					Text: khl.CardMessageElementText{
+						Content: emoji.Headphone.String() + "网易云音乐-搜索结果" + emoji.MagnifyingGlassTiltedLeft.String(),
+						Emoji:   false,
+					},
 				},
-			},
-		}, modulesNetese...)
-
+			}, modulesNetese...)
+			cardMessage = append(
+				cardMessage,
+				&khl.CardMessageCard{
+					Theme:   khl.CardThemePrimary,
+					Size:    khl.CardSizeSm,
+					Modules: modulesNetese,
+				},
+			)
+		}
 		tempMap = make(map[string]byte)
 		// 添加QQ音乐搜索的结果
 		for _, song := range resQQmusic {
@@ -84,27 +93,27 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 			})
 			tempMap[song.Name+" - "+song.ArtistName] = 0
 		}
-		modulesQQ = append([]interface{}{
-			khl.CardMessageHeader{
-				Text: khl.CardMessageElementText{
-					Content: emoji.MusicalNote.String() + "QQ音乐-搜索结果" + emoji.MagnifyingGlassTiltedLeft.String(),
-					Emoji:   false,
+		if len(resQQmusic) != 0 {
+			modulesQQ = append([]interface{}{
+				khl.CardMessageHeader{
+					Text: khl.CardMessageElementText{
+						Content: emoji.MusicalNote.String() + "QQ音乐-搜索结果" + emoji.MagnifyingGlassTiltedLeft.String(),
+						Emoji:   false,
+					},
 				},
-			},
-		}, modulesQQ...)
-
-		cardMessage = append(cardMessage,
-			&khl.CardMessageCard{
-				Theme:   khl.CardThemePrimary,
-				Size:    khl.CardSizeSm,
-				Modules: modulesNetese,
-			},
-			&khl.CardMessageCard{
-				Theme:   khl.CardThemePrimary,
-				Size:    khl.CardSizeSm,
-				Modules: modulesQQ,
-			},
-		)
+			}, modulesQQ...)
+			cardMessage = append(
+				cardMessage,
+				&khl.CardMessageCard{
+					Theme:   khl.CardThemePrimary,
+					Size:    khl.CardSizeSm,
+					Modules: modulesQQ,
+				},
+			)
+		}
+		if len(resNetease) == 0 && len(resQQmusic) == 0 {
+			return
+		}
 		cardStr, err = cardMessage.BuildMessage()
 		if err != nil {
 			zapLogger.Error("构建消息失败", zaplog.Error(err))
