@@ -29,4 +29,20 @@
 
     ...
     
-![image](https://user-images.githubusercontent.com/36391318/178223099-a2aa441c-3a5a-4a6b-9379-712a1ad28ae0.png)
+## 无参数/Help时展示当前用户支持的命令列表及使用方式
+
+![指令详情-test](https://user-images.githubusercontent.com/36391318/185680325-4e3eb0fa-ca1e-4120-b359-3c155c0de06c.gif)
+
+## 触发Panic时会通知开发者并提示用户
+
+![指令详情-test](https://user-images.githubusercontent.com/36391318/185678340-96d77e05-bad3-43d7-bfc7-6017b731682a.gif)
+
+## 音乐检索功能
+
+![搜索音乐](https://user-images.githubusercontent.com/36391318/185681199-067da756-5460-4348-84ec-4d2ed9323fda.gif)
+
+## 获取随机一言
+
+![搜索音乐](https://user-images.githubusercontent.com/36391318/185683931-f95d4716-1acf-41a7-ad5f-e2a26fe2d61e.gif)
+
+...更多示例待补全
