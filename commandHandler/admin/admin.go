@@ -280,8 +280,8 @@ func DeleteAllMessageHandler(TargetID, QuoteID, authorID string, args ...string)
 		err = fmt.Errorf("需要删除的消息数量>50，高危操作，请确认后`指定需要删除的消息数量`完成操作")
 		return
 	}
-	for _, m := range ms {
-		err := betagovar.GlobalSession.MessageDelete(m.ID)
+	for i := len(ms) - 1; i >= 0; i-- {
+		err := betagovar.GlobalSession.MessageDelete(ms[i].ID)
 		ec.Collect(err)
 	}
 	return ec.CheckError()
