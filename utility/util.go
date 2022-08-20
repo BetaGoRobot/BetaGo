@@ -12,9 +12,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/golang/freetype/truetype"
-	"github.com/heyuhengmatt/zaplog"
 	"github.com/lonelyevil/khl"
 )
 
@@ -50,25 +48,6 @@ func GetOutBoundIP() (ip string, err error) {
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 	fmt.Println(localAddr.String())
 	ip = strings.Split(localAddr.String(), ":")[0]
-	return
-}
-
-// GetPubIP 获取公网ip
-//
-//	@return ip
-//	@return err
-func GetPubIP() (ip string, err error) {
-	resp, err := httptool.GetWithParams(httptool.RequestInfo{
-		URL:    "http://ifconfig.me",
-		Params: map[string][]string{},
-	})
-	if err != nil || resp.StatusCode != 200 {
-		zaplog.Logger.Error("获取ip失败", zaplog.Error(err))
-	}
-	data, _ := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
-	ip = string(data)
-	zaplog.Logger.Info("获取ip成功", zaplog.String("data", ip))
 	return
 }
 

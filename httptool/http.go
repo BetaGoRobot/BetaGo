@@ -3,12 +3,14 @@ package httptool
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/heyuhengmatt/zaplog"
 )
 
 var (
@@ -21,6 +23,25 @@ type RequestInfo struct {
 	URL     string
 	Cookies []*http.Cookie
 	Params  map[string][]string
+}
+
+// GetPubIP 获取公网ip
+//
+//	@return ip
+//	@return err
+func GetPubIP() (ip string, err error) {
+	resp, err := GetWithParams(RequestInfo{
+		URL:    "http://ifconfig.me",
+		Params: map[string][]string{},
+	})
+	if err != nil || resp.StatusCode != 200 {
+		zapLogger.Error("获取ip失败", zaplog.Error(err))
+	}
+	data, _ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	ip = string(data)
+	zapLogger.Info("获取ip成功", zaplog.String("data", ip))
+	return
 }
 
 // GetWithCookieParams 发送带cookie和params的请求

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/khl"
 )
@@ -16,7 +16,7 @@ import (
 //	@return err
 func StartUpMessage(session *khl.Session) (err error) {
 	// StartUp for debug:
-	currentIP, err := utility.GetPubIP()
+	currentIP, err := httptool.GetPubIP()
 	if err != nil {
 		return
 	}
@@ -106,7 +106,7 @@ func StartUpMessage(session *khl.Session) (err error) {
 //	@param session
 //	@return err
 func OfflineMessage(session *khl.Session) (err error) {
-	currentIP, err := utility.GetPubIP()
+	currentIP, err := httptool.GetPubIP()
 	if err != nil {
 		return
 	}
