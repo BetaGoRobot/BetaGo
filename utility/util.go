@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/golang/freetype/truetype"
+	"github.com/heyuhengmatt/zaplog"
 	"github.com/lonelyevil/khl"
 )
 
@@ -38,7 +40,7 @@ func InitGlowSansSCFontType() {
 	}
 }
 
-//GetOutBoundIP 获取机器人部署的当前ip
+// GetOutBoundIP 获取机器人部署的当前ip
 func GetOutBoundIP() (ip string, err error) {
 	conn, err := net.Dial("udp", "101.132.154.52:80")
 	if err != nil {
@@ -51,7 +53,26 @@ func GetOutBoundIP() (ip string, err error) {
 	return
 }
 
-//GetCurrentTime 获取当前时间
+// GetPubIP 获取公网ip
+//
+//	@return ip
+//	@return err
+func GetPubIP() (ip string, err error) {
+	resp, err := httptool.GetWithParams(httptool.RequestInfo{
+		URL:    "http://ifconfig.me",
+		Params: map[string][]string{},
+	})
+	if err != nil || resp.StatusCode != 200 {
+		zaplog.Logger.Error("获取ip失败", zaplog.Error(err))
+	}
+	data, _ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	ip = string(data)
+	zaplog.Logger.Info("获取ip成功", zaplog.String("data", ip))
+	return
+}
+
+// GetCurrentTime 获取当前时间
 func GetCurrentTime() (localTime string) {
 	timeLocal, _ := time.LoadLocation("Asia/Shanghai")
 	time.Local = timeLocal
@@ -65,9 +86,10 @@ func ForDebug(test ...interface{}) {
 }
 
 // IsInSlice 判断机器人是否被at到
-//  @param target
-//  @param slice
-//  @return bool
+//
+//	@param target
+//	@param slice
+//	@return bool
 func IsInSlice(target string, slice []string) bool {
 	for i := range slice {
 		if slice[i] == target {
@@ -78,8 +100,9 @@ func IsInSlice(target string, slice []string) bool {
 }
 
 // MustAtoI 将字符串转换为int
-//  @param str
-//  @return int
+//
+//	@param str
+//	@return int
 func MustAtoI(str string) int {
 	i, err := strconv.Atoi(str)
 	if err != nil {
@@ -89,9 +112,10 @@ func MustAtoI(str string) int {
 }
 
 // GetUserInfo 获取用户信息
-//  @param userID
-//  @param guildID
-//  @return userInfo
+//
+//	@param userID
+//	@param guildID
+//	@return userInfo
 func GetUserInfo(userID, guildID string) (userInfo *khl.User, err error) {
 	if guildID != "" {
 		userInfo, err = betagovar.GlobalSession.UserView(userID, khl.UserViewWithGuildID(guildID))
@@ -105,9 +129,10 @@ func GetUserInfo(userID, guildID string) (userInfo *khl.User, err error) {
 }
 
 // GetGuildInfo 获取公会信息
-//  @param guildID
-//  @return guildInfo
-//  @return err
+//
+//	@param guildID
+//	@return guildInfo
+//	@return err
 func GetGuildInfo(guildID string) (guildInfo *khl.Guild, err error) {
 	guildInfo, err = betagovar.GlobalSession.GuildView(guildID)
 	if err != nil {
@@ -117,9 +142,10 @@ func GetGuildInfo(guildID string) (guildInfo *khl.Guild, err error) {
 }
 
 // GetChannnelInfo  获取频道信息
-//  @param channelID
-//  @return channelInfo
-//  @return err
+//
+//	@param channelID
+//	@return channelInfo
+//	@return err
 func GetChannnelInfo(channelID string) (channelInfo *khl.Channel, err error) {
 	channelInfo, err = betagovar.GlobalSession.ChannelView(channelID)
 	if err != nil {
@@ -129,8 +155,9 @@ func GetChannnelInfo(channelID string) (channelInfo *khl.Channel, err error) {
 }
 
 // Struct2Map  将结构体转换为map
-//  @param obj
-//  @return map
+//
+//	@param obj
+//	@return map
 func Struct2Map(obj interface{}) map[string]interface{} {
 	t := reflect.TypeOf(obj)
 	v := reflect.ValueOf(obj)

@@ -20,6 +20,9 @@ const (
 
 	// FontPath  字体存储路径
 	FontPath = "/data/fonts"
+
+	// PublicIPURL 获取公网IP的URL
+	PublicIPURL = "http://ifconfig.me"
 )
 
 // CardMessageModule khl cardmessage

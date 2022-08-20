@@ -16,7 +16,7 @@ import (
 //	@return err
 func StartUpMessage(session *khl.Session) (err error) {
 	// StartUp for debug:
-	currentIP, err := utility.GetOutBoundIP()
+	currentIP, err := utility.GetPubIP()
 	if err != nil {
 		return
 	}
@@ -106,7 +106,7 @@ func StartUpMessage(session *khl.Session) (err error) {
 //	@param session
 //	@return err
 func OfflineMessage(session *khl.Session) (err error) {
-	currentIP, err := utility.GetOutBoundIP()
+	currentIP, err := utility.GetPubIP()
 	if err != nil {
 		return
 	}
