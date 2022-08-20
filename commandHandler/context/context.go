@@ -38,31 +38,35 @@ type CommandExtraContext struct {
 }
 
 // IsAdmin is a function for command.
-//  @receiver ctx
-//  @return bool
+//
+//	@receiver ctx
+//	@return bool
 func (ctx *CommandContext) IsAdmin() bool {
 	return utility.CheckIsAdmin(ctx.Common.AuthorID)
 }
 
 // CommandContextFunc is a function for command.
-//  @param TargetID
-//  @param MsgID
-//  @param AuthorID
-//  @param parameters
-//  @return error
+//
+//	@param TargetID
+//	@param MsgID
+//	@param AuthorID
+//	@param parameters
+//	@return error
 type CommandContextFunc func(TargetID, MsgID, AuthorID string, parameters ...string) error
 
 // CommandContextWithGuildIDFunc is a function for command.
-//  @param targetID
-//  @param quoteID
-//  @param authorID
-//  @param guildID
-//  @param args
-//  @return error
+//
+//	@param targetID
+//	@param quoteID
+//	@param authorID
+//	@param guildID
+//	@param args
+//	@return error
 type CommandContextWithGuildIDFunc func(targetID, quoteID, authorID string, guildID string, args ...string) error
 
 // GetNewCommandCtx  is a function for command.
-//  @return *CommandContext
+//
+//	@return *CommandContext
 func GetNewCommandCtx() *CommandContext {
 	return &CommandContext{
 		Common: &CommandCommonContext{},
@@ -71,7 +75,8 @@ func GetNewCommandCtx() *CommandContext {
 }
 
 // Init is a init function for command.
-//  @receiver ctx
+//
+//	@receiver ctx
 func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) *CommandContext {
 	*ctx = CommandContext{
 		Common: &CommandCommonContext{
@@ -84,9 +89,10 @@ func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) *CommandC
 }
 
 // InitExtra is a init function for command.
-//  @receiver ctx
-//  @param khlCtx
-//  @return *CommandContext
+//
+//	@receiver ctx
+//	@param khlCtx
+//	@return *CommandContext
 func (ctx *CommandContext) InitExtra(khlCtx interface{}) *CommandContext {
 	switch khlCtx.(type) {
 	case *khl.KmarkdownMessageContext:
@@ -104,8 +110,9 @@ func (ctx *CommandContext) InitExtra(khlCtx interface{}) *CommandContext {
 }
 
 // ErrorSenderHandler is a function for command.
-//  @receiver ctx
-//  @param err
+//
+//	@receiver ctx
+//	@param err
 func (ctx *CommandContext) ErrorSenderHandler(err error) {
 	if err != nil {
 		errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
@@ -113,8 +120,9 @@ func (ctx *CommandContext) ErrorSenderHandler(err error) {
 }
 
 // ErrorSenderHandlerNew  is a function for command.
-//  @receiver ctx
-//  @param err
+//
+//	@receiver ctx
+//	@param err
 func (ctx *CommandContext) ErrorSenderHandlerNew(ctxFunc interface{}, parameters ...string) {
 	var err error
 	if realFunc, ok := ctxFunc.(CommandContextFunc); ok {
@@ -129,9 +137,10 @@ func (ctx *CommandContext) ErrorSenderHandlerNew(ctxFunc interface{}, parameters
 }
 
 // ContextHandler is a function for command.
-//  @receiver ctx
-//  @param Command
-//  @param parameters
+//
+//	@receiver ctx
+//	@param Command
+//	@param parameters
 func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) {
 	defer utility.CollectPanic(ctx, ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 	var ctxFunc CommandContextFunc
@@ -157,6 +166,8 @@ func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) 
 		fallthrough
 	case CommandContextTypeShowAdmin:
 		ctxFunc = admin.ShowAdminHandler
+	case CommandContextTypeDeleteAll:
+		ctxFunc = admin.DeleteAllMessageHandler
 	case betagovar.ShortCommandRoll:
 		fallthrough
 	case CommandContextTypeRoll:

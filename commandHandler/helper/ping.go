@@ -7,9 +7,10 @@ import (
 )
 
 // PingHandler  检查机器人是否运行正常
-//  @param targetID
-//  @param qouteID
-//  @param authorID
+//
+//	@param targetID
+//	@param qouteID
+//	@param authorID
 func PingHandler(TargetID, QuoteID, AuthorID string, parameters ...string) error {
 	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
 		MessageCreateBase: khl.MessageCreateBase{

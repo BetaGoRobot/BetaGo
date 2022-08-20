@@ -1,4 +1,4 @@
-FROM kevinmatt/betago-alpine-golang:1.18.3 as builder
+FROM kevinmatt/betago-alpine-golang:1.19.3 as builder
 
 COPY betago.zip /data/
 

@@ -11,10 +11,11 @@ import (
 )
 
 // RandRollHandler 随机抽取一个数字
-//  @param targetID 目标ID
-//  @param quoteID 引用ID
-//  @param authorID 发送者ID
-//  @return err 错误信息
+//
+//	@param targetID 目标ID
+//	@param quoteID 引用ID
+//	@param authorID 发送者ID
+//	@return err 错误信息
 func RandRollHandler(targetID, quoteID, authorID string, args ...string) (err error) {
 	var (
 		min, max int

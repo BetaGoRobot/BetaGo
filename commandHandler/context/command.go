@@ -1,11 +1,13 @@
 package context
 
 // const 长命令组
-//  @param CommandContextTypeAddAdmin
+//
+//	@param CommandContextTypeAddAdmin
 const (
 	CommandContextTypeAddAdmin    = "ADDADMIN"
 	CommandContextTypeRemoveAdmin = "REMOVEADMIN"
 	CommandContextTypeShowAdmin   = "SHOWADMIN"
+	CommandContextTypeDeleteAll   = "DELETEALL"
 	CommandContextTypeCal         = "SHOWCAL"
 	CommandContextTypeHelper      = "HELP"
 	CommandContextTypeHitokoto    = "ONEWORD"

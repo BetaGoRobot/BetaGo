@@ -38,10 +38,11 @@ func init() {
 }
 
 // SearchMusic  搜索音乐
-//  @receiver ctx
-//  @param keywords
-//  @return result
-//  @return err
+//
+//	@receiver ctx
+//	@param keywords
+//	@return result
+//	@return err
 func (ctx *QQmusicContext) SearchMusic(keywords []string) (result []SearchMusicRes, err error) {
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
@@ -95,10 +96,11 @@ func (ctx *QQmusicContext) SearchMusic(keywords []string) (result []SearchMusicR
 }
 
 // GetMusicURLByID 获取音乐的url
-//  @receiver ctx
-//  @param IDName
-//  @return musicURL
-//  @return err
+//
+//	@receiver ctx
+//	@param IDName
+//	@return musicURL
+//	@return err
 func (ctx *QQmusicContext) GetMusicURLByID(mid, mediaMid string) (musicURL string, err error) {
 
 	resp, err := httptool.PostWithTimestamp(

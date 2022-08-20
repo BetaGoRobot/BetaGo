@@ -11,8 +11,9 @@ import (
 )
 
 // StartUpMessage  启动时的消息
-//  @param session
-//  @return err
+//
+//	@param session
+//	@return err
 func StartUpMessage(session *khl.Session) (err error) {
 	// StartUp for debug:
 	currentIP, err := utility.GetOutBoundIP()
@@ -101,8 +102,9 @@ func StartUpMessage(session *khl.Session) (err error) {
 }
 
 // OfflineMessage 离线时的消息
-//  @param session
-//  @return err
+//
+//	@param session
+//	@return err
 func OfflineMessage(session *khl.Session) (err error) {
 	currentIP, err := utility.GetOutBoundIP()
 	if err != nil {

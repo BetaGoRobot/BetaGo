@@ -11,9 +11,10 @@ import (
 )
 
 // ShowAdminHandler 显示管理员
-//  @param targetID
-//  @param quoteID
-//  @return err
+//
+//	@param targetID
+//	@param quoteID
+//	@return err
 func ShowAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
 	admins := make([]utility.Administrator, 0)
 	utility.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level DESC")
@@ -83,11 +84,12 @@ func ShowAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err e
 }
 
 // AddAdminHandler 增加管理员
-//  @param userID
-//  @param userName
-//  @param QuoteID
-//  @param TargetID
-//  @return err PASS
+//
+//	@param userID
+//	@param userName
+//	@param QuoteID
+//	@param TargetID
+//	@return err PASS
 func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
 	var (
 		succUserID []string
@@ -170,11 +172,12 @@ func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err er
 }
 
 // RemoveAdminHandler 删除管理员
-//  @param userID
-//  @param targetUserID
-//  @param QuoteID
-//  @param TargetID
-//  @return err PASS
+//
+//	@param userID
+//	@param targetUserID
+//	@param QuoteID
+//	@param TargetID
+//	@return err PASS
 func RemoveAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
 	var (
 		ec         utility.ErrorCollector
@@ -249,4 +252,37 @@ func RemoveAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err
 		err = ec.GenErr()
 	}
 	return
+}
+
+// DeleteAllMessageHandler 删除频道内所有消息
+//
+//	@param TargetID
+//	@param QuoteID
+//	@param authorID
+//	@param args
+//	@return err
+func DeleteAllMessageHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
+	var (
+		ec         utility.ErrorCollector
+		messageNum int
+	)
+	if len(args) != 0 {
+		messageNum, err = strconv.Atoi(args[0])
+		if err != nil {
+			return
+		}
+	}
+	ms, err := betagovar.GlobalSession.MessageList(TargetID)
+	if err != nil {
+		ec.Collect(err)
+	}
+	if len(ms) > 50 || len(ms) > messageNum || messageNum <= 0 {
+		err = fmt.Errorf("需要删除的消息数量>50，高危操作，请确认后`指定需要删除的消息数量`完成操作")
+		return
+	}
+	for _, m := range ms {
+		err := betagovar.GlobalSession.MessageDelete(m.ID)
+		ec.Collect(err)
+	}
+	return ec.CheckError()
 }

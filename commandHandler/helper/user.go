@@ -9,9 +9,10 @@ import (
 )
 
 // GetUserInfoHandler 获取用户信息
-//  @param userID
-//  @param guildID
-//  @return err
+//
+//	@param userID
+//	@param guildID
+//	@return err
 func GetUserInfoHandler(targetID, quoteID, authorID string, guildID string, args ...string) (err error) {
 	var userID string
 	if len(args) == 1 {

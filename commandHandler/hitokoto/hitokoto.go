@@ -42,11 +42,12 @@ type RespBody struct {
 }
 
 // GetHitokotoHandler 获取一言
-//  @param targetID
-//  @param msgID
-//  @param authorID
-//  @param args
-//  @return err
+//
+//	@param targetID
+//	@param msgID
+//	@param authorID
+//	@param args
+//	@return err
 func GetHitokotoHandler(targetID, msgID, authorID string, args ...string) (err error) {
 	params := make([]string, 0)
 	for index := range args {
@@ -114,7 +115,8 @@ func GetHitokotoHandler(targetID, msgID, authorID string, args ...string) (err e
 }
 
 // GetHitokoto 获取一言
-//  @param parameters
+//
+//	@param parameters
 func GetHitokoto(field ...string) (hitokotoRes RespBody, err error) {
 	resp, err := httptool.GetWithParams(httptool.RequestInfo{
 		URL: hitokotoURL,

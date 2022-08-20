@@ -15,10 +15,11 @@ var (
 )
 
 // SendErrorInfo 发送错误信息
-//  @param targetID 目标ID
-//  @param QuoteID 引用ID
-//  @param authorID 作者ID
-//  @param err 错误信息
+//
+//	@param targetID 目标ID
+//	@param QuoteID 引用ID
+//	@param authorID 作者ID
+//	@param err 错误信息
 func SendErrorInfo(targetID, QuoteID, authorID string, err error) {
 	cardMessageStr, err := khl.CardMessage{
 		&khl.CardMessageCard{

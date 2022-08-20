@@ -18,10 +18,11 @@ var (
 )
 
 // SearchMusicByRobot  搜索音乐
-//  @param targetID
-//  @param quoteID
-//  @param authorID
-//  @return err
+//
+//	@param targetID
+//	@param quoteID
+//	@param authorID
+//	@return err
 func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err error) {
 	if len(args) == 0 {
 		return fmt.Errorf("搜索关键词不能为空")

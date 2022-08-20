@@ -66,8 +66,9 @@ type DrawChartLabel struct { //chl
 }
 
 // BuildRequestURL  构建请求URL
-//  @receiver ctx
-//  @return string
+//
+//	@receiver ctx
+//	@return string
 func (ctx *DrawPieAPICtx) BuildRequestURL() string {
 
 	// 构建图类型
@@ -135,7 +136,8 @@ func (ctx *DrawPieAPICtx) BuildRequestURL() string {
 }
 
 // ShowCalHandler 显示时间分布
-//  @param userID
+//
+//	@param userID
 func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (err error) {
 	var (
 		userInfo      *khl.User
@@ -209,8 +211,9 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 }
 
 // GetUserChannelTimeMap 获取用户在频道的时间
-//  @param userID
-//  @return map
+//
+//	@param userID
+//	@return map
 func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 	logs := make([]*utility.ChannelLog, 0)
 	userInfo, err := utility.GetUserInfo(userID, "")
@@ -240,9 +243,10 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 }
 
 // DrawPieChartWithAPI 本地获取频道的时间分布
-//  @param inputMap
-//  @param userName
-//  @return string
+//
+//	@param inputMap
+//	@param userName
+//	@return string
 func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (string, error) {
 	apiURL := "https://image-charts.com/chart?"
 	ctx := &DrawPieAPICtx{
@@ -328,7 +332,8 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (st
 }
 
 // DrawPieChartWithLocal 本地获取频道的时间分布
-//  @return {}
+//
+//	@return {}
 func DrawPieChartWithLocal(inputMap map[string]time.Duration, userName string) (string, error) {
 	if len(inputMap) == 0 {
 		return "", fmt.Errorf("No Data Found")

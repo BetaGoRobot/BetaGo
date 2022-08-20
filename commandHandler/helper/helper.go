@@ -11,10 +11,11 @@ import (
 )
 
 // AdminCommandHelperHandler 查看帮助
-//  @param targetID
-//  @param quoteID
-//  @param authorID
-//  @return err
+//
+//	@param targetID
+//	@param quoteID
+//	@param authorID
+//	@return err
 func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...string) (err error) {
 	if len(args) == 1 {
 		commandInfo := utility.CommandInfo{}
@@ -166,10 +167,11 @@ func getShortDesc(fullDesc string) (short string) {
 }
 
 // UserCommandHelperHandler 查看帮助
-//  @param targetID
-//  @param quoteID
-//  @param authorID
-//  @return err
+//
+//	@param targetID
+//	@param quoteID
+//	@param authorID
+//	@return err
 func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string) (err error) {
 	// 帮助信息
 	if len(args) == 1 {

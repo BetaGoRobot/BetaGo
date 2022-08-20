@@ -24,9 +24,10 @@ type RequestInfo struct {
 }
 
 // GetWithCookieParams 发送带cookie和params的请求
-//  @param info 传入的参数、url、cookie信息
-//  @return res
-//  @return err
+//
+//	@param info 传入的参数、url、cookie信息
+//	@return res
+//	@return err
 func GetWithCookieParams(info RequestInfo) (resp *http.Response, err error) {
 	var paramSlice = make([]string, 0)
 	for key, values := range info.Params {
@@ -54,9 +55,10 @@ func GetWithCookieParams(info RequestInfo) (resp *http.Response, err error) {
 }
 
 // GetWithParamsWithTimestamp 发送带cookie和params的请求
-//  @param info 传入的参数、url、cookie信息
-//  @return res
-//  @return err
+//
+//	@param info 传入的参数、url、cookie信息
+//	@return res
+//	@return err
 func GetWithParamsWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
 	var paramSlice = make([]string, 0)
 	for key, values := range info.Params {
@@ -73,9 +75,10 @@ func GetWithParamsWithTimestamp(info RequestInfo) (resp *http.Response, err erro
 }
 
 // GetWithParams 发送带cookie和params的请求
-//  @param info 传入的参数、url、cookie信息
-//  @return res
-//  @return err
+//
+//	@param info 传入的参数、url、cookie信息
+//	@return res
+//	@return err
 func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
 	var paramSlice = make([]string, 0)
 	for key, values := range info.Params {
@@ -125,9 +128,10 @@ func PostWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
 }
 
 // PostWithParams WithTimestamp 发送带Cookie Params的POST请求
-//  @param info
-//  @return resp
-//  @return err
+//
+//	@param info
+//	@return resp
+//	@return err
 func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
 	var paramSlice = make([]byte, 0)
 	req, err := http.NewRequest(http.MethodPost, info.URL, bytes.NewReader([]byte(paramSlice)))

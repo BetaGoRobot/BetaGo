@@ -41,8 +41,9 @@ func init() {
 }
 
 // RefreshLogin 刷新登录
-//  @receiver ctx
-//  @return error
+//
+//	@receiver ctx
+//	@return error
 func (ctx *NetEaseContext) RefreshLogin() error {
 	resp, err := httptool.PostWithParams(
 		httptool.RequestInfo{
@@ -60,8 +61,9 @@ func (ctx *NetEaseContext) RefreshLogin() error {
 }
 
 // LoginNetEase 获取登陆Cookie
-//  @receiver ctx
-//  @return err
+//
+//	@receiver ctx
+//	@return err
 func (ctx *NetEaseContext) LoginNetEase() (err error) {
 	if phoneNum, password := os.Getenv("NETEASE_PHONE"), os.Getenv("NETEASE_PASSWORD"); phoneNum == "" && password == "" {
 		log.Println("Empty NetEase account and password")
@@ -95,8 +97,9 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 }
 
 // CheckIfLogin 检查是否登陆
-//  @receiver ctx
-//  @return bool
+//
+//	@receiver ctx
+//	@return bool
 func (ctx *NetEaseContext) CheckIfLogin() bool {
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
@@ -122,7 +125,8 @@ func (ctx *NetEaseContext) CheckIfLogin() bool {
 }
 
 // TryGetLastCookie 获取初始化Cookie
-//  @receiver ctx
+//
+//	@receiver ctx
 func (ctx *NetEaseContext) TryGetLastCookie() {
 	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
@@ -138,7 +142,8 @@ func (ctx *NetEaseContext) TryGetLastCookie() {
 }
 
 // SaveCookie 保存Cookie
-//  @receiver ctx
+//
+//	@receiver ctx
 func (ctx *NetEaseContext) SaveCookie() {
 	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
@@ -151,9 +156,10 @@ func (ctx *NetEaseContext) SaveCookie() {
 }
 
 // GetDailyRecommendID 获取当前账号日推
-//  @receiver ctx
-//  @return musicIDs
-//  @return err
+//
+//	@receiver ctx
+//	@return musicIDs
+//	@return err
 func (ctx *NetEaseContext) GetDailyRecommendID() (musicIDs map[string]string, err error) {
 	musicIDs = make(map[string]string)
 	resp, err := httptool.PostWithTimestamp(
@@ -182,10 +188,11 @@ func (ctx *NetEaseContext) GetDailyRecommendID() (musicIDs map[string]string, er
 }
 
 // GetMusicURLByID 依据ID获取URL/Name
-//  @receiver ctx
-//  @param IDName
-//  @return InfoList
-//  @return err
+//
+//	@receiver ctx
+//	@param IDName
+//	@return InfoList
+//	@return err
 func (ctx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (InfoList []MusicInfo, err error) {
 	var id string
 	for key := range IDName {
@@ -224,10 +231,11 @@ func (ctx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (InfoList [
 }
 
 // SearchMusicByKeyWord 通过关键字搜索歌曲
-//  @receiver ctx
-//  @param keywords
-//  @return result
-//  @return err
+//
+//	@receiver ctx
+//	@param keywords
+//	@return result
+//	@return err
 func (ctx *NetEaseContext) SearchMusicByKeyWord(keywords []string) (result []SearchMusicRes, err error) {
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
@@ -279,9 +287,10 @@ func (ctx *NetEaseContext) SearchMusicByKeyWord(keywords []string) (result []Sea
 }
 
 // GetNewRecommendMusic 获得新的推荐歌曲
-//  @receiver ctx
-//  @return res
-//  @return err
+//
+//	@receiver ctx
+//	@return res
+//	@return err
 func (ctx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicRes, err error) {
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{

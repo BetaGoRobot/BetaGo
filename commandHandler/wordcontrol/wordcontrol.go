@@ -9,7 +9,8 @@ import (
 )
 
 // RemoveDirtyWords 删除脏词
-//  @param ctx
+//
+//	@param ctx
 func RemoveDirtyWords(ctx *khl.KmarkdownMessageContext) {
 	message := ctx.Common.Content
 
