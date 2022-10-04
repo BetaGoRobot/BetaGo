@@ -26,4 +26,5 @@ func Test_addAdministrator(t *testing.T) {
 }
 
 func Test_clickEventHandler(t *testing.T) {
+	// for a test
 }
