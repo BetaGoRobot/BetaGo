@@ -15,13 +15,7 @@ var MCounter = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 }, []string{"func_name"})
 
 func init() {
-	// 启动监控协程
-	go Detector()
-}
-
-// Detector 检测器
-func Detector() {
-
+	prometheus.MustRegister(MCounter)
 }
 
 // GetTimeCost  获取耗时
@@ -34,7 +28,7 @@ func GetTimeCost(startTime time.Time, function string) {
 
 func RunFuncName() string {
 	pc := make([]uintptr, 1)
-	runtime.Callers(2, pc)
+	runtime.Callers(3, pc)
 	f := runtime.FuncForPC(pc[0])
 	a := strings.Split(f.Name(), "/")
 	return a[len(a)-1]

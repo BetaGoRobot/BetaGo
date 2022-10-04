@@ -143,7 +143,6 @@ func (ctx *CommandContext) ErrorSenderHandlerNew(ctxFunc interface{}, parameters
 //	@param Command
 //	@param parameters
 func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) {
-	defer utility.GetTimeCost(time.Now(), utility.RunFuncName())
 	defer utility.CollectPanic(ctx, ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 	var ctxFunc CommandContextFunc
 	var ctxGuildFunc CommandContextWithGuildIDFunc
@@ -198,9 +197,11 @@ func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) 
 		ctx.ErrorSenderHandler(fmt.Errorf(emoji.QuestionMark.String()+"未知指令 `%s`", Command))
 	}
 	if ctxFunc != nil {
+		defer utility.GetTimeCost(time.Now(), Command)
 		ctx.ErrorSenderHandlerNew(ctxFunc, parameters...)
 	}
 	if ctxGuildFunc != nil {
+		defer utility.GetTimeCost(time.Now(), Command)
 		ctx.ErrorSenderHandlerNew(ctxGuildFunc, parameters...)
 	}
 }
