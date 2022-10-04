@@ -14,7 +14,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/commandHandler/wordcontrol"
 	"github.com/BetaGoRobot/BetaGo/scheduletask"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/heyuhengmatt/zaplog"
 	"github.com/lonelyevil/khl"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -23,6 +25,10 @@ var (
 )
 
 func init() {
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":2112", nil)
+	}()
 	utility.InitLogger()
 	betagovar.GlobalSession.AddHandler(messageHan)
 	betagovar.GlobalSession.AddHandler(clickEventAsyncHandler)
@@ -41,14 +47,17 @@ func CheckEnv() {
 		sendMessageToTestChannel(betagovar.GlobalSession, ">  机器人未配置名称！")
 	}
 	if betagovar.RobotID == "" {
-		sendMessageToTestChannel(betagovar.GlobalSession, ">  机器人未配置ID！")
-		os.Exit(-1)
+		zaplog.Logger.Fatal("机器人未配置ID！")
 	}
 }
 
 func main() {
 	CheckEnv()
-	betagovar.GlobalSession.Open()
+	e := betagovar.GlobalSession.Open()
+	if e != nil {
+		zaplog.Logger.Error("连接失败", zaplog.Error(e))
+		panic(e)
+	}
 	notifier.StartUpMessage(betagovar.GlobalSession)
 	go scheduletask.DailyRecommand()
 	// go scheduletask.HourlyGetSen()
