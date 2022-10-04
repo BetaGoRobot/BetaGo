@@ -1,0 +1,1 @@
+docker run --pull=always -d --name=betago --network=betago kevinmatt/betago:latest

@@ -3,6 +3,7 @@ package context
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
@@ -142,6 +143,7 @@ func (ctx *CommandContext) ErrorSenderHandlerNew(ctxFunc interface{}, parameters
 //	@param Command
 //	@param parameters
 func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) {
+	defer utility.GetTimeCost(time.Now(), utility.RunFuncName())
 	defer utility.CollectPanic(ctx, ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 	var ctxFunc CommandContextFunc
 	var ctxGuildFunc CommandContextWithGuildIDFunc

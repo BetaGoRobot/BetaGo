@@ -26,8 +26,12 @@ var (
 
 func init() {
 	go func() {
+		port := ":2112"
+		if os.Getenv("IS_TEST") == "true" {
+			port = ":2113"
+		}
 		http.Handle("/metrics", promhttp.Handler())
-		http.ListenAndServe(":2112", nil)
+		http.ListenAndServe(port, nil)
 	}()
 	utility.InitLogger()
 	betagovar.GlobalSession.AddHandler(messageHan)
