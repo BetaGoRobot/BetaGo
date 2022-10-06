@@ -117,12 +117,12 @@ func channelLeftHandler(ctx *khl.GuildChannelMemberDeleteContext) {
 	// 离开频道时，记录频道信息
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
 	if err != nil {
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err)
 		return
 	}
 	channelInfo, err := utility.GetChannnelInfo(ctx.Extra.ChannelID)
 	if err != nil {
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err)
 		return
 	}
 
@@ -136,7 +136,7 @@ func channelLeftHandler(ctx *khl.GuildChannelMemberDeleteContext) {
 		LeftTime:    ctx.Extra.ExitedAt.ToTime(),
 	}
 	if err = newChanLog.UpdateLeftTime(); err != nil {
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err)
 	}
 }
 

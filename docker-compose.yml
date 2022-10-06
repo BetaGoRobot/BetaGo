@@ -1,0 +1,87 @@
+version: '3.1'
+services:
+  
+  betago:
+    image: kevinmatt/betago
+    container_name: betago
+    restart: always
+    depends_on:
+      - qqmusic_api
+      - netease_api
+      - postgres
+    networks:
+      - betago
+
+  postgres:
+    image: postgres
+    container_name: betago-pg
+    user: root
+    environment:
+      - POSTGRES_PASSWORD=heyuheng1.22.3
+    ports:
+      - 5432:5432
+    networks:
+      - betago
+    volumes:
+      - /data/pgdata/data:/var/lib/postgresql/data
+
+  netease_api:
+    image: ccr.ccs.tencentyun.com/kevinmatt/netease-api
+    container_name: netease-api
+    ports:
+      - 3335:3335
+    networks:
+      - betago
+  
+  qqmusic_api:
+    image: ccr.ccs.tencentyun.com/kevinmatt/qqmusic-api
+    container_name: qqmusic-api
+    ports:
+      - 3300:3300
+    networks:
+      - betago
+  
+  loki:
+    image: grafana/loki
+    container_name: loki
+    ports:
+      - 3100:3100
+    networks:
+      - betago
+  
+  grafana:
+    image: grafana/grafana-enterprise
+    container_name: grafana
+    ports:
+      - 3000:3000
+    networks:
+      - betago
+  
+  promethues:
+    image: prom/prometheus
+    container_name: promethues
+    volumes:
+      - /root/.config/promethus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9091:9090
+    networks:
+      - betago
+  
+  javtube:
+    image: javtube/javtube-server
+    container_name: javtube
+    restart: always
+    user: root
+    environment:
+      - PORT=9999
+      - DSN=postgres://postgres:heyuheng1.22.3@betago-pg:5432
+      - DB_AUTO_MIGRATE=true
+    ports:
+      - 9999:9999
+    depends_on:
+      - postgres
+    networks:
+      - betago
+networks:
+  betago:
+    external: true
