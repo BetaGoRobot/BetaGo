@@ -31,8 +31,9 @@ func (music *khlMusicDownload) DownloadMusicDB() {
 }
 
 // CheckIsAdmin 检查是否是管理员
-//  @param userID
-//  @return isAdmin
+//
+//	@param userID
+//	@return isAdmin
 func CheckIsAdmin(userID string) (isAdmin bool) {
 	db := GetDbConnection()
 	userIDInt, _ := strconv.Atoi(userID)
@@ -47,8 +48,9 @@ func CheckIsAdmin(userID string) (isAdmin bool) {
 }
 
 // GetAdminLevel 获取管理员等级
-//  @param userID
-//  @return level
+//
+//	@param userID
+//	@return level
 func GetAdminLevel(userID string) int {
 	db := GetDbConnection()
 	userIDInt, _ := strconv.Atoi(userID)
@@ -64,8 +66,9 @@ func GetAdminLevel(userID string) int {
 }
 
 // GetCommandInfo 获取命令信息
-//  @param command
-//  @return info
+//
+//	@param command
+//	@return info
 func GetCommandInfo(command string) (commandInfoList []*CommandInfo, err error) {
 	db := GetDbConnection()
 	command = "`" + command + "`"
@@ -83,8 +86,9 @@ func GetCommandInfo(command string) (commandInfoList []*CommandInfo, err error) 
 }
 
 // GetCommandInfoWithOpt 获取命令信息
-//  @param option
-//  @return info
+//
+//	@param option
+//	@return info
 func GetCommandInfoWithOpt(optionf string) (commandInfoList []*CommandInfo, err error) {
 	if GetDbConnection().Table("betago.command_infos").Where(optionf).Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("option %s  not found", optionf)
@@ -94,15 +98,17 @@ func GetCommandInfoWithOpt(optionf string) (commandInfoList []*CommandInfo, err 
 }
 
 // AddJoinedRecord 添加加入记录
-//  @receiver cl
-//  @return error
+//
+//	@receiver cl
+//	@return error
 func (cl *ChannelLog) AddJoinedRecord() error {
 	return GetDbConnection().Table("betago.channel_logs").Create(&cl).Error
 }
 
 // UpdateLeftTime 更新离开时间
-//  @receiver cl
-//  @return error
+//
+//	@receiver cl
+//	@return error
 func (cl *ChannelLog) UpdateLeftTime() error {
 	FirstRow := &ChannelLog{}
 	if err := GetDbConnection().Table("betago.channel_logs").Where("channel_id = ? and user_id = ? and is_update = ?", cl.ChannelID, cl.UserID, false).Order("joined_time desc").First(FirstRow).Error; err != nil {
