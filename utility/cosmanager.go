@@ -22,9 +22,9 @@ var (
 func UploadFileToCos(filePath string) (linkURL string, err error) {
 	u, _ := url.Parse(COSBaseURL)
 
-	su, _ := url.Parse(COSBucketRegionURL)
+	// su, _ := url.Parse(COSBucketRegionURL)
 
-	b := &cos.BaseURL{BucketURL: u, ServiceURL: su}
+	b := &cos.BaseURL{BucketURL: u}
 
 	client := cos.NewClient(b, &http.Client{
 		Transport: &cos.AuthorizationTransport{

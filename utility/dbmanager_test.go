@@ -8,7 +8,7 @@ import (
 
 func TestA(t *testing.T) {
 	khl := khlMusicDownload{}
-	khl.DownloadMusicDB()
+	kook.DownloadMusicDB()
 }
 
 // func TestRegistAndBind(t *testing.T) {

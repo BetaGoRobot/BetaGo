@@ -2,15 +2,13 @@ package main
 
 import (
 	"testing"
-
-	"github.com/lonelyevil/khl"
 )
 
 func Test_addAdministrator(t *testing.T) {
-	commandHandler(&khl.KmarkdownMessageContext{
-		EventHandlerCommonContext: &khl.EventHandlerCommonContext{
-			Session: &khl.Session{},
-			Common: &khl.EventDataGeneral{
+	commandHandler(&kook.KmarkdownMessageContext{
+		EventHandlerCommonContext: &kook.EventHandlerCommonContext{
+			Session: &kook.Session{},
+			Common: &kook.EventDataGeneral{
 				ChannelType:  "",
 				Type:         0,
 				TargetID:     "",
@@ -21,7 +19,7 @@ func Test_addAdministrator(t *testing.T) {
 				Nonce:        "",
 			},
 		},
-		Extra: khl.EventCustomMessage{},
+		Extra: kook.EventCustomMessage{},
 	})
 }
 

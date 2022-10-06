@@ -9,16 +9,16 @@ import (
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-func clickEventAsyncHandler(ctx *khl.MessageButtonClickContext) {
+func clickEventAsyncHandler(ctx *kook.MessageButtonClickContext) {
 	go clickEventHandler(ctx)
 }
 
-func clickEventHandler(ctx *khl.MessageButtonClickContext) {
+func clickEventHandler(ctx *kook.MessageButtonClickContext) {
 	var (
 		command    = ctx.Extra.Value
 		commandCtx = &comcontext.CommandContext{
@@ -35,7 +35,7 @@ func clickEventHandler(ctx *khl.MessageButtonClickContext) {
 	commandCtx.ContextHandler(command)
 }
 
-func commandHandler(ctx *khl.KmarkdownMessageContext) {
+func commandHandler(ctx *kook.KmarkdownMessageContext) {
 	// 判断是否被at到,且消息不是引用/回复
 	if !utility.IsInSlice(betagovar.RobotID, ctx.Extra.Mention) {
 		return
@@ -53,11 +53,11 @@ func commandHandler(ctx *khl.KmarkdownMessageContext) {
 	}
 }
 
-func channelJoinedAsyncHandler(ctx *khl.GuildChannelMemberAddContext) {
+func channelJoinedAsyncHandler(ctx *kook.GuildChannelMemberAddContext) {
 	go channelJoinedHandler(ctx)
 }
 
-func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
+func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 	defer utility.CollectPanic(ctx.Common, ctx.Common.TargetID, ctx.Common.MsgID, "")
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
 	if err != nil {
@@ -82,12 +82,12 @@ func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 	}
 
-	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
-		Theme: khl.CardThemeInfo,
-		Size:  khl.CardSizeLg,
+	cardMessageStr, err := kook.CardMessage{&kook.CardMessageCard{
+		Theme: kook.CardThemeInfo,
+		Size:  kook.CardSizeLg,
 		Modules: []interface{}{
-			khl.CardMessageSection{
-				Text: khl.CardMessageElementKMarkdown{
+			kook.CardMessageSection{
+				Text: kook.CardMessageElementKMarkdown{
 					Content: "`" + userInfo.Nickname + "`悄悄加入了语音频道`" + channelInfo.Name + "`",
 				},
 			},
@@ -97,9 +97,9 @@ func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
 		return
 	}
-	_, err = betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
-			Type:     khl.MessageTypeCard,
+	_, err = betagovar.GlobalSession.MessageCreate(&kook.MessageCreate{
+		MessageCreateBase: kook.MessageCreateBase{
+			Type:     kook.MessageTypeCard,
 			TargetID: betagovar.NotifierChanID,
 			Content:  cardMessageStr,
 		},
@@ -109,10 +109,10 @@ func channelJoinedHandler(ctx *khl.GuildChannelMemberAddContext) {
 	}
 }
 
-func channelLeftAsyncHandler(ctx *khl.GuildChannelMemberDeleteContext) {
+func channelLeftAsyncHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 	go channelLeftHandler(ctx)
 }
-func channelLeftHandler(ctx *khl.GuildChannelMemberDeleteContext) {
+func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 	defer utility.CollectPanic(ctx.Extra, ctx.Common.TargetID, "", ctx.Extra.UserID)
 	// 离开频道时，记录频道信息
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
@@ -140,16 +140,16 @@ func channelLeftHandler(ctx *khl.GuildChannelMemberDeleteContext) {
 	}
 }
 
-func sendMessageToTestChannel(session *khl.Session, content string) {
+func sendMessageToTestChannel(session *kook.Session, content string) {
 
-	session.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
+	session.MessageCreate(&kook.MessageCreate{
+		MessageCreateBase: kook.MessageCreateBase{
 			Type:     9,
 			TargetID: betagovar.TestChanID,
 			Content:  content,
 		}})
 }
 
-func receiveDirectMessage(ctx *khl.DirectMessageReactionAddContext) {
+func receiveDirectMessage(ctx *kook.DirectMessageReactionAddContext) {
 	log.Println("-----------Test")
 }

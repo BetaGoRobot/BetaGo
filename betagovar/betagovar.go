@@ -3,8 +3,8 @@ package betagovar
 import (
 	"os"
 
-	"github.com/lonelyevil/khl"
-	"github.com/lonelyevil/khl/log_adapter/plog"
+	"github.com/lonelyevil/kook"
+	"github.com/lonelyevil/kook/log_adapter/plog"
 	"github.com/phuslu/log"
 )
 
@@ -56,7 +56,7 @@ type CardMessageColModule struct {
 }
 
 // GlobalSession 全局共享session
-var GlobalSession = khl.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
+var GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
 	Level:  log.DebugLevel,
 	Writer: &log.ConsoleWriter{},
 }))

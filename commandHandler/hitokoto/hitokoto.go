@@ -10,7 +10,7 @@ import (
 	"github.com/enescakir/emoji"
 	"github.com/heyuhengmatt/zaplog"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 var (
@@ -80,19 +80,19 @@ func GetHitokotoHandler(targetID, msgID, authorID string, args ...string) (err e
 	if err != nil {
 		return
 	}
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
+	cardMessageStr, err := kook.CardMessage{
+		&kook.CardMessageCard{
 			Theme: "info",
 			Size:  "lg",
 			Modules: []interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
+				kook.CardMessageHeader{
+					Text: kook.CardMessageElementText{
 						Content: fmt.Sprintf("%s 很喜欢《%s》中的一句话", emoji.Mountain.String(), hitokotoRes.From),
 						Emoji:   true,
 					},
 				},
-				khl.CardMessageSection{
-					Text: khl.CardMessageElementText{
+				kook.CardMessageSection{
+					Text: kook.CardMessageElementText{
 						Content: hitokotoRes.Hitokoto + "\n",
 						Emoji:   true,
 					},
@@ -103,9 +103,9 @@ func GetHitokotoHandler(targetID, msgID, authorID string, args ...string) (err e
 	if err != nil {
 		return
 	}
-	_, err = betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
-			Type:     khl.MessageTypeCard,
+	_, err = betagovar.GlobalSession.MessageCreate(&kook.MessageCreate{
+		MessageCreateBase: kook.MessageCreateBase{
+			Type:     kook.MessageTypeCard,
 			TargetID: targetID,
 			Content:  cardMessageStr,
 			Quote:    msgID,

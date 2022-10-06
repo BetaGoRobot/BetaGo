@@ -7,7 +7,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/enescakir/emoji"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 // RandRollHandler 随机抽取一个数字
@@ -54,19 +54,19 @@ func RandRollHandler(targetID, quoteID, authorID string, args ...string) (err er
 	} else if point == min {
 		extraStr = "什么倒霉蛋！"
 	}
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
+	cardMessageStr, err := kook.CardMessage{
+		&kook.CardMessageCard{
 			Theme: "info",
 			Size:  "lg",
 			Modules: []interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
+				kook.CardMessageHeader{
+					Text: kook.CardMessageElementText{
 						Content: string(emoji.BeerMug) + "一起掷骰子",
 						Emoji:   false,
 					},
 				},
-				khl.CardMessageSection{
-					Text: khl.CardMessageElementKMarkdown{
+				kook.CardMessageSection{
+					Text: kook.CardMessageElementKMarkdown{
 						Content: fmt.Sprintf("范围 `[%d,%d]` (met)%s(met) %s你掷出了 **%d**\n%s", min, max, authorID, emoji.ClinkingGlasses.String(), point, extraStr),
 					},
 				},
@@ -75,9 +75,9 @@ func RandRollHandler(targetID, quoteID, authorID string, args ...string) (err er
 	}.BuildMessage()
 
 	betagovar.GlobalSession.MessageCreate(
-		&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     khl.MessageTypeCard,
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeCard,
 				TargetID: targetID,
 				Content:  cardMessageStr,
 				Quote:    quoteID,

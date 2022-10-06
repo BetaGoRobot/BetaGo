@@ -24,8 +24,8 @@ import (
 
 const (
 	// Version current go sdk version
-	Version               = "0.7.35"
-	userAgent             = "cos-go-sdk-v5/" + Version
+	Version               = "0.7.38"
+	UserAgent             = "cos-go-sdk-v5/" + Version
 	contentTypeXML        = "application/xml"
 	defaultServiceBaseURL = "http://service.cos.myqcloud.com"
 )
@@ -141,7 +141,7 @@ func NewClient(uri *BaseURL, httpClient *http.Client) *Client {
 
 	c := &Client{
 		client:    httpClient,
-		UserAgent: userAgent,
+		UserAgent: UserAgent,
 		BaseURL:   baseURL,
 		Conf: &Config{
 			EnableCRC:        true,
@@ -244,7 +244,7 @@ func (c *Client) newRequest(ctx context.Context, baseURL *url.URL, uri, method s
 	if contentMD5 != "" {
 		req.Header["Content-MD5"] = []string{contentMD5}
 	}
-	if v := req.Header.Get("User-Agent"); v == "" || !strings.HasPrefix(v, userAgent) {
+	if v := req.Header.Get("User-Agent"); v == "" || !strings.HasPrefix(v, UserAgent) {
 		if c.UserAgent != "" {
 			req.Header.Set("User-Agent", c.UserAgent)
 		}
@@ -307,16 +307,16 @@ func (c *Client) doAPI(ctx context.Context, req *http.Request, result interface{
 		if c.Conf.EnableCRC && reader.writer != nil && !reader.disableCheckSum {
 			localcrc := reader.Crc64()
 			scoscrc := response.Header.Get("x-cos-hash-crc64ecma")
-			icoscrc, _ := strconv.ParseUint(scoscrc, 10, 64)
+			icoscrc, err := strconv.ParseUint(scoscrc, 10, 64)
 			if icoscrc != localcrc {
-				return response, fmt.Errorf("verification failed, want:%v, return:%v", localcrc, icoscrc)
+				return response, fmt.Errorf("verification failed, want:%v, return:%v, x-cos-hash-crc64ecma:%v, err:%v", localcrc, icoscrc, scoscrc, err)
 			}
 		}
 	}
 
 	if result != nil {
 		if w, ok := result.(io.Writer); ok {
-			io.Copy(w, resp.Body)
+			_, err = io.Copy(w, resp.Body)
 		} else {
 			err = xml.NewDecoder(resp.Body).Decode(result)
 			if err == io.EOF {

@@ -7,7 +7,7 @@ import (
 	betagovar "github.com/BetaGoRobot/BetaGo/betagovar"
 	command_context "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 // HourlyGetSen 每小时发送
@@ -36,9 +36,9 @@ func DailyRecommand() {
 			}
 
 			modules := make([]interface{}, 0)
-			cardMessage := make(khl.CardMessage, 0)
+			cardMessage := make(kook.CardMessage, 0)
 			var cardStr string
-			var messageType khl.MessageType
+			var messageType kook.MessageType
 			if len(res) != 0 {
 				modules = append(modules, betagovar.CardMessageTextModule{
 					Type: "header",
@@ -58,9 +58,9 @@ func DailyRecommand() {
 				}
 				cardMessage = append(
 					cardMessage,
-					&khl.CardMessageCard{
-						Theme:   khl.CardThemePrimary,
-						Size:    khl.CardSizeSm,
+					&kook.CardMessageCard{
+						Theme:   kook.CardThemePrimary,
+						Size:    kook.CardSizeSm,
 						Modules: modules,
 					},
 				)
@@ -71,8 +71,8 @@ func DailyRecommand() {
 				}
 			}
 			betagovar.GlobalSession.MessageCreate(
-				&khl.MessageCreate{
-					MessageCreateBase: khl.MessageCreateBase{
+				&kook.MessageCreate{
+					MessageCreateBase: kook.MessageCreateBase{
 						Type:     messageType,
 						TargetID: "3241026226723225",
 						Content:  cardStr,

@@ -9,7 +9,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/enescakir/emoji"
 	"github.com/heyuhengmatt/zaplog"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 var (
@@ -41,7 +41,7 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 	}
 
 	var (
-		cardMessage   = make(khl.CardMessage, 0)
+		cardMessage   = make(kook.CardMessage, 0)
 		modulesNetese = make([]interface{}, 0)
 		modulesQQ     = make([]interface{}, 0)
 		cardStr       string
@@ -54,8 +54,8 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 			if _, ok := tempMap[song.Name+" - "+song.ArtistName]; ok {
 				continue
 			}
-			modulesNetese = append(modulesNetese, khl.CardMessageFile{
-				Type:  khl.CardMessageFileTypeAudio,
+			modulesNetese = append(modulesNetese, kook.CardMessageFile{
+				Type:  kook.CardMessageFileTypeAudio,
 				Src:   song.SongURL,
 				Title: song.Name + " - " + song.ArtistName,
 				Cover: song.PicURL,
@@ -64,8 +64,8 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 		}
 		if len(resNetease) != 0 {
 			modulesNetese = append([]interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
+				kook.CardMessageHeader{
+					Text: kook.CardMessageElementText{
 						Content: emoji.Headphone.String() + "网易云音乐-搜索结果" + emoji.MagnifyingGlassTiltedLeft.String(),
 						Emoji:   false,
 					},
@@ -73,9 +73,9 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 			}, modulesNetese...)
 			cardMessage = append(
 				cardMessage,
-				&khl.CardMessageCard{
-					Theme:   khl.CardThemePrimary,
-					Size:    khl.CardSizeSm,
+				&kook.CardMessageCard{
+					Theme:   kook.CardThemePrimary,
+					Size:    kook.CardSizeSm,
 					Modules: modulesNetese,
 				},
 			)
@@ -86,8 +86,8 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 			if _, ok := tempMap[song.Name+" - "+song.ArtistName]; ok {
 				continue
 			}
-			modulesQQ = append(modulesQQ, khl.CardMessageFile{
-				Type:  khl.CardMessageFileTypeAudio,
+			modulesQQ = append(modulesQQ, kook.CardMessageFile{
+				Type:  kook.CardMessageFileTypeAudio,
 				Src:   song.SongURL,
 				Title: song.Name + " - " + song.ArtistName,
 				Cover: song.PicURL,
@@ -96,8 +96,8 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 		}
 		if len(resQQmusic) != 0 {
 			modulesQQ = append([]interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
+				kook.CardMessageHeader{
+					Text: kook.CardMessageElementText{
 						Content: emoji.MusicalNote.String() + "QQ音乐-搜索结果" + emoji.MagnifyingGlassTiltedLeft.String(),
 						Emoji:   false,
 					},
@@ -105,9 +105,9 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 			}, modulesQQ...)
 			cardMessage = append(
 				cardMessage,
-				&khl.CardMessageCard{
-					Theme:   khl.CardThemePrimary,
-					Size:    khl.CardSizeSm,
+				&kook.CardMessageCard{
+					Theme:   kook.CardThemePrimary,
+					Size:    kook.CardSizeSm,
 					Modules: modulesQQ,
 				},
 			)
@@ -125,9 +125,9 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 		return
 	}
 	betagovar.GlobalSession.MessageCreate(
-		&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     khl.MessageTypeCard,
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeCard,
 				TargetID: targetID,
 				Content:  cardStr,
 				Quote:    quoteID,

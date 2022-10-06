@@ -16,6 +16,7 @@ services:
     image: postgres
     container_name: betago-pg
     user: root
+    restart: always
     environment:
       - POSTGRES_PASSWORD=heyuheng1.22.3
     ports:
@@ -28,6 +29,8 @@ services:
   netease_api:
     image: ccr.ccs.tencentyun.com/kevinmatt/netease-api
     container_name: netease-api
+    init: true
+    restart: always
     ports:
       - 3335:3335
     networks:
@@ -36,6 +39,7 @@ services:
   qqmusic_api:
     image: ccr.ccs.tencentyun.com/kevinmatt/qqmusic-api
     container_name: qqmusic-api
+    restart: always
     ports:
       - 3300:3300
     networks:
@@ -44,6 +48,8 @@ services:
   loki:
     image: grafana/loki
     container_name: loki
+    restart: always
+    init: true
     ports:
       - 3100:3100
     networks:
@@ -52,6 +58,7 @@ services:
   grafana:
     image: grafana/grafana-enterprise
     container_name: grafana
+    restart: always
     ports:
       - 3000:3000
     networks:
@@ -60,6 +67,7 @@ services:
   promethues:
     image: prom/prometheus
     container_name: promethues
+    restart: always
     volumes:
       - /root/.config/promethus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:

@@ -7,7 +7,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 // ShowAdminHandler 显示管理员
@@ -20,17 +20,17 @@ func ShowAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err e
 	utility.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level DESC")
 	modules := make([]interface{}, 0)
 	modules = append(modules,
-		khl.CardMessageSection{
-			Text: khl.CardMessageParagraph{
+		kook.CardMessageSection{
+			Text: kook.CardMessageParagraph{
 				Cols: 3,
 				Fields: []interface{}{
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: "**用户名**",
 					},
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: "**用户ID**",
 					},
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: "**管理等级**",
 					},
 				},
@@ -42,17 +42,17 @@ func ShowAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err e
 			return err
 		}
 		modules = append(modules,
-			khl.CardMessageSection{
-				Text: khl.CardMessageParagraph{
+			kook.CardMessageSection{
+				Text: kook.CardMessageParagraph{
 					Cols: 3,
 					Fields: []interface{}{
-						khl.CardMessageElementKMarkdown{
+						kook.CardMessageElementKMarkdown{
 							Content: fmt.Sprintf("`%s`", info.Nickname),
 						},
-						khl.CardMessageElementKMarkdown{
+						kook.CardMessageElementKMarkdown{
 							Content: strconv.Itoa(int(admin.UserID)),
 						},
-						khl.CardMessageElementKMarkdown{
+						kook.CardMessageElementKMarkdown{
 							Content: strconv.Itoa(int(admin.Level)),
 						},
 					},
@@ -60,8 +60,8 @@ func ShowAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err e
 			},
 		)
 	}
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
+	cardMessageStr, err := kook.CardMessage{
+		&kook.CardMessageCard{
 			Theme:   "secondary",
 			Size:    "lg",
 			Modules: modules,
@@ -71,9 +71,9 @@ func ShowAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err e
 		return
 	}
 	betagovar.GlobalSession.MessageCreate(
-		&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     khl.MessageTypeCard,
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeCard,
 				TargetID: TargetID,
 				Content:  cardMessageStr,
 				Quote:    QuoteID,
@@ -132,19 +132,19 @@ func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err er
 	for _, userID := range succUserID {
 		succStr += fmt.Sprintf("(met)%s(met) 已被设置为管理员\n", userID)
 	}
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
+	cardMessageStr, err := kook.CardMessage{
+		&kook.CardMessageCard{
 			Theme: "secondary",
 			Size:  "lg",
 			Modules: []interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
+				kook.CardMessageHeader{
+					Text: kook.CardMessageElementText{
 						Content: "指令执行成功~~",
 						Emoji:   false,
 					},
 				},
-				khl.CardMessageSection{
-					Text: khl.CardMessageElementKMarkdown{
+				kook.CardMessageSection{
+					Text: kook.CardMessageElementKMarkdown{
 						Content: succStr,
 					},
 				},
@@ -156,9 +156,9 @@ func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err er
 		return ec.GenErr()
 	}
 	betagovar.GlobalSession.MessageCreate(
-		&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     khl.MessageTypeCard,
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeCard,
 				TargetID: TargetID,
 				Content:  cardMessageStr,
 				Quote:    QuoteID,
@@ -217,19 +217,19 @@ func RemoveAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err
 	for _, userID := range succUserID {
 		succStr += fmt.Sprintf("(met)%s(met) 管理员已被移除\n", userID)
 	}
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
+	cardMessageStr, err := kook.CardMessage{
+		&kook.CardMessageCard{
 			Theme: "secondary",
 			Size:  "lg",
 			Modules: []interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
+				kook.CardMessageHeader{
+					Text: kook.CardMessageElementText{
 						Content: "指令执行成功~~",
 						Emoji:   false,
 					},
 				},
-				khl.CardMessageSection{
-					Text: khl.CardMessageElementKMarkdown{
+				kook.CardMessageSection{
+					Text: kook.CardMessageElementKMarkdown{
 						Content: succStr,
 					},
 				},
@@ -240,9 +240,9 @@ func RemoveAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err
 		ec.Collect(err)
 		return ec.GenErr()
 	}
-	betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
-			Type:     khl.MessageTypeCard,
+	betagovar.GlobalSession.MessageCreate(&kook.MessageCreate{
+		MessageCreateBase: kook.MessageCreateBase{
+			Type:     kook.MessageTypeCard,
 			TargetID: TargetID,
 			Content:  cardMessageStr,
 			Quote:    QuoteID,

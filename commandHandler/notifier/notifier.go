@@ -7,33 +7,33 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/enescakir/emoji"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 // StartUpMessage  启动时的消息
 //
 //	@param session
 //	@return err
-func StartUpMessage(session *khl.Session) (err error) {
+func StartUpMessage(session *kook.Session) (err error) {
 	// StartUp for debug:
 	currentIP, err := httptool.GetPubIP()
 	if err != nil {
 		return
 	}
 	go func() {
-		cardMessage, _ := khl.CardMessage{
-			&khl.CardMessageCard{
-				Theme: khl.CardThemeInfo,
-				Size:  khl.CardSizeLg,
+		cardMessage, _ := kook.CardMessage{
+			&kook.CardMessageCard{
+				Theme: kook.CardThemeInfo,
+				Size:  kook.CardSizeLg,
 				Modules: []interface{}{
-					khl.CardMessageHeader{
-						Text: khl.CardMessageElementText{
+					kook.CardMessageHeader{
+						Text: kook.CardMessageElementText{
 							Content: emoji.DesertIsland.String() + "Online Notifacation" + emoji.Information.String(),
 							Emoji:   false,
 						},
 					},
-					khl.CardMessageSection{
-						Text: khl.CardMessageElementKMarkdown{
+					kook.CardMessageSection{
+						Text: kook.CardMessageElementKMarkdown{
 							Content: strings.Join(
 								[]string{
 									"Name: \t**", betagovar.RobotName, "**\n",
@@ -50,9 +50,9 @@ func StartUpMessage(session *khl.Session) (err error) {
 			},
 		}.BuildMessage()
 		session.MessageCreate(
-			&khl.MessageCreate{
-				MessageCreateBase: khl.MessageCreateBase{
-					Type:     khl.MessageTypeCard,
+			&kook.MessageCreate{
+				MessageCreateBase: kook.MessageCreateBase{
+					Type:     kook.MessageTypeCard,
 					TargetID: betagovar.TestChanID,
 					Content:  cardMessage,
 				},
@@ -63,19 +63,19 @@ func StartUpMessage(session *khl.Session) (err error) {
 		return
 	}
 	go func() { // StartUp for info:
-		cardMessage, _ := khl.CardMessage{
-			&khl.CardMessageCard{
-				Theme: khl.CardThemeInfo,
-				Size:  khl.CardSizeLg,
+		cardMessage, _ := kook.CardMessage{
+			&kook.CardMessageCard{
+				Theme: kook.CardThemeInfo,
+				Size:  kook.CardSizeLg,
 				Modules: []interface{}{
-					khl.CardMessageHeader{
-						Text: khl.CardMessageElementText{
+					kook.CardMessageHeader{
+						Text: kook.CardMessageElementText{
 							Content: emoji.DesertIsland.String() + "BetaGo更新信息" + emoji.Information.String(),
 							Emoji:   false,
 						},
 					},
-					khl.CardMessageSection{
-						Text: khl.CardMessageElementKMarkdown{
+					kook.CardMessageSection{
+						Text: kook.CardMessageElementKMarkdown{
 							Content: strings.Join(
 								[]string{
 									"Time: \t**", time.Now().Add(time.Hour * 8).Format("2006-01-02 15:04:05"), "**\n",
@@ -89,9 +89,9 @@ func StartUpMessage(session *khl.Session) (err error) {
 			},
 		}.BuildMessage()
 		session.MessageCreate(
-			&khl.MessageCreate{
-				MessageCreateBase: khl.MessageCreateBase{
-					Type:     khl.MessageTypeCard,
+			&kook.MessageCreate{
+				MessageCreateBase: kook.MessageCreateBase{
+					Type:     kook.MessageTypeCard,
 					TargetID: betagovar.BetaGoUpdateChanID,
 					Content:  cardMessage,
 				},
@@ -105,24 +105,24 @@ func StartUpMessage(session *khl.Session) (err error) {
 //
 //	@param session
 //	@return err
-func OfflineMessage(session *khl.Session) (err error) {
+func OfflineMessage(session *kook.Session) (err error) {
 	currentIP, err := httptool.GetPubIP()
 	if err != nil {
 		return
 	}
-	cardMessage, err := khl.CardMessage{
-		&khl.CardMessageCard{
+	cardMessage, err := kook.CardMessage{
+		&kook.CardMessageCard{
 			Theme: "info",
 			Size:  "lg",
 			Modules: []interface{}{
-				khl.CardMessageHeader{
-					Text: khl.CardMessageElementText{
+				kook.CardMessageHeader{
+					Text: kook.CardMessageElementText{
 						Content: emoji.DesertIsland.String() + "Offline Notifacation" + emoji.Information.String(),
 						Emoji:   false,
 					},
 				},
-				khl.CardMessageSection{
-					Text: khl.CardMessageElementKMarkdown{
+				kook.CardMessageSection{
+					Text: kook.CardMessageElementKMarkdown{
 						Content: strings.Join([]string{
 							"Name: \t**", betagovar.RobotName, "**\n",
 							"Time: \t**", time.Now().Add(time.Hour * 8).Format("2006-01-02 15:04:05"), "**\n",
@@ -137,9 +137,9 @@ func OfflineMessage(session *khl.Session) (err error) {
 		},
 	}.BuildMessage()
 	session.MessageCreate(
-		&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     khl.MessageTypeCard,
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeCard,
 				TargetID: betagovar.TestChanID,
 				Content:  cardMessage,
 			},

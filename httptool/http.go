@@ -67,7 +67,6 @@ func GetWithCookieParams(info RequestInfo) (resp *http.Response, err error) {
 	for index := range info.Cookies {
 		req.AddCookie(info.Cookies[index])
 	}
-	fmt.Println("--------", string(req.URL.String()))
 	resp, err = client.Do(req)
 	if err != nil {
 		return

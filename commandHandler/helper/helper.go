@@ -7,7 +7,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/enescakir/emoji"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 // AdminCommandHelperHandler 查看帮助
@@ -23,13 +23,13 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 		if utility.GetDbConnection().Table("betago.command_infos").Where("command_name = ?", "`"+strings.ToUpper(args[0])+"`").Find(&commandInfo).RowsAffected == 0 {
 			return fmt.Errorf("没有找到指令: %s", args[0])
 		}
-		cardMessageStr, err = khl.CardMessage{&khl.CardMessageCard{
+		cardMessageStr, err = kook.CardMessage{&kook.CardMessageCard{
 			Theme: "info",
-			Size:  khl.CardSizeLg,
+			Size:  kook.CardSizeLg,
 			Modules: []interface{}{
-				&khl.CardMessageSection{
-					Mode: khl.CardMessageSectionModeLeft,
-					Text: &khl.CardMessageElementKMarkdown{
+				&kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
 						Content: commandInfo.CommandName + ": " + commandInfo.CommandDesc,
 					},
 				},
@@ -39,9 +39,9 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 			return err
 		}
 		_, err = betagovar.GlobalSession.MessageCreate(
-			&khl.MessageCreate{
-				MessageCreateBase: khl.MessageCreateBase{
-					Type:     khl.MessageTypeCard,
+			&kook.MessageCreate{
+				MessageCreateBase: kook.MessageCreateBase{
+					Type:     kook.MessageTypeCard,
 					TargetID: targetID,
 					Content:  cardMessageStr,
 					Quote:    quoteID,
@@ -60,32 +60,32 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 
 	var (
 		modules = []interface{}{
-			khl.CardMessageHeader{
-				Text: khl.CardMessageElementText{
+			kook.CardMessageHeader{
+				Text: kook.CardMessageElementText{
 					Content: "遇到什么问题了吗？看看下面的命令指南吧~" + emoji.SmilingFaceWithHalo.String(),
 					Emoji:   true,
 				},
 			},
-			khl.CardMessageHeader{
-				Text: khl.CardMessageElementText{
+			kook.CardMessageHeader{
+				Text: kook.CardMessageElementText{
 					Content: string(emoji.ComputerMouse) + "无参数指令:",
 					Emoji:   true,
 				},
 			},
-			khl.CardMessageActionGroup{},
+			kook.CardMessageActionGroup{},
 		}
 	)
 	count := 0
 	for _, commandInfo := range commandInfoList {
 		count++
 		if count%4 == 0 {
-			modules = append(modules, khl.CardMessageActionGroup{})
+			modules = append(modules, kook.CardMessageActionGroup{})
 		}
-		modules[count/4+2] = append(modules[count/4+2].(khl.CardMessageActionGroup),
-			khl.CardMessageElementButton{
-				Theme: khl.CardThemeSuccess,
+		modules[count/4+2] = append(modules[count/4+2].(kook.CardMessageActionGroup),
+			kook.CardMessageElementButton{
+				Theme: kook.CardThemeSuccess,
 				Value: strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")),
-				Click: string(khl.CardMessageElementButtonClickReturnVal),
+				Click: string(kook.CardMessageElementButtonClickReturnVal),
 				Text:  strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")) + ">" + getShortDesc(commandInfo.CommandDesc),
 			},
 		)
@@ -98,20 +98,20 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 		return
 	}
 	modules = append(modules,
-		khl.CardMessageHeader{
-			Text: khl.CardMessageElementText{
+		kook.CardMessageHeader{
+			Text: kook.CardMessageElementText{
 				Content: emoji.Keyboard.String() + "含参数指令:",
 				Emoji:   true,
 			},
 		},
-		khl.CardMessageSection{
-			Text: khl.CardMessageParagraph{
+		kook.CardMessageSection{
+			Text: kook.CardMessageParagraph{
 				Cols: 2,
 				Fields: []interface{}{
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: "**指令名称**",
 					},
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: "**指令功能**",
 					},
 				},
@@ -119,14 +119,14 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 		},
 	)
 	for _, commandInfo := range commandInfoList {
-		modules = append(modules, khl.CardMessageSection{
-			Text: khl.CardMessageParagraph{
+		modules = append(modules, kook.CardMessageSection{
+			Text: kook.CardMessageParagraph{
 				Cols: 2,
 				Fields: []interface{}{
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: commandInfo.CommandName,
 					},
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: commandInfo.CommandDesc,
 					},
 				},
@@ -134,8 +134,8 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 		})
 	}
 
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
+	cardMessageStr, err := kook.CardMessage{
+		&kook.CardMessageCard{
 			Theme:   "secondary",
 			Size:    "lg",
 			Modules: modules,
@@ -148,9 +148,9 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 	}
 
 	betagovar.GlobalSession.MessageCreate(
-		&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     khl.MessageTypeCard,
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeCard,
 				TargetID: targetID,
 				Content:  cardMessageStr,
 				Quote:    quoteID,
@@ -180,13 +180,13 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 		if utility.GetDbConnection().Table("betago.command_infos").Where("command_name = ? and command_type = ?", "`"+strings.ToUpper(args[0])+"`", "user").Find(&commandInfo).RowsAffected == 0 {
 			return fmt.Errorf("没有找到指令: %s", args[0])
 		}
-		cardMessageStr, err = khl.CardMessage{&khl.CardMessageCard{
+		cardMessageStr, err = kook.CardMessage{&kook.CardMessageCard{
 			Theme: "info",
-			Size:  khl.CardSizeLg,
+			Size:  kook.CardSizeLg,
 			Modules: []interface{}{
-				&khl.CardMessageSection{
-					Mode: khl.CardMessageSectionModeLeft,
-					Text: &khl.CardMessageElementKMarkdown{
+				&kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
 						Content: commandInfo.CommandName + ": " + commandInfo.CommandDesc,
 					},
 				},
@@ -196,9 +196,9 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 			return err
 		}
 		_, err = betagovar.GlobalSession.MessageCreate(
-			&khl.MessageCreate{
-				MessageCreateBase: khl.MessageCreateBase{
-					Type:     khl.MessageTypeCard,
+			&kook.MessageCreate{
+				MessageCreateBase: kook.MessageCreateBase{
+					Type:     kook.MessageTypeCard,
 					TargetID: targetID,
 					Content:  cardMessageStr,
 					Quote:    quoteID,
@@ -216,26 +216,26 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 
 	var (
 		modules = []interface{}{
-			khl.CardMessageHeader{
-				Text: khl.CardMessageElementText{
+			kook.CardMessageHeader{
+				Text: kook.CardMessageElementText{
 					Content: string(emoji.ComputerMouse) + "无参数指令:",
 					Emoji:   true,
 				},
 			},
-			khl.CardMessageActionGroup{},
+			kook.CardMessageActionGroup{},
 		}
 	)
 	count := 0
 	for _, commandInfo := range commandInfoList {
 		count++
 		if count%4 == 0 {
-			modules = append(modules, khl.CardMessageActionGroup{})
+			modules = append(modules, kook.CardMessageActionGroup{})
 		}
-		modules[count/4+1] = append(modules[count/4+1].(khl.CardMessageActionGroup),
-			khl.CardMessageElementButton{
-				Theme: khl.CardThemeSuccess,
+		modules[count/4+1] = append(modules[count/4+1].(kook.CardMessageActionGroup),
+			kook.CardMessageElementButton{
+				Theme: kook.CardThemeSuccess,
 				Value: strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")),
-				Click: string(khl.CardMessageElementButtonClickReturnVal),
+				Click: string(kook.CardMessageElementButtonClickReturnVal),
 				Text:  strings.ToUpper(strings.Trim(commandInfo.CommandName, "`")) + ">" + getShortDesc(commandInfo.CommandDesc),
 			},
 		)
@@ -248,20 +248,20 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 		return
 	}
 	modules = append(modules,
-		khl.CardMessageHeader{
-			Text: khl.CardMessageElementText{
+		kook.CardMessageHeader{
+			Text: kook.CardMessageElementText{
 				Content: emoji.Keyboard.String() + "含参数指令:",
 				Emoji:   true,
 			},
 		},
-		khl.CardMessageSection{
-			Text: khl.CardMessageParagraph{
+		kook.CardMessageSection{
+			Text: kook.CardMessageParagraph{
 				Cols: 2,
 				Fields: []interface{}{
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: "**指令名称**",
 					},
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: "**指令功能**",
 					},
 				},
@@ -269,14 +269,14 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 		},
 	)
 	for _, commandInfo := range commandInfoList {
-		modules = append(modules, khl.CardMessageSection{
-			Text: khl.CardMessageParagraph{
+		modules = append(modules, kook.CardMessageSection{
+			Text: kook.CardMessageParagraph{
 				Cols: 2,
 				Fields: []interface{}{
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: commandInfo.CommandName,
 					},
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: commandInfo.CommandDesc,
 					},
 				},
@@ -284,8 +284,8 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 		})
 	}
 
-	cardMessageStr, err := khl.CardMessage{
-		&khl.CardMessageCard{
+	cardMessageStr, err := kook.CardMessage{
+		&kook.CardMessageCard{
 			Theme:   "secondary",
 			Size:    "lg",
 			Modules: modules,
@@ -298,9 +298,9 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 	}
 
 	betagovar.GlobalSession.MessageCreate(
-		&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     khl.MessageTypeCard,
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeCard,
 				TargetID: targetID,
 				Content:  cardMessageStr,
 				Quote:    quoteID,

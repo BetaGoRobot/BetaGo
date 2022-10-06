@@ -15,7 +15,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/scheduletask"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/heyuhengmatt/zaplog"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -59,7 +59,7 @@ func main() {
 	CheckEnv()
 	e := betagovar.GlobalSession.Open()
 	if e != nil {
-		zaplog.Logger.Error("连接失败", zaplog.Error(e))
+		utility.ZapLogger.Error("连接失败", zaplog.Error(e))
 		panic(e)
 	}
 	notifier.StartUpMessage(betagovar.GlobalSession)
@@ -75,9 +75,9 @@ func main() {
 	betagovar.GlobalSession.Close()
 }
 
-func messageHan(ctx *khl.KmarkdownMessageContext) {
+func messageHan(ctx *kook.KmarkdownMessageContext) {
 	go func() {
-		if ctx.Common.Type != khl.MessageTypeKMarkdown || ctx.Extra.Author.Bot {
+		if ctx.Common.Type != kook.MessageTypeKMarkdown || ctx.Extra.Author.Bot {
 			return
 		}
 		defer wordcontrol.RemoveDirtyWords(ctx)

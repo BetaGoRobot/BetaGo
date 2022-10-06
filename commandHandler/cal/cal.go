@@ -14,7 +14,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/httptool"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 	"github.com/wcharczuk/go-chart/v2"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -140,8 +140,8 @@ func (ctx *DrawPieAPICtx) BuildRequestURL() string {
 //	@param userID
 func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (err error) {
 	var (
-		userInfo      *khl.User
-		cardContainer khl.CardMessageContainer
+		userInfo      *kook.User
+		cardContainer kook.CardMessageContainer
 	)
 	if args != nil {
 		// 含参数，则获取参数中用户的时间分布
@@ -161,9 +161,9 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 				errorsender.SendErrorInfo(targetID, msgID, authorID, tmpErr)
 			}
 			cardContainer = append(cardContainer,
-				khl.CardMessageElementImage{
+				kook.CardMessageElementImage{
 					Src:  URL,
-					Size: string(khl.CardSizeLg),
+					Size: string(kook.CardSizeLg),
 				},
 			)
 		}
@@ -183,15 +183,15 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 			errorsender.SendErrorInfo(targetID, msgID, authorID, tmpErr)
 		}
 		cardContainer = append(cardContainer,
-			khl.CardMessageElementImage{
+			kook.CardMessageElementImage{
 				Src:  URL,
-				Size: string(khl.CardSizeLg),
+				Size: string(kook.CardSizeLg),
 			},
 		)
 	}
-	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
-		Theme: khl.CardThemeInfo,
-		Size:  khl.CardSizeLg,
+	cardMessageStr, err := kook.CardMessage{&kook.CardMessageCard{
+		Theme: kook.CardThemeInfo,
+		Size:  kook.CardSizeLg,
 		Modules: []interface{}{
 			cardContainer,
 		},
@@ -199,9 +199,9 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 	if err != nil {
 		return
 	}
-	_, err = betagovar.GlobalSession.MessageCreate(&khl.MessageCreate{
-		MessageCreateBase: khl.MessageCreateBase{
-			Type:     khl.MessageTypeCard,
+	_, err = betagovar.GlobalSession.MessageCreate(&kook.MessageCreate{
+		MessageCreateBase: kook.MessageCreateBase{
+			Type:     kook.MessageTypeCard,
 			TargetID: targetID,
 			Content:  cardMessageStr,
 			Quote:    msgID,
@@ -237,8 +237,6 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 		}
 		totalTime += timeCost
 	}
-	a := totalTime.Hours()
-	fmt.Println(a)
 	return chanDiv
 }
 

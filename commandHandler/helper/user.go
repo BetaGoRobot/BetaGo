@@ -5,7 +5,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 // GetUserInfoHandler 获取用户信息
@@ -31,18 +31,18 @@ func GetUserInfoHandler(targetID, quoteID, authorID string, guildID string, args
 	if err != nil {
 		return err
 	}
-	cardMessageStr, err := khl.CardMessage{&khl.CardMessageCard{
-		Theme:   khl.CardThemePrimary,
-		Size:    khl.CardSizeLg,
+	cardMessageStr, err := kook.CardMessage{&kook.CardMessageCard{
+		Theme:   kook.CardThemePrimary,
+		Size:    kook.CardSizeLg,
 		Modules: cardMessageModules,
 	}}.BuildMessage()
 	if err != nil {
 		return err
 	}
 	_, err = betagovar.GlobalSession.MessageCreate(
-		&khl.MessageCreate{
-			MessageCreateBase: khl.MessageCreateBase{
-				Type:     khl.MessageTypeCard,
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeCard,
 				TargetID: targetID,
 				Content:  cardMessageStr,
 				Quote:    quoteID,

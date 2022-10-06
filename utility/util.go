@@ -13,7 +13,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/golang/freetype/truetype"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 // MicrosoftYaHei  字体类型,未来荧黑
@@ -95,9 +95,9 @@ func MustAtoI(str string) int {
 //	@param userID
 //	@param guildID
 //	@return userInfo
-func GetUserInfo(userID, guildID string) (userInfo *khl.User, err error) {
+func GetUserInfo(userID, guildID string) (userInfo *kook.User, err error) {
 	if guildID != "" {
-		userInfo, err = betagovar.GlobalSession.UserView(userID, khl.UserViewWithGuildID(guildID))
+		userInfo, err = betagovar.GlobalSession.UserView(userID, kook.UserViewWithGuildID(guildID))
 	} else {
 		userInfo, err = betagovar.GlobalSession.UserView(userID)
 	}
@@ -112,7 +112,7 @@ func GetUserInfo(userID, guildID string) (userInfo *khl.User, err error) {
 //	@param guildID
 //	@return guildInfo
 //	@return err
-func GetGuildInfo(guildID string) (guildInfo *khl.Guild, err error) {
+func GetGuildInfo(guildID string) (guildInfo *kook.Guild, err error) {
 	guildInfo, err = betagovar.GlobalSession.GuildView(guildID)
 	if err != nil {
 		return
@@ -125,7 +125,7 @@ func GetGuildInfo(guildID string) (guildInfo *khl.Guild, err error) {
 //	@param channelID
 //	@return channelInfo
 //	@return err
-func GetChannnelInfo(channelID string) (channelInfo *khl.Channel, err error) {
+func GetChannnelInfo(channelID string) (channelInfo *kook.Channel, err error) {
 	channelInfo, err = betagovar.GlobalSession.ChannelView(channelID)
 	if err != nil {
 		return
@@ -143,7 +143,7 @@ func Struct2Map(obj interface{}) map[string]interface{} {
 
 	var data = make(map[string]interface{})
 	for i := 0; i < t.NumField(); i++ {
-		if timestamp, ok := v.Field(i).Interface().(khl.MilliTimeStamp); ok {
+		if timestamp, ok := v.Field(i).Interface().(kook.MilliTimeStamp); ok {
 			data[t.Field(i).Name] = time.Unix(int64(timestamp)/1000, 0).Format("2006-01-02 15:04:05")
 		} else {
 			data[t.Field(i).Name] = v.Field(i).Interface()
@@ -156,14 +156,14 @@ func Struct2Map(obj interface{}) map[string]interface{} {
 func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (res []interface{}, err error) {
 
 	sectionElements := []interface{}{
-		khl.CardMessageSection{
-			Text: khl.CardMessageParagraph{
+		kook.CardMessageSection{
+			Text: kook.CardMessageParagraph{
 				Cols: 2,
 				Fields: []interface{}{
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: titleK,
 					},
-					khl.CardMessageElementKMarkdown{
+					kook.CardMessageElementKMarkdown{
 						Content: titleV,
 					},
 				},
@@ -176,17 +176,17 @@ func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (
 		}
 		if strings.HasPrefix(fmt.Sprint(v), "http") {
 			sectionElements = append(sectionElements,
-				khl.CardMessageSection{
-					Mode: khl.CardMessageSectionModeLeft,
-					Text: khl.CardMessageParagraph{
+				kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: kook.CardMessageParagraph{
 						Cols: 2,
 						Fields: []interface{}{
-							khl.CardMessageElementKMarkdown{
+							kook.CardMessageElementKMarkdown{
 								Content: "**" + k + "**",
 							},
 						},
 					},
-					Accessory: khl.CardMessageElementImage{
+					Accessory: kook.CardMessageElementImage{
 						Src:    fmt.Sprint(v),
 						Size:   "sm",
 						Circle: true,
@@ -196,14 +196,14 @@ func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (
 
 		} else {
 			sectionElements = append(sectionElements,
-				khl.CardMessageSection{
-					Text: khl.CardMessageParagraph{
+				kook.CardMessageSection{
+					Text: kook.CardMessageParagraph{
 						Cols: 2,
 						Fields: []interface{}{
-							khl.CardMessageElementKMarkdown{
+							kook.CardMessageElementKMarkdown{
 								Content: "**" + k + "**",
 							},
-							khl.CardMessageElementKMarkdown{
+							kook.CardMessageElementKMarkdown{
 								Content: "`" + fmt.Sprintf("%#v", v) + "`",
 							},
 						},

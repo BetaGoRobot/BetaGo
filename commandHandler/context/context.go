@@ -17,7 +17,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/lonelyevil/khl"
+	"github.com/lonelyevil/kook"
 )
 
 // CommandContext  is a context for command.
@@ -78,7 +78,7 @@ func GetNewCommandCtx() *CommandContext {
 // Init is a init function for command.
 //
 //	@receiver ctx
-func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) *CommandContext {
+func (ctx *CommandContext) Init(khlCtx *kook.EventHandlerCommonContext) *CommandContext {
 	*ctx = CommandContext{
 		Common: &CommandCommonContext{
 			TargetID: khlCtx.Common.TargetID,
@@ -96,13 +96,13 @@ func (ctx *CommandContext) Init(khlCtx *khl.EventHandlerCommonContext) *CommandC
 //	@return *CommandContext
 func (ctx *CommandContext) InitExtra(khlCtx interface{}) *CommandContext {
 	switch khlCtx.(type) {
-	case *khl.KmarkdownMessageContext:
-		khlCtx := khlCtx.(*khl.KmarkdownMessageContext)
+	case *kook.KmarkdownMessageContext:
+		khlCtx := khlCtx.(*kook.KmarkdownMessageContext)
 		ctx.Extra = &CommandExtraContext{
 			GuildID: khlCtx.Extra.GuildID,
 		}
-	case *khl.MessageButtonClickContext:
-		khlCtx := khlCtx.(*khl.MessageButtonClickContext)
+	case *kook.MessageButtonClickContext:
+		khlCtx := khlCtx.(*kook.MessageButtonClickContext)
 		ctx.Extra = &CommandExtraContext{
 			GuildID: khlCtx.Extra.GuildID,
 		}
