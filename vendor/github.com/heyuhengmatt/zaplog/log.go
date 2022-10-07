@@ -94,64 +94,72 @@ var (
 )
 
 // Debug  debug
-//  @receiver l
-//  @param msg
-//  @param fields
+//
+//	@receiver l
+//	@param msg
+//	@param fields
 func (l *ZapLogger) Debug(msg string, fields ...zap.Field) {
 	l.logger.Debug(msg, fields...)
 }
 
 // Info info
-//  @receiver l
-//  @param msg
-//  @param fields
+//
+//	@receiver l
+//	@param msg
+//	@param fields
 func (l *ZapLogger) Info(msg string, fields ...zap.Field) {
 	l.logger.Info(msg, fields...)
 }
 
 // Warn warn
-//  @receiver l
-//  @param msg
-//  @param fields
+//
+//	@receiver l
+//	@param msg
+//	@param fields
 func (l *ZapLogger) Warn(msg string, fields ...zap.Field) {
 	l.logger.Warn(msg, fields...)
 }
 
 // Error error
-//  @receiver l
-//  @param msg
-//  @param fields
+//
+//	@receiver l
+//	@param msg
+//	@param fields
 func (l *ZapLogger) Error(msg string, fields ...zap.Field) {
 	l.logger.Error(msg, fields...)
 }
 
 // DPanic dpanic
-//  @receiver l
-//  @param msg
-//  @param fields
+//
+//	@receiver l
+//	@param msg
+//	@param fields
 func (l *ZapLogger) DPanic(msg string, fields ...zap.Field) {
 	l.logger.DPanic(msg, fields...)
 }
 
 // Panic panic
-//  @receiver l
-//  @param msg
-//  @param fields
+//
+//	@receiver l
+//	@param msg
+//	@param fields
 func (l *ZapLogger) Panic(msg string, fields ...zap.Field) {
 	l.logger.Panic(msg, fields...)
 }
 
 // Fatal  fatal
-//  @receiver l *ZapLogger
-//  @param msg string
-//  @param fields ...zap.Field
-//  @author kevinmatthe
+//
+//	@receiver l *ZapLogger
+//	@param msg string
+//	@param fields ...zap.Field
+//	@author kevinmatthe
 func (l *ZapLogger) Fatal(msg string, fields ...zap.Field) {
 	l.logger.Fatal(msg, fields...)
 }
 
 // LogLevelSetter  set log level
-//  @return map
+//
+//	@return map
 func LogLevelSetter() map[string]Level {
 	return map[string]zapcore.Level{
 		"DEBUG":  DebugLevel,
@@ -165,8 +173,9 @@ func LogLevelSetter() map[string]Level {
 }
 
 // NewLogger new logger
-//  @param logBasePath
-//  @return zapLogger
+//
+//	@param logBasePath
+//	@return zapLogger
 func NewLogger(logBasePath string) (zapLogger *ZapLogger) {
 	if logBasePath == "" {
 		logBasePath = "/data/logs/zaplog-default"
@@ -208,9 +217,6 @@ func NewLogger(logBasePath string) (zapLogger *ZapLogger) {
 		MaxAge:     7, //日志保留天数
 		Compress:   false,
 	})
-	// 重定向Stderr到Panic日志
-	panicLog, _ := os.OpenFile(logBasePath+"_panic.log", os.O_RDWR|os.O_CREATE, 0666)
-	setDup(int(panicLog.Fd()), int(os.Stderr.Fd()))
 	if logLevel == DebugLevel {
 		cfg = zap.NewDevelopmentConfig()
 	} else {
@@ -228,13 +234,14 @@ func NewLogger(logBasePath string) (zapLogger *ZapLogger) {
 		//Panic日志输出到panic.log
 		zapcore.NewCore(zapcore.NewConsoleEncoder(cfg.EncoderConfig), zapcore.NewMultiWriteSyncer(panicLogWriter), DPanicLevel),
 	)
-	zapLogger.logger = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
+	zapLogger.logger = zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1), zap.AddStacktrace(PanicLevel))
 	return
 }
 
 // Sync sync
-//  @receiver logger
-//  @return error
+//
+//	@receiver logger
+//	@return error
 func (l *ZapLogger) Sync() error {
 	return l.logger.Sync()
 }

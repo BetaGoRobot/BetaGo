@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/lonelyevil/kook"
 )
 
 func Test_addAdministrator(t *testing.T) {

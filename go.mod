@@ -14,7 +14,7 @@ require (
 	github.com/TwiN/go-away v1.6.8
 	github.com/enescakir/emoji v1.0.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/heyuhengmatt/zaplog v0.1.2
+	github.com/heyuhengmatt/zaplog v0.1.4
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
 	github.com/lonelyevil/kook v0.0.30

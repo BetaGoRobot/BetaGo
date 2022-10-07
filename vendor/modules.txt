@@ -33,7 +33,7 @@ github.com/google/go-querystring/query
 # github.com/gorilla/websocket v1.5.0
 ## explicit; go 1.12
 github.com/gorilla/websocket
-# github.com/heyuhengmatt/zaplog v0.1.2
+# github.com/heyuhengmatt/zaplog v0.1.4
 ## explicit; go 1.18
 github.com/heyuhengmatt/zaplog
 # github.com/jackc/chunkreader/v2 v2.0.1
