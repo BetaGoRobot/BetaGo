@@ -37,7 +37,9 @@ func init() {
 		for {
 			time.Sleep(time.Minute * 15)
 			if NetEaseGCtx.loginType == "qr" {
-				NetEaseGCtx.LoginNetEaseQR()
+				if !NetEaseGCtx.CheckIfLogin() {
+					NetEaseGCtx.LoginNetEaseQR()
+				}
 			} else {
 				NetEaseGCtx.RefreshLogin()
 				if NetEaseGCtx.CheckIfLogin() {
