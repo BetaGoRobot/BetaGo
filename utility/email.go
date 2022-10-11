@@ -36,6 +36,25 @@ func SendEmail(Subject string, Body string) {
 	ZapLogger.Info("Send email success")
 }
 
+// SendQRCodeMail is the function to send QRCode mail
+//
+//	@param qrimg
+//	@return error
+func SendQRCodeMail(qrimg string) error {
+	getReceieverEmailList()
+	em := email.NewEmail()
+	em.From = fmt.Sprintf("%s <%s>", betagovar.RobotName, netEaseEmailAddress)
+	em.To = recevierEmailList
+	em.Subject = "网易云登陆提醒"
+	em.AttachFile(qrimg)
+	err := em.Send(netEaseEmailURLWithPort, smtp.PlainAuth("", netEaseEmailAddress, netEaseEmailSecret, netEaseEmailURL))
+	if err != nil {
+		return err
+	}
+	os.Remove(qrimg)
+	return nil
+}
+
 // getReceieverEmailList is the function to get recevier email list
 func getReceieverEmailList() {
 	globalDBConn.Table("betago.alert_lists").Find(&recevierEmailList)

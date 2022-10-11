@@ -22,8 +22,15 @@ type LoginStatusStruct struct {
 
 // NetEaseContext 网易云API调用封装
 type NetEaseContext struct {
-	cookies []*http.Cookie
-	err     error
+	cookies  []*http.Cookie
+	err      error
+	retryCnt int
+	qrStruct struct {
+		isOutDated bool
+		uniKey     string
+		qrBase64   string
+	}
+	loginType string
 }
 
 type dailySongs struct {

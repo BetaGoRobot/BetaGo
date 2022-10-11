@@ -7,7 +7,7 @@ import (
 )
 
 func TestA(t *testing.T) {
-	khl := khlMusicDownload{}
+	kook := khlMusicDownload{}
 	kook.DownloadMusicDB()
 }
 

@@ -1,40 +1,51 @@
 package neteaseapi
 
 import (
+	"encoding/base64"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/httptool"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	jsoniter "github.com/json-iterator/go"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+const netEaseQRTmpFile = "/data/tmp"
+
 func init() {
 	if IsTest == "true" {
 		NetEaseAPIBaseURL = "http://127.0.0.1:3335"
 	}
-
 	NetEaseGCtx.TryGetLastCookie()
 	err := NetEaseGCtx.LoginNetEase()
+	err = NetEaseGCtx.LoginNetEaseQR()
 	if err != nil {
 		log.Println("error in init loginNetease", err)
 	}
 	go func() {
 		for {
 			time.Sleep(time.Minute * 15)
-			NetEaseGCtx.RefreshLogin()
-			if NetEaseGCtx.CheckIfLogin() {
-				NetEaseGCtx.SaveCookie()
+			if NetEaseGCtx.loginType == "qr" {
+				NetEaseGCtx.LoginNetEaseQR()
 			} else {
-				log.Println("error in refresh login")
-				NetEaseGCtx.LoginNetEase()
+				NetEaseGCtx.RefreshLogin()
+				if NetEaseGCtx.CheckIfLogin() {
+					NetEaseGCtx.SaveCookie()
+				} else {
+					log.Println("error in refresh login")
+					NetEaseGCtx.LoginNetEaseQR()
+				}
 			}
 		}
 	}()
@@ -59,12 +70,144 @@ func (ctx *NetEaseContext) RefreshLogin() error {
 	ctx.SaveCookie()
 	return err
 }
+func (ctx *NetEaseContext) getUniKey() (err error) {
+	resp, err := httptool.PostWithTimestamp(
+		httptool.RequestInfo{
+			URL: NetEaseAPIBaseURL + "/login/qr/key",
+		},
+	)
+	if err != nil || resp.StatusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
+		}
+	}
+	data, _ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	respMap := make(map[string]interface{})
+	if err = json.Unmarshal(data, &respMap); err != nil {
+		return
+	}
+	ctx.qrStruct.uniKey = respMap["data"].(map[string]interface{})["unikey"].(string)
+	return
+}
+
+func (ctx *NetEaseContext) getQRBase64() (err error) {
+	resp, err := httptool.PostWithTimestamp(
+		httptool.RequestInfo{
+			URL: NetEaseAPIBaseURL + "/login/qr/create",
+			Params: map[string][]string{
+				"key":   {ctx.qrStruct.uniKey},
+				"qrimg": {"1"},
+			},
+		},
+	)
+	if err != nil || resp.StatusCode != 200 {
+		if err == nil {
+			err = fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
+		}
+	}
+	data, _ := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	respMap := make(map[string]interface{})
+	if err = json.Unmarshal(data, &respMap); err != nil {
+		return
+	}
+	ctx.qrStruct.qrBase64 = respMap["data"].(map[string]interface{})["qrimg"].(string)
+	return
+}
+
+func (ctx *NetEaseContext) checkQRStatus() (err error) {
+	if !ctx.qrStruct.isOutDated {
+		var once = &sync.Once{}
+		for {
+
+			time.Sleep(time.Second)
+			resp, err := httptool.PostWithTimestamp(
+				httptool.RequestInfo{
+					URL: NetEaseAPIBaseURL + "/login/qr/check",
+					Params: map[string][]string{
+						"key": {ctx.qrStruct.uniKey},
+					},
+				},
+			)
+			if err != nil || resp.StatusCode != 200 {
+				if err == nil {
+					err = fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
+				}
+			}
+			data, _ := ioutil.ReadAll(resp.Body)
+			defer resp.Body.Close()
+			respMap := make(map[string]interface{})
+			if err = json.Unmarshal(data, &respMap); err != nil {
+				return err
+			}
+			switch respMap["code"].(float64) {
+			case 801:
+				once.Do(func() { log.Println("Waiting for scan") })
+			case 800:
+				once.Do(func() {
+					log.Println("二维码已失效")
+					ctx.qrStruct.isOutDated = true
+				})
+				return err
+			case 802:
+				once.Do(func() { log.Println("扫描未确认") })
+			case 803:
+				log.Println("登陆成功！")
+				ctx.cookies = resp.Cookies()
+				ctx.SaveCookie()
+				ctx.loginType = "qr"
+				return nil
+			}
+		}
+	}
+	return
+}
+
+// LoginNetEaseQR 通过二维码获取登陆Cookie
+//
+//	@receiver ctx
+//	@return err
+func (ctx *NetEaseContext) LoginNetEaseQR() (err error) {
+	ctx.getUniKey()
+
+	ctx.getQRBase64()
+	utility.SendQRCodeMail(SaveQRImg(ctx.qrStruct.qrBase64))
+	go ctx.checkQRStatus()
+	return
+}
+
+// SaveQRImg 保存二维码图片
+//
+//	@param imgBase64
+//	@return filename
+func SaveQRImg(imgBase64 string) (filename string) {
+	i := strings.Index(imgBase64, ",")
+	d := base64.NewDecoder(base64.StdEncoding, strings.NewReader(imgBase64[i+1:]))
+	filename = filepath.Join(netEaseQRTmpFile, fmt.Sprintf("qr_%d.jpg", time.Now().Unix()))
+	os.MkdirAll(netEaseQRTmpFile, 0777)
+	f, err := os.Create(filename)
+	if err != nil {
+		log.Println("error in create qr img", err)
+		return ""
+	}
+	defer f.Close()
+	_, err = io.Copy(f, d)
+	if err != nil {
+		log.Println("error in copy qr img", err)
+		return ""
+	}
+	return
+}
 
 // LoginNetEase 获取登陆Cookie
 //
 //	@receiver ctx
 //	@return err
 func (ctx *NetEaseContext) LoginNetEase() (err error) {
+	if len(ctx.cookies) > 0 {
+		return
+	}
 	if phoneNum, password := os.Getenv("NETEASE_PHONE"), os.Getenv("NETEASE_PASSWORD"); phoneNum == "" && password == "" {
 		log.Println("Empty NetEase account and password")
 		return
@@ -253,6 +396,13 @@ func (ctx *NetEaseContext) SearchMusicByKeyWord(keywords []string) (result []Sea
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return
+	}
+	if resp.StatusCode != 200 {
+		ctx.retryCnt++
+		if ctx.retryCnt >= 3 {
+			return
+		}
+		return ctx.SearchMusicByKeyWord(keywords)
 	}
 	defer func() {
 		_ = resp.Body.Close()
