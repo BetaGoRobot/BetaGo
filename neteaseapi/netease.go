@@ -46,7 +46,7 @@ func init() {
 					NetEaseGCtx.SaveCookie()
 				} else {
 					log.Println("error in refresh login")
-					NetEaseGCtx.LoginNetEaseQR()
+					// NetEaseGCtx.LoginNetEaseQR()
 				}
 			}
 		}
