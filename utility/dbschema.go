@@ -75,10 +75,17 @@ func init() {
 	sqlDb.SetMaxIdleConns(2)
 	sqlDb.SetMaxOpenConns(5)
 	sqlDb.SetConnMaxLifetime(time.Minute * 10)
+
+	// 启动时，清空所有的超时Channel log
+	db.Model(&ChannelLog{}).Where("left_time < joined_time").Delete(&ChannelLog{})
+
+	// 标记所有update为true
+	db.Model(&ChannelLog{}).Where("is_update = false").Update("is_update", true).Debug()
 }
 
 // GetDbConnection  returns the db connection
-//  @return *gorm.DB
+//
+//	@return *gorm.DB
 func GetDbConnection() *gorm.DB {
 	if globalDBConn != nil {
 		return globalDBConn

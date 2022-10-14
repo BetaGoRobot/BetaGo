@@ -134,7 +134,7 @@ func (ctx *NetEaseContext) checkQRStatus() (err error) {
 			)
 			if err != nil || resp.StatusCode != 200 {
 				if err == nil {
-					err = fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
+					return fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
 				}
 			}
 			data, _ := ioutil.ReadAll(resp.Body)

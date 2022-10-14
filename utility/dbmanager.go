@@ -111,8 +111,11 @@ func (cl *ChannelLog) AddJoinedRecord() error {
 //	@return error
 func (cl *ChannelLog) UpdateLeftTime() error {
 	FirstRow := &ChannelLog{}
-	if err := GetDbConnection().Table("betago.channel_logs").Where("channel_id = ? and user_id = ? and is_update = ?", cl.ChannelID, cl.UserID, false).Order("joined_time desc").First(FirstRow).Error; err != nil {
+	row := GetDbConnection().Table("betago.channel_logs").Where("channel_id = ? and user_id = ? and is_update = ?", cl.ChannelID, cl.UserID, false).Order("joined_time desc").First(FirstRow)
+	if err := row.Error; err != nil {
 		return err
 	}
-	return GetDbConnection().Table("betago.channel_logs").Where("channel_id = ? and user_id = ? and is_update = ? and joined_time = ?", cl.ChannelID, cl.UserID, false, FirstRow.JoinedTime).Update("left_time", cl.LeftTime).Update("is_update", true).Error
+	row.Updates(map[string]interface{}{"left_time": cl.LeftTime, "is_update": true})
+	// Update("left_time", cl.LeftTime).Update("is_update", true)
+	return nil
 }
