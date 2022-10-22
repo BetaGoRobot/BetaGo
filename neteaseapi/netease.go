@@ -255,6 +255,7 @@ func (ctx *NetEaseContext) CheckIfLogin() bool {
 	)
 	if err != nil || resp.StatusCode != 200 {
 		log.Printf("%#v", resp)
+		return false
 	}
 	data, _ := ioutil.ReadAll(resp.Body)
 	loginStatus := LoginStatusStruct{}
