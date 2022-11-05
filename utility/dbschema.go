@@ -90,7 +90,7 @@ func GetDbConnection() *gorm.DB {
 	if globalDBConn != nil {
 		return globalDBConn
 	}
-	var dsn string = "user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
+	var dsn string = " user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
 	if betagovar.IsTest {
 		dsn = betagovar.DBHostTest + dsn
 	} else if betagovar.IsCluster {
