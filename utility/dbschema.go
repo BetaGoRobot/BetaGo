@@ -47,8 +47,8 @@ type AlertList struct {
 }
 
 var (
-	isTest = os.Getenv("IS_TEST")
-
+	isTest    = os.Getenv("IS_TEST")
+	isCluster = os.Getenv("IS_CLUSTER")
 	// globalDBConn  is the global db connection
 	globalDBConn *gorm.DB
 )
@@ -90,11 +90,13 @@ func GetDbConnection() *gorm.DB {
 	if globalDBConn != nil {
 		return globalDBConn
 	}
-	var dsn string
-	if isTest == "true" {
-		dsn = "host=localhost user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
+	var dsn string = "user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
+	if betagovar.IsTest {
+		dsn = betagovar.DBHostTest + dsn
+	} else if betagovar.IsCluster {
+		dsn = betagovar.DBHostCluster + dsn
 	} else {
-		dsn = "host=betago-pg user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
+		dsn = betagovar.DBHostCompose + dsn
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -104,7 +106,6 @@ func GetDbConnection() *gorm.DB {
 	})
 	if err != nil {
 		ZapLogger.Error("get db connection error, will try local version", zaplog.Error(err))
-		dsn = "host=192.168.31.32 user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
 		return nil
 	}
 	globalDBConn = db

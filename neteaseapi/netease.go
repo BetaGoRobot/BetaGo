@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	jsoniter "github.com/json-iterator/go"
@@ -24,8 +25,10 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 const netEaseQRTmpFile = "/data/tmp"
 
 func init() {
-	if IsTest == "true" {
+	if betagovar.IsTest {
 		NetEaseAPIBaseURL = "http://127.0.0.1:3335"
+	} else if betagovar.IsCluster {
+		NetEaseAPIBaseURL = "http://neteaseapi-ix-chart.ix-neteaseapi:3335"
 	}
 	NetEaseGCtx.TryGetLastCookie()
 	err := NetEaseGCtx.LoginNetEase()

@@ -23,6 +23,12 @@ const (
 
 	// PublicIPURL 获取公网IP的URL
 	PublicIPURL = "http://ifconfig.me"
+	// DBHostCompose DockerCompose的PGHost
+	DBHostCompose = "betago-pg"
+	// DBHostCluster k8s的PGHost
+	DBHostCluster = "betago-pg-ix-chart.ix-betago-pg"
+	// DBHostTest 本地测试的PGHost
+	DBHostTest = "localhost"
 )
 
 // CardMessageModule khl cardmessage
@@ -70,6 +76,8 @@ var (
 	RobotID       = os.Getenv("ROBOT_ID")
 	TestChanID    = os.Getenv("TEST_CHAN_ID")
 	BetaGoTest    = os.Getenv("IS_TEST") == "true"
+	IsTest        = os.Getenv("IS_TEST") == "true"
+	IsCluster     = os.Getenv("IS_CLUSTER") == "true"
 )
 
 func init() {

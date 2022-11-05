@@ -6,16 +6,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/httptool"
-	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	jsoniter "github.com/json-iterator/go"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func init() {
-	if neteaseapi.IsTest == "true" {
+	if betagovar.IsTest {
 		qqmusicBaseURL = "http://localhost:3300"
+	} else if betagovar.IsCluster {
+		qqmusicBaseURL = "http://qqmusic-api-ix-chart.ix-qqmusic-api:3300"
 	}
 }
 func autoRefreshLogin() {
