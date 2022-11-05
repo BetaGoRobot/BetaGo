@@ -24,11 +24,11 @@ const (
 	// PublicIPURL 获取公网IP的URL
 	PublicIPURL = "http://ifconfig.me"
 	// DBHostCompose DockerCompose的PGHost
-	DBHostCompose = "betago-pg"
+	DBHostCompose = "host=betago-pg"
 	// DBHostCluster k8s的PGHost
-	DBHostCluster = "betago-pg-ix-chart.ix-betago-pg"
+	DBHostCluster = "host=betago-pg-ix-chart.ix-betago-pg"
 	// DBHostTest 本地测试的PGHost
-	DBHostTest = "localhost"
+	DBHostTest = "host=localhost"
 )
 
 // CardMessageModule khl cardmessage
