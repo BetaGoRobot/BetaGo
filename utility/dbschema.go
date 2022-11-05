@@ -103,7 +103,8 @@ func GetDbConnection() *gorm.DB {
 		},
 	})
 	if err != nil {
-		ZapLogger.Error("get db connection error", zaplog.Error(err))
+		ZapLogger.Error("get db connection error, will try local version", zaplog.Error(err))
+		dsn = "host=192.168.31.32 user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
 		return nil
 	}
 	globalDBConn = db

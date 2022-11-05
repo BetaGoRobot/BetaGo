@@ -9,6 +9,8 @@ services:
       - qqmusic_api
       - netease_api
       - postgres
+    ports:
+      - 6060:6060
     networks:
       - betago
 
@@ -24,8 +26,8 @@ services:
     networks:
       - betago
     volumes:
-      - /data/pgdata/data:/var/lib/postgresql/data
-
+      #- /data/pgdata/data:/var/lib/postgresql/data
+      - /mnt/Storage/workspace/config/postgres/data1:/var/lib/postgresql/data
   netease_api:
     image: ccr.ccs.tencentyun.com/kevinmatt/netease-api
     container_name: netease-api
@@ -45,51 +47,51 @@ services:
     networks:
       - betago
   
-  loki:
-    image: grafana/loki
-    container_name: loki
-    restart: always
-    init: true
-    ports:
-      - 3100:3100
-    networks:
-      - betago
+        #  loki:
+        #image: grafana/loki
+        #container_name: loki
+        #    restart: always
+        #    init: true
+        #    ports:
+        #      - 3100:3100
+        #    networks:
+        #      - betago
   
-  grafana:
-    image: grafana/grafana-enterprise
-    container_name: grafana
-    restart: always
-    ports:
-      - 3000:3000
-    networks:
-      - betago
+        #  grafana:
+        #    image: grafana/grafana-enterprise
+        #    container_name: grafana
+        #    restart: always
+        #    ports:
+        #      - 3000:3000
+        #    networks:
+        #      - betago
   
-  promethues:
-    image: prom/prometheus
-    container_name: promethues
-    restart: always
-    volumes:
-      - /root/.config/promethus/prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - 9091:9090
-    networks:
-      - betago
+        #  promethues:
+        #    image: prom/prometheus
+        #    container_name: promethues
+        #    restart: always
+        #    volumes:
+        #      - /root/.config/promethus/prometheus.yml:/etc/prometheus/prometheus.yml
+        #    ports:
+        #      - 9091:9090
+        #    networks:
+        #      - betago
   
-  javtube:
-    image: javtube/javtube-server
-    container_name: javtube
-    restart: always
-    user: root
-    environment:
-      - PORT=9999
-      - DSN=postgres://postgres:heyuheng1.22.3@betago-pg:5432
-      - DB_AUTO_MIGRATE=true
-    ports:
-      - 9999:9999
-    depends_on:
-      - postgres
-    networks:
-      - betago
+        #  javtube:
+        #image: javtube/javtube-server
+        #container_name: javtube
+        #    restart: always
+        #    user: root
+        #    environment:
+        #      - PORT=9999
+        #      - DSN=postgres://postgres:heyuheng1.22.3@betago-pg:5432
+        #      - DB_AUTO_MIGRATE=true
+        #    ports:
+        #      - 9999:9999
+        #    depends_on:
+        #      - postgres
+        #    networks:
+        #      - betago
 networks:
   betago:
     external: true
