@@ -17,7 +17,7 @@ func init() {
 	if betagovar.IsTest {
 		qqmusicBaseURL = "http://localhost:3300"
 	} else if betagovar.IsCluster {
-		qqmusicBaseURL = "http://qqmusic-api-ix-chart.ix-qqmusic-api:3300"
+		qqmusicBaseURL = "http://kubernetes.default:3300"
 	}
 }
 func autoRefreshLogin() {

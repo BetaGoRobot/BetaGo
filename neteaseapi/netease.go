@@ -28,7 +28,7 @@ func init() {
 	if betagovar.IsTest {
 		NetEaseAPIBaseURL = "http://127.0.0.1:3335"
 	} else if betagovar.IsCluster {
-		NetEaseAPIBaseURL = "http://neteaseapi-ix-chart.ix-neteaseapi:3335"
+		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
 	}
 	NetEaseGCtx.TryGetLastCookie()
 	err := NetEaseGCtx.LoginNetEase()
