@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
@@ -81,7 +82,9 @@ func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 	if err = newChanLog.AddJoinedRecord(); err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 	}
-
+	if strings.Contains(channelInfo.Name, "躲避女人") {
+		return
+	}
 	cardMessageStr, err := kook.CardMessage{&kook.CardMessageCard{
 		Theme: kook.CardThemeInfo,
 		Size:  kook.CardSizeLg,
