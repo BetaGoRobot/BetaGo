@@ -16,6 +16,7 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func clickEventAsyncHandler(ctx *kook.MessageButtonClickContext) {
+	// betagovar.FlowControl.M.Lock()
 	go clickEventHandler(ctx)
 }
 
@@ -34,6 +35,7 @@ func clickEventHandler(ctx *kook.MessageButtonClickContext) {
 		}
 	)
 	commandCtx.ContextHandler(command)
+	// betagovar.FlowControl.M.Unlock()
 }
 
 func commandHandler(ctx *kook.KmarkdownMessageContext) {

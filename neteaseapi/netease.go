@@ -25,8 +25,9 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 const netEaseQRTmpFile = "/data/tmp"
 
 func init() {
+	// 测试环境，使用本地网易云代理
 	if betagovar.IsTest {
-		NetEaseAPIBaseURL = "http://127.0.0.1:3335"
+		NetEaseAPIBaseURL = "http://192.168.31.74:3335"
 	} else if betagovar.IsCluster {
 		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
 	}
@@ -265,7 +266,7 @@ func (ctx *NetEaseContext) CheckIfLogin() bool {
 	if err = json.Unmarshal(data, &loginStatus); err != nil {
 		log.Println("error in unmarshal loginStatus", err)
 	} else {
-		if loginStatus.Data.Profile != nil {
+		if loginStatus.Data.Account != nil {
 			return true
 		}
 		return false
@@ -285,6 +286,10 @@ func (ctx *NetEaseContext) TryGetLastCookie() {
 	defer f.Close()
 	cookieData := make([]byte, 0)
 	cookieData, err = ioutil.ReadAll(f)
+	if len(cookieData) == 0 {
+		utility.ZapLogger.Info("No cookieData, skip json marshal")
+		return
+	}
 	if err = json.Unmarshal(cookieData, &ctx.cookies); err != nil {
 		log.Println("error in unmarshal cookieData", err)
 	}

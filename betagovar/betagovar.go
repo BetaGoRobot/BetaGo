@@ -2,6 +2,7 @@ package betagovar
 
 import (
 	"os"
+	"sync"
 
 	"github.com/lonelyevil/kook"
 	"github.com/lonelyevil/kook/log_adapter/plog"
@@ -84,4 +85,9 @@ func init() {
 	if RobotName = os.Getenv("ROBOT_NAME"); RobotName == "" {
 		RobotName = "No RobotName Configured"
 	}
+}
+
+var FlowControl struct {
+	M   sync.Mutex
+	Cnt int
 }
