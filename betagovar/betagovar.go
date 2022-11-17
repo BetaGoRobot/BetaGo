@@ -1,6 +1,7 @@
 package betagovar
 
 import (
+	"fmt"
 	"os"
 	"sync"
 
@@ -87,7 +88,30 @@ func init() {
 	}
 }
 
-var FlowControl struct {
-	M   sync.Mutex
+type FlowControlType struct {
+	M   sync.RWMutex
 	Cnt int
+}
+
+var FlowControl = &FlowControlType{}
+
+func (fc *FlowControlType) Add() {
+	fc.M.Lock()
+	fc.Cnt++
+	fc.M.Unlock()
+}
+
+func (fc *FlowControlType) Sub() {
+	fc.M.Lock()
+	fc.Cnt--
+	fc.M.Unlock()
+}
+
+func (fc *FlowControlType) Top() (err error) {
+	fc.M.RLock()
+	if fc.Cnt >= 5 {
+		return fmt.Errorf("每秒仅允许5次请求，请求过快，请稍后重试")
+	}
+	fc.M.RUnlock()
+	return
 }

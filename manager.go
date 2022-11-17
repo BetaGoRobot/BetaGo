@@ -16,11 +16,16 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func clickEventAsyncHandler(ctx *kook.MessageButtonClickContext) {
-	// betagovar.FlowControl.M.Lock()
 	go clickEventHandler(ctx)
 }
 
 func clickEventHandler(ctx *kook.MessageButtonClickContext) {
+	if err := betagovar.FlowControl.Top(); err != nil {
+		errorsender.SendErrorInfo(ctx.Extra.TargetID, "", "", err)
+		return
+	}
+	betagovar.FlowControl.Add()
+	defer betagovar.FlowControl.Sub()
 	var (
 		command    = ctx.Extra.Value
 		commandCtx = &comcontext.CommandContext{
@@ -35,7 +40,7 @@ func clickEventHandler(ctx *kook.MessageButtonClickContext) {
 		}
 	)
 	commandCtx.ContextHandler(command)
-	// betagovar.FlowControl.M.Unlock()
+	time.Sleep(time.Second)
 }
 
 func commandHandler(ctx *kook.KmarkdownMessageContext) {
