@@ -64,6 +64,7 @@ func main() {
 	}
 	notifier.StartUpMessage(betagovar.GlobalSession)
 	go scheduletask.DailyRecommand()
+	go scheduletask.DailyRate()
 	// go scheduletask.HourlyGetSen()
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")

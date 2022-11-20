@@ -27,7 +27,7 @@ const netEaseQRTmpFile = "/data/tmp"
 func init() {
 	// 测试环境，使用本地网易云代理
 	if betagovar.IsTest {
-		NetEaseAPIBaseURL = "http://192.168.31.74:3335"
+		NetEaseAPIBaseURL = "http://localhost:3335"
 	} else if betagovar.IsCluster {
 		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
 	}
@@ -69,8 +69,9 @@ func (ctx *NetEaseContext) RefreshLogin() error {
 			Cookies: ctx.cookies,
 		},
 	)
-	if err != nil || resp.StatusCode != 200 {
+	if err != nil || (resp != nil && resp.StatusCode != 200) {
 		log.Printf("%#v", resp)
+		return err
 	}
 	ctx.cookies = resp.Cookies()
 	ctx.SaveCookie()
@@ -86,6 +87,7 @@ func (ctx *NetEaseContext) getUniKey() (err error) {
 		if err == nil {
 			err = fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
 		}
+		return
 	}
 	data, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
@@ -111,6 +113,7 @@ func (ctx *NetEaseContext) getQRBase64() (err error) {
 		if err == nil {
 			err = fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
 		}
+		return
 	}
 	data, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
@@ -140,6 +143,7 @@ func (ctx *NetEaseContext) checkQRStatus() (err error) {
 				if err == nil {
 					return fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
 				}
+				return err
 			}
 			data, _ := ioutil.ReadAll(resp.Body)
 			defer resp.Body.Close()
@@ -239,6 +243,7 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 		if err == nil {
 			err = fmt.Errorf("LoginNetEase error, StatusCode %d", resp.StatusCode)
 		}
+		return
 	}
 	ctx.cookies = resp.Cookies()
 	ctx.SaveCookie()
