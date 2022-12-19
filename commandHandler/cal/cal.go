@@ -225,7 +225,9 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 	var chanDiv = make(map[string]time.Duration)
 	var totalTime time.Duration
 	for _, log := range logs {
-		timeCost := log.LeftTime.Sub(log.JoinedTime)
+		leftTimeT, _ := time.Parse(time.RFC3339Nano, log.LeftTime)
+		joinTimeT, _ := time.Parse(time.RFC3339Nano, log.JoinedTime)
+		timeCost := leftTimeT.Sub(joinTimeT)
 		if timeCost < time.Minute*10 {
 			// 10分钟以内的数据忽略
 			continue

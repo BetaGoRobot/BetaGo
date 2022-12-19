@@ -32,14 +32,14 @@ type CommandInfo struct {
 
 // ChannelLogExt  is the struct of channel log
 type ChannelLogExt struct {
-	UserID      string    `json:"user_id" gorm:"primaryKey"`
-	UserName    string    `json:"user_name"`
-	ChannelID   string    `json:"channel_id"`
-	ChannelName string    `json:"channel_name"`
-	JoinedTime  time.Time `json:"joined_time" gorm:"primaryKey"`
-	LeftTime    time.Time `json:"left_time"`
-	ISUpdate    bool      `json:"is_update"`
-	MsgID       string    `json:"msg_id"`
+	UserID      string `json:"user_id" gorm:"primaryKey"`
+	UserName    string `json:"user_name"`
+	ChannelID   string `json:"channel_id" gorm:"primaryKey"`
+	ChannelName string `json:"channel_name"`
+	JoinedTime  string `json:"joined_time" gorm:"primaryKey"`
+	LeftTime    string `json:"left_time"`
+	ISUpdate    bool   `json:"is_update"`
+	MsgID       string `json:"msg_id"`
 }
 
 // AlertList  is the struct of alert config

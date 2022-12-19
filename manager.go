@@ -83,8 +83,8 @@ func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 		UserName:    userInfo.Username,
 		ChannelID:   channelInfo.ID,
 		ChannelName: channelInfo.Name,
-		JoinedTime:  ctx.Extra.JoinedAt.ToTime(),
-		LeftTime:    time.Time{},
+		JoinedTime:  ctx.Extra.JoinedAt.ToTime().Format(time.RFC3339Nano),
+		LeftTime:    "",
 	}
 	if strings.Contains(channelInfo.Name, "躲避女人") {
 		return
@@ -148,14 +148,15 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 		UserName:    userInfo.Username,
 		ChannelID:   channelInfo.ID,
 		ChannelName: channelInfo.Name,
-		JoinedTime:  time.Time{},
-		LeftTime:    ctx.Extra.ExitedAt.ToTime(),
+		JoinedTime:  "",
+		LeftTime:    ctx.Extra.ExitedAt.ToTime().Format(time.RFC3339Nano),
 	}
 	if newChanLog, err = newChanLog.UpdateLeftTime(); err != nil {
 		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err)
 		return
 	}
-
+	joinTimeT, _ := time.Parse(time.RFC3339Nano, newChanLog.JoinedTime)
+	leftTimeT, _ := time.Parse(time.RFC3339Nano, newChanLog.LeftTime)
 	cardMessageStr, err := kook.CardMessage{&kook.CardMessageCard{
 		Theme: kook.CardThemeInfo,
 		Size:  kook.CardSizeLg,
@@ -165,8 +166,8 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 					Content: strings.Join(
 						[]string{
 							"`", userInfo.Nickname, "`", "离开了频道`", channelInfo.Name, "`", "\n",
-							"在线时间段：`", newChanLog.JoinedTime.Format("2006-01-02-15:04:05"), " - ", newChanLog.LeftTime.Format("2006-01-02-15:04:05"), "`\n",
-							"在线时长：**", newChanLog.LeftTime.Sub(newChanLog.JoinedTime).String(), "**\n",
+							"在线时间段：`", joinTimeT.Add(time.Hour * 8).Format("2006-01-02-15:04:05"), " - ", leftTimeT.Add(time.Hour * 8).Format("2006-01-02-15:04:05"), "`\n",
+							"在线时长：**", leftTimeT.Sub(joinTimeT).String(), "**\n",
 						},
 						""),
 				},
