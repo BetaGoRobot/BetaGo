@@ -30,15 +30,16 @@ type CommandInfo struct {
 	UpdatedAt       time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
-// ChannelLog  is the struct of channel log
-type ChannelLog struct {
+// ChannelLogExt  is the struct of channel log
+type ChannelLogExt struct {
 	UserID      string    `json:"user_id" gorm:"primaryKey"`
 	UserName    string    `json:"user_name"`
 	ChannelID   string    `json:"channel_id"`
 	ChannelName string    `json:"channel_name"`
-	JoinedTime  time.Time `json:"joined_time"`
+	JoinedTime  time.Time `json:"joined_time" gorm:"primaryKey"`
 	LeftTime    time.Time `json:"left_time"`
 	ISUpdate    bool      `json:"is_update"`
+	MsgID       string    `json:"msg_id"`
 }
 
 // AlertList  is the struct of alert config
@@ -63,7 +64,7 @@ func init() {
 
 	// migrate
 	db := GetDbConnection()
-	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLog{}, &AlertList{})
+	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLogExt{}, &AlertList{})
 	if err != nil {
 		ZapLogger.Error("init", zaplog.Error(err))
 	}
@@ -77,10 +78,10 @@ func init() {
 	sqlDb.SetConnMaxLifetime(time.Minute * 10)
 
 	// 启动时，清空所有的超时Channel log
-	db.Model(&ChannelLog{}).Where("left_time < joined_time").Delete(&ChannelLog{})
+	db.Model(&ChannelLogExt{}).Where("left_time < joined_time").Delete(&ChannelLogExt{})
 
 	// 标记所有update为true
-	db.Model(&ChannelLog{}).Where("is_update = false").Update("is_update", true).Debug()
+	db.Model(&ChannelLogExt{}).Where("is_update = false").Update("is_update", true).Debug()
 }
 
 // GetDbConnection  returns the db connection

@@ -10,12 +10,14 @@ import (
 	"github.com/phuslu/log"
 )
 
+var (
+	// NotifierChanID 发送消息的频道ID
+	NotifierChanID = "8583973157097178"
+)
+
 const (
 	// BetaGoUpdateChanID  发送更新消息的频道ID
 	BetaGoUpdateChanID = "8937461610423450"
-
-	// NotifierChanID 发送消息的频道ID
-	NotifierChanID = "8583973157097178"
 
 	// ImagePath 图片存储路径
 	ImagePath = "/data/images"
@@ -85,6 +87,9 @@ var (
 func init() {
 	if RobotName = os.Getenv("ROBOT_NAME"); RobotName == "" {
 		RobotName = "No RobotName Configured"
+	}
+	if IsTest {
+		NotifierChanID = "7419593543056418"
 	}
 }
 

@@ -78,16 +78,13 @@ func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 		return
 	}
 	// !频道日志记录
-	newChanLog := &utility.ChannelLog{
+	newChanLog := &utility.ChannelLogExt{
 		UserID:      userInfo.ID,
 		UserName:    userInfo.Username,
 		ChannelID:   channelInfo.ID,
 		ChannelName: channelInfo.Name,
 		JoinedTime:  ctx.Extra.JoinedAt.ToTime(),
 		LeftTime:    time.Time{},
-	}
-	if err = newChanLog.AddJoinedRecord(); err != nil {
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 	}
 	if strings.Contains(channelInfo.Name, "躲避女人") {
 		return
@@ -98,7 +95,7 @@ func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 		Modules: []interface{}{
 			kook.CardMessageSection{
 				Text: kook.CardMessageElementKMarkdown{
-					Content: "`" + userInfo.Nickname + "`悄悄加入了语音频道`" + channelInfo.Name + "`",
+					Content: "`" + userInfo.Nickname + "`加入了语音频道`" + channelInfo.Name + "`",
 				},
 			},
 		},
@@ -107,21 +104,30 @@ func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
 		return
 	}
-	_, err = betagovar.GlobalSession.MessageCreate(&kook.MessageCreate{
-		MessageCreateBase: kook.MessageCreateBase{
-			Type:     kook.MessageTypeCard,
-			TargetID: betagovar.NotifierChanID,
-			Content:  cardMessageStr,
+	resp, err := betagovar.GlobalSession.MessageCreate(
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeCard,
+				TargetID: betagovar.NotifierChanID,
+				Content:  cardMessageStr,
+			},
 		},
-	})
+	)
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
+		return
+	}
+	newChanLog.MsgID = resp.MsgID
+	// 写入数据库记录
+	if err = newChanLog.AddJoinedRecord(); err != nil {
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 	}
 }
 
 func channelLeftAsyncHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 	go channelLeftHandler(ctx)
 }
+
 func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 	defer utility.CollectPanic(ctx.Extra, ctx.Common.TargetID, "", ctx.Extra.UserID)
 	// 离开频道时，记录频道信息
@@ -137,7 +143,7 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 	}
 
 	// !频道日志记录
-	newChanLog := &utility.ChannelLog{
+	newChanLog := &utility.ChannelLogExt{
 		UserID:      userInfo.ID,
 		UserName:    userInfo.Username,
 		ChannelID:   channelInfo.ID,
@@ -145,8 +151,44 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 		JoinedTime:  time.Time{},
 		LeftTime:    ctx.Extra.ExitedAt.ToTime(),
 	}
-	if err = newChanLog.UpdateLeftTime(); err != nil {
+	if newChanLog, err = newChanLog.UpdateLeftTime(); err != nil {
 		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err)
+		return
+	}
+
+	cardMessageStr, err := kook.CardMessage{&kook.CardMessageCard{
+		Theme: kook.CardThemeInfo,
+		Size:  kook.CardSizeLg,
+		Modules: []interface{}{
+			kook.CardMessageSection{
+				Text: kook.CardMessageElementKMarkdown{
+					Content: strings.Join(
+						[]string{
+							"`", userInfo.Nickname, "`", "离开了频道`", channelInfo.Name, "`", "\n",
+							"在线时间段：`", newChanLog.JoinedTime.Format("2006-01-02-15:04:05"), " - ", newChanLog.LeftTime.Format("2006-01-02-15:04:05"), "`\n",
+							"在线时长：**", newChanLog.LeftTime.Sub(newChanLog.JoinedTime).String(), "**\n",
+						},
+						""),
+				},
+			},
+		},
+	}}.BuildMessage()
+
+	if err != nil {
+		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+		return
+	}
+	err = betagovar.GlobalSession.MessageUpdate(
+		&kook.MessageUpdate{
+			MessageUpdateBase: kook.MessageUpdateBase{
+				MsgID:   newChanLog.MsgID,
+				Content: cardMessageStr,
+			},
+		},
+	)
+	if err != nil {
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
+		return
 	}
 }
 

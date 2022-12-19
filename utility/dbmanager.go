@@ -101,21 +101,21 @@ func GetCommandInfoWithOpt(optionf string) (commandInfoList []*CommandInfo, err 
 //
 //	@receiver cl
 //	@return error
-func (cl *ChannelLog) AddJoinedRecord() error {
-	return GetDbConnection().Table("betago.channel_logs").Create(&cl).Error
+func (cl *ChannelLogExt) AddJoinedRecord() error {
+	return GetDbConnection().Create(&cl).Error
 }
 
 // UpdateLeftTime 更新离开时间
 //
 //	@receiver cl
 //	@return error
-func (cl *ChannelLog) UpdateLeftTime() error {
-	FirstRow := &ChannelLog{}
-	row := GetDbConnection().Table("betago.channel_logs").Where("channel_id = ? and user_id = ? and is_update = ?", cl.ChannelID, cl.UserID, false).Order("joined_time desc").First(FirstRow)
-	if err := row.Error; err != nil {
-		return err
+func (cl *ChannelLogExt) UpdateLeftTime() (newChanLog *ChannelLogExt, err error) {
+	newChanLog = &ChannelLogExt{}
+	row := GetDbConnection().Where("channel_id = ? and user_id = ? and is_update = ?", cl.ChannelID, cl.UserID, false).Order("joined_time desc").First(newChanLog)
+	if err = row.Error; err != nil {
+		return
 	}
 	row.Updates(map[string]interface{}{"left_time": cl.LeftTime, "is_update": true})
 	// Update("left_time", cl.LeftTime).Update("is_update", true)
-	return nil
+	return
 }

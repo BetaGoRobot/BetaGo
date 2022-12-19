@@ -215,7 +215,7 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 //	@param userID
 //	@return map
 func GetUserChannelTimeMap(userID string) map[string]time.Duration {
-	logs := make([]*utility.ChannelLog, 0)
+	logs := make([]*utility.ChannelLogExt, 0)
 	userInfo, err := utility.GetUserInfo(userID, "")
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
