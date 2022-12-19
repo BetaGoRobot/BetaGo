@@ -3,11 +3,12 @@ package main
 import (
 	"testing"
 
+	"github.com/BetaGoRobot/BetaGo/manager"
 	"github.com/lonelyevil/kook"
 )
 
 func Test_addAdministrator(t *testing.T) {
-	commandHandler(&kook.KmarkdownMessageContext{
+	manager.CommandHandler(&kook.KmarkdownMessageContext{
 		EventHandlerCommonContext: &kook.EventHandlerCommonContext{
 			Session: &kook.Session{},
 			Common: &kook.EventDataGeneral{

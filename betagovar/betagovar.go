@@ -67,7 +67,7 @@ type CardMessageColModule struct {
 
 // GlobalSession 全局共享session
 var GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
-	Level:  log.InfoLevel,
+	Level:  log.DebugLevel,
 	Writer: &log.ConsoleWriter{},
 }))
 

@@ -10,13 +10,10 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/check"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/notifier"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/wordcontrol"
-	"github.com/BetaGoRobot/BetaGo/scheduletask"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/heyuhengmatt/zaplog"
-	"github.com/lonelyevil/kook"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -25,46 +22,19 @@ var (
 )
 
 func init() {
-	go func() {
-		port := ":2112"
-		if os.Getenv("IS_TEST") == "true" {
-			port = ":2113"
-		}
-		http.Handle("/metrics", promhttp.Handler())
-		http.ListenAndServe(port, nil)
-	}()
 	utility.InitLogger()
-	betagovar.GlobalSession.AddHandler(messageHan)
-	betagovar.GlobalSession.AddHandler(clickEventAsyncHandler)
-	betagovar.GlobalSession.AddHandler(receiveDirectMessage)
-	betagovar.GlobalSession.AddHandler(channelJoinedAsyncHandler)
-	betagovar.GlobalSession.AddHandler(channelLeftAsyncHandler)
 	go func() {
-		// pprof监控
 		http.ListenAndServe(":6060", nil)
 	}()
 }
 
-// CheckEnv  检查环境变量
-func CheckEnv() {
-	if betagovar.RobotName == "" {
-		sendMessageToTestChannel(betagovar.GlobalSession, ">  机器人未配置名称！")
-	}
-	if betagovar.RobotID == "" {
-		zaplog.Logger.Fatal("机器人未配置ID！")
-	}
-}
-
 func main() {
-	CheckEnv()
+	check.CheckEnv()
 	e := betagovar.GlobalSession.Open()
 	if e != nil {
 		utility.ZapLogger.Error("连接失败", zaplog.Error(e))
 		panic(e)
 	}
-	notifier.StartUpMessage(betagovar.GlobalSession)
-	go scheduletask.DailyRecommand()
-	go scheduletask.DailyRate()
 	// go scheduletask.HourlyGetSen()
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
@@ -74,14 +44,4 @@ func main() {
 	// Cleanly close down the KHL session.
 	notifier.OfflineMessage(betagovar.GlobalSession)
 	betagovar.GlobalSession.Close()
-}
-
-func messageHan(ctx *kook.KmarkdownMessageContext) {
-	go func() {
-		if ctx.Common.Type != kook.MessageTypeKMarkdown || ctx.Extra.Author.Bot {
-			return
-		}
-		defer wordcontrol.RemoveDirtyWords(ctx)
-		commandHandler(ctx)
-	}()
 }

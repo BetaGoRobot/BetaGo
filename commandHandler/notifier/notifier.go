@@ -6,9 +6,17 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/httptool"
+	"github.com/BetaGoRobot/BetaGo/scheduletask"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
 )
+
+// StartAutoService  启动自动服务
+func StartAutoService() {
+	StartUpMessage(betagovar.GlobalSession)
+	go scheduletask.DailyRecommand()
+	go scheduletask.DailyRate()
+}
 
 // StartUpMessage  启动时的消息
 //

@@ -1,23 +1,16 @@
-package main
+package manager
 
 import (
-	"log"
 	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	comcontext "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/wordcontrol"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/lonelyevil/kook"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
-
-func clickEventAsyncHandler(ctx *kook.MessageButtonClickContext) {
-	go clickEventHandler(ctx)
-}
 
 func clickEventHandler(ctx *kook.MessageButtonClickContext) {
 	if err := betagovar.FlowControl.Top(); err != nil {
@@ -41,28 +34,6 @@ func clickEventHandler(ctx *kook.MessageButtonClickContext) {
 	)
 	commandCtx.ContextHandler(command)
 	time.Sleep(time.Second)
-}
-
-func commandHandler(ctx *kook.KmarkdownMessageContext) {
-	// 判断是否被at到,且消息不是引用/回复
-	if !utility.IsInSlice(betagovar.RobotID, ctx.Extra.Mention) {
-		return
-	}
-	// 示例中，由于用户发送的命令的Content格式为(met)id(met) <command> <parameters>
-	// 针对解析的判断逻辑，首先判断是否为空字符串，若为空发送help信息
-	// ? 解析出不包含at信息的实际内容
-	command, parameters := utility.GetCommandWithParameters(ctx.Common.Content)
-	commandCtx := comcontext.GetNewCommandCtx().Init(ctx.EventHandlerCommonContext).InitExtra(ctx)
-	if command != "" {
-		commandCtx.ContextHandler(command, parameters...)
-	} else {
-		// 内容为空，发送help信息
-		commandCtx.ContextHandler(comcontext.CommandContextTypeHelper)
-	}
-}
-
-func channelJoinedAsyncHandler(ctx *kook.GuildChannelMemberAddContext) {
-	go channelJoinedHandler(ctx)
 }
 
 func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
@@ -124,8 +95,8 @@ func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 	}
 }
 
-func channelLeftAsyncHandler(ctx *kook.GuildChannelMemberDeleteContext) {
-	go channelLeftHandler(ctx)
+func guildUpdateHandler(ctx *kook.GuildUpdateContext) {
+
 }
 
 func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
@@ -193,16 +164,12 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 	}
 }
 
-func sendMessageToTestChannel(session *kook.Session, content string) {
-
-	session.MessageCreate(&kook.MessageCreate{
-		MessageCreateBase: kook.MessageCreateBase{
-			Type:     9,
-			TargetID: betagovar.TestChanID,
-			Content:  content,
-		}})
-}
-
-func receiveDirectMessage(ctx *kook.DirectMessageReactionAddContext) {
-	log.Println("-----------Test")
+func messageEventHandler(ctx *kook.KmarkdownMessageContext) {
+	go func() {
+		if ctx.Common.Type != kook.MessageTypeKMarkdown || ctx.Extra.Author.Bot {
+			return
+		}
+		defer wordcontrol.RemoveDirtyWords(ctx)
+		CommandHandler(ctx)
+	}()
 }
