@@ -6,6 +6,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
 )
 
@@ -24,19 +25,21 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 		Select(`
 			user_id,
 			user_name,
-			SUM(
-			extract(
-				'epoch'
-				from
-				left_time
-			) - extract(
-				'epoch'
-				from
-				joined_time
-			)
-			) ::bigint * 1000 * 1000 * 1000 as time_cost
+			(
+			  SUM(
+				extract (
+				  'epoch'
+				  from
+					to_timestamp(left_time, 'YYYY-MM-DDTHH24:MI:SS.MS')
+				) - extract(
+				  'epoch'
+				  from
+					to_timestamp(joined_time, 'YYYY-MM-DDTHH24:MI:SS.MS')
+				)
+			  ) * 1000 
+			) ::integer as time_cost
 		`).
-		Where(`is_update = true AND left_time > NOW() - interval '24 hours'`).
+		Where(`is_update = true AND to_timestamp(left_time,'YYYY-MM-DDTHH24:MI:SS.MS') > NOW() - interval '24 hours'`).
 		Group("user_id, user_name").
 		Order("time_cost DESC").
 		Limit(3).
@@ -48,7 +51,7 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 			Text: struct {
 				Type    string "json:\"type\""
 				Content string "json:\"content\""
-			}{"plain-text", "语音龙王榜-测试消息"},
+			}{"plain-text", "勤恳在线排行榜" + emoji.DesktopComputer.String()},
 		})
 		modules = append(modules,
 			kook.CardMessageSection{
@@ -69,6 +72,7 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 			},
 		)
 		for _, user := range timeCostList {
+			user.TimeCost *= 1e6
 			modules = append(modules,
 				kook.CardMessageSection{
 					Text: kook.CardMessageParagraph{
@@ -102,7 +106,7 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 			&kook.MessageCreate{
 				MessageCreateBase: kook.MessageCreateBase{
 					Type:     kook.MessageTypeCard,
-					TargetID: "3241026226723225",
+					TargetID: betagovar.NotifierChanID,
 					Content:  cardMessageStr,
 					Quote:    msgID,
 				},

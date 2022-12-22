@@ -54,7 +54,7 @@ func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 		UserName:    userInfo.Username,
 		ChannelID:   channelInfo.ID,
 		ChannelName: channelInfo.Name,
-		JoinedTime:  ctx.Extra.JoinedAt.ToTime().Format(time.RFC3339Nano),
+		JoinedTime:  ctx.Extra.JoinedAt.ToTime().Format(betagovar.TimeFormat),
 		LeftTime:    "",
 	}
 	if strings.Contains(channelInfo.Name, "躲避女人") {
@@ -120,14 +120,14 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 		ChannelID:   channelInfo.ID,
 		ChannelName: channelInfo.Name,
 		JoinedTime:  "",
-		LeftTime:    ctx.Extra.ExitedAt.ToTime().Format(time.RFC3339Nano),
+		LeftTime:    ctx.Extra.ExitedAt.ToTime().Format(betagovar.TimeFormat),
 	}
 	if newChanLog, err = newChanLog.UpdateLeftTime(); err != nil {
 		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err)
 		return
 	}
-	joinTimeT, _ := time.Parse(time.RFC3339Nano, newChanLog.JoinedTime)
-	leftTimeT, _ := time.Parse(time.RFC3339Nano, newChanLog.LeftTime)
+	joinTimeT, _ := time.Parse(betagovar.TimeFormat, newChanLog.JoinedTime)
+	leftTimeT, _ := time.Parse(betagovar.TimeFormat, newChanLog.LeftTime)
 	cardMessageStr, err := kook.CardMessage{&kook.CardMessageCard{
 		Theme: kook.CardThemeInfo,
 		Size:  kook.CardSizeLg,

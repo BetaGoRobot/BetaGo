@@ -16,6 +16,7 @@ var (
 )
 
 const (
+	TimeFormat = "2006-01-02T15:04:05.9999"
 	// BetaGoUpdateChanID  发送更新消息的频道ID
 	BetaGoUpdateChanID = "8937461610423450"
 
