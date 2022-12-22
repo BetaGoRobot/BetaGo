@@ -8,6 +8,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/cal"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/dailyrate"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/hitokoto"
@@ -185,6 +186,8 @@ func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) 
 		fallthrough
 	case CommandContextTypeMusic:
 		ctxFunc = music.SearchMusicByRobot
+	case CommandContextTypeDailyRate:
+		ctxFunc = dailyrate.GetRateHandler
 	case CommandContextTypeUser:
 		ctxGuildFunc = helper.GetUserInfoHandler
 	case betagovar.ShortCommandShowCal:

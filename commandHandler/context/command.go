@@ -16,4 +16,5 @@ const (
 	CommandContextTypePing        = "PING"
 	CommandContextTypeUser        = "GETUSER"
 	CommandContextTypeTryPanic    = "TRYPANIC"
+	CommandContextTypeDailyRate   = "RATE"
 )
