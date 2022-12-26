@@ -23,6 +23,8 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 		Debug().
 		Table("betago.channel_log_exts").
 		Select(`
+			user_id,
+			user_name,
 			(
 				SUM(
 					EXTRACT(
