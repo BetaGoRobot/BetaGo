@@ -23,21 +23,15 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 		Debug().
 		Table("betago.channel_log_exts").
 		Select(`
-			user_id,
-			user_name,
 			(
-			  SUM(
-				extract (
-				  'epoch'
-				  from
-					to_timestamp(left_time, 'YYYY-MM-DDTHH24:MI:SS.MS')
-				) - extract(
-				  'epoch'
-				  from
-					to_timestamp(joined_time, 'YYYY-MM-DDTHH24:MI:SS.MS')
-				)
-			  ) * 1000 
-			) ::integer as time_cost
+				SUM(
+					EXTRACT(
+						epoch
+						FROM
+						to_timestamp(left_time, 'YYYY\-MM\-DD\THH24\:MI\.MS') - to_timestamp(joined_time, 'YYYY-MM-DD\THH24\:MI\.MS')
+					)
+				)* 1000 * 1000 * 1000
+			):: bigint as time_cost
 		`).
 		Where(`is_update = true AND to_timestamp(left_time,'YYYY-MM-DDTHH24:MI:SS.MS') > NOW() - interval '24 hours'`).
 		Group("user_id, user_name").
@@ -72,7 +66,6 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 			},
 		)
 		for _, user := range timeCostList {
-			user.TimeCost *= 1e6
 			modules = append(modules,
 				kook.CardMessageSection{
 					Text: kook.CardMessageParagraph{
