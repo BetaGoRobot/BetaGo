@@ -17,9 +17,9 @@ type timeCostStru struct {
 }
 
 func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error) {
-	// 获取24小时的整体在线情况
-	var timeCostList = make([]*timeCostStru, 0)
-	utility.GetDbConnection().
+	title := "勤恳在线排行榜"
+	quoteID := ""
+	matchSelect := utility.GetDbConnection().
 		Debug().
 		Table("betago.channel_log_exts").
 		Select(`
@@ -34,12 +34,18 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 					)
 				)* 1000 * 1000 * 1000
 			):: bigint as time_cost
-		`).
-		Where(`is_update = true AND to_timestamp(left_time,'YYYY-MM-DDTHH24:MI:SS.MS') > NOW() - interval '24 hours'`).
+		`).Where("is_update = true").
+		Where("to_timestamp(left_time,'YYYY-MM-DDTHH24:MI:SS.MS') > NOW() - interval '24 hours'").
 		Group("user_id, user_name").
-		Order("time_cost DESC").
-		Limit(3).
-		Find(&timeCostList)
+		Order("time_cost DESC")
+	if len(args) != 0 {
+		title = "近24小时在线时长"
+		quoteID = msgID
+		matchSelect = matchSelect.Where("user_id = ?", args[0])
+	}
+	// 获取24小时的整体在线情况
+	var timeCostList = make([]*timeCostStru, 0)
+	matchSelect.Limit(3).Find(&timeCostList)
 	if len(timeCostList) != 0 {
 		modules := make([]interface{}, 0)
 		modules = append(modules, betagovar.CardMessageTextModule{
@@ -47,7 +53,7 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 			Text: struct {
 				Type    string "json:\"type\""
 				Content string "json:\"content\""
-			}{"plain-text", "勤恳在线排行榜" + emoji.DesktopComputer.String()},
+			}{"plain-text", title + emoji.DesktopComputer.String()},
 		})
 		modules = append(modules,
 			kook.CardMessageSection{
@@ -103,7 +109,7 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 					Type:     kook.MessageTypeCard,
 					TargetID: betagovar.NotifierChanID,
 					Content:  cardMessageStr,
-					Quote:    msgID,
+					Quote:    quoteID,
 				},
 			},
 		)
