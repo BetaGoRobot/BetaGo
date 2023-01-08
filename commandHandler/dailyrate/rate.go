@@ -35,7 +35,15 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 				)* 1000 * 1000 * 1000
 			):: bigint as time_cost
 		`).Where("is_update = true").
-		Where("to_timestamp(left_time,'YYYY-MM-DDTHH24:MI:SS.MS') > NOW() - interval '24 hours'").
+		Where(`EXTRACT(
+					epoch
+					FROM
+					to_timestamp(left_time, 'YYYY\-MM\-DD\THH24\:MI\.MS')
+				) > EXTRACT(
+					epoch
+					FROM
+					now() - interval '32 hours'
+				)`).
 		Group("user_id, user_name").
 		Order("time_cost DESC")
 	if len(args) != 0 {
