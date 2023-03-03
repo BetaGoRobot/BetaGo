@@ -64,6 +64,7 @@ jobs:
              --build-arg COS_BUCKET_REGION_URL=${{ secrets.COS_BUCKET_REGION_URL }} \
              --build-arg COS_BASE_URL=${{ secrets.COS_BASE_URL }} \
              --build-arg MAIL_SECRET=${{ secrets.MAIL_SECRET }} \
+             --build-arg GPT_TOKEN=${{ secrets.GPT_TOKEN }}
              . \
              --file scripts/Dockerfile \
              --tag $IMAGE_NAME

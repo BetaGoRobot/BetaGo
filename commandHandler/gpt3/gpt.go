@@ -1,12 +1,13 @@
 package gpt3
 
 import (
+	"os"
 	"time"
 
 	"github.com/chatgp/gpt3"
 )
 
-var apiKey = "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"
+var apiKey = os.Getenv("GPT_TOKEN")
 
 // var cli = getClient()
 
