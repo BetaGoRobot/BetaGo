@@ -61,7 +61,7 @@ func (c *Client) Post(uri string, args ...map[string]interface{}) (*Result, erro
 		JSON:         data,
 		Headers:      headers,
 		Certificates: c.opts.Certificates,
-		Proxy:        "http://clash-pre-ix-chart.ix-clash-pre:7890",
+		Proxy:        "http://192.168.31.74:9890",
 	}
 
 	return c.Request(method, uri, opts)
