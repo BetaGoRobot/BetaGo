@@ -123,16 +123,17 @@ func (schema *Schema) parseRelation(field *Field) *Relationship {
 }
 
 // User has many Toys, its `Polymorphic` is `Owner`, Pet has one Toy, its `Polymorphic` is `Owner`
-//     type User struct {
-//       Toys []Toy `gorm:"polymorphic:Owner;"`
-//     }
-//     type Pet struct {
-//       Toy Toy `gorm:"polymorphic:Owner;"`
-//     }
-//     type Toy struct {
-//       OwnerID   int
-//       OwnerType string
-//     }
+//
+//	type User struct {
+//	  Toys []Toy `gorm:"polymorphic:Owner;"`
+//	}
+//	type Pet struct {
+//	  Toy Toy `gorm:"polymorphic:Owner;"`
+//	}
+//	type Toy struct {
+//	  OwnerID   int
+//	  OwnerType string
+//	}
 func (schema *Schema) buildPolymorphicRelation(relation *Relationship, field *Field, polymorphic string) {
 	relation.Polymorphic = &Polymorphic{
 		Value:           schema.Table,
@@ -403,34 +404,31 @@ func (schema *Schema) guessRelation(relation *Relationship, field *Field, cgl gu
 	case guessBelongs:
 		primarySchema, foreignSchema = relation.FieldSchema, schema
 	case guessEmbeddedBelongs:
-		if field.OwnerSchema != nil {
-			primarySchema, foreignSchema = relation.FieldSchema, field.OwnerSchema
-		} else {
+		if field.OwnerSchema == nil {
 			reguessOrErr()
 			return
 		}
+		primarySchema, foreignSchema = relation.FieldSchema, field.OwnerSchema
 	case guessHas:
 	case guessEmbeddedHas:
-		if field.OwnerSchema != nil {
-			primarySchema, foreignSchema = field.OwnerSchema, relation.FieldSchema
-		} else {
+		if field.OwnerSchema == nil {
 			reguessOrErr()
 			return
 		}
+		primarySchema, foreignSchema = field.OwnerSchema, relation.FieldSchema
 	}
 
 	if len(relation.foreignKeys) > 0 {
 		for _, foreignKey := range relation.foreignKeys {
-			if f := foreignSchema.LookUpField(foreignKey); f != nil {
-				foreignFields = append(foreignFields, f)
-			} else {
+			f := foreignSchema.LookUpField(foreignKey)
+			if f == nil {
 				reguessOrErr()
 				return
 			}
+			foreignFields = append(foreignFields, f)
 		}
 	} else {
-		var primaryFields []*Field
-		var primarySchemaName = primarySchema.Name
+		primarySchemaName := primarySchema.Name
 		if primarySchemaName == "" {
 			primarySchemaName = relation.FieldSchema.Name
 		}
@@ -466,10 +464,11 @@ func (schema *Schema) guessRelation(relation *Relationship, field *Field, cgl gu
 		}
 	}
 
-	if len(foreignFields) == 0 {
+	switch {
+	case len(foreignFields) == 0:
 		reguessOrErr()
 		return
-	} else if len(relation.primaryKeys) > 0 {
+	case len(relation.primaryKeys) > 0:
 		for idx, primaryKey := range relation.primaryKeys {
 			if f := primarySchema.LookUpField(primaryKey); f != nil {
 				if len(primaryFields) < idx+1 {
@@ -483,7 +482,7 @@ func (schema *Schema) guessRelation(relation *Relationship, field *Field, cgl gu
 				return
 			}
 		}
-	} else if len(primaryFields) == 0 {
+	case len(primaryFields) == 0:
 		if len(foreignFields) == 1 && primarySchema.PrioritizedPrimaryField != nil {
 			primaryFields = append(primaryFields, primarySchema.PrioritizedPrimaryField)
 		} else if len(primarySchema.PrimaryFields) == len(foreignFields) {
