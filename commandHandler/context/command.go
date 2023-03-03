@@ -17,4 +17,5 @@ const (
 	CommandContextTypeUser        = "GETUSER"
 	CommandContextTypeTryPanic    = "TRYPANIC"
 	CommandContextTypeDailyRate   = "RATE"
+	CommandContextTypeGPT         = "GPT"
 )

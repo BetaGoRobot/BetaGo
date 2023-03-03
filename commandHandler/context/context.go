@@ -10,6 +10,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/commandHandler/cal"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/dailyrate"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/gpt3"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/hitokoto"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
@@ -174,6 +175,8 @@ func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) 
 		fallthrough
 	case CommandContextTypeRoll:
 		ctxFunc = roll.RandRollHandler
+	case CommandContextTypeGPT:
+		ctxFunc = gpt3.ClientHandler
 	case betagovar.ShortCommandPing:
 		fallthrough
 	case CommandContextTypePing:
