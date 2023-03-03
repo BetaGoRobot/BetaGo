@@ -6,9 +6,9 @@ import (
 	"github.com/chatgp/gpt3"
 )
 
-var apiKey = "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"
+var apiKey = "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"
 
-var cli = getClient()
+// var cli = getClient()
 
 func getClient() (cli *gpt3.Client) {
 	// new gpt-3 client
@@ -21,6 +21,7 @@ func getClient() (cli *gpt3.Client) {
 }
 
 func CreateChatCompletion(msg string) (message string) {
+	cli := getClient()
 	uri := "/v1/chat/completions"
 	params := map[string]interface{}{
 		"model": "gpt-3.5-turbo",
