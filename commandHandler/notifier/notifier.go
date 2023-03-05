@@ -16,6 +16,7 @@ func StartAutoService() {
 	StartUpMessage(betagovar.GlobalSession)
 	go scheduletask.DailyRecommand()
 	go scheduletask.DailyRate()
+	go scheduletask.DailyNews()
 }
 
 // StartUpMessage  启动时的消息

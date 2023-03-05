@@ -20,6 +20,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/lonelyevil/kook v0.0.31
 	github.com/lonelyevil/kook/log_adapter/plog v0.0.31
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phuslu/log v1.0.83
 	github.com/prometheus/client_golang v1.14.0
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41

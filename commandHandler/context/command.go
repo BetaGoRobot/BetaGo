@@ -18,4 +18,5 @@ const (
 	CommandContextTypeTryPanic    = "TRYPANIC"
 	CommandContextTypeDailyRate   = "RATE"
 	CommandContextTypeGPT         = "GPT"
+	CommandContextTypeNews        = "NEWS"
 )

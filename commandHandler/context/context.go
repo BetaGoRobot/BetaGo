@@ -14,6 +14,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/hitokoto"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/news"
 	"github.com/enescakir/emoji"
 
 	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
@@ -189,6 +190,8 @@ func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) 
 		fallthrough
 	case CommandContextTypeMusic:
 		ctxFunc = music.SearchMusicByRobot
+	case CommandContextTypeNews:
+		ctxFunc = news.Handler
 	case CommandContextTypeDailyRate:
 		ctxFunc = dailyrate.GetRateHandler
 	case CommandContextTypeUser:

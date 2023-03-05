@@ -25,7 +25,8 @@ ARG BOTAPI \
     COS_BASE_URL \
     COS_BUCKET_REGION_URL \
     MAIL_SECRET \
-    GPT_TOKEN
+    GPT_TOKEN \
+    NEWS_API_KEY
 
 ENV BOTAPI=${BOTAPI} \
     ROBOT_NAME=${ROBOT_NAME} \
@@ -38,7 +39,8 @@ ENV BOTAPI=${BOTAPI} \
     COS_BASE_URL=${COS_BASE_URL} \
     COS_BUCKET_REGION_URL=${COS_BUCKET_REGION_URL} \
     MAIL_SECRET=${MAIL_SECRET} \
-    GPT_TOKEN=${GPT_TOKEN} 
+    GPT_TOKEN=${GPT_TOKEN} \
+    NEWS_API_KEY=${NEWS_API_KEY}
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 

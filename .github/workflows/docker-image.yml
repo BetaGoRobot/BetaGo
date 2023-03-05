@@ -65,6 +65,7 @@ jobs:
              --build-arg COS_BASE_URL=${{ secrets.COS_BASE_URL }} \
              --build-arg MAIL_SECRET=${{ secrets.MAIL_SECRET }} \
              --build-arg GPT_TOKEN=${{ secrets.GPT_TOKEN }} \
+             --build-arg NEWS_API_KEY=${{ secrets.NEWS_API_KEY }} \
              . \
              --file scripts/Dockerfile \
              --tag $IMAGE_NAME

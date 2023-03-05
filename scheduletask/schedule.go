@@ -7,6 +7,7 @@ import (
 	betagovar "github.com/BetaGoRobot/BetaGo/betagovar"
 	command_context "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/dailyrate"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/news"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/lonelyevil/kook"
 )
@@ -90,5 +91,13 @@ func DailyRate() {
 			dailyrate.GetRateHandler("3241026226723225", "", "")
 		}
 	}
+}
 
+func DailyNews() {
+	for {
+		time.Sleep(time.Hour)
+		if time.Now().UTC().Format("15") == "00" {
+			news.Handler("3241026226723225", "", "")
+		}
+	}
 }
