@@ -123,7 +123,7 @@ func Handler(targetID, quoteID, authorID string, args ...string) (err error) {
 			&kook.MessageCreate{
 				MessageCreateBase: kook.MessageCreateBase{
 					Type:     kook.MessageTypeCard,
-					TargetID: betagovar.NotifierChanID,
+					TargetID: targetID,
 					Content:  cardMessageStr,
 					Quote:    quoteID,
 				},
