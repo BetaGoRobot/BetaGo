@@ -35,6 +35,7 @@ func main() {
 		utility.ZapLogger.Error("连接失败", zaplog.Error(e))
 		panic(e)
 	}
+	notifier.StartAutoService()
 	// go scheduletask.HourlyGetSen()
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
