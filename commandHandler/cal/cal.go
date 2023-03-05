@@ -221,7 +221,7 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
 		return nil
 	}
-	utility.GetDbConnection().Table("betago.channel_logs").Where("user_id = ? and is_update = ?", userInfo.ID, true).Order("left_time desc").Find(&logs).Limit(1000)
+	utility.GetDbConnection().Table("betago.channel_log_exts").Where("user_id = ? and is_update = ?", userInfo.ID, true).Order("left_time desc").Find(&logs).Limit(1000)
 	var chanDiv = make(map[string]time.Duration)
 	var totalTime time.Duration
 	for _, log := range logs {
