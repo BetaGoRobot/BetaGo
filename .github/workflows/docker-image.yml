@@ -96,7 +96,7 @@ jobs:
             docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest-$currentTimeStamp
             docker push $IMAGE_NAME:latest-$currentTimeStamp
 
-            # docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest 
-            # docker push $TENCENT_HEADER/$IMAGE_NAME:latest
-            # docker tag $TENCENT_HEADER/$IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
-            # docker push $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
+            docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest 
+            docker push $TENCENT_HEADER/$IMAGE_NAME:latest
+            docker tag $TENCENT_HEADER/$IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
+            docker push $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
