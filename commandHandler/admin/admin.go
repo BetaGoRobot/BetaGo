@@ -266,23 +266,43 @@ func DeleteAllMessageHandler(TargetID, QuoteID, authorID string, args ...string)
 		ec         utility.ErrorCollector
 		messageNum int
 	)
+	defer cleaupData()
 	if len(args) != 0 {
 		messageNum, err = strconv.Atoi(args[0])
 		if err != nil {
 			return
 		}
 	}
-	ms, err := betagovar.GlobalSession.MessageList(TargetID)
-	if err != nil {
-		ec.Collect(err)
-	}
-	if len(ms) > 50 || len(ms) > messageNum || messageNum <= 0 {
-		err = fmt.Errorf("需要删除的消息数量>50，高危操作，请确认后`指定需要删除的消息数量`完成操作")
-		return
-	}
-	for i := len(ms) - 1; i >= 0; i-- {
-		err := betagovar.GlobalSession.MessageDelete(ms[i].ID)
-		ec.Collect(err)
+	if messageNum > 50 {
+		for i := 0; i < messageNum/50; i++ {
+			ms, err := betagovar.GlobalSession.MessageList(TargetID, kook.MessageListWithPageSize(50))
+			if err != nil {
+				ec.Collect(err)
+			}
+			for i := len(ms) - 1; i >= 0; i-- {
+				err := betagovar.GlobalSession.MessageDelete(ms[i].ID)
+				backupData(ms[i].Author.Username, ms[i].Content, ms[i].ID, TargetID)
+				ec.Collect(err)
+			}
+		}
+	} else {
+		ms, err := betagovar.GlobalSession.MessageList(TargetID, kook.MessageListWithPageSize(messageNum))
+		if err != nil {
+			ec.Collect(err)
+		}
+		ms = ms[:messageNum]
+		if len(ms) > 50 || len(ms) > messageNum || messageNum <= 0 {
+			err = fmt.Errorf("若全部删除，需要删除的消息数量>50，高危操作，请确认后`指定需要删除的消息数量`完成操作")
+			return err
+		}
+		for i := len(ms) - 1; i >= 0; i-- {
+			err := betagovar.GlobalSession.MessageDelete(ms[i].ID)
+			ec.Collect(err)
+			msg, err := getStringFromNode(ms[i].Content)
+			ec.Collect(err)
+			backupData(ms[i].Author.Username, msg, ms[i].ID, TargetID)
+		}
 	}
 	return ec.CheckError()
+
 }

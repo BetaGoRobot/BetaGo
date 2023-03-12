@@ -24,6 +24,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phuslu/log v1.0.83
 	github.com/prometheus/client_golang v1.14.0
+	github.com/spyzhov/ajson v0.7.2
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/wcharczuk/go-chart/v2 v2.1.0
 	gorm.io/driver/postgres v1.4.8
