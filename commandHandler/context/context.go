@@ -2,22 +2,10 @@ package context
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/admin"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/cal"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/dailyrate"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/gpt3"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/helper"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/hitokoto"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/music"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/news"
 	"github.com/enescakir/emoji"
-
-	"github.com/BetaGoRobot/BetaGo/commandHandler/roll"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/lonelyevil/kook"
@@ -149,61 +137,11 @@ func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) 
 	defer utility.CollectPanic(ctx, ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 	var ctxFunc CommandContextFunc
 	var ctxGuildFunc CommandContextWithGuildIDFunc
-	switch strings.ToUpper(Command) {
-	case betagovar.ShortCommandHelp:
-		fallthrough
-	case CommandContextTypeHelper:
-		if ctx.IsAdmin() {
-			ctxFunc = helper.AdminCommandHelperHandler
-		} else {
-			ctxFunc = helper.UserCommandHelperHandler
-		}
-	case betagovar.ShortCommandAddAdmin:
-		fallthrough
-	case CommandContextTypeAddAdmin:
-		ctxFunc = admin.AddAdminHandler
-	case betagovar.ShortCommandRemoveAdmin:
-		fallthrough
-	case CommandContextTypeRemoveAdmin:
-		ctxFunc = admin.RemoveAdminHandler
-	case betagovar.ShortCommandShowAdmin:
-		fallthrough
-	case CommandContextTypeShowAdmin:
-		ctxFunc = admin.ShowAdminHandler
-	case CommandContextTypeDeleteAll:
-		ctxFunc = admin.DeleteAllMessageHandler
-	case betagovar.ShortCommandRoll:
-		fallthrough
-	case CommandContextTypeRoll:
-		ctxFunc = roll.RandRollHandler
-	case CommandContextTypeGPT:
-		ctxFunc = gpt3.ClientHandler
-	case betagovar.ShortCommandPing:
-		fallthrough
-	case CommandContextTypePing:
-		ctxFunc = helper.PingHandler
-	case betagovar.ShortCommandHitokoto:
-		fallthrough
-	case CommandContextTypeHitokoto:
-		ctxFunc = hitokoto.GetHitokotoHandler
-	case betagovar.ShortCommandMusic:
-		fallthrough
-	case CommandContextTypeMusic:
-		ctxFunc = music.SearchMusicByRobot
-	case CommandContextTypeNews:
-		ctxFunc = news.Handler
-	case CommandContextTypeDailyRate:
-		ctxFunc = dailyrate.GetRateHandler
-	case CommandContextTypeUser:
-		ctxGuildFunc = helper.GetUserInfoHandler
-	case betagovar.ShortCommandShowCal:
-		fallthrough
-	case CommandContextTypeCal:
-		ctxGuildFunc = cal.ShowCalHandler
-	case CommandContextTypeTryPanic:
-		panic("try panic")
-	default:
+	ctxFunc = commandMapping[Command]
+	ctxGuildFunc = commandMappingWithGuildID[Command]
+	if ctxFunc == nil && ctxGuildFunc == nil {
 		ctx.ErrorSenderHandler(fmt.Errorf(emoji.QuestionMark.String()+"未知指令 `%s`", Command))
+		return
 	}
 	if ctxFunc != nil {
 		defer utility.GetTimeCost(time.Now(), Command)

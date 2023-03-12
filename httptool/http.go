@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -17,6 +19,34 @@ var (
 	zapLogger   = utility.ZapLogger
 	sugerLogger = utility.SugerLogger
 )
+
+// HTTP Client variables
+var (
+	HTTPClientWithProxy *http.Client
+	HTTPClient          = &http.Client{}
+	proxyURL            = os.Getenv("PRIVATE_PROXY")
+)
+
+func init() {
+	parsedProxyURL, err := url.Parse(proxyURL)
+	if err != nil {
+		panic(err)
+	}
+	HTTPClientWithProxy = &http.Client{
+		Transport: &http.Transport{
+			Proxy: http.ProxyURL(parsedProxyURL),
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+}
 
 // RequestInfo 请求字段的结构体
 type RequestInfo struct {
@@ -153,6 +183,10 @@ func PostWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
 //	@return resp
 //	@return err
 func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
+	return postWithParamsInner(info, HTTPClient)
+}
+
+func postWithParamsInner(info RequestInfo, client *http.Client) (resp *http.Response, err error) {
 	var paramSlice = make([]byte, 0)
 	req, err := http.NewRequest(http.MethodPost, info.URL, bytes.NewReader([]byte(paramSlice)))
 	if err != nil {
@@ -168,11 +202,14 @@ func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
 	for index := range info.Cookies {
 		req.AddCookie(info.Cookies[index])
 	}
-	resp, _ = http.DefaultClient.Do(req)
+	resp, _ = client.Do(req)
 	if err != nil {
 		zapLogger.Error(err.Error())
 		return
 	}
-
 	return
+}
+
+func PostWithParamsWithProxy(info RequestInfo) (resp *http.Response, err error) {
+	return postWithParamsInner(info, HTTPClientWithProxy)
 }

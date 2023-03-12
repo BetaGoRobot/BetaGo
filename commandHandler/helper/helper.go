@@ -10,6 +10,18 @@ import (
 	"github.com/lonelyevil/kook"
 )
 
+func TryPanic(targetID, quoteID, authorID string, args ...string) (err error) {
+	panic("try panic")
+}
+
+func CommandRouter(targetID, quoteID, authorID string, args ...string) (err error) {
+	if utility.CheckIsAdmin(authorID) {
+		return AdminCommandHelperHandler(targetID, quoteID, authorID, args...)
+	} else {
+		return UserCommandHelperHandler(targetID, quoteID, authorID, args...)
+	}
+}
+
 // AdminCommandHelperHandler 查看帮助
 //
 //	@param targetID

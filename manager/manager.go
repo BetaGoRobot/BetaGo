@@ -17,7 +17,9 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 //	@param ctx
 func CommandHandler(ctx *kook.KmarkdownMessageContext) {
 	// 判断是否被at到,且消息不是引用/回复
-	if !utility.IsInSlice(betagovar.RobotID, ctx.Extra.Mention) && !strings.Contains(ctx.Common.Content, betagovar.RobotID) {
+	if !utility.IsInSlice(betagovar.RobotID, ctx.Extra.Mention) &&
+		!strings.Contains(ctx.Common.Content, betagovar.RobotID) &&
+		!strings.HasPrefix(ctx.Common.Content, ".") {
 		return
 	}
 	// 示例中，由于用户发送的命令的Content格式为(met)id(met) <command> <parameters>

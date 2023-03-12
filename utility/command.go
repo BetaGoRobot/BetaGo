@@ -7,12 +7,19 @@ import (
 )
 
 // GetCommandWithParameters 获取命令及参数
-//  @param rawCommand
-//  @return command
-//  @return params
+//
+//	@param rawCommand
+//	@return command
+//	@return params
 func GetCommandWithParameters(rawCommand string) (command string, params []string) {
+	var trueContent string
+	if strings.HasPrefix(rawCommand, betagovar.CommandPrefix) {
+		trueContent = strings.TrimSpace(strings.Replace(rawCommand, "(met)"+betagovar.RobotID+"(met)", "", 1))
+	} else {
+		trueContent = strings.Trim(rawCommand, ".")
+	}
+
 	// 解析得到不包含At机器人的信息的实际内容
-	trueContent := strings.TrimSpace(strings.Replace(rawCommand, "(met)"+betagovar.RobotID+"(met)", "", 1))
 	// 判断是否为空字符串
 	if trueContent == "" {
 		return

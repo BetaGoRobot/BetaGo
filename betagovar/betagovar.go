@@ -83,6 +83,7 @@ var (
 	BetaGoTest    = os.Getenv("IS_TEST") == "true"
 	IsTest        = os.Getenv("IS_TEST") == "true"
 	IsCluster     = os.Getenv("IS_CLUSTER") == "true"
+	CommandPrefix = "(met)" + RobotID + "(met)"
 )
 
 func init() {
