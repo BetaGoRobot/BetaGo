@@ -25,7 +25,7 @@ func CreateChatCompletion(msg string) (message string) {
 	cli := getClient()
 	uri := "/v1/chat/completions"
 	params := map[string]interface{}{
-		"model": "gpt-3.5-turbo-0301",
+		"model": "gpt-3.5-turbo",
 		"messages": []map[string]interface{}{
 			{"role": "user", "content": msg},
 		},
