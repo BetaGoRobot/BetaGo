@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/carlmjohnson/requests"
 	"github.com/oliveagle/jsonpath"
@@ -68,6 +69,6 @@ func (g *GPTClient) Post() (msg string, err error) {
 	if err != nil {
 		return
 	}
-	msg = res.(string)
+	msg = strings.Trim(res.(string), "\n")
 	return
 }
