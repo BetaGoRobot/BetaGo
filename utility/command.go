@@ -14,9 +14,9 @@ import (
 func GetCommandWithParameters(rawCommand string) (command string, params []string) {
 	var trueContent = strings.TrimSpace(rawCommand)
 	if strings.HasPrefix(rawCommand, betagovar.CommandPrefix) {
-		trueContent = strings.TrimSpace(strings.Replace(rawCommand, "(met)"+betagovar.RobotID+"(met)", "", 1))
+		trueContent = strings.Replace(rawCommand, "(met)"+betagovar.RobotID+"(met)", "", 1)
 	} else {
-		trueContent = strings.Trim(rawCommand, ".")
+		trueContent = strings.Trim(trueContent, ".")
 	}
 
 	// 解析得到不包含At机器人的信息的实际内容
