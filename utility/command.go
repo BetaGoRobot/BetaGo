@@ -12,7 +12,7 @@ import (
 //	@return command
 //	@return params
 func GetCommandWithParameters(rawCommand string) (command string, params []string) {
-	var trueContent string
+	var trueContent = strings.TrimSpace(rawCommand)
 	if strings.HasPrefix(rawCommand, betagovar.CommandPrefix) {
 		trueContent = strings.TrimSpace(strings.Replace(rawCommand, "(met)"+betagovar.RobotID+"(met)", "", 1))
 	} else {
