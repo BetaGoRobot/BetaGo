@@ -25,6 +25,7 @@ var (
 	HTTPClientWithProxy *http.Client
 	HTTPClient          = &http.Client{}
 	proxyURL            = os.Getenv("PRIVATE_PROXY")
+	ParsedProxyURL      *url.URL
 )
 
 func init() {
@@ -32,6 +33,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+	ParsedProxyURL = parsedProxyURL
 	HTTPClientWithProxy = &http.Client{
 		Transport: &http.Transport{
 			Proxy: http.ProxyURL(parsedProxyURL),
@@ -53,6 +55,7 @@ type RequestInfo struct {
 	URL     string
 	Cookies []*http.Cookie
 	Params  map[string][]string
+	Header  http.Header
 }
 
 // GetPubIP 获取公网ip
@@ -198,6 +201,7 @@ func postWithParamsInner(info RequestInfo, client *http.Client) (resp *http.Resp
 			req.PostForm.Add(key, values[index])
 		}
 	}
+	req.Header = info.Header
 	//添加Cookies
 	for index := range info.Cookies {
 		req.AddCookie(info.Cookies[index])

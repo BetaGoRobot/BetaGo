@@ -16,7 +16,10 @@ import (
 // @return err 错误信息
 func ClientHandler(targetID, quoteID, authorID string, args ...string) (err error) {
 	msg := strings.Join(args, " ")
-	res := CreateChatCompletion(msg)
+	res, err := CreateChatCompletion(msg)
+	if err != nil {
+		return
+	}
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
 			Theme: "info",
@@ -37,7 +40,7 @@ func ClientHandler(targetID, quoteID, authorID string, args ...string) (err erro
 		},
 	}.BuildMessage()
 
-	betagovar.GlobalSession.MessageCreate(
+	_, err = betagovar.GlobalSession.MessageCreate(
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     kook.MessageTypeCard,
