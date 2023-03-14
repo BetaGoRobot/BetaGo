@@ -68,7 +68,7 @@ func (ec *ErrorCollector) Errorf(format string, args ...interface{}) {
 //	@receiver ec
 //	@return error
 func (ec *ErrorCollector) CheckError() error {
-	if !ec.NoError() {
+	if ec.NoError() {
 		return nil
 	}
 	return ec.GenErr()

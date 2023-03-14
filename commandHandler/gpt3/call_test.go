@@ -12,4 +12,5 @@ func TestGPTParams_Post(t *testing.T) {
 		}},
 	}
 	g.Post()
+	// g.GetModels()
 }

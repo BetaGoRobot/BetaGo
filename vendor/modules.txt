@@ -30,7 +30,7 @@ github.com/fasthttp/router/radix
 ## explicit
 github.com/golang/freetype/raster
 github.com/golang/freetype/truetype
-# github.com/golang/protobuf v1.5.2
+# github.com/golang/protobuf v1.5.3
 ## explicit; go 1.9
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes/timestamp
@@ -117,7 +117,7 @@ github.com/prometheus/client_golang/prometheus/internal
 # github.com/prometheus/client_model v0.3.0
 ## explicit; go 1.9
 github.com/prometheus/client_model/go
-# github.com/prometheus/common v0.41.0
+# github.com/prometheus/common v0.42.0
 ## explicit; go 1.18
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
@@ -156,7 +156,7 @@ github.com/wcharczuk/go-chart/v2/roboto
 # go.uber.org/atomic v1.10.0
 ## explicit; go 1.18
 go.uber.org/atomic
-# go.uber.org/multierr v1.9.0
+# go.uber.org/multierr v1.10.0
 ## explicit; go 1.19
 go.uber.org/multierr
 # go.uber.org/zap v1.24.0
@@ -202,7 +202,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# google.golang.org/protobuf v1.28.1
+# google.golang.org/protobuf v1.29.0
 ## explicit; go 1.11
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
@@ -235,10 +235,10 @@ google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/natefinch/lumberjack.v2 v2.2.1
 ## explicit; go 1.13
 gopkg.in/natefinch/lumberjack.v2
-# gorm.io/driver/postgres v1.4.8
+# gorm.io/driver/postgres v1.5.0
 ## explicit; go 1.14
 gorm.io/driver/postgres
-# gorm.io/gorm v1.24.6
+# gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
 ## explicit; go 1.16
 gorm.io/gorm
 gorm.io/gorm/callbacks

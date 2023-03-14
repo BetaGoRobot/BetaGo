@@ -1,6 +1,6 @@
 module github.com/BetaGoRobot/BetaGo
 
-go 1.18
+go 1.20
 
 replace (
 	github.com/BetaGoRobot/BetaGo/betagovar => ./betagovar
@@ -27,8 +27,8 @@ require (
 	github.com/spyzhov/ajson v0.7.2
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/wcharczuk/go-chart/v2 v2.1.0
-	gorm.io/driver/postgres v1.4.8
-	gorm.io/gorm v1.24.6
+	gorm.io/driver/postgres v1.5.0
+	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
 )
 
 require (
@@ -38,7 +38,7 @@ require (
 	github.com/bits-and-blooms/bloom/v3 v3.3.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/clbanning/mxj v1.8.4 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -53,19 +53,19 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mozillazg/go-httpheader v0.3.1 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
-	github.com/prometheus/common v0.41.0 // indirect
+	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.44.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
-	go.uber.org/multierr v1.9.0 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/image v0.6.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
+	google.golang.org/protobuf v1.29.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 )

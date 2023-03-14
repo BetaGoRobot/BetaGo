@@ -2,11 +2,13 @@ package gpt3
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/carlmjohnson/requests"
 	"github.com/oliveagle/jsonpath"
 )
@@ -14,6 +16,7 @@ import (
 var (
 	proxyURL       = os.Getenv("PRIVATE_PROXY")
 	ParsedProxyURL *url.URL
+	ec             utility.ErrorCollector
 )
 
 func init() {
@@ -47,6 +50,18 @@ func (g *GPTClient) SetContent(s string) {
 		Content: s,
 	}}
 }
+func (g *GPTClient) GetModels() (msg string, err error) {
+	var resp interface{}
+	err = requests.URL("https://api.openai.com/v1/models").
+		Bearer(apiKey).
+		Transport(&http.Transport{
+			Proxy: http.ProxyURL(ParsedProxyURL),
+		}).
+		ToJSON(&resp).
+		Fetch(context.Background())
+	print(resp)
+	return
+}
 
 // Post 发送请求
 //
@@ -69,6 +84,14 @@ func (g *GPTClient) Post() (msg string, err error) {
 	if err != nil {
 		return
 	}
-	msg = strings.Trim(res.(string), "\n")
+	promptTokens, err := jsonpath.JsonPathLookup(resp, "$.usage.prompt_tokens")
+	ec.Collect(err)
+	completionTokens, err := jsonpath.JsonPathLookup(resp, "$.usage.completion_tokens")
+	ec.Collect(err)
+	totalTokens, err := jsonpath.JsonPathLookup(resp, "$.usage.total_tokens")
+	ec.Collect(err)
+	err = ec.CheckError()
+
+	msg = fmt.Sprintf("%s\n---\n本次请求消耗: \n`prompt_tokens`: **%d**\n`completion_tokens`: **%d**\n`total_tokens`: **%d**", strings.Trim(res.(string), "\n"), int(promptTokens.(float64)), int(completionTokens.(float64)), int(totalTokens.(float64)))
 	return
 }
