@@ -69,23 +69,26 @@ func (g *GPTClient) GetModels() (msg string, err error) {
 //	@receiver g
 func (g *GPTClient) Post() (msg string, err error) {
 	var resp interface{}
+	headers := make(map[string][]string)
 	startTime := time.Now()
 	err = requests.
 		URL("https://api.openai.com/v1/chat/completions").
 		Bearer(apiKey).
 		BodyJSON(&g).
 		ToJSON(&resp).
+		CopyHeaders(headers).
 		Transport(&http.Transport{
 			Proxy: http.ProxyURL(ParsedProxyURL),
 		}).
 		Fetch(context.Background())
+	endTime := time.Now()
 	if err != nil {
 		return
 	}
-	endTime := time.Now()
 	createTime := time.Unix(int64(resp.(map[string]interface{})["created"].(float64)), 0)
-	sendingTime := createTime.Sub(startTime)
-	afterwardsTime := endTime.Sub(createTime)
+	sendingTime := createTime.Sub(startTime).Abs()
+	processTime, _ := time.ParseDuration(headers["Openai-Processing-Ms"][0] + "ms")
+	returnTime := endTime.Sub(createTime) - processTime
 
 	res, err := jsonpath.JsonPathLookup(resp, "$.choices[0].message.content")
 	if err != nil {
@@ -105,7 +108,8 @@ func (g *GPTClient) Post() (msg string, err error) {
 			"---",
 			"请求耗时:",
 			"`sending_time_cost`: **%s**",
-			"`afterwards_time_cost`: **%s**",
+			"`processing_time_cost`: **%s**",
+			"`return_time_cost`: **%s**",
 			"本次请求消耗: ",
 			"`prompt_tokens`: **%d**=￥%f",
 			"`completion_tokens`: **%d**=￥%f",
@@ -113,7 +117,8 @@ func (g *GPTClient) Post() (msg string, err error) {
 		}, "\n"),
 		strings.Trim(res.(string), "\n"),
 		sendingTime.Round(time.Millisecond*100).String(),
-		afterwardsTime.Round(time.Millisecond*100).String(),
+		processTime.Round(time.Millisecond*100).String(),
+		returnTime.Round(time.Millisecond*100).String(),
 		int(promptTokens.(float64)),
 		promptTokens.(float64)*0.01*0.001,
 		int(completionTokens.(float64)),
