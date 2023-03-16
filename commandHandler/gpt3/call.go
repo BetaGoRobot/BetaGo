@@ -114,7 +114,6 @@ func (g *GPTClient) Post() (msg string, err error) {
 		strings.Trim(res.(string), "\n"),
 		sendingTime.Round(time.Millisecond*100).String(),
 		afterwardsTime.Round(time.Millisecond*100).String(),
-		sendingTime.Round(time.Millisecond*100).String(),
 		int(promptTokens.(float64)),
 		promptTokens.(float64)*0.01*0.001,
 		int(completionTokens.(float64)),
