@@ -31,7 +31,6 @@ func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err
 	resNetease, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(args)
 	if err != nil {
 		if !neteaseapi.NetEaseGCtx.CheckIfLogin() {
-
 		}
 		return
 	}

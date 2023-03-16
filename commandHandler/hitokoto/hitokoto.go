@@ -22,8 +22,11 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 const (
 	hitokotoURL = "https://v1.hitokoto.cn"
 )
-const yiyanURL = "https://api.fanlisky.cn/niuren/getSen"
-const yiyanPoemURL = "https://v1.jinrishici.com/all.json"
+
+const (
+	yiyanURL     = "https://api.fanlisky.cn/niuren/getSen"
+	yiyanPoemURL = "https://v1.jinrishici.com/all.json"
+)
 
 // RespBody  一言返回体
 type RespBody struct {

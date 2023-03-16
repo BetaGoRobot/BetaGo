@@ -25,7 +25,6 @@ func init() {
 		panic(err)
 	}
 	ParsedProxyURL = parsedProxyURL
-
 }
 
 // Message 要发送的内容
@@ -50,6 +49,7 @@ func (g *GPTClient) SetContent(s string) {
 		Content: s,
 	}}
 }
+
 func (g *GPTClient) GetModels() (msg string, err error) {
 	var resp interface{}
 	err = requests.URL("https://api.openai.com/v1/models").

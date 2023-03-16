@@ -20,6 +20,7 @@ func init() {
 		qqmusicBaseURL = "http://kubernetes.default:3300"
 	}
 }
+
 func autoRefreshLogin() {
 	for {
 		time.Sleep(time.Minute * 5)
@@ -28,8 +29,9 @@ func autoRefreshLogin() {
 		})
 	}
 }
+
 func init() {
-	//获取存储的Cookie
+	// 获取存储的Cookie
 	_, err := httptool.PostWithTimestamp(httptool.RequestInfo{
 		URL: qqmusicBaseURL + "/user/cookie",
 	})
@@ -104,7 +106,6 @@ func (ctx *QQmusicContext) SearchMusic(keywords []string) (result []SearchMusicR
 //	@return musicURL
 //	@return err
 func (ctx *QQmusicContext) GetMusicURLByID(mid, mediaMid string) (musicURL string, err error) {
-
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
 			URL: qqmusicBaseURL + "/song/url",
@@ -130,6 +131,7 @@ func (ctx *QQmusicContext) GetMusicURLByID(mid, mediaMid string) (musicURL strin
 	musicURL = music.SongURL
 	return
 }
+
 func getAlbumPicURL(albumMID string) (picURL string) {
 	return qqmusicPicBaseURL + albumMID + ".jpg"
 }

@@ -17,9 +17,7 @@ import (
 //	@param authorID 发送者ID
 //	@return err 错误信息
 func RandRollHandler(targetID, quoteID, authorID string, args ...string) (err error) {
-	var (
-		min, max int
-	)
+	var min, max int
 	if len(args) == 0 {
 		// 如果没有参数，使用默认range[1,7)
 		min = 1

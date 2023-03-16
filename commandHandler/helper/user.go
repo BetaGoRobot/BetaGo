@@ -50,5 +50,4 @@ func GetUserInfoHandler(targetID, quoteID, authorID string, guildID string, args
 		},
 	)
 	return
-
 }

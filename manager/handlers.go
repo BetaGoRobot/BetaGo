@@ -96,7 +96,6 @@ func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 }
 
 func guildUpdateHandler(ctx *kook.GuildUpdateContext) {
-
 }
 
 func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
@@ -145,7 +144,6 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 			},
 		},
 	}}.BuildMessage()
-
 	if err != nil {
 		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
 		return

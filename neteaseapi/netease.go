@@ -77,6 +77,7 @@ func (ctx *NetEaseContext) RefreshLogin() error {
 	ctx.SaveCookie()
 	return err
 }
+
 func (ctx *NetEaseContext) getUniKey() (err error) {
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
@@ -127,7 +128,7 @@ func (ctx *NetEaseContext) getQRBase64() (err error) {
 
 func (ctx *NetEaseContext) checkQRStatus() (err error) {
 	if !ctx.qrStruct.isOutDated {
-		var once = &sync.Once{}
+		once := &sync.Once{}
 		for {
 
 			time.Sleep(time.Second)
@@ -195,7 +196,7 @@ func SaveQRImg(imgBase64 string) (filename string) {
 	i := strings.Index(imgBase64, ",")
 	d := base64.NewDecoder(base64.StdEncoding, strings.NewReader(imgBase64[i+1:]))
 	filename = filepath.Join(netEaseQRTmpFile, fmt.Sprintf("qr_%d.jpg", time.Now().Unix()))
-	os.MkdirAll(netEaseQRTmpFile, 0777)
+	os.MkdirAll(netEaseQRTmpFile, 0o777)
 	f, err := os.Create(filename)
 	if err != nil {
 		log.Println("error in create qr img", err)
@@ -283,7 +284,7 @@ func (ctx *NetEaseContext) CheckIfLogin() bool {
 //
 //	@receiver ctx
 func (ctx *NetEaseContext) TryGetLastCookie() {
-	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		log.Println("error in open last_cookie.json", err)
 		return
@@ -304,7 +305,7 @@ func (ctx *NetEaseContext) TryGetLastCookie() {
 //
 //	@receiver ctx
 func (ctx *NetEaseContext) SaveCookie() {
-	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		log.Println("error in open last_cookie.json", err)
 		return
