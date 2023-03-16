@@ -5,11 +5,8 @@ import (
 	"os"
 )
 
-var (
-
-	// IsTest 是否测试环境
-	IsTest = os.Getenv("IS_TEST")
-)
+// IsTest 是否测试环境
+var IsTest = os.Getenv("IS_TEST")
 
 // LoginStatusStruct  登录状态
 type LoginStatusStruct struct {

@@ -304,5 +304,4 @@ func DeleteAllMessageHandler(TargetID, QuoteID, authorID string, args ...string)
 		}
 	}
 	return ec.CheckError()
-
 }

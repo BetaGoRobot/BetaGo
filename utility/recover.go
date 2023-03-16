@@ -62,8 +62,9 @@ func removeSensitiveInfo(stack []byte) string {
 }
 
 // ForceMarshalJSON is the function to force marshal json
-//  @param v
-//  @return string
+//
+//	@param v
+//	@return string
 func ForceMarshalJSON(v interface{}) string {
 	b, _ := json.MarshalIndent(v, "", "    ")
 

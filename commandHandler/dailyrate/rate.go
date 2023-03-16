@@ -52,7 +52,7 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 		matchSelect = matchSelect.Where("user_id = ?", args[0])
 	}
 	// 获取24小时的整体在线情况
-	var timeCostList = make([]*timeCostStru, 0)
+	timeCostList := make([]*timeCostStru, 0)
 	matchSelect.Limit(3).Find(&timeCostList)
 	if len(timeCostList) != 0 {
 		modules := make([]interface{}, 0)

@@ -19,7 +19,6 @@ func TestNetEaseContext_getNewCommendMusic(t *testing.T) {
 	ctx := &NetEaseContext{}
 	ctx.LoginNetEase()
 	ctx.GetNewRecommendMusic()
-
 }
 
 func TestTime(t *testing.T) {

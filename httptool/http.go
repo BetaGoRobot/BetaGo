@@ -83,20 +83,20 @@ func GetPubIP() (ip string, err error) {
 //	@return res
 //	@return err
 func GetWithCookieParams(info RequestInfo) (resp *http.Response, err error) {
-	var paramSlice = make([]string, 0)
+	paramSlice := make([]string, 0)
 	for key, values := range info.Params {
 		paramSlice = append(paramSlice, key+"="+strings.Join(values, "%20"))
 	}
 
 	url := strings.Join([]string{info.URL, strings.Join(paramSlice, "&")}, "?")
-	//创建client
+	// 创建client
 	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return
 	}
 
-	//添加Cookies
+	// 添加Cookies
 	for index := range info.Cookies {
 		req.AddCookie(info.Cookies[index])
 	}
@@ -113,13 +113,13 @@ func GetWithCookieParams(info RequestInfo) (resp *http.Response, err error) {
 //	@return res
 //	@return err
 func GetWithParamsWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
-	var paramSlice = make([]string, 0)
+	paramSlice := make([]string, 0)
 	for key, values := range info.Params {
 		paramSlice = append(paramSlice, key+"="+strings.Join(values, "%20"))
 	}
 	paramSlice = append(paramSlice, "timestamp="+fmt.Sprint(time.Now().UnixNano()))
 	rawURL := strings.Join([]string{info.URL, strings.Join(paramSlice, "&")}, "?")
-	//创建client
+	// 创建client
 	resp, err = http.Get(rawURL)
 	if err != nil {
 		return
@@ -133,7 +133,7 @@ func GetWithParamsWithTimestamp(info RequestInfo) (resp *http.Response, err erro
 //	@return res
 //	@return err
 func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
-	var paramSlice = make([]string, 0)
+	paramSlice := make([]string, 0)
 	for key, values := range info.Params {
 		for index := range values {
 			paramSlice = append(paramSlice, key+"="+values[index])
@@ -146,7 +146,7 @@ func GetWithParams(info RequestInfo) (resp *http.Response, err error) {
 		rawURL = info.URL
 	}
 
-	//创建client
+	// 创建client
 	resp, err = http.Get(rawURL)
 	if err != nil {
 		return
@@ -167,7 +167,7 @@ func PostWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
 		return
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	//添加Cookies
+	// 添加Cookies
 	for index := range info.Cookies {
 		req.AddCookie(info.Cookies[index])
 	}
@@ -190,7 +190,7 @@ func PostWithParams(info RequestInfo) (resp *http.Response, err error) {
 }
 
 func postWithParamsInner(info RequestInfo, client *http.Client) (resp *http.Response, err error) {
-	var paramSlice = make([]byte, 0)
+	paramSlice := make([]byte, 0)
 	req, err := http.NewRequest(http.MethodPost, info.URL, bytes.NewReader([]byte(paramSlice)))
 	if err != nil {
 		return
@@ -202,7 +202,7 @@ func postWithParamsInner(info RequestInfo, client *http.Client) (resp *http.Resp
 		}
 	}
 	req.Header = info.Header
-	//添加Cookies
+	// 添加Cookies
 	for index := range info.Cookies {
 		req.AddCookie(info.Cookies[index])
 	}

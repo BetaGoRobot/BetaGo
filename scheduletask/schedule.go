@@ -78,7 +78,8 @@ func DailyRecommand() {
 						Type:     messageType,
 						TargetID: "3241026226723225",
 						Content:  cardStr,
-					}})
+					},
+				})
 		}
 	}
 }

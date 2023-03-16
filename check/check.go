@@ -17,5 +17,4 @@ func CheckEnv() {
 }
 
 func CheckDbStatus() {
-
 }

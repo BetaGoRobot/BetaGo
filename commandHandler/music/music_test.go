@@ -7,7 +7,7 @@ import (
 )
 
 func TestSearchMusicByRobot(t *testing.T) {
-	f, _ := os.OpenFile("/tmp/cpu.prof", os.O_RDWR|os.O_CREATE, 0644)
+	f, _ := os.OpenFile("/tmp/cpu.prof", os.O_RDWR|os.O_CREATE, 0o644)
 	defer f.Close()
 	pprof.StartCPUProfile(f)
 	defer pprof.StopCPUProfile()

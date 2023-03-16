@@ -60,7 +60,7 @@ type DrawChartLegend struct {
 }
 
 // DrawChartLabel 画图标签
-type DrawChartLabel struct { //chl
+type DrawChartLabel struct { // chl
 	Text []string
 	Size int
 }
@@ -70,7 +70,6 @@ type DrawChartLabel struct { //chl
 //	@receiver ctx
 //	@return string
 func (ctx *DrawPieAPICtx) BuildRequestURL() string {
-
 	// 构建图类型
 	chartTypeStr := string("cht=" + ctx.Ct)
 	// 构建图标题
@@ -222,7 +221,7 @@ func GetUserChannelTimeMap(userID string) map[string]time.Duration {
 		return nil
 	}
 	utility.GetDbConnection().Table("betago.channel_log_exts").Where("user_id = ? and is_update = ?", userInfo.ID, true).Order("left_time desc").Find(&logs).Limit(1000)
-	var chanDiv = make(map[string]time.Duration)
+	chanDiv := make(map[string]time.Duration)
 	var totalTime time.Duration
 	for _, log := range logs {
 		leftTimeT, _ := time.Parse(betagovar.TimeFormat, log.LeftTime)
@@ -314,7 +313,7 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (st
 	}
 	defer resp.Body.Close()
 	filePath := filepath.Join(betagovar.ImagePath, time.Now().Format(time.RFC3339)+"_"+userName+"_chtime.png")
-	f, _ := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
+	f, _ := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o666)
 	if err != nil {
 		return "", err
 	}
@@ -385,7 +384,7 @@ func DrawPieChartWithLocal(inputMap map[string]time.Duration, userName string) (
 
 	fileName := time.Now().Format(time.RFC3339) + "_" + userName + "_chtime.png"
 	filePath := filepath.Join(betagovar.ImagePath, fileName)
-	f, _ := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
+	f, _ := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o666)
 	defer f.Close()
 	err := pie.Render(chart.PNG, f)
 

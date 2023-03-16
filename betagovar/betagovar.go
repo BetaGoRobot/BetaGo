@@ -10,10 +10,8 @@ import (
 	"github.com/phuslu/log"
 )
 
-var (
-	// NotifierChanID 发送消息的频道ID
-	NotifierChanID = "8583973157097178"
-)
+// NotifierChanID 发送消息的频道ID
+var NotifierChanID = "8583973157097178"
 
 const (
 	TimeFormat = "2006-01-02T15:04:05"

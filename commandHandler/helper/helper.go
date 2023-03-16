@@ -70,23 +70,21 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 		return
 	}
 
-	var (
-		modules = []interface{}{
-			kook.CardMessageHeader{
-				Text: kook.CardMessageElementText{
-					Content: "遇到什么问题了吗？看看下面的命令指南吧~" + emoji.SmilingFaceWithHalo.String(),
-					Emoji:   true,
-				},
+	modules := []interface{}{
+		kook.CardMessageHeader{
+			Text: kook.CardMessageElementText{
+				Content: "遇到什么问题了吗？看看下面的命令指南吧~" + emoji.SmilingFaceWithHalo.String(),
+				Emoji:   true,
 			},
-			kook.CardMessageHeader{
-				Text: kook.CardMessageElementText{
-					Content: string(emoji.ComputerMouse) + "无参数指令:",
-					Emoji:   true,
-				},
+		},
+		kook.CardMessageHeader{
+			Text: kook.CardMessageElementText{
+				Content: string(emoji.ComputerMouse) + "无参数指令:",
+				Emoji:   true,
 			},
-			kook.CardMessageActionGroup{},
-		}
-	)
+		},
+		kook.CardMessageActionGroup{},
+	}
 	count := 0
 	for _, commandInfo := range commandInfoList {
 		count++
@@ -153,7 +151,6 @@ func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...strin
 			Modules: modules,
 		},
 	}.BuildMessage()
-
 	if err != nil {
 		err = fmt.Errorf("building cardMessage error %s", err.Error())
 		return
@@ -226,17 +223,15 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 		return
 	}
 
-	var (
-		modules = []interface{}{
-			kook.CardMessageHeader{
-				Text: kook.CardMessageElementText{
-					Content: string(emoji.ComputerMouse) + "无参数指令:",
-					Emoji:   true,
-				},
+	modules := []interface{}{
+		kook.CardMessageHeader{
+			Text: kook.CardMessageElementText{
+				Content: string(emoji.ComputerMouse) + "无参数指令:",
+				Emoji:   true,
 			},
-			kook.CardMessageActionGroup{},
-		}
-	)
+		},
+		kook.CardMessageActionGroup{},
+	}
 	count := 0
 	for _, commandInfo := range commandInfoList {
 		count++
@@ -303,7 +298,6 @@ func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string
 			Modules: modules,
 		},
 	}.BuildMessage()
-
 	if err != nil {
 		err = fmt.Errorf("building cardMessage error %s", err.Error())
 		return

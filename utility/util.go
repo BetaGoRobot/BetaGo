@@ -141,7 +141,7 @@ func Struct2Map(obj interface{}) map[string]interface{} {
 	t := reflect.TypeOf(obj)
 	v := reflect.ValueOf(obj)
 
-	var data = make(map[string]interface{})
+	data := make(map[string]interface{})
 	for i := 0; i < t.NumField(); i++ {
 		if timestamp, ok := v.Field(i).Interface().(kook.MilliTimeStamp); ok {
 			data[t.Field(i).Name] = time.Unix(int64(timestamp)/1000, 0).Format("2006-01-02 15:04:05")
@@ -154,7 +154,6 @@ func Struct2Map(obj interface{}) map[string]interface{} {
 
 // BuildCardMessageCols 创建卡片消息的列
 func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (res []interface{}, err error) {
-
 	sectionElements := []interface{}{
 		kook.CardMessageSection{
 			Text: kook.CardMessageParagraph{
@@ -193,7 +192,6 @@ func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (
 					},
 				},
 			)
-
 		} else {
 			sectionElements = append(sectionElements,
 				kook.CardMessageSection{
