@@ -1,6 +1,7 @@
 # BetaGo
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/BetaGoRobot/BetaGo)](https://goreportcard.com/report/github.com/BetaGoRobot/BetaGo) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/BetaGoRobot/BetaGo)](https://goreportcard.com/report/github.com/BetaGoRobot/BetaGo) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBetaGoRobot%2FBetaGo.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FBetaGoRobot%2FBetaGo?ref=badge_shield)
+
 [![CodeQL代码扫描](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/codeql-analysis.yml)
 [![Docker](https://github.com/BetaGoRobot/BetaGo/actions/workflows/docker-image.yml/badge.svg)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/docker-image.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/51a1e51f15aa447f91ef48f33ac0fd4b)](https://www.codacy.com/gh/BetaGoRobot/BetaGo/dashboard?utm_source=github.com&utm_medium=referral&utm_content=BetaGoRobot/BetaGo&utm_campaign=Badge_Grade)
@@ -46,3 +47,7 @@
 ![搜索音乐](https://user-images.githubusercontent.com/36391318/185683931-f95d4716-1acf-41a7-ad5f-e2a26fe2d61e.gif)
 
 ...更多示例待补全
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FBetaGoRobot%2FBetaGo.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FBetaGoRobot%2FBetaGo?ref=badge_large)
