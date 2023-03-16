@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/carlmjohnson/requests"
@@ -68,6 +69,7 @@ func (g *GPTClient) GetModels() (msg string, err error) {
 //	@receiver g
 func (g *GPTClient) Post() (msg string, err error) {
 	var resp interface{}
+	startTime := time.Now()
 	err = requests.
 		URL("https://api.openai.com/v1/chat/completions").
 		Bearer(apiKey).
@@ -80,6 +82,11 @@ func (g *GPTClient) Post() (msg string, err error) {
 	if err != nil {
 		return
 	}
+	endTime := time.Now()
+	createTime := time.Unix(int64(resp.(map[string]interface{})["created"].(float64)), 0)
+	sendingTime := createTime.Sub(startTime)
+	afterwardsTime := endTime.Sub(createTime)
+
 	res, err := jsonpath.JsonPathLookup(resp, "$.choices[0].message.content")
 	if err != nil {
 		return
@@ -92,6 +99,27 @@ func (g *GPTClient) Post() (msg string, err error) {
 	ec.Collect(err)
 	err = ec.CheckError()
 
-	msg = fmt.Sprintf("%s\n---\n本次请求消耗: \n`prompt_tokens`: **%d**\n`completion_tokens`: **%d**\n`total_tokens`: **%d**", strings.Trim(res.(string), "\n"), int(promptTokens.(float64)), int(completionTokens.(float64)), int(totalTokens.(float64)))
+	msg = fmt.Sprintf(strings.Join(
+		[]string{
+			"%s",
+			"---",
+			"请求耗时:",
+			"`sending_time_cost`: **%s**",
+			"`afterwards_time_cost`: **%s**",
+			"本次请求消耗: ",
+			"`prompt_tokens`: **%d**=￥%f",
+			"`completion_tokens`: **%d**=￥%f",
+			"`total_tokens`: **%d**=￥%f",
+		}, "\n"),
+		strings.Trim(res.(string), "\n"),
+		sendingTime.Round(time.Millisecond*100).String(),
+		afterwardsTime.Round(time.Millisecond*100).String(),
+		sendingTime.Round(time.Millisecond*100).String(),
+		int(promptTokens.(float64)),
+		promptTokens.(float64)*0.01*0.001,
+		int(completionTokens.(float64)),
+		completionTokens.(float64)*0.01*0.001,
+		int(totalTokens.(float64)),
+		totalTokens.(float64)*0.01*0.001)
 	return
 }
