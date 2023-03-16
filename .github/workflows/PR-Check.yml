@@ -37,6 +37,8 @@ jobs:
           retry_wait_seconds: 15
           command: | 
             echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login ccr.ccs.tencentyun.com -u 100016072032 --password-stdin
+      - name: Checkout
+        uses: actions/checkout@v2
       - uses: nick-fields/retry@v2
         name: build docker 
         with:
