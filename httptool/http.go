@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/heyuhengmatt/zaplog"
+	"github.com/kevinmatthe/zaplog"
 )
 
 var (

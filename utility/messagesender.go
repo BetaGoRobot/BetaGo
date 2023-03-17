@@ -3,7 +3,7 @@ package utility
 import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/enescakir/emoji"
-	"github.com/heyuhengmatt/zaplog"
+	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 )
 

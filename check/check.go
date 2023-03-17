@@ -3,7 +3,7 @@ package check
 import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/manager"
-	"github.com/heyuhengmatt/zaplog"
+	"github.com/kevinmatthe/zaplog"
 )
 
 // CheckEnv  检查环境变量

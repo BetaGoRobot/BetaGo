@@ -40,9 +40,6 @@ github.com/google/go-querystring/query
 # github.com/gorilla/websocket v1.5.0
 ## explicit; go 1.12
 github.com/gorilla/websocket
-# github.com/heyuhengmatt/zaplog v0.1.4
-## explicit; go 1.18
-github.com/heyuhengmatt/zaplog
 # github.com/jackc/pgpassfile v1.0.0
 ## explicit; go 1.12
 github.com/jackc/pgpassfile
@@ -75,12 +72,15 @@ github.com/jordan-wright/email
 # github.com/json-iterator/go v1.1.12
 ## explicit; go 1.12
 github.com/json-iterator/go
+# github.com/kevinmatthe/zaplog v0.1.6
+## explicit; go 1.20
+github.com/kevinmatthe/zaplog
 # github.com/klauspost/compress v1.15.9
 ## explicit; go 1.16
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/gzip
 github.com/klauspost/compress/zlib
-# github.com/lonelyevil/kook v0.0.31
+# github.com/lonelyevil/kook v0.0.32
 ## explicit; go 1.16
 github.com/lonelyevil/kook
 # github.com/lonelyevil/kook/log_adapter/plog v0.0.31

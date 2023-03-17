@@ -15,10 +15,10 @@ require (
 	github.com/enescakir/emoji v1.0.0
 	github.com/fasthttp/router v1.4.17
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
-	github.com/heyuhengmatt/zaplog v0.1.4
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
-	github.com/lonelyevil/kook v0.0.31
+	github.com/kevinmatthe/zaplog v0.1.6
+	github.com/lonelyevil/kook v0.0.32
 	github.com/lonelyevil/kook/log_adapter/plog v0.0.31
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/patrickmn/go-cache v2.1.0+incompatible

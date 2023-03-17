@@ -4,7 +4,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/enescakir/emoji"
-	"github.com/heyuhengmatt/zaplog"
+	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 )
 

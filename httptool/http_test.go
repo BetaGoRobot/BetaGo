@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/heyuhengmatt/zaplog"
+	"github.com/kevinmatthe/zaplog"
 )
 
 const NetEaseAPIBaseURL = "http://localhost:3335"

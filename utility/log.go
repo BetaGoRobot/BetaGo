@@ -1,6 +1,6 @@
 package utility
 
-import "github.com/heyuhengmatt/zaplog"
+import "github.com/kevinmatthe/zaplog"
 
 // var  ZapLog日志变量
 var (

@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/heyuhengmatt/zaplog"
 	"github.com/jordan-wright/email"
+	"github.com/kevinmatthe/zaplog"
 )
 
 const (

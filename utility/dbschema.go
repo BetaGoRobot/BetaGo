@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/heyuhengmatt/zaplog"
+	"github.com/kevinmatthe/zaplog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"

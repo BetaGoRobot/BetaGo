@@ -13,7 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/check"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/notifier"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/heyuhengmatt/zaplog"
+	"github.com/kevinmatthe/zaplog"
 )
 
 var (

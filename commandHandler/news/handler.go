@@ -13,7 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/enescakir/emoji"
-	"github.com/heyuhengmatt/zaplog"
+	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 	"github.com/patrickmn/go-cache"
 )
