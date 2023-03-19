@@ -27,7 +27,7 @@ func ClientHandler(targetID, quoteID, authorID string, args ...string) (err erro
 			Modules: []interface{}{
 				kook.CardMessageHeader{
 					Text: kook.CardMessageElementText{
-						Content: string(emoji.BeerMug) + "GPT来帮你",
+						Content: emoji.Robot.String() + "GPT来帮你",
 						Emoji:   false,
 					},
 				},

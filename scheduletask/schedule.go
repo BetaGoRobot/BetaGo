@@ -112,31 +112,37 @@ func OnlineTest() {
 		once.Do(func() {
 			time.Sleep(time.Second * 5)
 		})
-		resp, err := betagovar.GlobalSession.MessageCreate(
-			&kook.MessageCreate{
-				MessageCreateBase: kook.MessageCreateBase{
-					Type:     kook.MessageTypeText,
-					TargetID: betagovar.TestChanID,
-					Content:  betagovar.SelfCheckMessage,
-				},
-			})
-		if err != nil {
-			fmt.Println("Cannot send message, killing...")
-			os.Exit(-1)
-		}
-		time.Sleep(time.Second * 10)
-		select {
-		case <-betagovar.SelfCheckChan:
-			fmt.Println("Self check successful")
-		default:
-			fmt.Println("Self check failed")
-			os.Exit(-1)
-		}
-		err = betagovar.GlobalSession.MessageDelete(resp.MsgID)
+		selfCheckInner()
+	}
+}
+
+func selfCheckInner() {
+	resp, err := betagovar.GlobalSession.MessageCreate(
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeText,
+				TargetID: betagovar.TestChanID,
+				Content:  betagovar.SelfCheckMessage,
+			},
+		})
+	if err != nil {
+		fmt.Println("Cannot send message, killing...", err.Error())
+		os.Exit(-1)
+	}
+	defer func(msgID string) {
+		err = betagovar.GlobalSession.MessageDelete(msgID)
 		if err != nil {
 			fmt.Println("Cannot delete sent message, killing...")
 			os.Exit(-1)
 		}
-		time.Sleep(time.Minute * 5)
+	}(resp.MsgID)
+	time.Sleep(time.Second * 10)
+	select {
+	case <-betagovar.SelfCheckChan:
+		fmt.Println("Self check successful")
+	default:
+		fmt.Println("Self check failed")
+		panic("self check failed")
 	}
+	time.Sleep(time.Second * 10)
 }
