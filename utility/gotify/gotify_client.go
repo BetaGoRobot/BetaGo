@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/gotify/go-api-client/v2/auth"
 	"github.com/gotify/go-api-client/v2/client"
 	"github.com/gotify/go-api-client/v2/client/message"
@@ -29,6 +30,9 @@ func init() {
 }
 
 func SendMessage(title, msg string, priority int) {
+	if betagovar.IsTest {
+		return
+	}
 	if title == "" {
 		title = "BetaGo Notification"
 	}
