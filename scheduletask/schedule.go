@@ -11,11 +11,15 @@ import (
 	"github.com/BetaGoRobot/BetaGo/commandHandler/dailyrate"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/news"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/lonelyevil/kook"
+	"github.com/patrickmn/go-cache"
 )
 
 var once = &sync.Once{}
+
+var SelfCheckCache = cache.New(time.Minute*30, time.Minute)
 
 // HourlyGetSen 每小时发送
 func HourlyGetSen() {
@@ -137,13 +141,20 @@ func selfCheckInner() {
 			os.Exit(-1)
 		}
 	}(resp.MsgID)
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 15)
 	select {
 	case <-betagovar.SelfCheckChan:
-		fmt.Println("Self check successful")
+		utility.ZapLogger.Info("Self check successful")
 	default:
-		gotify.SendMessage("", "Self check failed, will kill itself and restart...", 7)
-		panic("self check failed")
+		if cnt, ok := SelfCheckCache.Get("selfcheck"); ok {
+			if cnt.(int) > 3 {
+				gotify.SendMessage("", "Self check failed, will kill itself and restart...", 7)
+				panic("self check failed")
+			}
+			SelfCheckCache.Set("selfcheck", cnt.(int)+1, time.Minute*30)
+		} else {
+			SelfCheckCache.Set("selfcheck", int(0), time.Minute*30)
+		}
 	}
-	time.Sleep(time.Minute * 10)
+	time.Sleep(time.Minute * 5)
 }
