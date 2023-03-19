@@ -38,7 +38,9 @@ var commandMapping = map[string]CommandContextFunc{
 }
 
 var commandMappingWithGuildID = map[string]CommandContextWithGuildIDFunc{
-	CommandContextTypeUser:        helper.GetUserInfoHandler,
-	CommandContextTypeCal:         cal.ShowCalHandler,
-	betagovar.ShortCommandShowCal: cal.ShowCalHandler,
+	CommandContextTypeUser:             helper.GetUserInfoHandler,
+	CommandContextTypeCal:              cal.ShowCalHandler,
+	CommandContextTypeCalLocal:         cal.ShowCalLocalHandler,
+	betagovar.ShortCommandShowCalLocal: cal.ShowCalLocalHandler,
+	betagovar.ShortCommandShowCal:      cal.ShowCalHandler,
 }

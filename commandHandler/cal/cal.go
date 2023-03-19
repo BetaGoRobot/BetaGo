@@ -209,6 +209,75 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 	return
 }
 
+func ShowCalLocalHandler(targetID, msgID, authorID, guildID string, args ...string) (err error) {
+	var (
+		userInfo      *kook.User
+		cardContainer kook.CardMessageContainer
+	)
+	if args != nil {
+		// 含参数，则获取参数中用户的时间分布
+		for _, arg := range args {
+			userID := strings.Trim(arg, "(met)")
+			userInfo, err = utility.GetUserInfo(userID, guildID)
+			if err != nil {
+				return
+			}
+			// 尝试使用本地绘图
+			URL, err := DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+			if err != nil {
+				return err
+			}
+			errorsender.SendErrorInfo(targetID, msgID, authorID, err)
+			cardContainer = append(cardContainer,
+				kook.CardMessageElementImage{
+					Src:  URL,
+					Size: string(kook.CardSizeLg),
+				},
+			)
+		}
+	} else {
+		// 无参数，则获取当前用户的时间分布
+		userInfo, err = utility.GetUserInfo(authorID, guildID)
+		if err != nil {
+			return
+		}
+		URL, tmpErr := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+		if tmpErr != nil {
+			// 尝试使用本地绘图
+			URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+			if err != nil {
+				return err
+			}
+			errorsender.SendErrorInfo(targetID, msgID, authorID, tmpErr)
+		}
+		cardContainer = append(cardContainer,
+			kook.CardMessageElementImage{
+				Src:  URL,
+				Size: string(kook.CardSizeLg),
+			},
+		)
+	}
+	cardMessageStr, err := kook.CardMessage{&kook.CardMessageCard{
+		Theme: kook.CardThemeInfo,
+		Size:  kook.CardSizeLg,
+		Modules: []interface{}{
+			cardContainer,
+		},
+	}}.BuildMessage()
+	if err != nil {
+		return
+	}
+	_, err = betagovar.GlobalSession.MessageCreate(&kook.MessageCreate{
+		MessageCreateBase: kook.MessageCreateBase{
+			Type:     kook.MessageTypeCard,
+			TargetID: targetID,
+			Content:  cardMessageStr,
+			Quote:    msgID,
+		},
+	})
+	return
+}
+
 // GetUserChannelTimeMap 获取用户在频道的时间
 //
 //	@param userID

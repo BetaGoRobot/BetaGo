@@ -9,6 +9,7 @@ const (
 	CommandContextTypeShowAdmin   = "SHOWADMIN"
 	CommandContextTypeDeleteAll   = "DELETEALL"
 	CommandContextTypeCal         = "SHOWCAL"
+	CommandContextTypeCalLocal    = "SHOWCALLOCAL"
 	CommandContextTypeHelper      = "HELP"
 	CommandContextTypeHitokoto    = "ONEWORD"
 	CommandContextTypeMusic       = "SEARCHMUSIC"
