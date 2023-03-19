@@ -31,7 +31,7 @@ func CollectPanic(ctx interface{}, TargetID, QuoteID, UserID string) {
 				emoji.Warning.String()),
 			strings.ReplaceAll(fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%s`\n```go\n%s```\nRecord:\n```json\n%s\n```",
 				TargetID, err, removeSensitiveInfo(debug.Stack()), JSONStr), "\n", "\n\n"),
-			9)
+			7)
 		if TargetID != betagovar.TestChanID {
 			SendMessageWithTitle(TargetID, QuoteID, UserID,
 				fmt.Sprintf("ErrorMsg: `%v`\n`%v`\n",

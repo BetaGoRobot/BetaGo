@@ -142,7 +142,7 @@ func selfCheckInner() {
 	case <-betagovar.SelfCheckChan:
 		fmt.Println("Self check successful")
 	default:
-		gotify.SendMessage("", "Self check failed, will kill itself and restart...", 9)
+		gotify.SendMessage("", "Self check failed, will kill itself and restart...", 7)
 		panic("self check failed")
 	}
 	time.Sleep(time.Minute * 10)

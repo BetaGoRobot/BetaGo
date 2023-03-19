@@ -54,5 +54,5 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error) {
 		},
 		// TempTargetID: authorID,
 	})
-	gotify.SendMessage(emoji.Warning.String()+"CommandError", sourceErr.Error(), 8)
+	gotify.SendMessage(emoji.Warning.String()+"CommandError", sourceErr.Error(), 6)
 }
