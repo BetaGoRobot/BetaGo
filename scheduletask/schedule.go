@@ -124,7 +124,7 @@ func OnlineTest() {
 			fmt.Println("Cannot send message, killing...")
 			os.Exit(-1)
 		}
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 10)
 		select {
 		case <-betagovar.SelfCheckChan:
 			fmt.Println("Self check successful")
