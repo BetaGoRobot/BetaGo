@@ -116,7 +116,7 @@ func OnlineTest() {
 			&kook.MessageCreate{
 				MessageCreateBase: kook.MessageCreateBase{
 					Type:     kook.MessageTypeText,
-					TargetID: betagovar.NotifierChanID,
+					TargetID: betagovar.TestChanID,
 					Content:  betagovar.SelfCheckMessage,
 				},
 			})
