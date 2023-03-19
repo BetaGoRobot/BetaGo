@@ -11,6 +11,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/commandHandler/dailyrate"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/news"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
+	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/lonelyevil/kook"
 )
 
@@ -141,8 +142,8 @@ func selfCheckInner() {
 	case <-betagovar.SelfCheckChan:
 		fmt.Println("Self check successful")
 	default:
-		fmt.Println("Self check failed")
+		gotify.SendMessage("", "Self check failed, will kill itself and restart...", 9)
 		panic("self check failed")
 	}
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Minute * 10)
 }

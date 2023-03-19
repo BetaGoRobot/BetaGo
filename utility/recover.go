@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -20,9 +21,23 @@ func CollectPanic(ctx interface{}, TargetID, QuoteID, UserID string) {
 		JSONStr := ForceMarshalJSON(ctx)
 		SendEmail("Panic-Collected!", fmt.Sprintf("%v\n%s", string(debug.Stack()), JSONStr))
 		// 测试频道不用脱敏
-		SendMessageWithTitle(betagovar.TestChanID, "", "", fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%v`\n`%v`\nRecord: `%s`", TargetID, err, string(debug.Stack()), JSONStr), fmt.Sprintf("%s Panic-Collected!", emoji.Warning.String()))
+		SendMessageWithTitle(betagovar.TestChanID, "", "",
+			fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%s`\n\n```go\n%s```\nRecord:\n\n```json\n%s\n```",
+				TargetID, err, removeSensitiveInfo(debug.Stack()), JSONStr),
+			fmt.Sprintf("%s Panic-Collected!",
+				emoji.Warning.String()))
+		gotify.SendMessage(
+			fmt.Sprintf("%s Panic-Collected!",
+				emoji.Warning.String()),
+			strings.ReplaceAll(fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%s`\n```go\n%s```\nRecord:\n```json\n%s\n```",
+				TargetID, err, removeSensitiveInfo(debug.Stack()), JSONStr), "\n", "\n\n"),
+			9)
 		if TargetID != betagovar.TestChanID {
-			SendMessageWithTitle(TargetID, QuoteID, UserID, fmt.Sprintf("ErrorMsg: `%v`\n`%v`\n", err, removeSensitiveInfo(debug.Stack())), fmt.Sprintf("%s Panic-Collected!请联系开发者", emoji.Warning.String()))
+			SendMessageWithTitle(TargetID, QuoteID, UserID,
+				fmt.Sprintf("ErrorMsg: `%v`\n`%v`\n",
+					err, removeSensitiveInfo(debug.Stack())),
+				fmt.Sprintf("%s Panic-Collected!请联系开发者",
+					emoji.Warning.String()))
 		}
 		SugerLogger.Errorf("=====Panic====== %s", string(debug.Stack()))
 	}
@@ -38,7 +53,7 @@ func removeSensitiveInfo(stack []byte) string {
 			break
 		}
 		if b == '\n' {
-			if leftIndex, rightIndex := strings.Index(string(buf), "("), strings.Index(string(buf), ")"); leftIndex+1 != rightIndex {
+			if leftIndex, rightIndex := strings.LastIndex(string(buf), "("), strings.LastIndex(string(buf), ")"); leftIndex+1 != rightIndex {
 				if leftIndex != -1 && rightIndex != -1 {
 					temp := buf[:leftIndex+1]
 					temp = append(temp, buf[rightIndex:]...)

@@ -3,6 +3,7 @@ package errorsender
 import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
@@ -20,7 +21,7 @@ var (
 //	@param QuoteID 引用ID
 //	@param authorID 作者ID
 //	@param err 错误信息
-func SendErrorInfo(targetID, QuoteID, authorID string, err error) {
+func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error) {
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
 			Theme: "danger",
@@ -34,14 +35,14 @@ func SendErrorInfo(targetID, QuoteID, authorID string, err error) {
 				},
 				kook.CardMessageSection{
 					Text: kook.CardMessageElementKMarkdown{
-						Content: err.Error(),
+						Content: sourceErr.Error(),
 					},
 				},
 			},
 		},
 	}.BuildMessage()
 	if err != nil {
-		ZapLogger.Error("SendErrorInfo", zaplog.Error(err))
+		ZapLogger.Error("SendErrorInfo", zaplog.Error(sourceErr))
 		return
 	}
 	betagovar.GlobalSession.MessageCreate(&kook.MessageCreate{
@@ -53,4 +54,5 @@ func SendErrorInfo(targetID, QuoteID, authorID string, err error) {
 		},
 		// TempTargetID: authorID,
 	})
+	gotify.SendMessage(emoji.Warning.String()+"CommandError", sourceErr.Error(), 8)
 }
