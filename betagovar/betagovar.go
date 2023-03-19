@@ -10,12 +10,13 @@ import (
 	"github.com/phuslu/log"
 )
 
+// NotifierChanID 发送消息的频道ID
+var NotifierChanID = "8583973157097178"
+
 const (
 	TimeFormat = "2006-01-02T15:04:05"
 	// BetaGoUpdateChanID  发送更新消息的频道ID
 	BetaGoUpdateChanID = "8937461610423450"
-	// NotifierChanID 发送消息的频道ID
-	NotifierChanID = "8583973157097178"
 
 	// ImagePath 图片存储路径
 	ImagePath = "/data/images"
