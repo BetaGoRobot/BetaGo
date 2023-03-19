@@ -164,7 +164,7 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 
 func messageEventHandler(ctx *kook.KmarkdownMessageContext) {
 	go func() {
-		if ctx.Common.Type != kook.MessageTypeKMarkdown || ctx.Extra.Author.Bot {
+		if ctx.Common.Type != kook.MessageTypeKMarkdown {
 			return
 		}
 		defer wordcontrol.RemoveDirtyWords(ctx)

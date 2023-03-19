@@ -16,6 +16,13 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 //
 //	@param ctx
 func CommandHandler(ctx *kook.KmarkdownMessageContext) {
+	// 配合每分钟自我健康检查，接收到指定消息写入chan
+	if ctx.Common.Content == betagovar.SelfCheckMessage {
+		betagovar.SelfCheckChan <- "ok"
+	}
+	if ctx.Extra.Author.Bot {
+		return
+	}
 	// 判断是否被at到,且消息不是引用/回复
 	if !utility.IsInSlice(betagovar.RobotID, ctx.Extra.Mention) &&
 		!strings.Contains(ctx.Common.Content, betagovar.RobotID) &&

@@ -2,6 +2,8 @@ package scheduletask
 
 import (
 	"fmt"
+	"os"
+	"sync"
 	"time"
 
 	betagovar "github.com/BetaGoRobot/BetaGo/betagovar"
@@ -11,6 +13,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/lonelyevil/kook"
 )
+
+var once = &sync.Once{}
 
 // HourlyGetSen 每小时发送
 func HourlyGetSen() {
@@ -29,7 +33,7 @@ func HourlyGetSen() {
 // DailyRecommand 每日发送歌曲推荐
 func DailyRecommand() {
 	for {
-		time.Sleep(time.Hour)
+		time.Sleep(time.Minute)
 		if time.Now().UTC().Format("15") == "00" {
 			res, err := neteaseapi.NetEaseGCtx.GetNewRecommendMusic()
 			if err != nil {
@@ -49,7 +53,7 @@ func DailyRecommand() {
 						Content string "json:\"content\""
 					}{"plain-text", "每日8点-音乐推荐~"},
 				})
-				messageType = 10
+				messageType = kook.MessageTypeCard
 				for _, song := range res {
 					modules = append(modules, betagovar.CardMessageModule{
 						Type:  "audio",
@@ -87,7 +91,7 @@ func DailyRecommand() {
 // DailyRate 每日排行
 func DailyRate() {
 	for {
-		time.Sleep(time.Hour)
+		time.Sleep(time.Minute)
 		if time.Now().UTC().Format("15") == "00" {
 			dailyrate.GetRateHandler("3241026226723225", "", "")
 		}
@@ -96,9 +100,43 @@ func DailyRate() {
 
 func DailyNews() {
 	for {
-		time.Sleep(time.Hour)
+		time.Sleep(time.Minute)
 		if time.Now().UTC().Format("15") == "00" {
 			news.Handler("3241026226723225", "", "")
 		}
+	}
+}
+
+func OnlineTest() {
+	for {
+		once.Do(func() {
+			time.Sleep(time.Second * 5)
+		})
+		resp, err := betagovar.GlobalSession.MessageCreate(
+			&kook.MessageCreate{
+				MessageCreateBase: kook.MessageCreateBase{
+					Type:     kook.MessageTypeText,
+					TargetID: betagovar.NotifierChanID,
+					Content:  betagovar.SelfCheckMessage,
+				},
+			})
+		if err != nil {
+			fmt.Println("Cannot send message, killing...")
+			os.Exit(-1)
+		}
+		time.Sleep(time.Second * 3)
+		select {
+		case <-betagovar.SelfCheckChan:
+			fmt.Println("Self check successful")
+		default:
+			fmt.Println("Self check failed")
+			os.Exit(-1)
+		}
+		err = betagovar.GlobalSession.MessageDelete(resp.MsgID)
+		if err != nil {
+			fmt.Println("Cannot delete sent message, killing...")
+			os.Exit(-1)
+		}
+		time.Sleep(time.Minute * 5)
 	}
 }

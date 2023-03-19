@@ -32,6 +32,9 @@ const (
 	DBHostCluster = "host=kubernetes.default"
 	// DBHostTest 本地测试的PGHost
 	DBHostTest = "host=localhost"
+
+	// SelfCheckMessage 自我健康检查
+	SelfCheckMessage = "self check message"
 )
 
 // CardMessageModule khl cardmessage
@@ -63,6 +66,9 @@ type CardMessageColModule struct {
 		}
 	}
 }
+
+// SelfCheckChan 自我检查通道
+var SelfCheckChan = make(chan string, 1)
 
 // GlobalSession 全局共享session
 var GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
