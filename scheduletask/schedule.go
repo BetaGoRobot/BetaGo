@@ -21,6 +21,8 @@ var once = &sync.Once{}
 
 var SelfCheckCache = cache.New(time.Minute*30, time.Minute)
 
+var DailyTaskCache = cache.New(time.Hour*3, time.Minute)
+
 // HourlyGetSen 每小时发送
 func HourlyGetSen() {
 	for {
@@ -39,6 +41,9 @@ func HourlyGetSen() {
 func DailyRecommand() {
 	for {
 		time.Sleep(time.Minute)
+		if getOrSetCache("DailyRecommand") {
+			continue
+		}
 		if time.Now().UTC().Format("15") == "00" {
 			res, err := neteaseapi.NetEaseGCtx.GetNewRecommendMusic()
 			if err != nil {
@@ -97,15 +102,29 @@ func DailyRecommand() {
 func DailyRate() {
 	for {
 		time.Sleep(time.Minute)
+		if getOrSetCache("DailyRate") {
+			continue
+		}
 		if time.Now().UTC().Format("15") == "00" {
 			dailyrate.GetRateHandler("3241026226723225", "", "")
 		}
 	}
 }
 
+func getOrSetCache(key string) bool {
+	if _, ok := DailyTaskCache.Get(key); ok {
+		return true
+	}
+	DailyTaskCache.Set(key, 1, time.Hour*3)
+	return false
+}
+
 func DailyNews() {
 	for {
 		time.Sleep(time.Minute)
+		if getOrSetCache("DailyNews") {
+			continue
+		}
 		if time.Now().UTC().Format("15") == "00" {
 			news.Handler("3241026226723225", "", "")
 		}
