@@ -7,6 +7,7 @@ import (
 	"time"
 
 	betagovar "github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/betagovar/env"
 	command_context "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/dailyrate"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/news"
@@ -160,7 +161,7 @@ func selfCheckInner() {
 			os.Exit(-1)
 		}
 	}(resp.MsgID)
-	time.Sleep(time.Second * 15)
+	time.Sleep(time.Second * 30)
 	select {
 	case <-betagovar.SelfCheckChan:
 		utility.ZapLogger.Info("Self check successful")
@@ -175,5 +176,5 @@ func selfCheckInner() {
 			SelfCheckCache.Set("selfcheck", int(0), time.Minute*30)
 		}
 	}
-	time.Sleep(time.Minute * 5)
+	time.Sleep(time.Minute * time.Duration(utility.MustAtoI(env.CheckPeriod)))
 }
