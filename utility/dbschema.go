@@ -77,8 +77,8 @@ func init() {
 	sqlDb.SetMaxOpenConns(5)
 	sqlDb.SetConnMaxLifetime(time.Minute * 10)
 
-	// 启动时，清空所有的超时Channel log
-	db.Model(&ChannelLogExt{}).Where("left_time < joined_time").Delete(&ChannelLogExt{})
+	// // 启动时，清空所有的超时Channel log
+	// db.Model(&ChannelLogExt{}).Where("left_time < joined_time").Delete(&ChannelLogExt{})
 
 	// // 标记所有update为true
 	// db.Model(&ChannelLogExt{}).Where("is_update = false").Update("is_update", true).Debug()
