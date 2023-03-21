@@ -1,10 +1,12 @@
 package notifier
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/betagovar/env"
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/scheduletask"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
@@ -38,8 +40,8 @@ func StartUpMessage(session *kook.Session) (err error) {
 				"Name: \t**", betagovar.RobotName, "**\n",
 				"Time: \t**", time.Now().Add(time.Hour * 8).Local().Format("2006-01-02 15:04:05"), "**\n",
 				"IP: \t**", currentIP, "**\n",
-				"Message: \t**" + betagovar.CommitMessage + "**\n",
-				"Commit-Page: \t[CommitPage](", betagovar.HTMLURL, ")\n",
+				"Message: \t**" + env.GitCommitMessage + "**\n",
+				"Commit-Page: \t[CommitPage](", fmt.Sprintf("https://github.com/BetaGoRobot/BetaGo/commit/%s", env.GithubSha), ")\n",
 				"LeaveYourCommentHere: \t[CommentPage](", betagovar.CommentsURL, ")\n",
 			},
 			"")

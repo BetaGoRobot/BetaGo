@@ -68,6 +68,8 @@ jobs:
              --build-arg NEWS_API_KEY=${{ secrets.NEWS_API_KEY }} \
              --build-arg GOTIFY_URL=${{ secrets.GOTIFY_URL }} \
              --build-arg GOTIFY_APPLICATION_TOKEN=${{ secrets.GOTIFY_APPLICATION_TOKEN }} \
+             --build-arg GITHUB_SHA=$GITHUB_SHA \
+             --build-arg GIT_COMMIT_MESSAGE=$(git log -1 --pretty=%B $GITHUB_SHA) \
              . \
              --file scripts/Dockerfile \
              --tag $IMAGE_NAME
