@@ -14,6 +14,7 @@ import (
 func GetCommandWithParameters(rawCommand string) (command string, params []string) {
 	trueContent := strings.TrimSpace(rawCommand) // test
 	trueContent = strings.Replace(trueContent, betagovar.CommandPrefix, "", 1)
+	trueContent = strings.ReplaceAll(trueContent, "  ", " ")
 	trueContent = strings.Trim(trueContent, ".")
 	trueContent = strings.TrimSpace(trueContent)
 	// 解析得到不包含At机器人的信息的实际内容
