@@ -179,6 +179,7 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 			if err != nil {
 				return err
 			}
+			errorsender.SendErrorInfo(targetID, msgID, authorID, tmpErr)
 		}
 		cardContainer = append(cardContainer,
 			kook.CardMessageElementImage{
@@ -226,7 +227,6 @@ func ShowCalLocalHandler(targetID, msgID, authorID, guildID string, args ...stri
 			if err != nil {
 				return err
 			}
-			errorsender.SendErrorInfo(targetID, msgID, authorID, err)
 			cardContainer = append(cardContainer,
 				kook.CardMessageElementImage{
 					Src:  URL,
@@ -240,14 +240,9 @@ func ShowCalLocalHandler(targetID, msgID, authorID, guildID string, args ...stri
 		if err != nil {
 			return
 		}
-		URL, tmpErr := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
-		if tmpErr != nil {
-			// 尝试使用本地绘图
-			URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
-			if err != nil {
-				return err
-			}
-			errorsender.SendErrorInfo(targetID, msgID, authorID, tmpErr)
+		URL, err := DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+		if err != nil {
+			return err
 		}
 		cardContainer = append(cardContainer,
 			kook.CardMessageElementImage{
