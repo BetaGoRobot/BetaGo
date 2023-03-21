@@ -5,6 +5,7 @@ const (
 	ShortCommandShowCal      = "SC"
 	ShortCommandShowCalLocal = "SCL"
 	ShortCommandShowAdmin    = "SA"
+	ShortCommandReconnect    = "RC"
 	ShortCommandAddAdmin     = "AA"
 	ShortCommandRemoveAdmin  = "RA"
 	ShortCommandHelp         = "H"

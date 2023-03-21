@@ -25,7 +25,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phuslu/log v1.0.83
 	github.com/prometheus/client_golang v1.14.0
-	github.com/spyzhov/ajson v0.7.2
+	github.com/spyzhov/ajson v0.8.0
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/wcharczuk/go-chart/v2 v2.1.0
 	gorm.io/driver/postgres v1.5.0
@@ -87,7 +87,7 @@ require (
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
-	google.golang.org/protobuf v1.29.1 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

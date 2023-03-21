@@ -1,7 +1,7 @@
 package env
 
 // CheckPeriod  1
-var CheckPeriod = GetEnvWithDefault("CHECK_PERIOD", "15")
+var CheckPeriod = GetEnvWithDefault("CHECK_PERIOD", "5")
 
 // GithubSha  1
 var GithubSha = GetEnvWithDefault("GITHUB_SHA", "")

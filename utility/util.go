@@ -214,3 +214,20 @@ func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (
 	res = sectionElements
 	return
 }
+
+// Reconnect 重建链接
+func Reconnect() (err error) {
+	betagovar.GlobalSession.Close()
+	time.Sleep(100 * time.Millisecond)
+	err = betagovar.GlobalSession.Open()
+	retryCnt := 0
+	for err != nil {
+		time.Sleep(100 * time.Millisecond)
+		err = betagovar.GlobalSession.Open()
+		if retryCnt++; retryCnt == 5 {
+			return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
+		}
+	}
+	ZapLogger.Info("Reconnecting successfully")
+	return
+}

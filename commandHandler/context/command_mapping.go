@@ -24,6 +24,8 @@ var commandMapping = map[string]CommandContextFunc{
 	betagovar.ShortCommandShowAdmin:   admin.ShowAdminHandler,
 	CommandContextTypeShowAdmin:       admin.ShowAdminHandler,
 	CommandContextTypeDeleteAll:       admin.DeleteAllMessageHandler,
+	CommandContextReconnect:           admin.ReconnectHandler,
+	betagovar.ShortCommandReconnect:   admin.ReconnectHandler,
 	CommandContextTypeRoll:            roll.RandRollHandler,
 	betagovar.ShortCommandRoll:        roll.RandRollHandler,
 	CommandContextTypeGPT:             gpt3.ClientHandler,

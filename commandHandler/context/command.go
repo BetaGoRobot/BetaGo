@@ -8,6 +8,7 @@ const (
 	CommandContextTypeRemoveAdmin = "REMOVEADMIN"
 	CommandContextTypeShowAdmin   = "SHOWADMIN"
 	CommandContextTypeDeleteAll   = "DELETEALL"
+	CommandContextReconnect       = "RECONNECT"
 	CommandContextTypeCal         = "SHOWCAL"
 	CommandContextTypeCalLocal    = "SHOWCALLOCAL"
 	CommandContextTypeHelper      = "HELP"

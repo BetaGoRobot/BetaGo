@@ -99,7 +99,11 @@ func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err er
 		for _, arg := range args {
 			userID := strings.Trim(arg, "(met)")
 			// 先检验是否存在
-			if utility.GetDbConnection().Table("betago.administrators").Where("user_id = ?", utility.MustAtoI(userID)).Find(&utility.Administrator{}).RowsAffected != 0 {
+			if utility.GetDbConnection().
+				Table("betago.administrators").
+				Where("user_id = ?", utility.MustAtoI(userID)).
+				Find(&utility.Administrator{}).
+				RowsAffected != 0 {
 				// 存在则不处理，返回信息
 				return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 已经是管理员了`, userID))
 			}
@@ -266,6 +270,10 @@ func DeleteAllMessageHandler(TargetID, QuoteID, authorID string, args ...string)
 		ec         utility.ErrorCollector
 		messageNum int
 	)
+	if !utility.CheckIsAdmin(authorID) {
+		// 不存在则不处理，返回信息
+		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))
+	}
 	defer cleaupData()
 	if len(args) != 0 {
 		messageNum, err = strconv.Atoi(args[0])
@@ -304,4 +312,19 @@ func DeleteAllMessageHandler(TargetID, QuoteID, authorID string, args ...string)
 		}
 	}
 	return ec.CheckError()
+}
+
+// ReconnectHandler 重连
+//
+//	@param TargetID
+//	@param QuoteID
+//	@param authorID
+//	@param args
+//	@return err
+func ReconnectHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
+	if !utility.CheckIsAdmin(authorID) {
+		// 不存在则不处理，返回信息
+		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))
+	}
+	return utility.Reconnect()
 }

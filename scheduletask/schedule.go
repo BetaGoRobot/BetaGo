@@ -167,9 +167,10 @@ func selfCheckInner() {
 		utility.ZapLogger.Info("Self check successful")
 	default:
 		if cnt, ok := SelfCheckCache.Get("selfcheck"); ok {
+			utility.Reconnect()
 			if cnt.(int) > 3 {
 				gotify.SendMessage("", "Self check failed, will kill itself and restart...", 7)
-				panic("self check failed")
+				panic("self check failed too many times...")
 			}
 			SelfCheckCache.Set("selfcheck", cnt.(int)+1, time.Minute*30)
 		} else {
