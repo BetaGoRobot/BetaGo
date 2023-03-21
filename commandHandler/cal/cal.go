@@ -179,7 +179,6 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 			if err != nil {
 				return err
 			}
-			errorsender.SendErrorInfo(targetID, msgID, authorID, tmpErr)
 		}
 		cardContainer = append(cardContainer,
 			kook.CardMessageElementImage{
