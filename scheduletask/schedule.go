@@ -42,10 +42,10 @@ func HourlyGetSen() {
 func DailyRecommand() {
 	for {
 		time.Sleep(time.Minute)
-		if getOrSetCache("DailyRecommand") {
-			continue
-		}
 		if time.Now().UTC().Format("15") == "00" {
+			if getOrSetCache("DailyRecommand") {
+				continue
+			}
 			res, err := neteaseapi.NetEaseGCtx.GetNewRecommendMusic()
 			if err != nil {
 				fmt.Println("--------------", err.Error())
@@ -103,10 +103,10 @@ func DailyRecommand() {
 func DailyRate() {
 	for {
 		time.Sleep(time.Minute)
-		if getOrSetCache("DailyRate") {
-			continue
-		}
 		if time.Now().UTC().Format("15") == "00" {
+			if getOrSetCache("DailyRate") {
+				continue
+			}
 			dailyrate.GetRateHandler("3241026226723225", "", "")
 		}
 	}
@@ -123,10 +123,10 @@ func getOrSetCache(key string) bool {
 func DailyNews() {
 	for {
 		time.Sleep(time.Minute)
-		if getOrSetCache("DailyNews") {
-			continue
-		}
 		if time.Now().UTC().Format("15") == "00" {
+			if getOrSetCache("DailyNews") {
+				continue
+			}
 			news.Handler("3241026226723225", "", "")
 		}
 	}
