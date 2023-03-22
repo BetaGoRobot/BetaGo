@@ -2,6 +2,7 @@ package errorsender
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -40,7 +41,8 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx cont
 				},
 				kook.CardMessageSection{
 					Text: kook.CardMessageElementKMarkdown{
-						Content: "请联系开发者并提供此ID\nTraceID: `" + span.SpanContext().TraceID().String() + "`",
+						Content: "请联系开发者并提供此ID\nTraceID: `" + span.SpanContext().TraceID().String() + "`\n" + fmt.Sprintf("[TraceURL](http://jaeger.kevinmatt.top/trace/%s)",
+							span.SpanContext().TraceID().String()),
 					},
 				},
 			},

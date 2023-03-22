@@ -29,7 +29,11 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 		SendEmail("Panic-Collected!", fmt.Sprintf("%v\n%s", string(debug.Stack()), JSONStr))
 		// // 测试频道不用脱敏
 		SendMessageWithTitle(betagovar.TestChanID, "", "",
-			fmt.Sprintf(emoji.ExclamationMark.String()+"发生Panic, 请保存此ID提供给开发者\nTraceID: "+span.SpanContext().TraceID().String()),
+			emoji.ExclamationMark.String()+
+				"发生Panic, 请保存此ID提供给开发者\nTraceID: `"+
+				span.SpanContext().TraceID().String()+"`\n"+
+				fmt.Sprintf("[TraceURL](http://jaeger.kevinmatt.top/trace/%s)",
+					span.SpanContext().TraceID().String()),
 			fmt.Sprintf("%s Panic-Collected!",
 				emoji.Warning.String()))
 		gotify.SendMessage(
