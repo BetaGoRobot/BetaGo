@@ -24,25 +24,27 @@ var SelfCheckCache = cache.New(time.Minute*30, time.Minute)
 
 var DailyTaskCache = cache.New(time.Hour*3, time.Minute)
 
-// HourlyGetSen 每小时发送
-func HourlyGetSen() {
+// DailyGetSen 每小时发送
+func DailyGetSen() {
 	for {
-		time.Sleep(time.Hour)
-		commandCtx := &command_context.CommandContext{
-			Common: &command_context.CommandCommonContext{
-				TargetID: "3241026226723225",
-			},
-			Extra: &command_context.CommandExtraContext{},
+		time.Sleep(time.Second * 30)
+		if time.Now().UTC().Format("15:04") == "00:00" {
+			commandCtx := &command_context.CommandContext{
+				Common: &command_context.CommandCommonContext{
+					TargetID: "3241026226723225",
+				},
+				Extra: &command_context.CommandExtraContext{},
+			}
+			commandCtx.ContextHandler("hitokoto")
 		}
-		commandCtx.ContextHandler("hitokoto")
 	}
 }
 
 // DailyRecommand 每日发送歌曲推荐
 func DailyRecommand() {
 	for {
-		time.Sleep(time.Minute)
-		if time.Now().UTC().Format("15") == "00" {
+		time.Sleep(time.Second * 30)
+		if time.Now().UTC().Format("15:04") == "00:00" {
 			if getOrSetCache("DailyRecommand") {
 				continue
 			}
@@ -102,8 +104,8 @@ func DailyRecommand() {
 // DailyRate 每日排行
 func DailyRate() {
 	for {
-		time.Sleep(time.Minute)
-		if time.Now().UTC().Format("15") == "00" {
+		time.Sleep(time.Second * 30)
+		if time.Now().UTC().Format("15:04") == "00:00" {
 			if getOrSetCache("DailyRate") {
 				continue
 			}

@@ -21,6 +21,7 @@ func StartAutoService() {
 	go scheduletask.DailyRate()
 	go scheduletask.DailyNews()
 	go scheduletask.OnlineTest()
+	go scheduletask.DailyGetSen()
 }
 
 // StartUpMessage  启动时的消息
