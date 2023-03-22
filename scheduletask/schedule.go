@@ -139,6 +139,7 @@ func OnlineTest() {
 			time.Sleep(time.Second * 5)
 		})
 		selfCheckInner()
+		time.Sleep(time.Minute * time.Duration(utility.MustAtoI(env.CheckPeriod)))
 	}
 }
 
@@ -178,5 +179,4 @@ func selfCheckInner() {
 			SelfCheckCache.Set("selfcheck", int(0), time.Minute*30)
 		}
 	}
-	time.Sleep(time.Minute * time.Duration(utility.MustAtoI(env.CheckPeriod)))
 }
