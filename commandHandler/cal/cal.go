@@ -70,39 +70,39 @@ type DrawChartLabel struct { // chl
 
 // BuildRequestURL  构建请求URL
 //
-//	@receiver ctx
+//	@receiver drawCtx
 //	@return string
-func (ctx *DrawPieAPICtx) BuildRequestURL() string {
+func (drawCtx *DrawPieAPICtx) BuildRequestURL() string {
 	// 构建图类型
-	chartTypeStr := string("cht=" + ctx.Ct)
+	chartTypeStr := string("cht=" + drawCtx.Ct)
 	// 构建图标题
-	titleSlice := []string{"chtt=" + url.QueryEscape(ctx.Title.Text)}
-	if ctx.Title.Color != "" {
-		titleSlice = append(titleSlice, "chts="+url.QueryEscape(ctx.Title.Color+","+strconv.Itoa(ctx.Title.Size)))
+	titleSlice := []string{"chtt=" + url.QueryEscape(drawCtx.Title.Text)}
+	if drawCtx.Title.Color != "" {
+		titleSlice = append(titleSlice, "chts="+url.QueryEscape(drawCtx.Title.Color+","+strconv.Itoa(drawCtx.Title.Size)))
 	} else {
-		titleSlice = append(titleSlice, "chts="+url.QueryEscape("000000"+","+strconv.Itoa(ctx.Title.Size)))
+		titleSlice = append(titleSlice, "chts="+url.QueryEscape("000000"+","+strconv.Itoa(drawCtx.Title.Size)))
 	}
 	titleStr := strings.Join(titleSlice, "&")
 
 	// 构建图Legend
 	var legendText string
-	for i, text := range ctx.Legend.Text {
-		if i == len(ctx.Legend.Text)-1 {
+	for i, text := range drawCtx.Legend.Text {
+		if i == len(drawCtx.Legend.Text)-1 {
 			legendText += text
 		} else {
 			legendText += text + "|"
 		}
 	}
 	legendSlice := []string{"chdl=" + url.QueryEscape(legendText)}
-	legendSlice = append(legendSlice, "chdlp="+ctx.Legend.Position)
-	if ctx.Legend.Size != 0 {
-		legendSlice = append(legendSlice, "chdls="+url.QueryEscape("000000,"+strconv.Itoa(ctx.Legend.Size)))
+	legendSlice = append(legendSlice, "chdlp="+drawCtx.Legend.Position)
+	if drawCtx.Legend.Size != 0 {
+		legendSlice = append(legendSlice, "chdls="+url.QueryEscape("000000,"+strconv.Itoa(drawCtx.Legend.Size)))
 	}
 	legendText = strings.Join(legendSlice, "&")
 
 	// 构建图Label
 	var labelText string
-	for i, text := range ctx.Label.Text {
+	for i, text := range drawCtx.Label.Text {
 		if i != 0 {
 			labelText += url.QueryEscape("|" + text)
 		} else {
@@ -110,29 +110,29 @@ func (ctx *DrawPieAPICtx) BuildRequestURL() string {
 		}
 	}
 	labelText = "chl=" + labelText
-	if ctx.Label.Size != 0 {
-		labelText += "&chlps=" + url.QueryEscape("font.size,"+strconv.Itoa(ctx.Label.Size))
+	if drawCtx.Label.Size != 0 {
+		labelText += "&chlps=" + url.QueryEscape("font.size,"+strconv.Itoa(drawCtx.Label.Size))
 	}
 	// 构建图数据
 	var dataText string
-	for i, text := range ctx.Data {
+	for i, text := range drawCtx.Data {
 		if i != 0 {
 			dataText += url.QueryEscape("," + text)
 		} else {
 			dataText += url.QueryEscape(text)
 		}
-		if ctx.IsDivided && i != len(ctx.Data)-1 && (i)%(len(ctx.Data)/2) == 0 {
+		if drawCtx.IsDivided && i != len(drawCtx.Data)-1 && (i)%(len(drawCtx.Data)/2) == 0 {
 			dataText += "|"
 		}
 	}
 	dataText = "chd=t:" + dataText
 
 	// 构建图颜色
-	ctx.Color = "chf=ps0-0,lg,45,ffeb3b,0.2,f44336,1"
+	drawCtx.Color = "chf=ps0-0,lg,45,ffeb3b,0.2,f44336,1"
 
 	// 构建图大小
-	sizeText := "chs=" + ctx.Size
-	QueryStr := strings.Join([]string{chartTypeStr, titleStr, legendText, labelText, dataText, ctx.Color, sizeText}, "&")
+	sizeText := "chs=" + drawCtx.Size
+	QueryStr := strings.Join([]string{chartTypeStr, titleStr, legendText, labelText, dataText, drawCtx.Color, sizeText}, "&")
 
 	return QueryStr
 }
@@ -158,10 +158,10 @@ func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID st
 			if err != nil {
 				return
 			}
-			URL, tmpErr := DrawPieChartWithAPI(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
+			URL, tmpErr := DrawPieChartWithAPI(ctx, GetUserChannelTimeMap(ctx, userInfo.ID, guildID), userInfo.Nickname)
 			if tmpErr != nil {
 				// 尝试使用本地绘图
-				URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
+				URL, err = DrawPieChartWithLocal(ctx, GetUserChannelTimeMap(ctx, userInfo.ID, guildID), userInfo.Nickname)
 				if err != nil {
 					return err
 				}
@@ -180,10 +180,10 @@ func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID st
 		if err != nil {
 			return
 		}
-		URL, tmpErr := DrawPieChartWithAPI(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
+		URL, tmpErr := DrawPieChartWithAPI(ctx, GetUserChannelTimeMap(ctx, userInfo.ID, guildID), userInfo.Nickname)
 		if tmpErr != nil {
 			// 尝试使用本地绘图
-			URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
+			URL, err = DrawPieChartWithLocal(ctx, GetUserChannelTimeMap(ctx, userInfo.ID, guildID), userInfo.Nickname)
 			if err != nil {
 				return err
 			}
@@ -232,7 +232,7 @@ func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID st
 
 // ShowCalLocalHandler sc
 //
-//	@param ctx
+//	@param drawCtx
 //	@param targetID
 //	@param msgID
 //	@param authorID
@@ -258,7 +258,7 @@ func ShowCalLocalHandler(ctx context.Context, targetID, quoteID, authorID, guild
 				return
 			}
 			// 尝试使用本地绘图
-			URL, err := DrawPieChartWithLocal(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
+			URL, err := DrawPieChartWithLocal(ctx, GetUserChannelTimeMap(ctx, userInfo.ID, guildID), userInfo.Nickname)
 			if err != nil {
 				return err
 			}
@@ -275,7 +275,7 @@ func ShowCalLocalHandler(ctx context.Context, targetID, quoteID, authorID, guild
 		if err != nil {
 			return
 		}
-		URL, err := DrawPieChartWithLocal(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
+		URL, err := DrawPieChartWithLocal(ctx, GetUserChannelTimeMap(ctx, userInfo.ID, guildID), userInfo.Nickname)
 		if err != nil {
 			return err
 		}
@@ -324,14 +324,23 @@ func ShowCalLocalHandler(ctx context.Context, targetID, quoteID, authorID, guild
 //
 //	@param userID
 //	@return map
-func GetUserChannelTimeMap(ctx context.Context, userID string) map[string]time.Duration {
+func GetUserChannelTimeMap(ctx context.Context, userID, guildID string) map[string]time.Duration {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("userID").String(userID))
+	defer span.End()
+
 	logs := make([]*utility.ChannelLogExt, 0)
 	userInfo, err := utility.GetUserInfo(userID, "")
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err, ctx)
 		return nil
 	}
-	utility.GetDbConnection().Table("betago.channel_log_exts").Where("user_id = ? and is_update = ?", userInfo.ID, true).Order("left_time desc").Find(&logs).Limit(1000)
+	utility.GetDbConnection().
+		Table("betago.channel_log_exts").
+		Where("user_id = ? and is_update = ? and guild_id = ?", userInfo.ID, true, guildID).
+		Order("left_time desc").
+		Find(&logs).
+		Limit(1000)
 	chanDiv := make(map[string]time.Duration)
 	var totalTime time.Duration
 	for _, log := range logs {
@@ -357,9 +366,12 @@ func GetUserChannelTimeMap(ctx context.Context, userID string) map[string]time.D
 //	@param inputMap
 //	@param userName
 //	@return string
-func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (string, error) {
+func DrawPieChartWithAPI(ctx context.Context, inputMap map[string]time.Duration, userName string) (string, error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
 	apiURL := "https://image-charts.com/chart?"
-	ctx := &DrawPieAPICtx{
+	drawCtx := &DrawPieAPICtx{
 		Ct: "p3",
 		Title: DrawChartTitle{
 			Text: userName + "的频道时间分布(Last 24h)",
@@ -405,14 +417,14 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (st
 		timeConvWithPercent := timeConv.String() + "\n" + percentStr
 		if percent >= 10 {
 			// %5实质为最大1个小时的值
-			ctx.Label.Text = append(ctx.Label.Text, k+"\n"+timeConvWithPercent)
+			drawCtx.Label.Text = append(drawCtx.Label.Text, k+"\n"+timeConvWithPercent)
 		} else {
-			ctx.Label.Text = append(ctx.Label.Text, percentStr)
+			drawCtx.Label.Text = append(drawCtx.Label.Text, percentStr)
 		}
-		ctx.Legend.Text = append(ctx.Legend.Text, k+"-"+percentStr)
-		ctx.Data = append(ctx.Data, fmt.Sprintf("%.1f", float64(v)/float64(totalTime)*100))
+		drawCtx.Legend.Text = append(drawCtx.Legend.Text, k+"-"+percentStr)
+		drawCtx.Data = append(drawCtx.Data, fmt.Sprintf("%.1f", float64(v)/float64(totalTime)*100))
 	}
-	apiURL += ctx.BuildRequestURL()
+	apiURL += drawCtx.BuildRequestURL()
 	resp, err := httptool.GetWithParams(httptool.RequestInfo{URL: apiURL})
 	if err != nil {
 		return "", err
@@ -444,7 +456,10 @@ func DrawPieChartWithAPI(inputMap map[string]time.Duration, userName string) (st
 // DrawPieChartWithLocal 本地获取频道的时间分布
 //
 //	@return {}
-func DrawPieChartWithLocal(inputMap map[string]time.Duration, userName string) (string, error) {
+func DrawPieChartWithLocal(ctx context.Context, inputMap map[string]time.Duration, userName string) (string, error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
 	if len(inputMap) == 0 {
 		return "", fmt.Errorf("No Data Found")
 	}

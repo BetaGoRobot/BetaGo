@@ -6,5 +6,5 @@ import (
 )
 
 func TestDrawPieChartWithAPI(t *testing.T) {
-	DrawPieChartWithAPI(GetUserChannelTimeMap(context.Background(), "938697103"), "KevinMatt")
+	DrawPieChartWithAPI(context.Background(), GetUserChannelTimeMap(context.Background(), "938697103", "3757937292559087"), "KevinMatt")
 }

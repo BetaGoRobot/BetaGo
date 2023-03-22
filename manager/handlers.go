@@ -60,6 +60,7 @@ func channelJoinedHandler(baseCtx context.Context, ctx *kook.GuildChannelMemberA
 		ChannelName: channelInfo.Name,
 		JoinedTime:  ctx.Extra.JoinedAt.ToTime().Format(betagovar.TimeFormat),
 		LeftTime:    "",
+		GuildID:     utility.GetGuildIDFromChannelID(channelInfo.ID),
 	}
 	if strings.Contains(channelInfo.Name, "躲避女人") {
 		return
@@ -124,6 +125,7 @@ func channelLeftHandler(baseCtx context.Context, kookCtx *kook.GuildChannelMembe
 		ChannelName: channelInfo.Name,
 		JoinedTime:  "",
 		LeftTime:    kookCtx.Extra.ExitedAt.ToTime().Format(betagovar.TimeFormat),
+		GuildID:     "",
 	}
 	if newChanLog, err = newChanLog.UpdateLeftTime(); err != nil {
 		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err, baseCtx)

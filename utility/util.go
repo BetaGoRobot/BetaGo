@@ -14,6 +14,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/golang/freetype/truetype"
+	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 )
 
@@ -106,6 +107,18 @@ func GetUserInfo(userID, guildID string) (userInfo *kook.User, err error) {
 		return
 	}
 	return
+}
+
+// GetGuildIDFromChannelID 通过ChannelID获取GuildID
+//
+//	@param channelID
+//	@return GuildID
+func GetGuildIDFromChannelID(channelID string) (GuildID string) {
+	c, err := betagovar.GlobalSession.ChannelView(channelID)
+	if err != nil {
+		ZapLogger.Error("Error getting guild", zaplog.Error(err))
+	}
+	return c.GuildID
 }
 
 // GetGuildInfo 获取公会信息

@@ -40,6 +40,7 @@ type ChannelLogExt struct {
 	LeftTime    string `json:"left_time"`
 	ISUpdate    bool   `json:"is_update"`
 	MsgID       string `json:"msg_id"`
+	GuildID     string `json:"guild_id" `
 }
 
 // AlertList  is the struct of alert config
