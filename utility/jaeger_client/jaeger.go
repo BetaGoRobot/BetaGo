@@ -20,7 +20,7 @@ const (
 )
 
 // betaGoJaegerProvider jaeger provider
-var betaGoJaegerProvider, _ = tracerProvider("http://172.17.141.192:14268/api/traces")
+var betaGoJaegerProvider, _ = tracerProvider("http://jaeger-all-in-one-ix-chart.ix-jaeger-all-in-one:14268/api/traces")
 
 // BetaGoCommandTracer a
 var BetaGoCommandTracer = betaGoJaegerProvider.Tracer("command-handler")
