@@ -163,19 +163,23 @@ func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID 
 		},
 	)
 	for _, commandInfo := range commandInfoList {
-		modules = append(modules, kook.CardMessageSection{
-			Text: kook.CardMessageParagraph{
-				Cols: 2,
-				Fields: []interface{}{
-					kook.CardMessageElementKMarkdown{
-						Content: commandInfo.CommandName,
-					},
-					kook.CardMessageElementKMarkdown{
-						Content: commandInfo.CommandDesc,
+		modules = append(
+			modules,
+			&kook.CardMessageDivider{},
+			kook.CardMessageSection{
+				Text: kook.CardMessageParagraph{
+					Cols: 2,
+					Fields: []interface{}{
+						kook.CardMessageElementKMarkdown{
+							Content: commandInfo.CommandName,
+						},
+						kook.CardMessageElementKMarkdown{
+							Content: commandInfo.CommandDesc,
+						},
 					},
 				},
 			},
-		})
+		)
 	}
 
 	cardMessageStr, err := kook.CardMessage{
