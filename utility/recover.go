@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
@@ -27,24 +28,22 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 		JSONStr := ForceMarshalJSON(ctx)
 		SendEmail("Panic-Collected!", fmt.Sprintf("%v\n%s", string(debug.Stack()), JSONStr))
 		// // 测试频道不用脱敏
-		// SendMessageWithTitle(betagovar.TestChanID, "", "",
-		// 	fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%s`\n\n```go\n%s```\nRecord:\n\n```json\n%s\n```",
-		// 		TargetID, err, removeSensitiveInfo(debug.Stack()), JSONStr),
-		// 	fmt.Sprintf("%s Panic-Collected!",
-		// 		emoji.Warning.String()))
+		SendMessageWithTitle(betagovar.TestChanID, "", "",
+			fmt.Sprintf(emoji.ExclamationMark.String()+"发生Panic, 请保存此ID提供给开发者\nTraceID: "+span.SpanContext().TraceID().String()),
+			fmt.Sprintf("%s Panic-Collected!",
+				emoji.Warning.String()))
 		gotify.SendMessage(
 			fmt.Sprintf("%s Panic-Collected!",
 				emoji.Warning.String()),
 			strings.ReplaceAll(fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%s`\n```go\n%s```\nRecord:\n```json\n%s\n```",
 				TargetID, err, removeSensitiveInfo(debug.Stack()), JSONStr), "\n", "\n\n"),
 			7)
-		// if TargetID != betagovar.TestChanID {
-		// 	SendMessageWithTitle(TargetID, QuoteID, UserID,
-		// 		fmt.Sprintf("ErrorMsg: `%v`\n`%v`\n",
-		// 			err, removeSensitiveInfo(debug.Stack())),
-		// 		fmt.Sprintf("%s Panic-Collected!请联系开发者",
-		// 			emoji.Warning.String()))
-		// }
+		if TargetID != betagovar.TestChanID {
+			SendMessageWithTitle(TargetID, "", "",
+				fmt.Sprintf(emoji.ExclamationMark.String()+"发生Panic, 请保存此ID提供给开发者\nTraceID: "+span.SpanContext().TraceID().String()),
+				fmt.Sprintf("%s Panic-Collected!",
+					emoji.Warning.String()))
+		}
 		SugerLogger.Errorf("=====Panic====== %s", string(debug.Stack()))
 	}
 }
