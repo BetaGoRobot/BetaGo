@@ -78,7 +78,7 @@ func ChannelLeftAsyncHandler(kookCtx *kook.GuildChannelMemberDeleteContext) {
 	rawRecord, _ := json.Marshal(&kookCtx.Extra)
 	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer span.End()
-	go channelLeftHandler(kookCtx, newCtx)
+	go channelLeftHandler(newCtx, kookCtx)
 }
 
 // ClickEventAsyncHandler  is a async handler for click event
