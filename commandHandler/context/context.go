@@ -159,7 +159,7 @@ func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) 
 	ctx.span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer ctx.span.End()
 
-	defer utility.CollectPanic(ctx, ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+	defer utility.CollectPanic(ctx.Ctx, ctx, ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
 
 	var ctxFunc CommandContextFunc
 	var ctxGuildFunc CommandContextWithGuildIDFunc

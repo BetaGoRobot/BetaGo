@@ -41,7 +41,7 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 }
 
 func channelJoinedHandler(baseCtx context.Context, ctx *kook.GuildChannelMemberAddContext) {
-	defer utility.CollectPanic(ctx.Common, ctx.Common.TargetID, ctx.Common.MsgID, "")
+	defer utility.CollectPanic(baseCtx, ctx.Common, ctx.Common.TargetID, ctx.Common.MsgID, "")
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err, baseCtx)
@@ -102,8 +102,8 @@ func channelJoinedHandler(baseCtx context.Context, ctx *kook.GuildChannelMemberA
 func guildUpdateHandler(kookCtx *kook.GuildUpdateContext) {
 }
 
-func channelLeftHandler(kookCtx *kook.GuildChannelMemberDeleteContext, baseCtx context.Context) {
-	defer utility.CollectPanic(kookCtx.Extra, kookCtx.Common.TargetID, "", kookCtx.Extra.UserID)
+func channelLeftHandler(baseCtx context.Context, kookCtx *kook.GuildChannelMemberDeleteContext) {
+	defer utility.CollectPanic(baseCtx, kookCtx.Extra, kookCtx.Common.TargetID, "", kookCtx.Extra.UserID)
 	// 离开频道时，记录频道信息
 	userInfo, err := utility.GetUserInfo(kookCtx.Extra.UserID, kookCtx.Common.TargetID)
 	if err != nil {

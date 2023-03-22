@@ -2,43 +2,49 @@ package utility
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"runtime/debug"
 	"strings"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // CollectPanic is the function to collect panic
-func CollectPanic(ctx interface{}, TargetID, QuoteID, UserID string) {
+func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, UserID string) {
 	if err := recover(); err != nil {
+		ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+		span.SetAttributes(attribute.Key("Panic Stack").String(removeSensitiveInfo(debug.Stack())))
+		defer span.End()
+
 		JSONStr := ForceMarshalJSON(ctx)
 		SendEmail("Panic-Collected!", fmt.Sprintf("%v\n%s", string(debug.Stack()), JSONStr))
-		// 测试频道不用脱敏
-		SendMessageWithTitle(betagovar.TestChanID, "", "",
-			fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%s`\n\n```go\n%s```\nRecord:\n\n```json\n%s\n```",
-				TargetID, err, removeSensitiveInfo(debug.Stack()), JSONStr),
-			fmt.Sprintf("%s Panic-Collected!",
-				emoji.Warning.String()))
+		// // 测试频道不用脱敏
+		// SendMessageWithTitle(betagovar.TestChanID, "", "",
+		// 	fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%s`\n\n```go\n%s```\nRecord:\n\n```json\n%s\n```",
+		// 		TargetID, err, removeSensitiveInfo(debug.Stack()), JSONStr),
+		// 	fmt.Sprintf("%s Panic-Collected!",
+		// 		emoji.Warning.String()))
 		gotify.SendMessage(
 			fmt.Sprintf("%s Panic-Collected!",
 				emoji.Warning.String()),
 			strings.ReplaceAll(fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%s`\n```go\n%s```\nRecord:\n```json\n%s\n```",
 				TargetID, err, removeSensitiveInfo(debug.Stack()), JSONStr), "\n", "\n\n"),
 			7)
-		if TargetID != betagovar.TestChanID {
-			SendMessageWithTitle(TargetID, QuoteID, UserID,
-				fmt.Sprintf("ErrorMsg: `%v`\n`%v`\n",
-					err, removeSensitiveInfo(debug.Stack())),
-				fmt.Sprintf("%s Panic-Collected!请联系开发者",
-					emoji.Warning.String()))
-		}
+		// if TargetID != betagovar.TestChanID {
+		// 	SendMessageWithTitle(TargetID, QuoteID, UserID,
+		// 		fmt.Sprintf("ErrorMsg: `%v`\n`%v`\n",
+		// 			err, removeSensitiveInfo(debug.Stack())),
+		// 		fmt.Sprintf("%s Panic-Collected!请联系开发者",
+		// 			emoji.Warning.String()))
+		// }
 		SugerLogger.Errorf("=====Panic====== %s", string(debug.Stack()))
 	}
 }
