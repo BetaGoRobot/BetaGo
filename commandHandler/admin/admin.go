@@ -21,6 +21,7 @@ import (
 func ShowAdminHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	admins := make([]utility.Administrator, 0)
@@ -73,13 +74,14 @@ func ShowAdminHandler(ctx context.Context, targetID, quoteID, authorID string, a
 			Size:  "lg",
 			Modules: append(
 				modules,
+				&kook.CardMessageDivider{},
 				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
 					},
 					Accessory: kook.CardMessageElementButton{
-						Theme: kook.CardThemeWarning,
+						Theme: kook.CardThemeSuccess,
 						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
 						Click: "link",
 						Text:  "链路追踪",
@@ -114,6 +116,7 @@ func ShowAdminHandler(ctx context.Context, targetID, quoteID, authorID string, a
 func AddAdminHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	var (
@@ -177,10 +180,17 @@ func AddAdminHandler(ctx context.Context, targetID, quoteID, authorID string, ar
 						Content: succStr,
 					},
 				},
+				&kook.CardMessageDivider{},
 				kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+					},
+					Accessory: kook.CardMessageElementButton{
+						Theme: kook.CardThemeSuccess,
+						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+						Click: "link",
+						Text:  "链路追踪",
 					},
 				},
 			},
@@ -216,6 +226,7 @@ func AddAdminHandler(ctx context.Context, targetID, quoteID, authorID string, ar
 func RemoveAdminHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	var (
@@ -272,13 +283,14 @@ func RemoveAdminHandler(ctx context.Context, targetID, quoteID, authorID string,
 						Content: succStr,
 					},
 				},
+				&kook.CardMessageDivider{},
 				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
 					},
 					Accessory: kook.CardMessageElementButton{
-						Theme: kook.CardThemeWarning,
+						Theme: kook.CardThemeSuccess,
 						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
 						Click: "link",
 						Text:  "链路追踪",
@@ -315,6 +327,7 @@ func RemoveAdminHandler(ctx context.Context, targetID, quoteID, authorID string,
 func DeleteAllMessageHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	var (
@@ -375,6 +388,7 @@ func DeleteAllMessageHandler(ctx context.Context, targetID, quoteID, authorID st
 func ReconnectHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	if !utility.CheckIsAdmin(authorID) {

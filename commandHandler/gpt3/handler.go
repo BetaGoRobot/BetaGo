@@ -21,6 +21,7 @@ import (
 func ClientHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	msg := strings.Join(args, " ")
@@ -44,13 +45,14 @@ func ClientHandler(ctx context.Context, targetID, quoteID, authorID string, args
 						Content: res,
 					},
 				},
+				&kook.CardMessageDivider{},
 				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
 					},
 					Accessory: kook.CardMessageElementButton{
-						Theme: kook.CardThemeWarning,
+						Theme: kook.CardThemeSuccess,
 						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
 						Click: "link",
 						Text:  "链路追踪",

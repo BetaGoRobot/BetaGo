@@ -23,6 +23,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 	if err := recover(); err != nil {
 		ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
 		span.SetAttributes(attribute.Key("Panic Stack").String(removeSensitiveInfo(debug.Stack())))
+		defer span.RecordError(fmt.Errorf(err.(string)))
 		defer span.End()
 
 		JSONStr := ForceMarshalJSON(ctx)
@@ -30,7 +31,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 		// // 测试频道不用脱敏
 		SendMessageWithTitle(betagovar.TestChanID, "", "",
 			emoji.ExclamationMark.String()+
-				"发生Panic, 请保存此ID提供给开发者\nTraceID: `"+
+				"发生Panic, 请联系开发者并提供此ID\n\nTraceID: `"+
 				span.SpanContext().TraceID().String()+"`\n",
 			fmt.Sprintf("%s Panic-Collected!",
 				emoji.Warning.String()), ctx)
@@ -42,7 +43,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 			7)
 		if TargetID != betagovar.TestChanID {
 			SendMessageWithTitle(TargetID, "", "",
-				fmt.Sprintf(emoji.ExclamationMark.String()+"发生Panic, 请保存此ID提供给开发者\nTraceID: "+span.SpanContext().TraceID().String()),
+				fmt.Sprintf(emoji.ExclamationMark.String()+"发生Panic, 请联系开发者并提供此ID\n\nTraceID: "+span.SpanContext().TraceID().String()),
 				fmt.Sprintf("%s Panic-Collected!",
 					emoji.Warning.String()), ctx)
 		}

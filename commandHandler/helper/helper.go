@@ -24,6 +24,7 @@ import (
 func TryPanic(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	panic("try panic")
@@ -53,6 +54,7 @@ func CommandRouter(ctx context.Context, targetID, quoteID, authorID string, args
 func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	if len(args) == 1 {
@@ -66,13 +68,13 @@ func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID 
 			Size:  kook.CardSizeLg,
 			Modules: []interface{}{
 				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: commandInfo.CommandName + ": " + commandInfo.CommandDesc,
 					},
 				},
 				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: "TraceID: " + span.SpanContext().TraceID().String(),
 					},
@@ -182,13 +184,14 @@ func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID 
 			Size:  "lg",
 			Modules: append(
 				modules,
+				&kook.CardMessageDivider{},
 				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
 					},
 					Accessory: kook.CardMessageElementButton{
-						Theme: kook.CardThemeWarning,
+						Theme: kook.CardThemeSuccess,
 						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
 						Click: "link",
 						Text:  "链路追踪",
@@ -230,6 +233,7 @@ func getShortDesc(fullDesc string) (short string) {
 func UserCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	// 帮助信息
@@ -244,13 +248,13 @@ func UserCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID s
 			Size:  kook.CardSizeLg,
 			Modules: []interface{}{
 				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: commandInfo.CommandName + ": " + commandInfo.CommandDesc,
 					},
 				},
 				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: "TraceID: " + span.SpanContext().TraceID().String(),
 					},
@@ -354,7 +358,7 @@ func UserCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID s
 			Modules: append(
 				modules,
 				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: "TraceID: " + span.SpanContext().TraceID().String(),
 					},

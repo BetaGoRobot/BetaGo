@@ -177,7 +177,7 @@ func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (
 		if strings.HasPrefix(fmt.Sprint(v), "http") {
 			sectionElements = append(sectionElements,
 				kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeLeft,
+					Mode: kook.CardMessageSectionModeRight,
 					Text: kook.CardMessageParagraph{
 						Cols: 2,
 						Fields: []interface{}{

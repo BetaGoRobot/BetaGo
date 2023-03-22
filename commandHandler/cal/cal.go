@@ -143,6 +143,7 @@ func (ctx *DrawPieAPICtx) BuildRequestURL() string {
 func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	var (
@@ -200,10 +201,17 @@ func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID st
 		Size:  kook.CardSizeLg,
 		Modules: []interface{}{
 			cardContainer,
+			&kook.CardMessageDivider{},
 			&kook.CardMessageSection{
-				Mode: kook.CardMessageSectionModeLeft,
+				Mode: kook.CardMessageSectionModeRight,
 				Text: &kook.CardMessageElementKMarkdown{
 					Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+				},
+				Accessory: kook.CardMessageElementButton{
+					Theme: kook.CardThemeSuccess,
+					Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+					Click: "link",
+					Text:  "链路追踪",
 				},
 			},
 		},
@@ -234,6 +242,7 @@ func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID st
 func ShowCalLocalHandler(ctx context.Context, targetID, quoteID, authorID, guildID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	var (
@@ -282,10 +291,17 @@ func ShowCalLocalHandler(ctx context.Context, targetID, quoteID, authorID, guild
 		Size:  kook.CardSizeLg,
 		Modules: []interface{}{
 			cardContainer,
+			&kook.CardMessageDivider{},
 			&kook.CardMessageSection{
-				Mode: kook.CardMessageSectionModeLeft,
+				Mode: kook.CardMessageSectionModeRight,
 				Text: &kook.CardMessageElementKMarkdown{
 					Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+				},
+				Accessory: kook.CardMessageElementButton{
+					Theme: kook.CardThemeSuccess,
+					Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+					Click: "link",
+					Text:  "链路追踪",
 				},
 			},
 		},

@@ -16,9 +16,10 @@ import (
 //	@param targetID
 //	@param qouteID
 //	@param authorID
-func PingHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) error {
+func PingHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.RecordError(err)
 	defer span.End()
 
 	betagovar.GlobalSession.MessageCreate(&kook.MessageCreate{

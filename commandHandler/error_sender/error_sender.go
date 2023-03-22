@@ -26,11 +26,13 @@ var (
 //	@param err 错误信息
 func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx context.Context) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.RecordError(sourceErr)
 	defer span.End()
+
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
 			Theme: "danger",
-			Size:  "lg",
+			Size:  "sm",
 			Modules: []interface{}{
 				kook.CardMessageHeader{
 					Text: kook.CardMessageElementText{
@@ -38,10 +40,11 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx cont
 						Emoji:   true,
 					},
 				},
+				&kook.CardMessageDivider{},
 				kook.CardMessageSection{
 					Mode: kook.CardMessageSectionModeRight,
 					Text: kook.CardMessageElementKMarkdown{
-						Content: "请联系开发者并提供此ID\nTraceID: `" +
+						Content: "请联系开发者并提供此ID\n\nTraceID: `" +
 							span.SpanContext().TraceID().String() + "`\n",
 					},
 					Accessory: kook.CardMessageElementButton{

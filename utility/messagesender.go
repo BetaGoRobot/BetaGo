@@ -108,7 +108,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
 			Theme: "danger",
-			Size:  "lg",
+			Size:  "sm",
 			Modules: []interface{}{
 				kook.CardMessageHeader{
 					Text: kook.CardMessageElementText{
@@ -116,13 +116,14 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 						Emoji:   true,
 					},
 				},
+				&kook.CardMessageDivider{},
 				kook.CardMessageSection{
 					Mode: kook.CardMessageSectionModeRight,
 					Text: kook.CardMessageElementKMarkdown{
 						Content: message,
 					},
 					Accessory: kook.CardMessageElementButton{
-						Theme: kook.CardThemeWarning,
+						Theme: kook.CardThemeDanger,
 						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
 						Click: "link",
 						Text:  "链路追踪",
