@@ -107,6 +107,18 @@ func GetHitokotoHandler(ctx context.Context, targetID, quoteID, authorID string,
 						Emoji:   true,
 					},
 				},
+				&kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
+						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+					},
+					Accessory: kook.CardMessageElementButton{
+						Theme: kook.CardThemeWarning,
+						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+						Click: "link",
+						Text:  "链路追踪",
+					},
+				},
 			},
 		},
 	}.BuildMessage()

@@ -1,7 +1,10 @@
 package utility
 
 import (
+	"context"
+
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
@@ -98,7 +101,10 @@ func SendMessage(targetID, QuoteID, authorID string, message string) {
 //	@param QuoteID 引用ID
 //	@param authorID 作者ID
 //	@param message
-func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string) {
+func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ctx context.Context) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+	defer span.End()
+
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
 			Theme: "danger",
@@ -111,8 +117,15 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string) {
 					},
 				},
 				kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeRight,
 					Text: kook.CardMessageElementKMarkdown{
 						Content: message,
+					},
+					Accessory: kook.CardMessageElementButton{
+						Theme: kook.CardThemeWarning,
+						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+						Click: "link",
+						Text:  "链路追踪",
 					},
 				},
 			},

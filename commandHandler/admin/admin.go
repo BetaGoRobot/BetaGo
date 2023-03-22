@@ -18,7 +18,11 @@ import (
 //	@param targetID
 //	@param quoteID
 //	@return err
-func ShowAdminHandler(ctx context.Context, TargetID, QuoteID, authorID string, args ...string) (err error) {
+func ShowAdminHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	admins := make([]utility.Administrator, 0)
 	utility.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level DESC")
 	modules := make([]interface{}, 0)
@@ -65,9 +69,23 @@ func ShowAdminHandler(ctx context.Context, TargetID, QuoteID, authorID string, a
 	}
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
-			Theme:   "secondary",
-			Size:    "lg",
-			Modules: modules,
+			Theme: "secondary",
+			Size:  "lg",
+			Modules: append(
+				modules,
+				&kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
+						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+					},
+					Accessory: kook.CardMessageElementButton{
+						Theme: kook.CardThemeWarning,
+						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+						Click: "link",
+						Text:  "链路追踪",
+					},
+				},
+			),
 		},
 	}.BuildMessage()
 	if err != nil {
@@ -77,9 +95,9 @@ func ShowAdminHandler(ctx context.Context, TargetID, QuoteID, authorID string, a
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     kook.MessageTypeCard,
-				TargetID: TargetID,
+				TargetID: targetID,
 				Content:  cardMessageStr,
-				Quote:    QuoteID,
+				Quote:    quoteID,
 			},
 		},
 	)
@@ -157,6 +175,12 @@ func AddAdminHandler(ctx context.Context, targetID, quoteID, authorID string, ar
 				kook.CardMessageSection{
 					Text: kook.CardMessageElementKMarkdown{
 						Content: succStr,
+					},
+				},
+				kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
+						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
 					},
 				},
 			},
@@ -246,6 +270,18 @@ func RemoveAdminHandler(ctx context.Context, targetID, quoteID, authorID string,
 				kook.CardMessageSection{
 					Text: kook.CardMessageElementKMarkdown{
 						Content: succStr,
+					},
+				},
+				&kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
+						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+					},
+					Accessory: kook.CardMessageElementButton{
+						Theme: kook.CardThemeWarning,
+						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+						Click: "link",
+						Text:  "链路追踪",
 					},
 				},
 			},

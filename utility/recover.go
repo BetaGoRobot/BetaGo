@@ -31,11 +31,9 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 		SendMessageWithTitle(betagovar.TestChanID, "", "",
 			emoji.ExclamationMark.String()+
 				"发生Panic, 请保存此ID提供给开发者\nTraceID: `"+
-				span.SpanContext().TraceID().String()+"`\n"+
-				fmt.Sprintf("[TraceURL](http://jaeger.kevinmatt.top/trace/%s)",
-					span.SpanContext().TraceID().String()),
+				span.SpanContext().TraceID().String()+"`\n",
 			fmt.Sprintf("%s Panic-Collected!",
-				emoji.Warning.String()))
+				emoji.Warning.String()), ctx)
 		gotify.SendMessage(
 			fmt.Sprintf("%s Panic-Collected!",
 				emoji.Warning.String()),
@@ -46,7 +44,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 			SendMessageWithTitle(TargetID, "", "",
 				fmt.Sprintf(emoji.ExclamationMark.String()+"发生Panic, 请保存此ID提供给开发者\nTraceID: "+span.SpanContext().TraceID().String()),
 				fmt.Sprintf("%s Panic-Collected!",
-					emoji.Warning.String()))
+					emoji.Warning.String()), ctx)
 		}
 		SugerLogger.Errorf("=====Panic====== %s", string(debug.Stack()))
 	}

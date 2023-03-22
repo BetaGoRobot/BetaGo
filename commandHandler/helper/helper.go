@@ -71,6 +71,12 @@ func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID 
 						Content: commandInfo.CommandName + ": " + commandInfo.CommandDesc,
 					},
 				},
+				&kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
+						Content: "TraceID: " + span.SpanContext().TraceID().String(),
+					},
+				},
 			},
 		}}.BuildMessage()
 		if err != nil {
@@ -172,9 +178,23 @@ func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID 
 
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
-			Theme:   "secondary",
-			Size:    "lg",
-			Modules: modules,
+			Theme: "secondary",
+			Size:  "lg",
+			Modules: append(
+				modules,
+				&kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
+						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+					},
+					Accessory: kook.CardMessageElementButton{
+						Theme: kook.CardThemeWarning,
+						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+						Click: "link",
+						Text:  "链路追踪",
+					},
+				},
+			),
 		},
 	}.BuildMessage()
 	if err != nil {
@@ -227,6 +247,12 @@ func UserCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID s
 					Mode: kook.CardMessageSectionModeLeft,
 					Text: &kook.CardMessageElementKMarkdown{
 						Content: commandInfo.CommandName + ": " + commandInfo.CommandDesc,
+					},
+				},
+				&kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
+						Content: "TraceID: " + span.SpanContext().TraceID().String(),
 					},
 				},
 			},
@@ -323,9 +349,17 @@ func UserCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID s
 
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
-			Theme:   "secondary",
-			Size:    "lg",
-			Modules: modules,
+			Theme: "secondary",
+			Size:  "lg",
+			Modules: append(
+				modules,
+				&kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
+						Content: "TraceID: " + span.SpanContext().TraceID().String(),
+					},
+				},
+			),
 		},
 	}.BuildMessage()
 	if err != nil {

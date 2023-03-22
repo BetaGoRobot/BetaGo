@@ -83,9 +83,17 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 			cardMessage = append(
 				cardMessage,
 				&kook.CardMessageCard{
-					Theme:   kook.CardThemePrimary,
-					Size:    kook.CardSizeSm,
-					Modules: modulesNetese,
+					Theme: kook.CardThemePrimary,
+					Size:  kook.CardSizeSm,
+					Modules: append(
+						modulesNetese,
+						&kook.CardMessageSection{
+							Mode: kook.CardMessageSectionModeLeft,
+							Text: &kook.CardMessageElementKMarkdown{
+								Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+							},
+						},
+					),
 				},
 			)
 		}
@@ -115,9 +123,17 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 			cardMessage = append(
 				cardMessage,
 				&kook.CardMessageCard{
-					Theme:   kook.CardThemePrimary,
-					Size:    kook.CardSizeSm,
-					Modules: modulesQQ,
+					Theme: kook.CardThemePrimary,
+					Size:  kook.CardSizeSm,
+					Modules: append(
+						modulesQQ,
+						&kook.CardMessageSection{
+							Mode: kook.CardMessageSectionModeLeft,
+							Text: &kook.CardMessageElementKMarkdown{
+								Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+							},
+						},
+					),
 				},
 			)
 		}

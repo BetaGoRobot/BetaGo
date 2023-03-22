@@ -200,6 +200,12 @@ func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID st
 		Size:  kook.CardSizeLg,
 		Modules: []interface{}{
 			cardContainer,
+			&kook.CardMessageSection{
+				Mode: kook.CardMessageSectionModeLeft,
+				Text: &kook.CardMessageElementKMarkdown{
+					Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+				},
+			},
 		},
 	}}.BuildMessage()
 	if err != nil {
@@ -276,6 +282,12 @@ func ShowCalLocalHandler(ctx context.Context, targetID, quoteID, authorID, guild
 		Size:  kook.CardSizeLg,
 		Modules: []interface{}{
 			cardContainer,
+			&kook.CardMessageSection{
+				Mode: kook.CardMessageSectionModeLeft,
+				Text: &kook.CardMessageElementKMarkdown{
+					Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+				},
+			},
 		},
 	}}.BuildMessage()
 	if err != nil {

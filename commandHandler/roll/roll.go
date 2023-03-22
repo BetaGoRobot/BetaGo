@@ -76,6 +76,18 @@ func RandRollHandler(ctx context.Context, targetID, quoteID, authorID string, ar
 						Content: fmt.Sprintf("范围 `[%d,%d]` (met)%s(met) %s你掷出了 **%d**\n%s", min, max, authorID, emoji.ClinkingGlasses.String(), point, extraStr),
 					},
 				},
+				&kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeLeft,
+					Text: &kook.CardMessageElementKMarkdown{
+						Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+					},
+					Accessory: kook.CardMessageElementButton{
+						Theme: kook.CardThemeWarning,
+						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+						Click: "link",
+						Text:  "链路追踪",
+					},
+				},
 			},
 		},
 	}.BuildMessage()

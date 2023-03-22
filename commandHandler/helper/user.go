@@ -39,9 +39,17 @@ func GetUserInfoHandler(ctx context.Context, targetID, quoteID, authorID string,
 		return err
 	}
 	cardMessageStr, err := kook.CardMessage{&kook.CardMessageCard{
-		Theme:   kook.CardThemePrimary,
-		Size:    kook.CardSizeLg,
-		Modules: cardMessageModules,
+		Theme: kook.CardThemePrimary,
+		Size:  kook.CardSizeLg,
+		Modules: append(
+			cardMessageModules,
+			&kook.CardMessageSection{
+				Mode: kook.CardMessageSectionModeLeft,
+				Text: &kook.CardMessageElementKMarkdown{
+					Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
+				},
+			},
+		),
 	}}.BuildMessage()
 	if err != nil {
 		return err
