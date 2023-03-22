@@ -8,7 +8,6 @@ import (
 	"time"
 
 	betagovar "github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/betagovar/env"
 	command_context "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/dailyrate"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/news"
@@ -139,7 +138,7 @@ func OnlineTest() {
 			time.Sleep(time.Second * 5)
 		})
 		selfCheckInner()
-		time.Sleep(time.Minute * time.Duration(utility.MustAtoI(env.CheckPeriod)))
+		time.Sleep(time.Second * 3)
 	}
 }
 
@@ -156,27 +155,17 @@ func selfCheckInner() {
 		fmt.Println("Cannot send message, killing...", err.Error())
 		os.Exit(-1)
 	}
-	defer func(msgID string) {
-		err = betagovar.GlobalSession.MessageDelete(msgID)
-		if err != nil {
-			fmt.Println("Cannot delete sent message, killing...")
-			os.Exit(-1)
-		}
-	}(resp.MsgID)
-	time.Sleep(time.Second * 30)
+	err = betagovar.GlobalSession.MessageDelete(resp.MsgID)
+	if err != nil {
+		fmt.Println("Cannot delete sent message, killing...")
+		os.Exit(-1)
+	}
+	time.Sleep(time.Second * 1)
 	select {
 	case <-betagovar.SelfCheckChan:
-		utility.ZapLogger.Info("Self check successful")
+		utility.ZapLogger.Debug("Self check successful")
 	default:
-		if cnt, ok := SelfCheckCache.Get("selfcheck"); ok {
-			utility.Reconnect()
-			if cnt.(int) > 3 {
-				gotify.SendMessage("", "Self check failed, will kill itself and restart...", 7)
-				panic("self check failed too many times...")
-			}
-			SelfCheckCache.Set("selfcheck", cnt.(int)+1, time.Minute*30)
-		} else {
-			SelfCheckCache.Set("selfcheck", int(0), time.Minute*30)
-		}
+		utility.Reconnect()
+		gotify.SendMessage("", "Self check failed, reconnecting...", 7)
 	}
 }

@@ -70,5 +70,5 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx cont
 		},
 		// TempTargetID: authorID,
 	})
-	gotify.SendMessage(emoji.Warning.String()+"CommandError", sourceErr.Error(), 6)
+	gotify.SendMessage(emoji.Warning.String()+"CommandError", sourceErr.Error()+"\n"+"[追踪链接](https://jaeger.kevinmatt.top/trace/"+span.SpanContext().TraceID().String()+")", 6)
 }

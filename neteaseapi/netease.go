@@ -17,6 +17,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -183,7 +184,11 @@ func (ctx *NetEaseContext) LoginNetEaseQR() (err error) {
 	ctx.getUniKey()
 
 	ctx.getQRBase64()
-	utility.SendQRCodeMail(SaveQRImg(ctx.qrStruct.qrBase64))
+	linkURL, err := utility.UploadFileToCos(SaveQRImg(ctx.qrStruct.qrBase64))
+	if err != nil {
+		return err
+	}
+	gotify.SendMessage("网易云登录", fmt.Sprintf("![QRCode](%s)", linkURL), 7)
 	go ctx.checkQRStatus()
 	return
 }
