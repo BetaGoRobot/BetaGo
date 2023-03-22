@@ -1,6 +1,7 @@
 package news
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,10 +13,12 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 	"github.com/patrickmn/go-cache"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var (
@@ -49,7 +52,11 @@ var newsCache = cache.New(5*time.Hour, time.Hour)
 //	@param authorID
 //	@param args
 //	@return err
-func Handler(targetID, quoteID, authorID string, args ...string) (err error) {
+func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	newsType := "weibo"
 	if len(args) > 0 {
 		newsType = args[0]

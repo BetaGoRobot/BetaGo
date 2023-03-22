@@ -1,9 +1,12 @@
 package errorsender
 
 import (
+	"context"
+
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
@@ -21,7 +24,9 @@ var (
 //	@param QuoteID 引用ID
 //	@param authorID 作者ID
 //	@param err 错误信息
-func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error) {
+func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx context.Context) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
 			Theme: "danger",
@@ -29,13 +34,13 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error) {
 			Modules: []interface{}{
 				kook.CardMessageHeader{
 					Text: kook.CardMessageElementText{
-						Content: emoji.Warning.String() + " Command Error",
+						Content: emoji.Warning.String() + " Command Error: 指令错误",
 						Emoji:   true,
 					},
 				},
 				kook.CardMessageSection{
 					Text: kook.CardMessageElementKMarkdown{
-						Content: sourceErr.Error(),
+						Content: "请联系开发者并提供此ID\nTraceID: `" + span.SpanContext().TraceID().String() + "`",
 					},
 				},
 			},

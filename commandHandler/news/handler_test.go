@@ -1,6 +1,9 @@
 package news
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestHandler(t *testing.T) {
 	type args struct {
@@ -18,7 +21,7 @@ func TestHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Handler(tt.args.targetID, tt.args.quoteID, tt.args.authorID, tt.args.args...); (err != nil) != tt.wantErr {
+			if err := Handler(context.Background(), tt.args.targetID, tt.args.quoteID, tt.args.authorID, tt.args.args...); (err != nil) != tt.wantErr {
 				t.Errorf("Handler() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

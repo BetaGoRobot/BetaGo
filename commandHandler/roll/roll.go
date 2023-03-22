@@ -1,13 +1,17 @@
 package roll
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"strconv"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // RandRollHandler 随机抽取一个数字
@@ -16,7 +20,11 @@ import (
 //	@param quoteID 引用ID
 //	@param authorID 发送者ID
 //	@return err 错误信息
-func RandRollHandler(targetID, quoteID, authorID string, args ...string) (err error) {
+func RandRollHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	var min, max int
 	if len(args) == 0 {
 		// 如果没有参数，使用默认range[1,7)

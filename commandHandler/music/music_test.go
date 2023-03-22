@@ -1,6 +1,7 @@
 package music
 
 import (
+	"context"
 	"os"
 	"runtime/pprof"
 	"testing"
@@ -12,6 +13,6 @@ func TestSearchMusicByRobot(t *testing.T) {
 	pprof.StartCPUProfile(f)
 	defer pprof.StopCPUProfile()
 	for i := 0; i < 1000; i++ {
-		SearchMusicByRobot("", "", "", "命名")
+		SearchMusicByRobot(context.Background(), "", "", "", "命名")
 	}
 }

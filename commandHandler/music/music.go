@@ -1,15 +1,18 @@
 package music
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/qqmusicapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var (
@@ -23,7 +26,11 @@ var (
 //	@param quoteID
 //	@param authorID
 //	@return err
-func SearchMusicByRobot(targetID, quoteID, authorID string, args ...string) (err error) {
+func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	if len(args) == 0 {
 		return fmt.Errorf("搜索关键词不能为空")
 	}

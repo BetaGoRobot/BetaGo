@@ -1,25 +1,47 @@
 package helper
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
+	"go.opentelemetry.io/otel/attribute"
 )
 
-func TryPanic(targetID, quoteID, authorID string, args ...string) (err error) {
+// TryPanic 1
+//
+//	@param ctx
+//	@param targetID
+//	@param quoteID
+//	@param authorID
+//	@param args
+//	@return err
+func TryPanic(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	panic("try panic")
 }
 
-func CommandRouter(targetID, quoteID, authorID string, args ...string) (err error) {
+// CommandRouter  1
+//
+//	@param ctx
+//	@param targetID
+//	@param quoteID
+//	@param authorID
+//	@param args
+//	@return err
+func CommandRouter(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
 	if utility.CheckIsAdmin(authorID) {
-		return AdminCommandHelperHandler(targetID, quoteID, authorID, args...)
-	} else {
-		return UserCommandHelperHandler(targetID, quoteID, authorID, args...)
+		return AdminCommandHelperHandler(ctx, targetID, quoteID, authorID, args...)
 	}
+	return UserCommandHelperHandler(ctx, targetID, quoteID, authorID, args...)
 }
 
 // AdminCommandHelperHandler 查看帮助
@@ -28,7 +50,11 @@ func CommandRouter(targetID, quoteID, authorID string, args ...string) (err erro
 //	@param quoteID
 //	@param authorID
 //	@return err
-func AdminCommandHelperHandler(targetID, quoteID, authorID string, args ...string) (err error) {
+func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	if len(args) == 1 {
 		commandInfo := utility.CommandInfo{}
 		var cardMessageStr string
@@ -181,7 +207,11 @@ func getShortDesc(fullDesc string) (short string) {
 //	@param quoteID
 //	@param authorID
 //	@return err
-func UserCommandHelperHandler(targetID, quoteID, authorID string, args ...string) (err error) {
+func UserCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	// 帮助信息
 	if len(args) == 1 {
 		commandInfo := utility.CommandInfo{}

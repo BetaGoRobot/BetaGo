@@ -1,6 +1,7 @@
 package cal
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -14,8 +15,10 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/httptool"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/lonelyevil/kook"
 	"github.com/wcharczuk/go-chart/v2"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
 )
@@ -137,7 +140,11 @@ func (ctx *DrawPieAPICtx) BuildRequestURL() string {
 // ShowCalHandler 显示时间分布
 //
 //	@param userID
-func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (err error) {
+func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	var (
 		userInfo      *kook.User
 		cardContainer kook.CardMessageContainer
@@ -150,14 +157,14 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 			if err != nil {
 				return
 			}
-			URL, tmpErr := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+			URL, tmpErr := DrawPieChartWithAPI(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
 			if tmpErr != nil {
 				// 尝试使用本地绘图
-				URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+				URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
 				if err != nil {
 					return err
 				}
-				errorsender.SendErrorInfo(targetID, msgID, authorID, tmpErr)
+				errorsender.SendErrorInfo(targetID, quoteID, authorID, tmpErr, ctx)
 			}
 			cardContainer = append(cardContainer,
 				kook.CardMessageElementImage{
@@ -172,14 +179,14 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 		if err != nil {
 			return
 		}
-		URL, tmpErr := DrawPieChartWithAPI(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+		URL, tmpErr := DrawPieChartWithAPI(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
 		if tmpErr != nil {
 			// 尝试使用本地绘图
-			URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+			URL, err = DrawPieChartWithLocal(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
 			if err != nil {
 				return err
 			}
-			errorsender.SendErrorInfo(targetID, msgID, authorID, tmpErr)
+			errorsender.SendErrorInfo(targetID, quoteID, authorID, tmpErr, ctx)
 		}
 		cardContainer = append(cardContainer,
 			kook.CardMessageElementImage{
@@ -203,13 +210,26 @@ func ShowCalHandler(targetID, msgID, authorID, guildID string, args ...string) (
 			Type:     kook.MessageTypeCard,
 			TargetID: targetID,
 			Content:  cardMessageStr,
-			Quote:    msgID,
+			Quote:    quoteID,
 		},
 	})
 	return
 }
 
-func ShowCalLocalHandler(targetID, msgID, authorID, guildID string, args ...string) (err error) {
+// ShowCalLocalHandler sc
+//
+//	@param ctx
+//	@param targetID
+//	@param msgID
+//	@param authorID
+//	@param guildID
+//	@param args
+//	@return err
+func ShowCalLocalHandler(ctx context.Context, targetID, quoteID, authorID, guildID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	var (
 		userInfo      *kook.User
 		cardContainer kook.CardMessageContainer
@@ -223,7 +243,7 @@ func ShowCalLocalHandler(targetID, msgID, authorID, guildID string, args ...stri
 				return
 			}
 			// 尝试使用本地绘图
-			URL, err := DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+			URL, err := DrawPieChartWithLocal(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
 			if err != nil {
 				return err
 			}
@@ -240,7 +260,7 @@ func ShowCalLocalHandler(targetID, msgID, authorID, guildID string, args ...stri
 		if err != nil {
 			return
 		}
-		URL, err := DrawPieChartWithLocal(GetUserChannelTimeMap(userInfo.ID), userInfo.Nickname)
+		URL, err := DrawPieChartWithLocal(GetUserChannelTimeMap(ctx, userInfo.ID), userInfo.Nickname)
 		if err != nil {
 			return err
 		}
@@ -266,7 +286,7 @@ func ShowCalLocalHandler(targetID, msgID, authorID, guildID string, args ...stri
 			Type:     kook.MessageTypeCard,
 			TargetID: targetID,
 			Content:  cardMessageStr,
-			Quote:    msgID,
+			Quote:    quoteID,
 		},
 	})
 	return
@@ -276,11 +296,11 @@ func ShowCalLocalHandler(targetID, msgID, authorID, guildID string, args ...stri
 //
 //	@param userID
 //	@return map
-func GetUserChannelTimeMap(userID string) map[string]time.Duration {
+func GetUserChannelTimeMap(ctx context.Context, userID string) map[string]time.Duration {
 	logs := make([]*utility.ChannelLogExt, 0)
 	userInfo, err := utility.GetUserInfo(userID, "")
 	if err != nil {
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err, ctx)
 		return nil
 	}
 	utility.GetDbConnection().Table("betago.channel_log_exts").Where("user_id = ? and is_update = ?", userInfo.ID, true).Order("left_time desc").Find(&logs).Limit(1000)

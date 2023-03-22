@@ -1,13 +1,16 @@
 package manager
 
 import (
+	"context"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	comcontext "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/lonelyevil/kook"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -15,25 +18,30 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 // CommandHandler  is a async handler for command event
 //
 //	@param ctx
-func CommandHandler(ctx *kook.KmarkdownMessageContext) {
+func CommandHandler(baseCtx context.Context, kookCtx *kook.KmarkdownMessageContext) {
+	baseCtx, span := jaeger_client.BetaGoCommandTracer.Start(baseCtx, utility.GetCurrentFunc())
+	rawRecord, _ := json.Marshal(&kookCtx.Extra)
+	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
+	defer span.End()
+
 	// 配合每分钟自我健康检查，接收到指定消息写入chan
-	if ctx.Common.Content == betagovar.SelfCheckMessage {
+	if kookCtx.Common.Content == betagovar.SelfCheckMessage {
 		betagovar.SelfCheckChan <- "ok"
 	}
-	if ctx.Extra.Author.Bot {
+	if kookCtx.Extra.Author.Bot {
 		return
 	}
 	// 判断是否被at到,且消息不是引用/回复
-	if !utility.IsInSlice(betagovar.RobotID, ctx.Extra.Mention) &&
-		!strings.Contains(ctx.Common.Content, betagovar.RobotID) &&
-		!strings.HasPrefix(ctx.Common.Content, ".") {
+	if !utility.IsInSlice(betagovar.RobotID, kookCtx.Extra.Mention) &&
+		!strings.Contains(kookCtx.Common.Content, betagovar.RobotID) &&
+		!strings.HasPrefix(kookCtx.Common.Content, ".") {
 		return
 	}
 	// 示例中，由于用户发送的命令的Content格式为(met)id(met) <command> <parameters>
 	// 针对解析的判断逻辑，首先判断是否为空字符串，若为空发送help信息
 	// ! 解析出不包含at信息的实际内容
-	command, parameters := utility.GetCommandWithParameters(ctx.Common.Content)
-	commandCtx := comcontext.GetNewCommandCtx().Init(ctx.EventHandlerCommonContext).InitExtra(ctx)
+	command, parameters := utility.GetCommandWithParameters(kookCtx.Common.Content)
+	commandCtx := comcontext.GetNewCommandCtx().Init(kookCtx.EventHandlerCommonContext).InitContext(baseCtx).InitExtra(kookCtx)
 	if command != "" {
 		commandCtx.ContextHandler(command, parameters...)
 	} else {
@@ -45,34 +53,54 @@ func CommandHandler(ctx *kook.KmarkdownMessageContext) {
 // ChannelJoinedAsyncHandler is a async handler for channel joined event
 //
 //	@param ctx
-func ChannelJoinedAsyncHandler(ctx *kook.GuildChannelMemberAddContext) {
-	go channelJoinedHandler(ctx)
+func ChannelJoinedAsyncHandler(kookCtx *kook.GuildChannelMemberAddContext) {
+	newCtx := context.Background()
+	newCtx, span := jaeger_client.BetaGoCommandTracer.Start(newCtx, utility.GetCurrentFunc())
+	rawRecord, _ := json.Marshal(&kookCtx.Extra)
+	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
+	defer span.End()
+	go channelJoinedHandler(newCtx, kookCtx)
 }
 
 // guildUpdateAsyncHandler  is a async handler for guild update event
 //
 //	@param ctx
-func guildUpdateAsyncHandler(ctx *kook.GuildUpdateContext) {
-	go guildUpdateHandler(ctx)
+func guildUpdateAsyncHandler(kookCtx *kook.GuildUpdateContext) {
+	go guildUpdateHandler(kookCtx)
 }
 
 // ChannelLeftAsyncHandler  is a async handler for channel left event
 //
 //	@param ctx
-func ChannelLeftAsyncHandler(ctx *kook.GuildChannelMemberDeleteContext) {
-	go channelLeftHandler(ctx)
+func ChannelLeftAsyncHandler(kookCtx *kook.GuildChannelMemberDeleteContext) {
+	newCtx := context.Background()
+	newCtx, span := jaeger_client.BetaGoCommandTracer.Start(newCtx, utility.GetCurrentFunc())
+	rawRecord, _ := json.Marshal(&kookCtx.Extra)
+	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
+	defer span.End()
+	go channelLeftHandler(kookCtx, newCtx)
 }
 
 // ClickEventAsyncHandler  is a async handler for click event
 //
 //	@param ctx
-func ClickEventAsyncHandler(ctx *kook.MessageButtonClickContext) {
-	go clickEventHandler(ctx)
+func ClickEventAsyncHandler(kookCtx *kook.MessageButtonClickContext) {
+	newCtx := context.Background()
+	newCtx, span := jaeger_client.BetaGoCommandTracer.Start(newCtx, utility.GetCurrentFunc())
+	rawRecord, _ := json.Marshal(&kookCtx.Extra)
+	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
+	defer span.End()
+	go clickEventHandler(newCtx, kookCtx)
 }
 
 // MessageEventAsyncHandler  is a async handler for message event
 //
 //	@param ctx
-func MessageEventAsyncHandler(ctx *kook.KmarkdownMessageContext) {
-	go messageEventHandler(ctx)
+func MessageEventAsyncHandler(kookCtx *kook.KmarkdownMessageContext) {
+	newCtx := context.Background()
+	newCtx, span := jaeger_client.BetaGoCommandTracer.Start(newCtx, utility.GetCurrentFunc())
+	rawRecord, _ := json.Marshal(&kookCtx.Extra)
+	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
+	defer span.End()
+	go messageEventHandler(newCtx, kookCtx)
 }

@@ -7,6 +7,7 @@ import (
 	"net"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -230,4 +231,20 @@ func Reconnect() (err error) {
 	}
 	ZapLogger.Info("Reconnecting successfully")
 	return
+}
+
+// GetFuncFromInstance 1
+//
+//	@return string
+func GetFuncFromInstance(ctxFunc interface{}) string {
+	r := strings.Split(runtime.FuncForPC(reflect.ValueOf(ctxFunc).Pointer()).Name(), "/")
+	return r[len(r)-1]
+}
+
+// GetCurrentFunc 1
+//
+//	@return string
+func GetCurrentFunc() string {
+	pc, _, _, _ := runtime.Caller(1)
+	return runtime.FuncForPC(pc).Name()
 }

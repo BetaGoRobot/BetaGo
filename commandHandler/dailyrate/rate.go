@@ -1,13 +1,16 @@
 package dailyrate
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type timeCostStru struct {
@@ -16,9 +19,13 @@ type timeCostStru struct {
 	TimeCost time.Duration
 }
 
-func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error) {
+func GetRateHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	title := "勤恳在线排行榜"
-	quoteID := ""
+	// quoteID := ""
 	matchSelect := utility.GetDbConnection().
 		Debug().
 		Table("betago.channel_log_exts").
@@ -48,7 +55,7 @@ func GetRateHandler(targetID, msgID, authorID string, args ...string) (err error
 		Order("time_cost DESC")
 	if len(args) != 0 {
 		title = "近24小时在线时长"
-		quoteID = msgID
+		// quoteID = msgID
 		matchSelect = matchSelect.Where("user_id = ?", args[0])
 	}
 	// 获取24小时的整体在线情况

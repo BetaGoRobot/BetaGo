@@ -1,16 +1,19 @@
 package hitokoto
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var (
@@ -51,7 +54,11 @@ type RespBody struct {
 //	@param authorID
 //	@param args
 //	@return err
-func GetHitokotoHandler(targetID, msgID, authorID string, args ...string) (err error) {
+func GetHitokotoHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	params := make([]string, 0)
 	for index := range args {
 		switch args[index] {
@@ -111,7 +118,7 @@ func GetHitokotoHandler(targetID, msgID, authorID string, args ...string) (err e
 			Type:     kook.MessageTypeCard,
 			TargetID: targetID,
 			Content:  cardMessageStr,
-			Quote:    msgID,
+			Quote:    quoteID,
 		},
 	})
 	return

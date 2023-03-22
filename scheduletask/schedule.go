@@ -1,6 +1,7 @@
 package scheduletask
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sync"
@@ -107,7 +108,7 @@ func DailyRate() {
 			if getOrSetCache("DailyRate") {
 				continue
 			}
-			dailyrate.GetRateHandler("3241026226723225", "", "")
+			dailyrate.GetRateHandler(context.Background(), "3241026226723225", "", "")
 		}
 	}
 }
@@ -127,7 +128,7 @@ func DailyNews() {
 			if getOrSetCache("DailyNews") {
 				continue
 			}
-			news.Handler("3241026226723225", "", "")
+			news.Handler(context.Background(), "3241026226723225", "", "")
 		}
 	}
 }

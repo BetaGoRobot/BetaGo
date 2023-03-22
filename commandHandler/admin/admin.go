@@ -1,13 +1,16 @@
 package admin
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/lonelyevil/kook"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // ShowAdminHandler 显示管理员
@@ -15,7 +18,7 @@ import (
 //	@param targetID
 //	@param quoteID
 //	@return err
-func ShowAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
+func ShowAdminHandler(ctx context.Context, TargetID, QuoteID, authorID string, args ...string) (err error) {
 	admins := make([]utility.Administrator, 0)
 	utility.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level DESC")
 	modules := make([]interface{}, 0)
@@ -90,7 +93,11 @@ func ShowAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err e
 //	@param QuoteID
 //	@param TargetID
 //	@return err PASS
-func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
+func AddAdminHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	var (
 		succUserID []string
 		ec         utility.ErrorCollector
@@ -163,9 +170,9 @@ func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err er
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     kook.MessageTypeCard,
-				TargetID: TargetID,
+				TargetID: targetID,
 				Content:  cardMessageStr,
-				Quote:    QuoteID,
+				Quote:    quoteID,
 			},
 		},
 	)
@@ -182,7 +189,11 @@ func AddAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err er
 //	@param QuoteID
 //	@param TargetID
 //	@return err PASS
-func RemoveAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
+func RemoveAdminHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	var (
 		ec         utility.ErrorCollector
 		succUserID []string
@@ -247,9 +258,9 @@ func RemoveAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err
 	betagovar.GlobalSession.MessageCreate(&kook.MessageCreate{
 		MessageCreateBase: kook.MessageCreateBase{
 			Type:     kook.MessageTypeCard,
-			TargetID: TargetID,
+			TargetID: targetID,
 			Content:  cardMessageStr,
-			Quote:    QuoteID,
+			Quote:    quoteID,
 		},
 	})
 	if !ec.NoError() {
@@ -265,7 +276,11 @@ func RemoveAdminHandler(TargetID, QuoteID, authorID string, args ...string) (err
 //	@param authorID
 //	@param args
 //	@return err
-func DeleteAllMessageHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
+func DeleteAllMessageHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	var (
 		ec         utility.ErrorCollector
 		messageNum int
@@ -283,18 +298,18 @@ func DeleteAllMessageHandler(TargetID, QuoteID, authorID string, args ...string)
 	}
 	if messageNum > 50 {
 		for i := 0; i < messageNum/50; i++ {
-			ms, err := betagovar.GlobalSession.MessageList(TargetID, kook.MessageListWithPageSize(50))
+			ms, err := betagovar.GlobalSession.MessageList(targetID, kook.MessageListWithPageSize(50))
 			if err != nil {
 				ec.Collect(err)
 			}
 			for i := len(ms) - 1; i >= 0; i-- {
 				err := betagovar.GlobalSession.MessageDelete(ms[i].ID)
-				backupData(ms[i].Author.Username, ms[i].Content, ms[i].ID, TargetID)
+				backupData(ms[i].Author.Username, ms[i].Content, ms[i].ID, targetID)
 				ec.Collect(err)
 			}
 		}
 	} else {
-		ms, err := betagovar.GlobalSession.MessageList(TargetID, kook.MessageListWithPageSize(messageNum))
+		ms, err := betagovar.GlobalSession.MessageList(targetID, kook.MessageListWithPageSize(messageNum))
 		if err != nil {
 			ec.Collect(err)
 		}
@@ -308,7 +323,7 @@ func DeleteAllMessageHandler(TargetID, QuoteID, authorID string, args ...string)
 			ec.Collect(err)
 			msg, err := getStringFromNode(ms[i].Content)
 			ec.Collect(err)
-			backupData(ms[i].Author.Username, msg, ms[i].ID, TargetID)
+			backupData(ms[i].Author.Username, msg, ms[i].ID, targetID)
 		}
 	}
 	return ec.CheckError()
@@ -321,7 +336,11 @@ func DeleteAllMessageHandler(TargetID, QuoteID, authorID string, args ...string)
 //	@param authorID
 //	@param args
 //	@return err
-func ReconnectHandler(TargetID, QuoteID, authorID string, args ...string) (err error) {
+func ReconnectHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	if !utility.CheckIsAdmin(authorID) {
 		// 不存在则不处理，返回信息
 		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))

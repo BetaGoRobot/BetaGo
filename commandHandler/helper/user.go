@@ -1,11 +1,14 @@
 package helper
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/lonelyevil/kook"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // GetUserInfoHandler 获取用户信息
@@ -13,7 +16,11 @@ import (
 //	@param userID
 //	@param guildID
 //	@return err
-func GetUserInfoHandler(targetID, quoteID, authorID string, guildID string, args ...string) (err error) {
+func GetUserInfoHandler(ctx context.Context, targetID, quoteID, authorID string, guildID string, args ...string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
+	defer span.End()
+
 	var userID string
 	if len(args) == 1 {
 		userID = args[0]

@@ -1,13 +1,17 @@
 package context
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
-	"time"
 
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/enescakir/emoji"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/lonelyevil/kook"
 )
 
@@ -15,6 +19,8 @@ import (
 type CommandContext struct {
 	Common *CommandCommonContext
 	Extra  *CommandExtraContext
+	Ctx    context.Context
+	span   trace.Span
 }
 
 // CommandCommonContext  is a context for command.
@@ -44,7 +50,7 @@ func (ctx *CommandContext) IsAdmin() bool {
 //	@param AuthorID
 //	@param parameters
 //	@return error
-type CommandContextFunc func(TargetID, MsgID, AuthorID string, parameters ...string) error
+type CommandContextFunc func(ctx context.Context, TargetID, MsgID, AuthorID string, parameters ...string) error
 
 // CommandContextWithGuildIDFunc is a function for command.
 //
@@ -54,7 +60,7 @@ type CommandContextFunc func(TargetID, MsgID, AuthorID string, parameters ...str
 //	@param guildID
 //	@param args
 //	@return error
-type CommandContextWithGuildIDFunc func(targetID, quoteID, authorID string, guildID string, args ...string) error
+type CommandContextWithGuildIDFunc func(ctx context.Context, targetID, quoteID, authorID string, guildID string, args ...string) error
 
 // GetNewCommandCtx  is a function for command.
 //
@@ -77,6 +83,16 @@ func (ctx *CommandContext) Init(khlCtx *kook.EventHandlerCommonContext) *Command
 			MsgID:    khlCtx.Common.MsgID,
 		},
 	}
+	return ctx
+}
+
+// InitContext 1
+//
+//	@receiver ctx
+//	@param baseCtx
+//	@return *CommandContext
+func (ctx *CommandContext) InitContext(baseCtx context.Context) *CommandContext {
+	ctx.Ctx = baseCtx
 	return ctx
 }
 
@@ -107,7 +123,6 @@ func (ctx *CommandContext) InitExtra(khlCtx interface{}) *CommandContext {
 //	@param err
 func (ctx *CommandContext) ErrorSenderHandler(err error) {
 	if err != nil {
-		errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
 	}
 }
 
@@ -116,15 +131,20 @@ func (ctx *CommandContext) ErrorSenderHandler(err error) {
 //	@receiver ctx
 //	@param err
 func (ctx *CommandContext) ErrorSenderHandlerNew(ctxFunc interface{}, parameters ...string) {
+	ctx.Ctx, ctx.span = jaeger_client.BetaGoCommandTracer.Start(ctx.Ctx, utility.GetFuncFromInstance(ctxFunc))
+	rawRecord, _ := json.Marshal(&ctx.Extra)
+	ctx.span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
+	defer ctx.span.End()
+
 	var err error
 	if realFunc, ok := ctxFunc.(CommandContextFunc); ok {
-		err = realFunc(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...)
+		err = realFunc(ctx.Ctx, ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, parameters...)
 	}
 	if realFunc, ok := ctxFunc.(CommandContextWithGuildIDFunc); ok {
-		err = realFunc(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, ctx.Extra.GuildID, parameters...)
+		err = realFunc(ctx.Ctx, ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, ctx.Extra.GuildID, parameters...)
 	}
 	if err != nil {
-		errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err)
+		errorsender.SendErrorInfo(ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID, err, ctx.Ctx)
 	}
 }
 
@@ -134,21 +154,33 @@ func (ctx *CommandContext) ErrorSenderHandlerNew(ctxFunc interface{}, parameters
 //	@param Command
 //	@param parameters
 func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) {
+	ctx.Ctx, ctx.span = jaeger_client.BetaGoCommandTracer.Start(ctx.Ctx, utility.GetCurrentFunc())
+	rawRecord, _ := json.Marshal(&ctx.Extra)
+	ctx.span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
+	defer ctx.span.End()
+
 	defer utility.CollectPanic(ctx, ctx.Common.TargetID, ctx.Common.MsgID, ctx.Common.AuthorID)
+
 	var ctxFunc CommandContextFunc
 	var ctxGuildFunc CommandContextWithGuildIDFunc
 	ctxFunc = commandMapping[Command]
 	ctxGuildFunc = commandMappingWithGuildID[Command]
 	if ctxFunc == nil && ctxGuildFunc == nil {
-		ctx.ErrorSenderHandler(fmt.Errorf(emoji.QuestionMark.String()+"未知指令 `%s`", Command))
+		errorsender.SendErrorInfo(
+			ctx.Common.TargetID,
+			ctx.Common.MsgID,
+			ctx.Common.AuthorID,
+			fmt.Errorf(emoji.QuestionMark.String()+"未知指令 `%s`", Command),
+			ctx.Ctx,
+		)
 		return
 	}
 	if ctxFunc != nil {
-		defer utility.GetTimeCost(time.Now(), Command)
+		// defer utility.GetTimeCost(time.Now(), Command)
 		ctx.ErrorSenderHandlerNew(ctxFunc, parameters...)
 	}
 	if ctxGuildFunc != nil {
-		defer utility.GetTimeCost(time.Now(), Command)
+		// defer utility.GetTimeCost(time.Now(), Command)
 		ctx.ErrorSenderHandlerNew(ctxGuildFunc, parameters...)
 	}
 }

@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -9,12 +10,14 @@ import (
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/wordcontrol"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/lonelyevil/kook"
+	"go.opentelemetry.io/otel/attribute"
 )
 
-func clickEventHandler(ctx *kook.MessageButtonClickContext) {
+func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickContext) {
 	if err := betagovar.FlowControl.Top(); err != nil {
-		errorsender.SendErrorInfo(ctx.Extra.TargetID, "", "", err)
+		errorsender.SendErrorInfo(ctx.Extra.TargetID, "", "", err, context.Background())
 		return
 	}
 	betagovar.FlowControl.Add()
@@ -30,22 +33,23 @@ func clickEventHandler(ctx *kook.MessageButtonClickContext) {
 			Extra: &comcontext.CommandExtraContext{
 				GuildID: ctx.Extra.GuildID,
 			},
+			Ctx: baseCtx,
 		}
 	)
 	commandCtx.ContextHandler(command)
 	time.Sleep(time.Second)
 }
 
-func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
+func channelJoinedHandler(baseCtx context.Context, ctx *kook.GuildChannelMemberAddContext) {
 	defer utility.CollectPanic(ctx.Common, ctx.Common.TargetID, ctx.Common.MsgID, "")
 	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
 	if err != nil {
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err, baseCtx)
 		return
 	}
 	channelInfo, err := utility.GetChannnelInfo(ctx.Extra.ChannelID)
 	if err != nil {
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err, baseCtx)
 		return
 	}
 	// !频道日志记录
@@ -72,7 +76,7 @@ func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 		},
 	}}.BuildMessage()
 	if err != nil {
-		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err, baseCtx)
 		return
 	}
 	resp, err := betagovar.GlobalSession.MessageCreate(
@@ -85,30 +89,30 @@ func channelJoinedHandler(ctx *kook.GuildChannelMemberAddContext) {
 		},
 	)
 	if err != nil {
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err, baseCtx)
 		return
 	}
 	newChanLog.MsgID = resp.MsgID
 	// 写入数据库记录
 	if err = newChanLog.AddJoinedRecord(); err != nil {
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err, baseCtx)
 	}
 }
 
-func guildUpdateHandler(ctx *kook.GuildUpdateContext) {
+func guildUpdateHandler(kookCtx *kook.GuildUpdateContext) {
 }
 
-func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
-	defer utility.CollectPanic(ctx.Extra, ctx.Common.TargetID, "", ctx.Extra.UserID)
+func channelLeftHandler(kookCtx *kook.GuildChannelMemberDeleteContext, baseCtx context.Context) {
+	defer utility.CollectPanic(kookCtx.Extra, kookCtx.Common.TargetID, "", kookCtx.Extra.UserID)
 	// 离开频道时，记录频道信息
-	userInfo, err := utility.GetUserInfo(ctx.Extra.UserID, ctx.Common.TargetID)
+	userInfo, err := utility.GetUserInfo(kookCtx.Extra.UserID, kookCtx.Common.TargetID)
 	if err != nil {
-		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err, baseCtx)
 		return
 	}
-	channelInfo, err := utility.GetChannnelInfo(ctx.Extra.ChannelID)
+	channelInfo, err := utility.GetChannnelInfo(kookCtx.Extra.ChannelID)
 	if err != nil {
-		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err, baseCtx)
 		return
 	}
 
@@ -119,10 +123,10 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 		ChannelID:   channelInfo.ID,
 		ChannelName: channelInfo.Name,
 		JoinedTime:  "",
-		LeftTime:    ctx.Extra.ExitedAt.ToTime().Format(betagovar.TimeFormat),
+		LeftTime:    kookCtx.Extra.ExitedAt.ToTime().Format(betagovar.TimeFormat),
 	}
 	if newChanLog, err = newChanLog.UpdateLeftTime(); err != nil {
-		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err)
+		errorsender.SendErrorInfo(betagovar.TestChanID, "", userInfo.ID, err, baseCtx)
 		return
 	}
 	joinTimeT, _ := time.Parse(betagovar.TimeFormat, newChanLog.JoinedTime)
@@ -145,7 +149,7 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 		},
 	}}.BuildMessage()
 	if err != nil {
-		errorsender.SendErrorInfo(ctx.Common.TargetID, "", "", err)
+		errorsender.SendErrorInfo(kookCtx.Common.TargetID, "", "", err, baseCtx)
 		return
 	}
 	err = betagovar.GlobalSession.MessageUpdate(
@@ -157,17 +161,19 @@ func channelLeftHandler(ctx *kook.GuildChannelMemberDeleteContext) {
 		},
 	)
 	if err != nil {
-		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err)
+		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", "", err, baseCtx)
 		return
 	}
 }
 
-func messageEventHandler(ctx *kook.KmarkdownMessageContext) {
-	go func() {
-		if ctx.Common.Type != kook.MessageTypeKMarkdown {
-			return
-		}
-		defer wordcontrol.RemoveDirtyWords(ctx)
-		CommandHandler(ctx)
-	}()
+func messageEventHandler(baseCtx context.Context, kookCtx *kook.KmarkdownMessageContext) {
+	baseCtx, span := jaeger_client.BetaGoCommandTracer.Start(baseCtx, utility.GetCurrentFunc())
+	rawRecord, _ := json.Marshal(&kookCtx.Extra)
+	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
+	defer span.End()
+	if kookCtx.Common.Type != kook.MessageTypeKMarkdown {
+		return
+	}
+	defer wordcontrol.RemoveDirtyWords(kookCtx)
+	CommandHandler(baseCtx, kookCtx)
 }
