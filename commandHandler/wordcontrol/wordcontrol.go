@@ -17,7 +17,7 @@ func RemoveDirtyWords(ctx *kook.KmarkdownMessageContext) {
 		ctx.Session.MessageCreate(&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				TargetID: ctx.Common.TargetID,
-				Content:  fmt.Sprintf("%s 使用了侮辱发言%s, 消息已被移除, 不可以向他学习哦", ctx.Extra.Author.Nickname, message),
+				Content:  fmt.Sprintf("%s 使用了侮辱发言`%s`, 消息已被移除, 不可以向他学习哦", ctx.Extra.Author.Nickname, message),
 				Quote:    ctx.Common.MsgID,
 			},
 		})
