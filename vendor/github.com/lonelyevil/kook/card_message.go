@@ -221,7 +221,8 @@ func (c *CardMessageContext) AddItem(i ...interface{}) *CardMessageContext {
 }
 
 // CardMessageDivider is the type for 模块-分割线模块.
-type CardMessageDivider struct{}
+type CardMessageDivider struct {
+}
 
 // MarshalJSON adds additional type field when marshaling
 func (c CardMessageDivider) MarshalJSON() ([]byte, error) {

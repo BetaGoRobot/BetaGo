@@ -3,7 +3,6 @@ package scheduletask
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -140,7 +139,7 @@ func OnlineTest() {
 			time.Sleep(time.Second * 5)
 		})
 		selfCheckInner()
-		time.Sleep(time.Minute * 1)
+		time.Sleep(time.Second * 5)
 	}
 }
 
@@ -155,22 +154,23 @@ func selfCheckInner() {
 		})
 	if err != nil {
 		fmt.Println("Cannot send message, killing...", err.Error())
-		os.Exit(-1)
+		return
 	}
 	err = betagovar.GlobalSession.MessageDelete(resp.MsgID)
 	if err != nil {
 		fmt.Println("Cannot delete sent message, killing...")
-		os.Exit(-1)
+		return
 	}
 	time.Sleep(time.Second * 1)
 	select {
 	case <-betagovar.SelfCheckChan:
-		utility.ZapLogger.Debug("Self check successful")
+		utility.ZapLogger.Info("Self check successful")
 	default:
 		gotify.SendMessage("", "Self check failed, reconnecting...", 7)
-		err := utility.Reconnect()
-		if err != nil {
-			gotify.SendMessage("", "Reconnect failed, error is "+err.Error(), 7)
-		}
+		betagovar.ReconnectChan <- "reconnect"
+		// err := utility.Reconnect()
+		// if err != nil {
+		// 	gotify.SendMessage("", "Reconnect failed, error is "+err.Error(), 7)
+		// }
 	}
 }

@@ -3,8 +3,8 @@ package utility
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net"
+	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -13,10 +13,11 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/golang/freetype/truetype"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
+	"github.com/lonelyevil/kook/log_adapter/plog"
+	"github.com/phuslu/log"
 )
 
 // MicrosoftYaHei  字体类型,未来荧黑
@@ -31,12 +32,12 @@ func InitGlowSansSCFontType() {
 	fontFile := filepath.Join(betagovar.FontPath, "Microsoft Yahei.ttf")
 	fontBytes, err := ioutil.ReadFile(fontFile)
 	if err != nil {
-		log.Println(err)
+		ZapLogger.Info("errot init font", zaplog.Error(err))
 		return
 	}
 	MicrosoftYaHei, err = truetype.Parse(fontBytes)
 	if err != nil {
-		log.Println(err)
+		ZapLogger.Info("errot init font", zaplog.Error(err))
 		return
 	}
 }
@@ -236,20 +237,31 @@ func Reconnect() (err error) {
 	if err != nil {
 		return
 	}
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(time.Second)
+	betagovar.GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
+		Level:  log.InfoLevel,
+		Writer: &log.ConsoleWriter{},
+	}))
+
 	err = betagovar.GlobalSession.Open()
-	retryCnt := 0
-	for err != nil {
-		time.Sleep(100 * time.Millisecond)
-		err = betagovar.GlobalSession.Open()
-		if err != nil {
-			gotify.SendMessage("", "Reconnect failed, error is "+err.Error(), 7)
-		}
-		if retryCnt++; retryCnt == 5 {
-			return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
-		}
-	}
+	// retryCnt := 0
+	// for err != nil {
+	// 	time.Sleep(100 * time.Millisecond)
+	// 	betagovar.GlobalSession.Close()
+	// 	betagovar.GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
+	// 		Level:  log.InfoLevel,
+	// 		Writer: &log.ConsoleWriter{},
+	// 	}))
+	// 	err = betagovar.GlobalSession.Open()
+	// 	if err != nil {
+	// 		gotify.SendMessage("", "Reconnect failed, error is "+err.Error(), 7)
+	// 	}
+	// 	if retryCnt++; retryCnt == 5 {
+	// 		return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
+	// 	}
+	// }
 	ZapLogger.Info("Reconnecting successfully")
+	time.Sleep(time.Second * 5)
 	return
 }
 

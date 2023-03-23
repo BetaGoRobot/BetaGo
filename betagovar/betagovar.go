@@ -70,6 +70,9 @@ type CardMessageColModule struct {
 // SelfCheckChan 自我检查通道
 var SelfCheckChan = make(chan string, 1)
 
+// ReconnectChan 1
+var ReconnectChan = make(chan string)
+
 // GlobalSession 全局共享session
 var GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
 	Level:  log.InfoLevel,

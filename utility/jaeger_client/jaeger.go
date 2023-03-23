@@ -1,12 +1,14 @@
 package jaeger_client
 
 import (
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func init() {
@@ -20,10 +22,19 @@ const (
 )
 
 // betaGoJaegerProvider jaeger provider
-var betaGoJaegerProvider, _ = tracerProvider("http://jaeger-all-in-one-ix-chart.ix-jaeger-all-in-one:14268/api/traces")
+var betaGoJaegerProvider *tracesdk.TracerProvider
+
+func init() {
+	if betagovar.IsTest {
+		betaGoJaegerProvider, _ = tracerProvider("http://192.168.31.74:14268/api/traces")
+	} else {
+		betaGoJaegerProvider, _ = tracerProvider("http://jaeger-all-in-one-ix-chart.ix-jaeger-all-in-one:14268/api/traces")
+	}
+	BetaGoCommandTracer = betaGoJaegerProvider.Tracer("command-handler")
+}
 
 // BetaGoCommandTracer a
-var BetaGoCommandTracer = betaGoJaegerProvider.Tracer("command-handler")
+var BetaGoCommandTracer trace.Tracer
 
 // tracerProvider returns an OpenTelemetry TracerProvider configured to use
 // the Jaeger exporter that will send spans to the provided url. The returned

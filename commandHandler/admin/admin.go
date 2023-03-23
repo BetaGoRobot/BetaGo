@@ -395,5 +395,6 @@ func ReconnectHandler(ctx context.Context, targetID, quoteID, authorID string, a
 		// 不存在则不处理，返回信息
 		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))
 	}
-	return utility.Reconnect()
+	betagovar.ReconnectChan <- "reconnect"
+	return
 }
