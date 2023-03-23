@@ -139,7 +139,7 @@ func OnlineTest() {
 			time.Sleep(time.Second * 5)
 		})
 		selfCheckInner()
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Second * 30)
 	}
 }
 
@@ -168,9 +168,5 @@ func selfCheckInner() {
 	default:
 		gotify.SendMessage("", "Self check failed, reconnecting...", 7)
 		betagovar.ReconnectChan <- "reconnect"
-		// err := utility.Reconnect()
-		// if err != nil {
-		// 	gotify.SendMessage("", "Reconnect failed, error is "+err.Error(), 7)
-		// }
 	}
 }
