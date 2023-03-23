@@ -12,6 +12,12 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+// ChatContextRecord is
+type ChatContextRecord struct {
+	UserID    string `json:"user_id"`
+	SessionID string `json:"session_id"`
+}
+
 // Administrator is the struct of administrator
 type Administrator struct {
 	gorm.Model
@@ -65,7 +71,7 @@ func init() {
 
 	// migrate
 	db := GetDbConnection()
-	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLogExt{}, &AlertList{})
+	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLogExt{}, &AlertList{}, &ChatContextRecord{})
 	if err != nil {
 		ZapLogger.Error("init", zaplog.Error(err))
 	}

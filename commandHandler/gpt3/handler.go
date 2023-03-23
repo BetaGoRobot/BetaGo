@@ -25,7 +25,7 @@ func ClientHandler(ctx context.Context, targetID, quoteID, authorID string, args
 	defer span.End()
 
 	msg := strings.Join(args, " ")
-	res, err := CreateChatCompletion(msg)
+	res, err := CreateChatCompletion(ctx, msg, authorID)
 	if err != nil {
 		return
 	}

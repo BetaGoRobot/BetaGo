@@ -1,7 +1,14 @@
 package gpt3
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestCreateChatCompletion(t *testing.T) {
-	CreateChatCompletion("zsh是什么")
+	CreateChatCompletion(context.Background(), "zsh是什么", "")
+}
+
+func TestModerationCheck(t *testing.T) {
+	ModerationCheck(context.Background(), "I want to kill you")
 }
