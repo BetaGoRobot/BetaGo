@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/golang/freetype/truetype"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
@@ -241,6 +242,9 @@ func Reconnect() (err error) {
 	for err != nil {
 		time.Sleep(100 * time.Millisecond)
 		err = betagovar.GlobalSession.Open()
+		if err != nil {
+			gotify.SendMessage("", "Reconnect failed, error is "+err.Error(), 7)
+		}
 		if retryCnt++; retryCnt == 5 {
 			return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
 		}
