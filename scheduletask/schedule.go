@@ -156,9 +156,10 @@ func selfCheckInner() {
 		fmt.Println("Cannot send message, killing...", err.Error())
 		return
 	}
+	time.Sleep(time.Millisecond * 100)
 	err = betagovar.GlobalSession.MessageDelete(resp.MsgID)
 	if err != nil {
-		fmt.Println("Cannot delete sent message, killing...")
+		fmt.Println("Cannot delete sent message, return...")
 		return
 	}
 	time.Sleep(time.Second * 1)
