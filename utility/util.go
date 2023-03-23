@@ -231,7 +231,10 @@ func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (
 
 // Reconnect 重建链接
 func Reconnect() (err error) {
-	betagovar.GlobalSession.Close()
+	err = betagovar.GlobalSession.Close()
+	if err != nil {
+		return
+	}
 	time.Sleep(100 * time.Millisecond)
 	err = betagovar.GlobalSession.Open()
 	retryCnt := 0
