@@ -1,3 +1,4 @@
+// Package scheduletask 存放定时任务
 package scheduletask
 
 import (
@@ -19,8 +20,9 @@ import (
 
 var once = &sync.Once{}
 
-var SelfCheckCache = cache.New(time.Minute*30, time.Minute)
+// var SelfCheckCache = cache.New(time.Minute*30, time.Minute)
 
+// DailyTaskCache  每日任务缓存
 var DailyTaskCache = cache.New(time.Hour*3, time.Minute)
 
 // DailyGetSen 每小时发送
@@ -121,6 +123,7 @@ func getOrSetCache(key string) bool {
 	return false
 }
 
+// DailyNews 每日新闻
 func DailyNews() {
 	for {
 		time.Sleep(time.Minute)
@@ -133,6 +136,7 @@ func DailyNews() {
 	}
 }
 
+// OnlineTest 在线测试
 func OnlineTest() {
 	for {
 		once.Do(func() {
