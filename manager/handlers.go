@@ -176,6 +176,13 @@ func messageEventHandler(baseCtx context.Context, kookCtx *kook.KmarkdownMessage
 	if kookCtx.Common.Type != kook.MessageTypeKMarkdown {
 		return
 	}
+	// 配合每分钟自我健康检查，接收到指定消息写入chan
+	if kookCtx.Common.Content == betagovar.SelfCheckMessage && kookCtx.Extra.Author.Bot {
+		betagovar.SelfCheckChan <- "ok"
+	}
+	if kookCtx.Extra.Author.Bot {
+		return
+	}
 	defer wordcontrol.RemoveDirtyWords(kookCtx)
 	CommandHandler(baseCtx, kookCtx)
 }

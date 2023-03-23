@@ -24,10 +24,6 @@ func CommandHandler(baseCtx context.Context, kookCtx *kook.KmarkdownMessageConte
 	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer span.End()
 
-	// 配合每分钟自我健康检查，接收到指定消息写入chan
-	if kookCtx.Common.Content == betagovar.SelfCheckMessage {
-		betagovar.SelfCheckChan <- "ok"
-	}
 	if kookCtx.Extra.Author.Bot {
 		return
 	}
