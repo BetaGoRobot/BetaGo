@@ -1,17 +1,23 @@
 package gpt3
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/carlmjohnson/requests"
 	"github.com/oliveagle/jsonpath"
+	"github.com/spyzhov/ajson"
 )
 
 var (
@@ -36,8 +42,11 @@ type Message struct {
 
 // GPTClient GPT的请求体
 type GPTClient struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
+	Model     string      `json:"model"`
+	Messages  []Message   `json:"messages"`
+	Stream    bool        `json:"stream,omitempty"`
+	AsyncChan chan string `json:"-"`
+	StopChan  chan string `json:"-"`
 }
 
 // SetContent 设置内容
@@ -125,5 +134,56 @@ func (g *GPTClient) Post() (msg string, err error) {
 		completionTokens.(float64)*0.01*0.001,
 		int(totalTokens.(float64)),
 		totalTokens.(float64)*0.01*0.001)
+	return
+}
+
+// PostWithStream  流式请求
+//
+//	@receiver g
+//	@param ctx
+//	@return executeMsg
+//	@return err
+func (g *GPTClient) PostWithStream(ctx context.Context) (err error) {
+	req, err := requests.
+		URL("https://api.openai.com/v1/chat/completions").
+		Bearer(apiKey).
+		BodyJSON(&g).
+		Transport(&http.Transport{
+			Proxy: http.ProxyURL(ParsedProxyURL),
+		}).
+		Request(context.Background())
+
+	rsp, err := httptool.HTTPClient.Do(req)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	reader := bufio.NewReader(rsp.Body)
+	for {
+		line, err := reader.ReadBytes('\n')
+		if err == io.EOF {
+			break
+		}
+		lineJSON := bytes.TrimLeft(line, "data: ")
+		res, err := ajson.JSONPath(lineJSON, "$..content")
+		if err != nil {
+			continue
+		}
+		if len(res) > 0 {
+			r, err := res[0].GetString()
+			if err != nil {
+				log.Println(err.Error())
+			}
+			select {
+			case <-g.StopChan:
+				close(g.AsyncChan)
+				close(g.StopChan)
+				return nil
+			default:
+				g.AsyncChan <- r
+			}
+		}
+	}
+
 	return
 }

@@ -13,6 +13,9 @@ import (
 
 var apiKey = os.Getenv("GPT_TOKEN")
 
+// GPTAsyncMap 异步map
+var GPTAsyncMap = make(map[string]*chan string)
+
 // CreateChatCompletion
 //
 //	@param msg
@@ -31,6 +34,9 @@ func CreateChatCompletion(ctx context.Context, msg, authorID string) (message st
 	gptClient.SetContent(msg)
 	message, err = gptClient.Post()
 	return
+}
+
+func CreateChatCompletionStream(ctx context.Context, input, authorID string) {
 }
 
 func ModerationCheck(ctx context.Context, content string) (res []string) {

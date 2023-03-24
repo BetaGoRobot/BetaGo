@@ -8,6 +8,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	comcontext "github.com/BetaGoRobot/BetaGo/commandHandler/context"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
+	"github.com/BetaGoRobot/BetaGo/commandHandler/gpt3"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/wordcontrol"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
@@ -36,6 +37,10 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 			Ctx: baseCtx,
 		}
 	)
+	if strings.HasPrefix(command, "GPTTrace:") {
+		*gpt3.GPTAsyncMap[command] <- "&&&&STOP&&&&"
+		return
+	}
 	commandCtx.ContextHandler(command)
 	time.Sleep(time.Second)
 }

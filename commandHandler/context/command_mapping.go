@@ -28,7 +28,7 @@ var commandMapping = map[string]CommandContextFunc{
 	betagovar.ShortCommandReconnect:   admin.ReconnectHandler,
 	CommandContextTypeRoll:            roll.RandRollHandler,
 	betagovar.ShortCommandRoll:        roll.RandRollHandler,
-	CommandContextTypeGPT:             gpt3.ClientHandler,
+	CommandContextTypeGPT:             gpt3.ClientHandlerStream,
 	betagovar.ShortCommandPing:        helper.PingHandler,
 	CommandContextTypePing:            helper.PingHandler,
 	betagovar.ShortCommandHitokoto:    hitokoto.GetHitokotoHandler,
