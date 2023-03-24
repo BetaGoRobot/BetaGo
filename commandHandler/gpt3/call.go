@@ -153,7 +153,7 @@ func (g *GPTClient) PostWithStream(ctx context.Context) (err error) {
 		}).
 		Request(context.Background())
 
-	rsp, err := httptool.HTTPClient.Do(req)
+	rsp, err := httptool.HTTPClientWithProxy.Do(req)
 	if err != nil {
 		log.Println(err.Error())
 		return
