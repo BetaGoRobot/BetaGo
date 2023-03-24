@@ -121,10 +121,12 @@ func (fc *FlowControlType) Sub() {
 	fc.M.Unlock()
 }
 
+var ErrorOverReq = fmt.Errorf("每秒仅允许5次请求，请求过快，请稍后重试")
+
 func (fc *FlowControlType) Top() (err error) {
 	fc.M.RLock()
 	if fc.Cnt >= 5 {
-		return fmt.Errorf("每秒仅允许5次请求，请求过快，请稍后重试")
+		return ErrorOverReq
 	}
 	fc.M.RUnlock()
 	return

@@ -28,35 +28,61 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx cont
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.RecordError(sourceErr)
 	defer span.End()
-
-	cardMessageStr, err := kook.CardMessage{
-		&kook.CardMessageCard{
-			Theme: "danger",
-			Size:  "sm",
-			Modules: []interface{}{
-				kook.CardMessageHeader{
-					Text: kook.CardMessageElementText{
-						Content: emoji.Warning.String() + " Command Error: 指令错误",
-						Emoji:   true,
+	var (
+		cardMessageStr string
+		err            error
+	)
+	if sourceErr == betagovar.ErrorOverReq {
+		cardMessageStr, err = kook.CardMessage{
+			&kook.CardMessageCard{
+				Theme: "danger",
+				Size:  "lg",
+				Modules: []interface{}{
+					kook.CardMessageHeader{
+						Text: kook.CardMessageElementText{
+							Content: emoji.Warning.String() + " Command Error",
+							Emoji:   true,
+						},
 					},
-				},
-				&kook.CardMessageDivider{},
-				kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeRight,
-					Text: kook.CardMessageElementKMarkdown{
-						Content: "请联系开发者并提供此ID\n\nTraceID: `" +
-							span.SpanContext().TraceID().String() + "`\n",
-					},
-					Accessory: kook.CardMessageElementButton{
-						Theme: kook.CardThemeWarning,
-						Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
-						Click: "link",
-						Text:  "链路追踪",
+					kook.CardMessageSection{
+						Text: kook.CardMessageElementKMarkdown{
+							Content: sourceErr.Error(),
+						},
 					},
 				},
 			},
-		},
-	}.BuildMessage()
+		}.BuildMessage()
+	} else {
+		cardMessageStr, err = kook.CardMessage{
+			&kook.CardMessageCard{
+				Theme: "danger",
+				Size:  "sm",
+				Modules: []interface{}{
+					kook.CardMessageHeader{
+						Text: kook.CardMessageElementText{
+							Content: emoji.Warning.String() + " Command Error: 指令错误",
+							Emoji:   true,
+						},
+					},
+					&kook.CardMessageDivider{},
+					kook.CardMessageSection{
+						Mode: kook.CardMessageSectionModeRight,
+						Text: kook.CardMessageElementKMarkdown{
+							Content: "请联系开发者并提供此ID\n\nTraceID: `" +
+								span.SpanContext().TraceID().String() + "`\n",
+						},
+						Accessory: kook.CardMessageElementButton{
+							Theme: kook.CardThemeWarning,
+							Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+							Click: "link",
+							Text:  "链路追踪",
+						},
+					},
+				},
+			},
+		}.BuildMessage()
+	}
+
 	if err != nil {
 		ZapLogger.Error("SendErrorInfo", zaplog.Error(sourceErr))
 		return
