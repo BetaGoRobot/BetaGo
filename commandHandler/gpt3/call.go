@@ -184,6 +184,7 @@ func (g *GPTClient) PostWithStream(ctx context.Context) (err error) {
 			}
 		}
 	}
-
+	close(g.AsyncChan)
+	close(g.StopChan)
 	return
 }
