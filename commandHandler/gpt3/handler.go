@@ -44,10 +44,10 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 						Content: "",
 					},
 					Accessory: kook.CardMessageElementButton{
-						Theme: kook.CardThemeDanger,
+						Theme: kook.CardThemeSecondary,
 						Value: "GPTTrace:" + spanID,
 						Click: "return-val",
-						Text:  emoji.StopButton.String() + "Stop Generate",
+						Text:  emoji.StopSign.String() + "Stop",
 					},
 				},
 				&kook.CardMessageDivider{},
