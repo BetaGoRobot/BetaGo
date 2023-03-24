@@ -91,7 +91,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 			Content: msg,
 		}},
 		Stream:    true,
-		AsyncChan: make(chan string, 5),
+		AsyncChan: make(chan string),
 		StopChan:  make(chan string),
 	}
 	GPTAsyncMap["GPTTrace:"+spanID] = &g.StopChan
