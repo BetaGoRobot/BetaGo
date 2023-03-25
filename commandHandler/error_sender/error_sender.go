@@ -68,7 +68,7 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx cont
 					kook.CardMessageSection{
 						Mode: kook.CardMessageSectionModeRight,
 						Text: kook.CardMessageElementKMarkdown{
-							Content: "请联系开发者并提供此ID\n\nTraceID: `" +
+							Content: sourceErr.Error() + "\n请联系开发者并提供此ID\nTraceID: `" +
 								span.SpanContext().TraceID().String() + "`\n",
 						},
 						Accessory: kook.CardMessageElementButton{

@@ -28,7 +28,7 @@ var DailyTaskCache = cache.New(time.Hour*3, time.Minute)
 // DailyGetSen 每小时发送
 func DailyGetSen() {
 	for {
-		time.Sleep(time.Second * 30)
+		time.Sleep(time.Second * 40)
 		if time.Now().UTC().Format("15:04") == "00:00" {
 			commandCtx := &command_context.CommandContext{
 				Common: &command_context.CommandCommonContext{
@@ -36,7 +36,7 @@ func DailyGetSen() {
 				},
 				Extra: &command_context.CommandExtraContext{},
 			}
-			commandCtx.ContextHandler("hitokoto")
+			commandCtx.ContextHandler("ONEWORD")
 		}
 	}
 }
