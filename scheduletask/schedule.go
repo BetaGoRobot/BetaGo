@@ -80,7 +80,7 @@ func DailyRecommand() {
 					cardMessage,
 					&kook.CardMessageCard{
 						Theme:   kook.CardThemePrimary,
-						Size:    kook.CardSizeSm,
+						Size:    kook.CardSizeLg,
 						Modules: modules,
 					},
 				)
