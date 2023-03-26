@@ -131,7 +131,7 @@ func DailyNews() {
 			if getOrSetCache("DailyNews") {
 				continue
 			}
-			news.Handler(context.Background(), "3241026226723225", "", "")
+			news.Handler(context.Background(), "3241026226723225", "", "", "morning")
 		}
 	}
 }

@@ -273,10 +273,16 @@ func GetFuncFromInstance(ctxFunc interface{}) string {
 	return r[len(r)-1]
 }
 
+var pcCache = make(map[uintptr]string)
+
 // GetCurrentFunc 1
 //
 //	@return string
 func GetCurrentFunc() string {
 	pc, _, _, _ := runtime.Caller(1)
-	return runtime.FuncForPC(pc).Name()
+	if name, ok := pcCache[pc]; ok {
+		return name
+	}
+	pcCache[pc] = runtime.FuncForPC(pc).Name()
+	return pcCache[pc]
 }
