@@ -11,12 +11,12 @@ import (
 )
 
 // NotifierChanID 发送消息的频道ID
-var NotifierChanID = "8583973157097178"
+var NotifierChanID = "2472013302648680"
 
 const (
 	TimeFormat = "2006-01-02T15:04:05"
 	// BetaGoUpdateChanID  发送更新消息的频道ID
-	BetaGoUpdateChanID = "8937461610423450"
+	BetaGoUpdateChanID = "6422768213722929"
 
 	// ImagePath 图片存储路径
 	ImagePath = "/data/images"
@@ -98,7 +98,7 @@ func init() {
 		RobotName = "No RobotName Configured"
 	}
 	if IsTest {
-		NotifierChanID = "7419593543056418"
+		NotifierChanID = "4988093461275944"
 	}
 }
 

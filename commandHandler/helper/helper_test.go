@@ -6,9 +6,9 @@ import (
 )
 
 func TestAdminCommandHelperHandler(t *testing.T) {
-	AdminCommandHelperHandler(context.Background(), "7419593543056418", "", "")
+	AdminCommandHelperHandler(context.Background(), "4988093461275944", "", "")
 }
 
 func TestUserCommandHelperHandler(t *testing.T) {
-	UserCommandHelperHandler(context.Background(), "7419593543056418", "", "")
+	UserCommandHelperHandler(context.Background(), "4988093461275944", "", "")
 }

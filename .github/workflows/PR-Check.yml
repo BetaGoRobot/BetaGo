@@ -18,7 +18,7 @@ env:
   # 设置 docker 镜像名
   IMAGE_NAME: kevinmatt/betago
   ROBOT_NAME: BetaGo
-  TEST_CHAN_ID: "7419593543056418"
+  TEST_CHAN_ID: "4988093461275944"
   ROBOT_ID: "3508390651"
   NETEASE_PHONE: "${{ secrets.NETEASE_PHONE }}"
   NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
