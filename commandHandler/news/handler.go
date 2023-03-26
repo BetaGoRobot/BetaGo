@@ -32,10 +32,10 @@ var apiDailyMorningReport = "https://api.itapi.cn/api/news/zaobao"
 
 // NewsData a
 type NewsData struct {
-	Rank    int    `json:"rank"`
-	Name    string `json:"name"`
-	ViewNum string `json:"viewnum"`
-	URL     string `json:"url"`
+	Rank    int         `json:"rank"`
+	Name    string      `json:"name"`
+	ViewNum interface{} `json:"viewnum"`
+	URL     string      `json:"url"`
 }
 
 // NewsDataRaw 原始
@@ -66,8 +66,7 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 		MorningHandler(ctx, targetID, quoteID, authorID)
 	}
 	var res NewsDataRaw
-	resCache, found := newsCache.Get(newsType)
-	if found {
+	if resCache, found := newsCache.Get(newsType); found {
 		res = resCache.(NewsDataRaw)
 	} else {
 		resp, err := betagovar.HttpClient.R().
@@ -82,7 +81,6 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 		res = NewsDataRaw{
 			Data: make([]NewsData, 0),
 		}
-		fmt.Println(string(resp.Body()))
 		err = json.Unmarshal(resp.Body(), &res)
 		if err != nil {
 			zapLogger.Error("Unmarshal err", zaplog.Error(err))
@@ -102,6 +100,9 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 			}{"plain-text", title + emoji.Newspaper.String()},
 		})
 		for _, data := range res.Data[:10] {
+			if !strings.HasPrefix(data.URL, "http") {
+				data.URL = "http:" + data.URL
+			}
 			modules = append(modules,
 				kook.CardMessageSection{
 					Text: kook.CardMessageElementKMarkdown{
