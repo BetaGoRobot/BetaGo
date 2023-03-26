@@ -14,6 +14,7 @@ import (
 )
 
 var commandMapping = map[string]CommandContextFunc{
+	CommandContextTypeRestart:         admin.RestartHandler,
 	CommandContextTypeTryPanic:        helper.TryPanic,
 	betagovar.ShortCommandHelp:        helper.CommandRouter,
 	CommandContextTypeHelper:          helper.CommandRouter,

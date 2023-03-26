@@ -18,6 +18,7 @@ const (
 	CommandContextTypePing        = "PING"
 	CommandContextTypeUser        = "GETUSER"
 	CommandContextTypeTryPanic    = "TRYPANIC"
+	CommandContextTypeRestart     = "RESTART"
 	CommandContextTypeDailyRate   = "RATE"
 	CommandContextTypeGPT         = "GPT"
 	CommandContextTypeNews        = "NEWS"

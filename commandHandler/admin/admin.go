@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -396,5 +397,21 @@ func ReconnectHandler(ctx context.Context, targetID, quoteID, authorID string, a
 		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))
 	}
 	betagovar.ReconnectChan <- "reconnect"
+	return
+}
+
+// RestartHandler
+//
+//	@param ctx
+//	@param targetID
+//	@param quoteID
+//	@param authorID
+//	@param args
+func RestartHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	if !utility.CheckIsAdmin(authorID) {
+		// 不存在则不处理，返回信息
+		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))
+	}
+	os.Exit(0)
 	return
 }
