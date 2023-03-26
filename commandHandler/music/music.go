@@ -85,7 +85,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 				cardMessage,
 				&kook.CardMessageCard{
 					Theme: kook.CardThemePrimary,
-					Size:  kook.CardSizeSm,
+					Size:  kook.CardSizeLg,
 					Modules: append(
 						modulesNetese,
 						&kook.CardMessageDivider{},
