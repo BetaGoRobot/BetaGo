@@ -36,7 +36,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 		return fmt.Errorf("搜索关键词不能为空")
 	}
 	// 使用网易云搜索
-	resNetease, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(args)
+	resNetease, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(ctx, args)
 	if err != nil {
 		if !neteaseapi.NetEaseGCtx.CheckIfLogin() {
 		}
@@ -45,7 +45,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 
 	// 使用QQ音乐搜索
 	qqmusicCtx := qqmusicapi.QQmusicContext{}
-	resQQmusic, err := qqmusicCtx.SearchMusic(args)
+	resQQmusic, err := qqmusicCtx.SearchMusic(ctx, args)
 	if err != nil {
 		return
 	}

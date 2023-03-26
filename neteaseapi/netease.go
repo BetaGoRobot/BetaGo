@@ -1,6 +1,7 @@
 package neteaseapi
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -18,7 +19,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	jsoniter "github.com/json-iterator/go"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -62,24 +65,25 @@ func init() {
 //
 //	@receiver ctx
 //	@return error
-func (ctx *NetEaseContext) RefreshLogin() error {
+func (neteaseCtx *NetEaseContext) RefreshLogin() error {
 	resp, err := httptool.PostWithParams(
 		httptool.RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/login/refresh",
 			Params:  map[string][]string{},
-			Cookies: ctx.cookies,
+			Cookies: neteaseCtx.cookies,
 		},
 	)
 	if err != nil || (resp != nil && resp.StatusCode != 200) {
 		log.Printf("%#v", resp)
 		return err
 	}
-	ctx.cookies = resp.Cookies()
-	ctx.SaveCookie()
+	neteaseCtx.cookies = make([]*http.Cookie, 0)
+	neteaseCtx.cookies = resp.Cookies()
+	neteaseCtx.SaveCookie()
 	return err
 }
 
-func (ctx *NetEaseContext) getUniKey() (err error) {
+func (neteaseCtx *NetEaseContext) getUniKey() (err error) {
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
 			URL: NetEaseAPIBaseURL + "/login/qr/key",
@@ -97,16 +101,16 @@ func (ctx *NetEaseContext) getUniKey() (err error) {
 	if err = json.Unmarshal(data, &respMap); err != nil {
 		return
 	}
-	ctx.qrStruct.uniKey = respMap["data"].(map[string]interface{})["unikey"].(string)
+	neteaseCtx.qrStruct.uniKey = respMap["data"].(map[string]interface{})["unikey"].(string)
 	return
 }
 
-func (ctx *NetEaseContext) getQRBase64() (err error) {
+func (neteaseCtx *NetEaseContext) getQRBase64() (err error) {
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
 			URL: NetEaseAPIBaseURL + "/login/qr/create",
 			Params: map[string][]string{
-				"key":   {ctx.qrStruct.uniKey},
+				"key":   {neteaseCtx.qrStruct.uniKey},
 				"qrimg": {"1"},
 			},
 		},
@@ -123,12 +127,12 @@ func (ctx *NetEaseContext) getQRBase64() (err error) {
 	if err = json.Unmarshal(data, &respMap); err != nil {
 		return
 	}
-	ctx.qrStruct.qrBase64 = respMap["data"].(map[string]interface{})["qrimg"].(string)
+	neteaseCtx.qrStruct.qrBase64 = respMap["data"].(map[string]interface{})["qrimg"].(string)
 	return
 }
 
-func (ctx *NetEaseContext) checkQRStatus() (err error) {
-	if !ctx.qrStruct.isOutDated {
+func (neteaseCtx *NetEaseContext) checkQRStatus() (err error) {
+	if !neteaseCtx.qrStruct.isOutDated {
 		once := &sync.Once{}
 		for {
 
@@ -137,7 +141,7 @@ func (ctx *NetEaseContext) checkQRStatus() (err error) {
 				httptool.RequestInfo{
 					URL: NetEaseAPIBaseURL + "/login/qr/check",
 					Params: map[string][]string{
-						"key": {ctx.qrStruct.uniKey},
+						"key": {neteaseCtx.qrStruct.uniKey},
 					},
 				},
 			)
@@ -159,16 +163,16 @@ func (ctx *NetEaseContext) checkQRStatus() (err error) {
 			case 800:
 				once.Do(func() {
 					log.Println("二维码已失效")
-					ctx.qrStruct.isOutDated = true
+					neteaseCtx.qrStruct.isOutDated = true
 				})
 				return err
 			case 802:
 				once.Do(func() { log.Println("扫描未确认") })
 			case 803:
 				log.Println("登陆成功！")
-				ctx.cookies = resp.Cookies()
-				ctx.SaveCookie()
-				ctx.loginType = "qr"
+				neteaseCtx.cookies = resp.Cookies()
+				neteaseCtx.SaveCookie()
+				neteaseCtx.loginType = "qr"
 				return nil
 			}
 		}
@@ -180,16 +184,16 @@ func (ctx *NetEaseContext) checkQRStatus() (err error) {
 //
 //	@receiver ctx
 //	@return err
-func (ctx *NetEaseContext) LoginNetEaseQR() (err error) {
-	ctx.getUniKey()
+func (neteaseCtx *NetEaseContext) LoginNetEaseQR() (err error) {
+	neteaseCtx.getUniKey()
 
-	ctx.getQRBase64()
-	linkURL, err := utility.UploadFileToCos(SaveQRImg(ctx.qrStruct.qrBase64))
+	neteaseCtx.getQRBase64()
+	linkURL, err := utility.UploadFileToCos(SaveQRImg(neteaseCtx.qrStruct.qrBase64))
 	if err != nil {
 		return err
 	}
 	gotify.SendMessage("网易云登录", fmt.Sprintf("![QRCode](%s)", linkURL), 7)
-	go ctx.checkQRStatus()
+	go neteaseCtx.checkQRStatus()
 	return
 }
 
@@ -220,8 +224,8 @@ func SaveQRImg(imgBase64 string) (filename string) {
 //
 //	@receiver ctx
 //	@return err
-func (ctx *NetEaseContext) LoginNetEase() (err error) {
-	if len(ctx.cookies) > 0 {
+func (neteaseCtx *NetEaseContext) LoginNetEase() (err error) {
+	if len(neteaseCtx.cookies) > 0 {
 		return
 	}
 	if phoneNum, password := os.Getenv("NETEASE_PHONE"), os.Getenv("NETEASE_PASSWORD"); phoneNum == "" && password == "" {
@@ -230,9 +234,9 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 	}
 	var resp *http.Response
 	// !Step1:检查登陆状态
-	if ctx.CheckIfLogin() {
+	if neteaseCtx.CheckIfLogin() {
 		// 已登陆，刷新登陆
-		err = ctx.RefreshLogin()
+		err = neteaseCtx.RefreshLogin()
 		return
 	}
 	// !Step2:未登陆，启动登陆
@@ -251,8 +255,8 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 		}
 		return
 	}
-	ctx.cookies = resp.Cookies()
-	ctx.SaveCookie()
+	neteaseCtx.cookies = resp.Cookies()
+	neteaseCtx.SaveCookie()
 	return
 }
 
@@ -260,12 +264,12 @@ func (ctx *NetEaseContext) LoginNetEase() (err error) {
 //
 //	@receiver ctx
 //	@return bool
-func (ctx *NetEaseContext) CheckIfLogin() bool {
+func (neteaseCtx *NetEaseContext) CheckIfLogin() bool {
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/login/status",
 			Params:  map[string][]string{},
-			Cookies: ctx.cookies,
+			Cookies: neteaseCtx.cookies,
 		},
 	)
 	if err != nil || resp.StatusCode != 200 {
@@ -288,7 +292,7 @@ func (ctx *NetEaseContext) CheckIfLogin() bool {
 // TryGetLastCookie 获取初始化Cookie
 //
 //	@receiver ctx
-func (ctx *NetEaseContext) TryGetLastCookie() {
+func (neteaseCtx *NetEaseContext) TryGetLastCookie() {
 	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		log.Println("error in open last_cookie.json", err)
@@ -301,7 +305,7 @@ func (ctx *NetEaseContext) TryGetLastCookie() {
 		utility.ZapLogger.Info("No cookieData, skip json marshal")
 		return
 	}
-	if err = json.Unmarshal(cookieData, &ctx.cookies); err != nil {
+	if err = json.Unmarshal(cookieData, &neteaseCtx.cookies); err != nil {
 		log.Println("error in unmarshal cookieData", err)
 	}
 }
@@ -309,14 +313,14 @@ func (ctx *NetEaseContext) TryGetLastCookie() {
 // SaveCookie 保存Cookie
 //
 //	@receiver ctx
-func (ctx *NetEaseContext) SaveCookie() {
+func (neteaseCtx *NetEaseContext) SaveCookie() {
 	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		log.Println("error in open last_cookie.json", err)
 		return
 	}
 	defer f.Close()
-	cookieData, _ := json.Marshal(ctx.cookies)
+	cookieData, _ := json.Marshal(neteaseCtx.cookies)
 	f.Write(cookieData)
 }
 
@@ -325,12 +329,12 @@ func (ctx *NetEaseContext) SaveCookie() {
 //	@receiver ctx
 //	@return musicIDs
 //	@return err
-func (ctx *NetEaseContext) GetDailyRecommendID() (musicIDs map[string]string, err error) {
+func (neteaseCtx *NetEaseContext) GetDailyRecommendID() (musicIDs map[string]string, err error) {
 	musicIDs = make(map[string]string)
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/recommend/songs",
-			Cookies: ctx.cookies,
+			Cookies: neteaseCtx.cookies,
 		},
 	)
 	if err != nil {
@@ -358,7 +362,7 @@ func (ctx *NetEaseContext) GetDailyRecommendID() (musicIDs map[string]string, er
 //	@param IDName
 //	@return InfoList
 //	@return err
-func (ctx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (InfoList []MusicInfo, err error) {
+func (neteaseCtx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (InfoList []MusicInfo, err error) {
 	var id string
 	for key := range IDName {
 		if id != "" {
@@ -369,7 +373,7 @@ func (ctx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (InfoList [
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/song/url",
-			Cookies: ctx.cookies,
+			Cookies: neteaseCtx.cookies,
 			Params:  map[string][]string{"id": {id}, "br": {"128000"}},
 		})
 	if err != nil {
@@ -397,40 +401,32 @@ func (ctx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (InfoList [
 
 // SearchMusicByKeyWord 通过关键字搜索歌曲
 //
-//	@receiver ctx
+//	@receiver neteaseCtx
+//	@param ctx
 //	@param keywords
 //	@return result
 //	@return err
-func (ctx *NetEaseContext) SearchMusicByKeyWord(keywords []string) (result []SearchMusicRes, err error) {
-	resp, err := httptool.PostWithTimestamp(
-		httptool.RequestInfo{
-			URL:     NetEaseAPIBaseURL + "/cloudsearch",
-			Cookies: ctx.cookies,
-			Params: map[string][]string{
+func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keywords []string) (result []SearchMusicRes, err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("keywords").StringSlice(keywords))
+	defer span.End()
+
+	resp1, err := betagovar.HttpClient.R().
+		SetFormDataFromValues(
+			map[string][]string{
 				"limit":    {"3"},
 				"type":     {"1"},
 				"keywords": {strings.Join(keywords, " ")},
 			},
-		})
+		).
+		SetCookies(neteaseCtx.cookies).
+		Post(NetEaseAPIBaseURL + "/cloudsearch")
 	if err != nil {
-		return
+		log.Println(err.Error())
 	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-	if resp.StatusCode != 200 {
-		ctx.retryCnt++
-		if ctx.retryCnt >= 3 {
-			return
-		}
-		return ctx.SearchMusicByKeyWord(keywords)
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+
 	searchMusic := searchMusic{}
-	jsoniter.Unmarshal(body, &searchMusic)
+	jsoniter.Unmarshal(resp1.Body(), &searchMusic)
 	for _, song := range searchMusic.Result.Songs {
 		var ArtistName string
 		for _, name := range song.Ar {
@@ -439,7 +435,7 @@ func (ctx *NetEaseContext) SearchMusicByKeyWord(keywords []string) (result []Sea
 			}
 			ArtistName += name.Name
 		}
-		SongURL, errIn := ctx.GetMusicURLByID(map[string]string{strconv.Itoa(song.ID): song.Name})
+		SongURL, errIn := neteaseCtx.GetMusicURLByID(map[string]string{strconv.Itoa(song.ID): song.Name})
 		if errIn != nil {
 			err = errIn
 			return
@@ -463,27 +459,18 @@ func (ctx *NetEaseContext) SearchMusicByKeyWord(keywords []string) (result []Sea
 //	@receiver ctx
 //	@return res
 //	@return err
-func (ctx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicRes, err error) {
-	resp, err := httptool.PostWithTimestamp(
-		httptool.RequestInfo{
-			URL: NetEaseAPIBaseURL + "/personalized/newsong",
-			Params: map[string][]string{
-				"limit": {"3"},
-			},
+func (neteaseCtx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicRes, err error) {
+	resp, err := betagovar.HttpClient.R().SetFormDataFromValues(
+		map[string][]string{
+			"limit": {"5"},
 		},
-	)
+	).Post(NetEaseAPIBaseURL + "/personalized/newsong")
 	if err != nil {
 		return
 	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+
 	music := &GlobRecommendMusicRes{}
-	json.Unmarshal(body, music)
+	json.Unmarshal(resp.Body(), music)
 	for _, result := range music.Result {
 		var ArtistName string
 		for _, name := range result.Song.Artists {
@@ -492,7 +479,7 @@ func (ctx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicRes, err err
 			}
 			ArtistName += name.Name
 		}
-		SongURL, errIn := ctx.GetMusicURLByID(map[string]string{strconv.Itoa(result.Song.ID): result.Song.Name})
+		SongURL, errIn := neteaseCtx.GetMusicURLByID(map[string]string{strconv.Itoa(result.Song.ID): result.Song.Name})
 		if err != nil {
 			err = errIn
 			return

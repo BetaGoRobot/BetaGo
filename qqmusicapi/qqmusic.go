@@ -1,6 +1,7 @@
 package qqmusicapi
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -8,7 +9,10 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/httptool"
+	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	jsoniter "github.com/json-iterator/go"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -47,7 +51,11 @@ func init() {
 //	@param keywords
 //	@return result
 //	@return err
-func (ctx *QQmusicContext) SearchMusic(keywords []string) (result []SearchMusicRes, err error) {
+func (qqCtx *QQmusicContext) SearchMusic(ctx context.Context, keywords []string) (result []SearchMusicRes, err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("keywords").StringSlice(keywords))
+	defer span.End()
+
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
 			URL: qqmusicBaseURL + "/search",
@@ -80,7 +88,7 @@ func (ctx *QQmusicContext) SearchMusic(keywords []string) (result []SearchMusicR
 			ArtistName += name.Name
 		}
 
-		songURL, errIn := ctx.GetMusicURLByID(song.Songmid, song.StrMediaMid)
+		songURL, errIn := qqCtx.GetMusicURLByID(song.Songmid, song.StrMediaMid)
 		if errIn != nil {
 			err = errIn
 			return
