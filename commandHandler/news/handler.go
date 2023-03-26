@@ -106,7 +106,7 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 			modules = append(modules,
 				kook.CardMessageSection{
 					Text: kook.CardMessageElementKMarkdown{
-						Content: fmt.Sprintf("%d. [%s](%s) ***%s***", data.Rank, data.Name, data.URL, data.ViewNum),
+						Content: fmt.Sprintf("%d. %s [%s](%s) **%s**", data.Rank, data.Name, data.URL, data.URL, data.ViewNum),
 					},
 				},
 			)
