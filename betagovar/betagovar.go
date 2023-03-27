@@ -22,7 +22,7 @@ const (
 	ImagePath = "/data/images"
 
 	// ChatPath 对话信息存储路径
-	ChatPath = "/data/chat"
+	ChatPath = "/data/chat/chat.dump"
 
 	// FontPath  字体存储路径
 	FontPath = "/data/fonts"

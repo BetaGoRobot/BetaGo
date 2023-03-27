@@ -68,7 +68,11 @@ func GetPubIP() (ip string, err error) {
 		Params: map[string][]string{},
 	})
 	if err != nil || resp.StatusCode != 200 {
-		zapLogger.Error("获取ip失败", zaplog.Error(err))
+		if err != nil {
+			zapLogger.Error("获取ip失败", zaplog.Error(err))
+		} else {
+			zapLogger.Error("获取ip失败", zaplog.Int("StatusCode", resp.StatusCode))
+		}
 	}
 	data, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()

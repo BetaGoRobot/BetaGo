@@ -54,6 +54,12 @@ type AlertList struct {
 	EmailAddress string
 }
 
+// ChatRecordLog 存储chat的对话记录
+type ChatRecordLog struct {
+	AuthorID  string `json:"user_id" gorm:"primaryKey"`
+	RecordStr string `json:"record_str"`
+}
+
 var (
 	isTest    = os.Getenv("IS_TEST")
 	isCluster = os.Getenv("IS_CLUSTER")
@@ -71,7 +77,7 @@ func init() {
 
 	// migrate
 	db := GetDbConnection()
-	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLogExt{}, &AlertList{}, &ChatContextRecord{})
+	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLogExt{}, &AlertList{}, &ChatContextRecord{}, &ChatRecordLog{})
 	if err != nil {
 		ZapLogger.Error("init", zaplog.Error(err))
 	}

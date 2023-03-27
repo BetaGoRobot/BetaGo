@@ -2,10 +2,12 @@ package gpt3
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
@@ -14,7 +16,36 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var chatCache = cache.New(0, 0)
+var chatCache = cache.New(time.Minute*30, time.Minute*1)
+
+func init() {
+	go func() {
+		for {
+			utility.ZapLogger.Info("Syncing chat cache to db...")
+			for authorID, messages := range chatCache.Items() {
+				m, err := json.Marshal(messages.Object.([]Message))
+				if err != nil {
+					errorsender.SendErrorInfo("4988093461275944", "", "", err, context.Background())
+				}
+				table := utility.GetDbConnection().Table("betago.chat_record_logs")
+				res := int64(0)
+				if table.Where("author_id = ?", authorID).Count(&res); res == 0 {
+					utility.GetDbConnection().
+						Table("betago.chat_record_logs").
+						Create(&utility.ChatRecordLog{
+							AuthorID:  authorID,
+							RecordStr: string(m),
+						})
+				} else {
+					table.
+						Where("author_id = ?", authorID).
+						Update("record_str", string(m))
+				}
+			}
+			time.Sleep(time.Minute * 3)
+		}
+	}()
+}
 
 // ClientHandlerStream 1
 //
@@ -113,7 +144,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 						Role:    "assistant",
 						Content: lastMsg,
 					})
-					chatCache.Set(authorID, g.Messages, -1)
+					chatCache.Set(authorID, g.Messages, cache.DefaultExpiration)
 					return
 				}
 				lastMsg += s
@@ -123,11 +154,26 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 	}(ctx, curMsgID, quoteID, spanID, cardMessageDupStruct)
 	if chatMsg, ok := chatCache.Get(authorID); ok {
 		g.Messages = append(chatMsg.([]Message), g.Messages...)
+	} else {
+		recordLog := struct {
+			RecordStr string `json:"record_str"`
+		}{}
+		utility.GetDbConnection().Table("betago.chat_record_logs").Find(&recordLog, &utility.ChatRecordLog{
+			AuthorID: authorID,
+		})
+		if recordLog.RecordStr != "" {
+			oldMessages := make([]Message, 0)
+			err = json.Unmarshal([]byte(recordLog.RecordStr), &oldMessages)
+			if err != nil {
+				return
+			}
+			g.Messages = append(oldMessages, g.Messages...)
+			chatCache.Set(authorID, g.Messages, cache.DefaultExpiration)
+		}
 	}
 	if err = g.PostWithStream(ctx); err != nil {
 		return
 	}
-	chatCache.SaveFile(betagovar.ChatPath + time.Now().Format(time.DateOnly))
 	return
 }
 
