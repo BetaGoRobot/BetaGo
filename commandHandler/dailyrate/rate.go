@@ -138,7 +138,7 @@ func GetRateHandler(ctx context.Context, targetID, quoteID, authorID string, arg
 			&kook.MessageCreate{
 				MessageCreateBase: kook.MessageCreateBase{
 					Type:     kook.MessageTypeCard,
-					TargetID: betagovar.NotifierChanID,
+					TargetID: targetID,
 					Content:  cardMessageStr,
 					Quote:    quoteID,
 				},
