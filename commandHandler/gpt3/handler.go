@@ -30,8 +30,7 @@ func init() {
 				table := utility.GetDbConnection().Table("betago.chat_record_logs")
 				res := int64(0)
 				if table.Where("author_id = ?", authorID).Count(&res); res == 0 {
-					utility.GetDbConnection().
-						Table("betago.chat_record_logs").
+					table.
 						Create(&utility.ChatRecordLog{
 							AuthorID:  authorID,
 							RecordStr: string(m),
@@ -62,6 +61,18 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 	defer span.End()
 	spanID := span.SpanContext().TraceID().String()
 
+	msg := strings.Join(args, " ")
+	if msg == "RESET" {
+		err = utility.GetDbConnection().
+			Table("betago.chat_record_logs").
+			Delete(&utility.ChatRecordLog{AuthorID: authorID}, &utility.ChatRecordLog{AuthorID: authorID}).Error
+		if err != nil {
+			return
+		}
+		utility.SendMessageTemp(targetID, quoteID, authorID, "重置ChatGPT会话成功")
+		chatCache = cache.New(time.Minute*30, time.Minute*1)
+		return
+	}
 	cardMessageDupStruct := kook.CardMessage{
 		&kook.CardMessageCard{
 			Theme: "info",
@@ -117,7 +128,6 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		return
 	}
 	curMsgID := resp.MsgID
-	msg := strings.Join(args, " ")
 
 	g := &GPTClient{
 		Model: "gpt-3.5-turbo",
@@ -203,7 +213,6 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID string, cardMessageDupStru
 		MessageUpdateBase: kook.MessageUpdateBase{
 			MsgID:   curMsgID,
 			Content: cardMessageDupStruct.MustBuildMessage(),
-			Quote:   quoteID,
 		},
 	})
 }
