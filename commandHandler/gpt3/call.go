@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -13,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/httptool"
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/carlmjohnson/requests"
 	"github.com/oliveagle/jsonpath"
@@ -144,21 +145,21 @@ func (g *GPTClient) Post() (msg string, err error) {
 //	@return executeMsg
 //	@return err
 func (g *GPTClient) PostWithStream(ctx context.Context) (err error) {
-	req, err := requests.
-		URL("https://api.openai.com/v1/chat/completions").
-		Bearer(apiKey).
-		BodyJSON(&g).
-		Transport(&http.Transport{
-			Proxy: http.ProxyURL(ParsedProxyURL),
-		}).
-		Request(context.Background())
-
-	rsp, err := httptool.HTTPClientWithProxy.Do(req)
+	jsonBody, err := json.Marshal(&g)
 	if err != nil {
-		log.Println(err.Error())
 		return
 	}
-	reader := bufio.NewReader(rsp.Body)
+	resp, err := betagovar.HttpClientWithProxy.R().
+		SetAuthScheme("Bearer").
+		SetHeader("Content-Type", "application/json").
+		SetAuthToken(apiKey).
+		SetBody(jsonBody).
+		SetDoNotParseResponse(true).
+		Post("https://api.openai.com/v1/chat/completions")
+	if err != nil {
+		return
+	}
+	reader := bufio.NewReader(resp.RawBody())
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err == io.EOF {

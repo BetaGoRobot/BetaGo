@@ -3,14 +3,18 @@ package gpt3
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
+	"github.com/patrickmn/go-cache"
 	"go.opentelemetry.io/otel/attribute"
 )
+
+var chatCache = cache.New(0, 0)
 
 // ClientHandlerStream 1
 //
@@ -105,6 +109,11 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 			case s, open := <-g.AsyncChan:
 				if !open {
 					updateMessage(curMsgID, quoteID, lastMsg, spanID, cardMessageDupStruct, true)
+					g.Messages = append(g.Messages, Message{
+						Role:    "assistant",
+						Content: lastMsg,
+					})
+					chatCache.Set(authorID, g.Messages, -1)
 					return
 				}
 				lastMsg += s
@@ -112,10 +121,13 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 			updateMessage(curMsgID, quoteID, lastMsg, spanID, cardMessageDupStruct, false)
 		}
 	}(ctx, curMsgID, quoteID, spanID, cardMessageDupStruct)
-
+	if chatMsg, ok := chatCache.Get(authorID); ok {
+		g.Messages = append(chatMsg.([]Message), g.Messages...)
+	}
 	if err = g.PostWithStream(ctx); err != nil {
 		return
 	}
+	chatCache.SaveFile(betagovar.ChatPath + time.Now().Format(time.DateOnly))
 	return
 }
 

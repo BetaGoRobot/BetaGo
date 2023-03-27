@@ -21,6 +21,9 @@ const (
 	// ImagePath 图片存储路径
 	ImagePath = "/data/images"
 
+	// ChatPath 对话信息存储路径
+	ChatPath = "/data/chat"
+
 	// FontPath  字体存储路径
 	FontPath = "/data/fonts"
 
