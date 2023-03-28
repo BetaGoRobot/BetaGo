@@ -8,6 +8,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/jordan-wright/email"
 	"github.com/kevinmatthe/zaplog"
+	"gorm.io/gorm"
 )
 
 const (
@@ -23,7 +24,7 @@ var (
 
 // SendEmail  is the function to send email
 func SendEmail(Subject string, Body string) {
-	getReceieverEmailList()
+	GetReceieverEmailList(betagovar.GlobalDBConn)
 	em := email.NewEmail()
 	em.From = fmt.Sprintf("%s <%s>", betagovar.RobotName, netEaseEmailAddress)
 	em.To = recevierEmailList
@@ -41,7 +42,7 @@ func SendEmail(Subject string, Body string) {
 //	@param qrimg
 //	@return error
 func SendQRCodeMail(qrimg string) error {
-	getReceieverEmailList()
+	GetReceieverEmailList(betagovar.GlobalDBConn)
 	em := email.NewEmail()
 	em.From = fmt.Sprintf("%s <%s>", betagovar.RobotName, netEaseEmailAddress)
 	em.To = recevierEmailList
@@ -55,7 +56,7 @@ func SendQRCodeMail(qrimg string) error {
 	return nil
 }
 
-// getReceieverEmailList is the function to get recevier email list
-func getReceieverEmailList() {
-	globalDBConn.Table("betago.alert_lists").Find(&recevierEmailList)
+// GetReceieverEmailList is the function to get recevier email list
+func GetReceieverEmailList(dbConn *gorm.DB) {
+	dbConn.Table("betago.alert_lists").Find(&recevierEmailList)
 }

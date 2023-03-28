@@ -7,6 +7,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
@@ -27,7 +28,7 @@ func GetRateHandler(ctx context.Context, targetID, quoteID, authorID string, arg
 
 	title := "勤恳在线排行榜"
 	// quoteID := ""
-	matchSelect := utility.GetDbConnection().
+	matchSelect := database.GetDbConnection().
 		Debug().
 		Table("betago.channel_log_exts").
 		Select(`

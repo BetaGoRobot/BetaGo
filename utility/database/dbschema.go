@@ -1,4 +1,4 @@
-package utility
+package database
 
 import (
 	"log"
@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/kevinmatthe/zaplog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -63,15 +64,12 @@ type ChatRecordLog struct {
 var (
 	isTest    = os.Getenv("IS_TEST")
 	isCluster = os.Getenv("IS_CLUSTER")
-	// globalDBConn  is the global db connection
-	globalDBConn *gorm.DB
 )
 
 func init() {
-	InitLogger()
 	// try get db conn
 	if GetDbConnection() == nil {
-		ZapLogger.Error("get db connection error")
+		utility.ZapLogger.Error("get db connection error")
 		os.Exit(-1)
 	}
 
@@ -79,9 +77,9 @@ func init() {
 	db := GetDbConnection()
 	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLogExt{}, &AlertList{}, &ChatContextRecord{}, &ChatRecordLog{})
 	if err != nil {
-		ZapLogger.Error("init", zaplog.Error(err))
+		utility.ZapLogger.Error("init", zaplog.Error(err))
 	}
-	getReceieverEmailList()
+	utility.GetReceieverEmailList(betagovar.GlobalDBConn)
 	sqlDb, err := db.DB()
 	if err != nil {
 		log.Panicln(" get sql db error")
@@ -101,8 +99,8 @@ func init() {
 //
 //	@return *gorm.DB
 func GetDbConnection() *gorm.DB {
-	if globalDBConn != nil {
-		return globalDBConn
+	if betagovar.GlobalDBConn != nil {
+		return betagovar.GlobalDBConn
 	}
 	var dsn string = " user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
 	if betagovar.IsTest {
@@ -119,9 +117,9 @@ func GetDbConnection() *gorm.DB {
 		},
 	})
 	if err != nil {
-		ZapLogger.Error("get db connection error, will try local version", zaplog.Error(err))
+		utility.ZapLogger.Error("get db connection error, will try local version", zaplog.Error(err))
 		return nil
 	}
-	globalDBConn = db
-	return globalDBConn
+	betagovar.GlobalDBConn = db
+	return betagovar.GlobalDBConn
 }

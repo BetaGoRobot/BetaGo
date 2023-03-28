@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/lonelyevil/kook"
 )
@@ -40,7 +41,7 @@ type CommandExtraContext struct {
 //	@receiver ctx
 //	@return bool
 func (ctx *CommandContext) IsAdmin() bool {
-	return utility.CheckIsAdmin(ctx.Common.AuthorID)
+	return database.CheckIsAdmin(ctx.Common.AuthorID)
 }
 
 // CommandContextFunc is a function for command.

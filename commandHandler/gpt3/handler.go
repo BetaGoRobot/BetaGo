@@ -9,6 +9,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
@@ -27,11 +28,11 @@ func init() {
 				if err != nil {
 					errorsender.SendErrorInfo("4988093461275944", "", "", err, context.Background())
 				}
-				table := utility.GetDbConnection().Table("betago.chat_record_logs")
+				table := database.GetDbConnection().Table("betago.chat_record_logs")
 				res := int64(0)
 				if table.Where("author_id = ?", authorID).Count(&res); res == 0 {
 					table.
-						Create(&utility.ChatRecordLog{
+						Create(&database.ChatRecordLog{
 							AuthorID:  authorID,
 							RecordStr: string(m),
 						})
@@ -63,9 +64,9 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 
 	msg := strings.Join(args, " ")
 	if msg == "RESET" {
-		err = utility.GetDbConnection().
+		err = database.GetDbConnection().
 			Table("betago.chat_record_logs").
-			Delete(&utility.ChatRecordLog{AuthorID: authorID}, &utility.ChatRecordLog{AuthorID: authorID}).Error
+			Delete(&database.ChatRecordLog{AuthorID: authorID}, &database.ChatRecordLog{AuthorID: authorID}).Error
 		if err != nil {
 			return
 		}
@@ -168,7 +169,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		recordLog := struct {
 			RecordStr string `json:"record_str"`
 		}{}
-		utility.GetDbConnection().Table("betago.chat_record_logs").Find(&recordLog, &utility.ChatRecordLog{
+		database.GetDbConnection().Table("betago.chat_record_logs").Find(&recordLog, &database.ChatRecordLog{
 			AuthorID: authorID,
 		})
 		if recordLog.RecordStr != "" {

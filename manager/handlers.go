@@ -11,6 +11,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/commandHandler/gpt3"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/wordcontrol"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/lonelyevil/kook"
 	"go.opentelemetry.io/otel/attribute"
@@ -58,7 +59,7 @@ func channelJoinedHandler(baseCtx context.Context, ctx *kook.GuildChannelMemberA
 		return
 	}
 	// !频道日志记录
-	newChanLog := &utility.ChannelLogExt{
+	newChanLog := &database.ChannelLogExt{
 		UserID:      userInfo.ID,
 		UserName:    userInfo.Username,
 		ChannelID:   channelInfo.ID,
@@ -123,7 +124,7 @@ func channelLeftHandler(baseCtx context.Context, kookCtx *kook.GuildChannelMembe
 	}
 
 	// !频道日志记录
-	newChanLog := &utility.ChannelLogExt{
+	newChanLog := &database.ChannelLogExt{
 		UserID:      userInfo.ID,
 		UserName:    userInfo.Username,
 		ChannelID:   channelInfo.ID,

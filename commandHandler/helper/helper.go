@@ -7,6 +7,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
@@ -39,7 +40,7 @@ func TryPanic(ctx context.Context, targetID, quoteID, authorID string, args ...s
 //	@param args
 //	@return err
 func CommandRouter(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	if utility.CheckIsAdmin(authorID) {
+	if database.CheckIsAdmin(authorID) {
 		return AdminCommandHelperHandler(ctx, targetID, quoteID, authorID, args...)
 	}
 	return UserCommandHelperHandler(ctx, targetID, quoteID, authorID, args...)
@@ -58,9 +59,9 @@ func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID 
 	defer span.End()
 
 	if len(args) == 1 {
-		commandInfo := utility.CommandInfo{}
+		commandInfo := database.CommandInfo{}
 		var cardMessageStr string
-		if utility.GetDbConnection().Table("betago.command_infos").Where("command_name = ?", "`"+strings.ToUpper(args[0])+"`").Find(&commandInfo).RowsAffected == 0 {
+		if database.GetDbConnection().Table("betago.command_infos").Where("command_name = ?", "`"+strings.ToUpper(args[0])+"`").Find(&commandInfo).RowsAffected == 0 {
 			return fmt.Errorf("没有找到指令: %s", args[0])
 		}
 		cardMessageStr, err = kook.CardMessage{&kook.CardMessageCard{
@@ -98,8 +99,8 @@ func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID 
 	}
 	// title := "嗨，你可以使用的指令如下:"
 	// !对无参数指令，使用Button展示
-	var commandInfoList []*utility.CommandInfo
-	if utility.GetDbConnection().Table("betago.command_infos").Where("command_param_len=0").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
+	var commandInfoList []*database.CommandInfo
+	if database.GetDbConnection().Table("betago.command_infos").Where("command_param_len=0").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("no command info found")
 		return
 	}
@@ -136,8 +137,8 @@ func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID 
 	}
 
 	// !对有参指令，使用文本展示
-	commandInfoList = make([]*utility.CommandInfo, 0)
-	if utility.GetDbConnection().Table("betago.command_infos").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
+	commandInfoList = make([]*database.CommandInfo, 0)
+	if database.GetDbConnection().Table("betago.command_infos").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("no command info found")
 		return
 	}
@@ -242,9 +243,9 @@ func UserCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID s
 
 	// 帮助信息
 	if len(args) == 1 {
-		commandInfo := utility.CommandInfo{}
+		commandInfo := database.CommandInfo{}
 		var cardMessageStr string
-		if utility.GetDbConnection().Table("betago.command_infos").Where("command_name = ? and command_type = ?", "`"+strings.ToUpper(args[0])+"`", "user").Find(&commandInfo).RowsAffected == 0 {
+		if database.GetDbConnection().Table("betago.command_infos").Where("command_name = ? and command_type = ?", "`"+strings.ToUpper(args[0])+"`", "user").Find(&commandInfo).RowsAffected == 0 {
 			return fmt.Errorf("没有找到指令: %s", args[0])
 		}
 		cardMessageStr, err = kook.CardMessage{&kook.CardMessageCard{
@@ -281,8 +282,8 @@ func UserCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID s
 		return
 	}
 	// !对无参数指令，使用Button展示
-	var commandInfoList []*utility.CommandInfo
-	if utility.GetDbConnection().Table("betago.command_infos").Where("command_param_len=0 and command_type='user'").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
+	var commandInfoList []*database.CommandInfo
+	if database.GetDbConnection().Table("betago.command_infos").Where("command_param_len=0 and command_type='user'").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("no command info found")
 		return
 	}
@@ -313,8 +314,8 @@ func UserCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID s
 	}
 
 	// !对有参指令，使用文本展示
-	commandInfoList = make([]*utility.CommandInfo, 0)
-	if utility.GetDbConnection().Table("betago.command_infos").Where("command_type='user'").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
+	commandInfoList = make([]*database.CommandInfo, 0)
+	if database.GetDbConnection().Table("betago.command_infos").Where("command_type='user'").Order("command_name desc").Find(&commandInfoList).RowsAffected == 0 {
 		err = fmt.Errorf("no command info found")
 		return
 	}

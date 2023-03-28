@@ -9,6 +9,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/lonelyevil/kook"
 	"go.opentelemetry.io/otel/attribute"
@@ -25,8 +26,8 @@ func ShowAdminHandler(ctx context.Context, targetID, quoteID, authorID string, a
 	defer span.RecordError(err)
 	defer span.End()
 
-	admins := make([]utility.Administrator, 0)
-	utility.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level DESC")
+	admins := make([]database.Administrator, 0)
+	database.GetDbConnection().Table("betago.administrators").Find(&admins).Order("level DESC")
 	modules := make([]interface{}, 0)
 	modules = append(modules,
 		kook.CardMessageSection{
@@ -128,10 +129,10 @@ func AddAdminHandler(ctx context.Context, targetID, quoteID, authorID string, ar
 		for _, arg := range args {
 			userID := strings.Trim(arg, "(met)")
 			// 先检验是否存在
-			if utility.GetDbConnection().
+			if database.GetDbConnection().
 				Table("betago.administrators").
 				Where("user_id = ?", utility.MustAtoI(userID)).
-				Find(&utility.Administrator{}).
+				Find(&database.Administrator{}).
 				RowsAffected != 0 {
 				// 存在则不处理，返回信息
 				return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 已经是管理员了`, userID))
@@ -141,9 +142,9 @@ func AddAdminHandler(ctx context.Context, targetID, quoteID, authorID string, ar
 				return err
 			}
 			// 创建管理员
-			dbRes := utility.GetDbConnection().Table("betago.administrators").
+			dbRes := database.GetDbConnection().Table("betago.administrators").
 				Create(
-					&utility.Administrator{
+					&database.Administrator{
 						UserID:   int64(utility.MustAtoI(userID)),
 						UserName: userInfo.Nickname,
 						Level:    1,
@@ -239,21 +240,21 @@ func RemoveAdminHandler(ctx context.Context, targetID, quoteID, authorID string,
 		for _, arg := range args {
 			userID := strings.Trim(arg, "(met)")
 			// 先检验是否存在
-			if !utility.CheckIsAdmin(userID) {
+			if !database.CheckIsAdmin(userID) {
 				// 不存在则不处理，返回信息
 				return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, userID))
 			}
 			// 等级校验
-			if userLevel, targetLevel := utility.GetAdminLevel(authorID), utility.GetAdminLevel(userID); userLevel <= targetLevel && userID != authorID {
+			if userLevel, targetLevel := database.GetAdminLevel(authorID), database.GetAdminLevel(userID); userLevel <= targetLevel && userID != authorID {
 				// 等级不足，无权限操作
 				err = fmt.Errorf("您的等级小于或等于目标用户，无权限操作")
 				return
 			}
 			// 删除管理员
-			dbRes := utility.GetDbConnection().Table("betago.administrators").
+			dbRes := database.GetDbConnection().Table("betago.administrators").
 				Where("user_id = ?", utility.MustAtoI(userID)).
 				Unscoped().
-				Delete(&utility.Administrator{})
+				Delete(&database.Administrator{})
 			if dbRes.Error != nil {
 				ec.Collect(dbRes.Error)
 				continue
@@ -335,7 +336,7 @@ func DeleteAllMessageHandler(ctx context.Context, targetID, quoteID, authorID st
 		ec         utility.ErrorCollector
 		messageNum int
 	)
-	if !utility.CheckIsAdmin(authorID) {
+	if !database.CheckIsAdmin(authorID) {
 		// 不存在则不处理，返回信息
 		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))
 	}
@@ -392,7 +393,7 @@ func ReconnectHandler(ctx context.Context, targetID, quoteID, authorID string, a
 	defer span.RecordError(err)
 	defer span.End()
 
-	if !utility.CheckIsAdmin(authorID) {
+	if !database.CheckIsAdmin(authorID) {
 		// 不存在则不处理，返回信息
 		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))
 	}
@@ -408,7 +409,7 @@ func ReconnectHandler(ctx context.Context, targetID, quoteID, authorID string, a
 //	@param authorID
 //	@param args
 func RestartHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	if !utility.CheckIsAdmin(authorID) {
+	if !database.CheckIsAdmin(authorID) {
 		// 不存在则不处理，返回信息
 		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))
 	}

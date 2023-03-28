@@ -15,6 +15,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/httptool"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/lonelyevil/kook"
 	"github.com/wcharczuk/go-chart/v2"
@@ -329,13 +330,13 @@ func GetUserChannelTimeMap(ctx context.Context, userID, guildID string) map[stri
 	span.SetAttributes(attribute.Key("userID").String(userID))
 	defer span.End()
 
-	logs := make([]*utility.ChannelLogExt, 0)
+	logs := make([]*database.ChannelLogExt, 0)
 	userInfo, err := utility.GetUserInfo(userID, "")
 	if err != nil {
 		errorsender.SendErrorInfo(betagovar.NotifierChanID, "", userInfo.ID, err, ctx)
 		return nil
 	}
-	utility.GetDbConnection().
+	database.GetDbConnection().
 		Table("betago.channel_log_exts").
 		Where("user_id = ? and is_update = ? and guild_id = ?", userInfo.ID, true, guildID).
 		Order("left_time desc").
