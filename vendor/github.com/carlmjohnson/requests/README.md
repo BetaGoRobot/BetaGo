@@ -1,4 +1,4 @@
-# Requests [![GoDoc](https://godoc.org/github.com/carlmjohnson/requests?status.svg)](https://godoc.org/github.com/carlmjohnson/requests) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/requests)](https://goreportcard.com/report/github.com/carlmjohnson/requests) [![Gocover.io](https://gocover.io/_badge/github.com/carlmjohnson/requests)](https://gocover.io/github.com/carlmjohnson/requests) [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
+# Requests [![GoDoc](https://godoc.org/github.com/carlmjohnson/requests?status.svg)](https://godoc.org/github.com/carlmjohnson/requests) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/requests)](https://goreportcard.com/report/github.com/carlmjohnson/requests) [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 ![Requests logo](/img/gopher-web.png)
 
@@ -41,7 +41,6 @@ if err != nil {
 }
 s := string(b)
 ```
-
 </td>
 <td>
 
@@ -65,23 +64,13 @@ err := requests.
 <table>
 <thead>
 <tr>
-<th><strong>code with requests</strong></th>
 <th><strong>code with net/http</strong></th>
+<th><strong>code with requests</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>
-
-```go
-err := requests.
-	URL("https://postman-echo.com/post").
-	BodyBytes([]byte(`hello, world`)).
-	ContentType("text/plain").
-	Fetch(ctx)
-```
-
-</td><td>
 
 ```go
 body := bytes.NewReader(([]byte(`hello, world`))
@@ -102,32 +91,33 @@ if err != nil {
 }
 ```
 
-</td></tr>
-<tr><td>5 lines</td><td>12+ lines</td></tr></tbody></table>
+</td>
+<td>
+
+```go
+err := requests.
+	URL("https://postman-echo.com/post").
+	BodyBytes([]byte(`hello, world`)).
+	ContentType("text/plain").
+	Fetch(ctx)
+```
+
+</td>
+</tr>
+<tr><td>12+ lines</td><td>5 lines</td></tr></tbody></table>
 
 ### GET a JSON object
 
 <table>
 <thead>
 <tr>
-<th><strong>code with requests</strong></th>
 <th><strong>code with net/http</strong></th>
+<th><strong>code with requests</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>
-
-```go
-var post placeholder
-err := requests.
-	URL("https://jsonplaceholder.typicode.com").
-	Pathf("/posts/%d", 1).
-	ToJSON(&post).
-	Fetch(ctx)
-```
-
-</td><td>
 
 ```go
 var post placeholder
@@ -155,8 +145,20 @@ if err != nil {
 	// ...
 }
 ```
-</td></tr>
-<tr><td>7 lines</td><td>18+ lines</td></tr></tbody></table>
+</td><td>
+
+```go
+var post placeholder
+err := requests.
+	URL("https://jsonplaceholder.typicode.com").
+	Pathf("/posts/%d", 1).
+	ToJSON(&post).
+	Fetch(ctx)
+```
+
+</td>
+</tr>
+<tr><td>18+ lines</td><td>7 lines</td></tr></tbody></table>
 
 ### POST a JSON object and parse the response
 
@@ -189,16 +191,17 @@ err := requests.
 	Fetch(ctx)
 ```
 
-### Easily manipulate query parameters
+### Easily manipulate URLs and query parameters
 
 ```go
-var params postman
-err := requests.
-	URL("https://postman-echo.com/get?a=1&b=2").
+u, err := requests.
+	URL("https://prod.example.com/get?a=1&b=2").
+	Hostf("%s.example.com", "dev1").
 	Param("b", "3").
-	Param("c", "4").
-	Fetch(ctx)
-	// URL is https://postman-echo.com/get?a=1&b=3&c=4
+	ParamInt("c", 4).
+	URL()
+if err != nil { /* ... */ }
+fmt.Println(u.String()) // https://dev1.example.com/get?a=1&b=3&c=4
 ```
 
 ### Record and replay responses

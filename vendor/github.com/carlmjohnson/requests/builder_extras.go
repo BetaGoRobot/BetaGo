@@ -10,6 +10,21 @@ import (
 	"strconv"
 )
 
+// URL creates a new Builder suitable for method chaining.
+// It is equivalent to calling BaseURL on an empty Builder.
+func URL(baseurl string) *Builder {
+	return (&Builder{}).BaseURL(baseurl)
+}
+
+// New creates a new Builder suitable for method chaining by applying the specified Configs.
+// It is equivalent to calling Config on an empty Builder.
+// The zero value of Builder is usable,
+// so it is not necessary to call New
+// when you do not have any Configs to apply.
+func New(cfgs ...Config) *Builder {
+	return (&Builder{}).Config(cfgs...)
+}
+
 // Head sets HTTP method to HEAD.
 func (rb *Builder) Head() *Builder {
 	return rb.Method(http.MethodHead)
