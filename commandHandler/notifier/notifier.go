@@ -17,11 +17,8 @@ import (
 // StartAutoService  启动自动服务
 func StartAutoService() {
 	StartUpMessage(betagovar.GlobalSession)
-	go scheduletask.DailyRecommand()
-	go scheduletask.DailyRate()
-	go scheduletask.DailyNews()
+	go scheduletask.DailyTask()
 	go scheduletask.OnlineTest()
-	go scheduletask.DailyGetSen()
 }
 
 // StartUpMessage  启动时的消息

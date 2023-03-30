@@ -25,94 +25,85 @@ var once = &sync.Once{}
 // DailyTaskCache  每日任务缓存
 var DailyTaskCache = cache.New(time.Hour*3, time.Minute)
 
-// DailyGetSen 每小时发送
-func DailyGetSen() {
+func DailyTask() {
 	for {
 		time.Sleep(time.Second * 40)
 		if time.Now().UTC().Format("15:04") == "00:00" {
-			commandCtx := &command_context.CommandContext{
-				Common: &command_context.CommandCommonContext{
-					TargetID: "3241026226723225",
-				},
-				Extra: &command_context.CommandExtraContext{},
-			}
-			commandCtx.ContextHandler("ONEWORD")
+			DailyGetSen()
+			DailyRecommand()
+			DailyNews()
+			DailyRate()
 		}
 	}
+}
+
+// DailyGetSen 每小时发送
+func DailyGetSen() {
+	commandCtx := &command_context.CommandContext{
+		Common: &command_context.CommandCommonContext{
+			TargetID: "3241026226723225",
+		},
+		Extra: &command_context.CommandExtraContext{},
+	}
+	commandCtx.ContextHandler("ONEWORD")
 }
 
 // DailyRecommand 每日发送歌曲推荐
 func DailyRecommand() {
-	for {
-		time.Sleep(time.Second * 30)
-		if time.Now().UTC().Format("15:04") == "00:00" {
-			if getOrSetCache("DailyRecommand") {
-				continue
-			}
-			res, err := neteaseapi.NetEaseGCtx.GetNewRecommendMusic()
-			if err != nil {
-				fmt.Println("--------------", err.Error())
-				return
-			}
+	res, err := neteaseapi.NetEaseGCtx.GetNewRecommendMusic()
+	if err != nil {
+		fmt.Println("--------------", err.Error())
+		return
+	}
 
-			modules := make([]interface{}, 0)
-			cardMessage := make(kook.CardMessage, 0)
-			var cardStr string
-			var messageType kook.MessageType
-			if len(res) != 0 {
-				modules = append(modules, betagovar.CardMessageTextModule{
-					Type: "header",
-					Text: struct {
-						Type    string "json:\"type\""
-						Content string "json:\"content\""
-					}{"plain-text", "每日8点-音乐推荐~"},
-				})
-				messageType = kook.MessageTypeCard
-				for _, song := range res {
-					modules = append(modules, betagovar.CardMessageModule{
-						Type:  "audio",
-						Title: song.Name + " - " + song.ArtistName,
-						Src:   song.SongURL,
-						Cover: song.PicURL,
-					})
-				}
-				cardMessage = append(
-					cardMessage,
-					&kook.CardMessageCard{
-						Theme:   kook.CardThemePrimary,
-						Size:    kook.CardSizeLg,
-						Modules: modules,
-					},
-				)
-				cardStr, err = cardMessage.BuildMessage()
-				if err != nil {
-					fmt.Println("-------------", err.Error())
-					return
-				}
-			}
-			betagovar.GlobalSession.MessageCreate(
-				&kook.MessageCreate{
-					MessageCreateBase: kook.MessageCreateBase{
-						Type:     messageType,
-						TargetID: "3241026226723225",
-						Content:  cardStr,
-					},
-				})
+	modules := make([]interface{}, 0)
+	cardMessage := make(kook.CardMessage, 0)
+	var cardStr string
+	var messageType kook.MessageType
+	if len(res) != 0 {
+		modules = append(modules, betagovar.CardMessageTextModule{
+			Type: "header",
+			Text: struct {
+				Type    string "json:\"type\""
+				Content string "json:\"content\""
+			}{"plain-text", "每日8点-音乐推荐~"},
+		})
+		messageType = kook.MessageTypeCard
+		for _, song := range res {
+			modules = append(modules, betagovar.CardMessageModule{
+				Type:  "audio",
+				Title: song.Name + " - " + song.ArtistName,
+				Src:   song.SongURL,
+				Cover: song.PicURL,
+			})
+		}
+		cardMessage = append(
+			cardMessage,
+			&kook.CardMessageCard{
+				Theme:   kook.CardThemePrimary,
+				Size:    kook.CardSizeLg,
+				Modules: modules,
+			},
+		)
+		cardStr, err = cardMessage.BuildMessage()
+		if err != nil {
+			fmt.Println("-------------", err.Error())
+			return
 		}
 	}
+	betagovar.GlobalSession.MessageCreate(
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     messageType,
+				TargetID: "3241026226723225",
+				Content:  cardStr,
+			},
+		})
 }
 
 // DailyRate 每日排行
 func DailyRate() {
-	for {
-		time.Sleep(time.Second * 30)
-		if time.Now().UTC().Format("15:04") == "00:00" {
-			if getOrSetCache("DailyRate") {
-				continue
-			}
-			dailyrate.GetRateHandler(context.Background(), "3241026226723225", "", "")
-		}
-	}
+	dailyrate.GetRateHandler(context.Background(), "3241026226723225", "", "")
 }
 
 func getOrSetCache(key string) bool {
@@ -125,15 +116,7 @@ func getOrSetCache(key string) bool {
 
 // DailyNews 每日新闻
 func DailyNews() {
-	for {
-		time.Sleep(time.Minute)
-		if time.Now().UTC().Format("15") == "00" {
-			if getOrSetCache("DailyNews") {
-				continue
-			}
-			news.Handler(context.Background(), "3241026226723225", "", "", "morning")
-		}
-	}
+	news.Handler(context.Background(), "3241026226723225", "", "", "morning")
 }
 
 // OnlineTest 在线测试
