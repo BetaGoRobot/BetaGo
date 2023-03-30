@@ -4,8 +4,8 @@ on:
   push:
     branches: [master]
     paths-ignore:
-      - "NeteaseCloudMusicApiWithGo/*"
-      - ".github/workflows/*"
+      - "neteaseapi/netease-api-service/*"
+      - "qqmusicapi/qqmusic-api-service/*"
       - "README.md"
   workflow_dispatch:
     inputs:

@@ -2,7 +2,7 @@ name: PR-Check
 
 on:
   pull_request:
-    branches: master
+    branches: [master]
     paths-ignore:
       - "neteaseapi/netease-api-service/*"
       - "qqmusicapi/qqmusic-api-service/*"
@@ -15,7 +15,6 @@ on:
         default: "测试"
 
 env:
-  # 设置 docker 镜像名
   IMAGE_NAME: kevinmatt/betago
   ROBOT_NAME: BetaGo
   TEST_CHAN_ID: "4988093461275944"
@@ -24,13 +23,11 @@ env:
   NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
   TENCENT_HEADER: ccr.ccs.tencentyun.com
 jobs:
-  # Push image to GitHub Packages.
-  # See also https://docs.docker.com/docker-hub/builds/
-  push:
+  Build:
     runs-on: ubuntu-latest
     steps:
-      - uses: nick-fields/retry@v2
-        name: Log into hub
+      - name: Log into registry
+        uses: nick-fields/retry@v2
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -39,13 +36,13 @@ jobs:
             echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login ccr.ccs.tencentyun.com -u 100016072032 --password-stdin
       - name: Checkout
         uses: actions/checkout@v2
-      - uses: nick-fields/retry@v2
-        name: build docker 
+      - name: Build image
+        uses: nick-fields/retry@v2
         with:
           timeout_minutes: 10
           max_attempts: 3
           retry_wait_seconds: 15
-          command: | 
+          command:  |
             zip \
             -r \
             -9 \
@@ -68,6 +65,9 @@ jobs:
              --build-arg MAIL_SECRET=${{ secrets.MAIL_SECRET }} \
              --build-arg GPT_TOKEN=${{ secrets.GPT_TOKEN }} \
              --build-arg NEWS_API_KEY=${{ secrets.NEWS_API_KEY }} \
+             --build-arg GOTIFY_URL=${{ secrets.GOTIFY_URL }} \
+             --build-arg GOTIFY_APPLICATION_TOKEN=${{ secrets.GOTIFY_APPLICATION_TOKEN }} \
+             --build-arg GITHUB_SHA=$GITHUB_SHA \
              . \
              --file scripts/Dockerfile \
              --tag $IMAGE_NAME
