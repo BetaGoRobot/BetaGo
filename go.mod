@@ -13,7 +13,7 @@ replace (
 require (
 	github.com/carlmjohnson/requests v0.23.2
 	github.com/enescakir/emoji v1.0.0
-	github.com/fasthttp/router v1.4.17
+	github.com/fasthttp/router v1.4.18
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gotify/go-api-client/v2 v2.0.4
@@ -38,7 +38,7 @@ require (
 )
 
 require (
-	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.5.0 // indirect
@@ -66,7 +66,7 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/klauspost/compress v1.15.9 // indirect
+	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -80,7 +80,7 @@ require (
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.44.0 // indirect
+	github.com/valyala/fasthttp v1.45.0 // indirect
 	go.mongodb.org/mongo-driver v1.11.3 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
