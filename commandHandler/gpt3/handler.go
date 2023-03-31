@@ -145,22 +145,32 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 		defer span.End()
 
-		lastMsg := ""
+		returnedMsg := ""
 		for {
 			select {
 			case s, open := <-g.AsyncChan:
 				if !open {
-					updateMessage(curMsgID, quoteID, lastMsg, spanID, cardMessageDupStruct, true)
+					updateMessage(curMsgID, quoteID, returnedMsg, spanID, cardMessageDupStruct, true)
 					g.Messages = append(g.Messages, Message{
 						Role:    "assistant",
-						Content: lastMsg,
+						Content: returnedMsg,
 					})
-					chatCache.Set(authorID, g.Messages, cache.DefaultExpiration)
+					fromCache, _ := chatCache.Get(authorID)
+					chatCache.SetDefault(
+						authorID,
+						append(
+							fromCache.([]Message),
+							[]Message{
+								{"user", msg},
+								{"assistant", returnedMsg},
+							}...,
+						),
+					)
 					return
 				}
-				lastMsg += s
+				returnedMsg += s
 			}
-			updateMessage(curMsgID, quoteID, lastMsg, spanID, cardMessageDupStruct, false)
+			updateMessage(curMsgID, quoteID, returnedMsg, spanID, cardMessageDupStruct, false)
 		}
 	}(ctx, curMsgID, quoteID, spanID, cardMessageDupStruct)
 	if chatMsg, ok := chatCache.Get(authorID); ok {
@@ -179,7 +189,10 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 				return
 			}
 			g.Messages = append(oldMessages, g.Messages...)
-			chatCache.Set(authorID, g.Messages, cache.DefaultExpiration)
+			chatCache.SetDefault(authorID, g.Messages)
+		} else {
+			// 缓存和DB均为空，填入空值
+			chatCache.SetDefault(authorID, []Message{})
 		}
 	}
 	if err = g.PostWithStream(ctx); err != nil {
