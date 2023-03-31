@@ -161,16 +161,18 @@ func (g *GPTClient) PostWithStream(ctx context.Context) (err error) {
 	}
 	reader := bufio.NewReader(resp.RawBody())
 	for {
-		line, err := reader.ReadBytes('\n')
+		var line []byte
+		line, err = reader.ReadBytes('\n')
 		if err == io.EOF {
 			break
 		}
 		lineJSON := bytes.TrimLeft(line, "data: ")
 		if bytes.Contains(lineJSON, []byte("maximum")) {
 			err = fmt.Errorf(
-				`你的会话已经达到了GPT-3.5-turbo的4096 token上限, 请使用指令 **.gpt RESET** 来重置会话。
-请注意, 为了保护你的隐私, 目前我们不会保存你与ChatGPT交流的历史会话。
-在后续BetaGo上线OAuth鉴权后, 你可能需要统一EULA协议来允许我们保存你的历史会话。`,
+				`		你的会话已经达到了GPT-3.5-turbo的4096 token上限, 请使用指令` + "`" + ".gpt RESET" + "`" + `来重置会话。
+		请注意: 为了保护你的隐私,
+***目前***我们不会保存你与ChatGPT交流的历史会话。在后续BetaGo上线OAuth鉴权后, 你可能需要同意[EULA协议]来允许我们保存你的历史会话。
+`,
 			)
 			break
 		}
