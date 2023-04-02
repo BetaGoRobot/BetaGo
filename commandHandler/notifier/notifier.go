@@ -29,7 +29,9 @@ func StartAutoService() {
 //	@param session
 //	@return err
 func StartUpMessage(session *kook.Session) (err error) {
-	RestartMsgID, RestartTargetID, RestartAuthorID := redis.GetRedisClient().GetDel(context.Background(), "RestartMsgID").String(), redis.GetRedisClient().GetDel(context.Background(), "RestartTargetID").String(), redis.GetRedisClient().GetDel(context.Background(), "RestartAuthorID").String()
+	RestartMsgID, _ := redis.GetRedisClient().GetDel(context.Background(), "RestartMsgID").Result()
+	RestartTargetID, _ := redis.GetRedisClient().GetDel(context.Background(), "RestartTargetID").Result()
+	RestartAuthorID, _ := redis.GetRedisClient().GetDel(context.Background(), "RestartAuthorID").Result()
 	utility.SendMessageTempAndDelete(RestartTargetID, RestartMsgID, RestartAuthorID, "重启成功。")
 	// StartUp for debug:
 	currentIP, err := httptool.GetPubIP()
