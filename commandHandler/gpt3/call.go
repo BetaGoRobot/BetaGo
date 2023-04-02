@@ -165,6 +165,7 @@ func (g *GPTClient) PostWithStream(ctx context.Context) (err error) {
 		var line []byte
 		line, err = reader.ReadBytes('\n')
 		if err == io.EOF {
+			err = nil
 			break
 		}
 		lineJSON := bytes.TrimLeft(line, "data: ")
