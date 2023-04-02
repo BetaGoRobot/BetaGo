@@ -103,3 +103,15 @@ func (cl closeLogger) Close() error {
 	cl.fn()
 	return cl.ReadCloser.Close()
 }
+
+// DoerTransport converts a Doer into a Transport.
+// It exists for compatibility with other libraries.
+// A Doer is an interface with a Do method.
+// Users should prefer Transport,
+// because Do is the interface of http.Client
+// which has higher level concerns.
+func DoerTransport(cl interface {
+	Do(req *http.Request) (*http.Response, error)
+}) Transport {
+	return RoundTripFunc(cl.Do)
+}

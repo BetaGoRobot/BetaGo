@@ -3,6 +3,7 @@ package requests
 import (
 	"compress/gzip"
 	"io"
+	"net/http/httptest"
 )
 
 // Config allows Builder to be extended by setting several options at once.
@@ -27,5 +28,16 @@ func GzipConfig(level int, h func(gw *gzip.Writer) error) Config {
 				}
 				return gw.Close()
 			})
+	}
+}
+
+// TestServerConfig returns a Config
+// which sets the Builder's BaseURL to s.URL
+// and the Builder's Client to s.Client().
+func TestServerConfig(s *httptest.Server) Config {
+	return func(rb *Builder) {
+		rb.
+			BaseURL(s.URL).
+			Client(s.Client())
 	}
 }
