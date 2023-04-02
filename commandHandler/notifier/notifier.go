@@ -1,6 +1,7 @@
 package notifier
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -9,7 +10,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar/env"
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/scheduletask"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
+	"github.com/BetaGoRobot/BetaGo/utility/redis"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
 )
@@ -26,6 +29,8 @@ func StartAutoService() {
 //	@param session
 //	@return err
 func StartUpMessage(session *kook.Session) (err error) {
+	RestartMsgID, RestartTargetID, RestartAuthorID := redis.GetRedisClient().GetDel(context.Background(), "RestartMsgID").String(), redis.GetRedisClient().GetDel(context.Background(), "RestartTargetID").String(), redis.GetRedisClient().GetDel(context.Background(), "RestartAuthorID").String()
+	utility.SendMessageTempAndDelete(RestartTargetID, RestartMsgID, RestartAuthorID, "重启成功。")
 	// StartUp for debug:
 	currentIP, err := httptool.GetPubIP()
 	if err != nil {

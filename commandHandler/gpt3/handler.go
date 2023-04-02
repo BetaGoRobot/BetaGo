@@ -70,7 +70,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		if err != nil {
 			return
 		}
-		utility.SendMessageTemp(targetID, quoteID, authorID, "重置ChatGPT会话成功")
+		utility.SendMessageTempAndDelete(targetID, quoteID, authorID, "重置ChatGPT会话成功")
 		chatCache = cache.New(time.Minute*30, time.Minute*1)
 		return
 	}

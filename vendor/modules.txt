@@ -25,6 +25,9 @@ github.com/cespare/xxhash/v2
 # github.com/clbanning/mxj v1.8.4
 ## explicit
 github.com/clbanning/mxj
+# github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f
+## explicit
+github.com/dgryski/go-rendezvous
 # github.com/enescakir/emoji v1.0.0
 ## explicit; go 1.13
 github.com/enescakir/emoji
@@ -156,7 +159,7 @@ github.com/kevinmatthe/zaplog
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/gzip
 github.com/klauspost/compress/zlib
-# github.com/lonelyevil/kook v0.0.32
+# github.com/lonelyevil/kook v0.0.33
 ## explicit; go 1.16
 github.com/lonelyevil/kook
 # github.com/lonelyevil/kook/log_adapter/plog v0.0.31
@@ -216,6 +219,16 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
+# github.com/redis/go-redis/v9 v9.0.2
+## explicit; go 1.17
+github.com/redis/go-redis/v9
+github.com/redis/go-redis/v9/internal
+github.com/redis/go-redis/v9/internal/hashtag
+github.com/redis/go-redis/v9/internal/hscan
+github.com/redis/go-redis/v9/internal/pool
+github.com/redis/go-redis/v9/internal/proto
+github.com/redis/go-redis/v9/internal/rand
+github.com/redis/go-redis/v9/internal/util
 # github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee
 ## explicit; go 1.20
 github.com/savsgio/gotils/bytes

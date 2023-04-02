@@ -40,6 +40,7 @@ func TryPanic(ctx context.Context, targetID, quoteID, authorID string, args ...s
 //	@param args
 //	@return err
 func CommandRouter(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
+	defer betagovar.GlobalSession.MessageDelete(quoteID)
 	if database.CheckIsAdmin(authorID) {
 		return AdminCommandHelperHandler(ctx, targetID, quoteID, authorID, args...)
 	}
