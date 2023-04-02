@@ -41,7 +41,7 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 	if strings.HasPrefix(command, "GPTTrace:") {
 		if asyncStruct, ok := gpt3.GPTAsyncMap[command]; ok {
 			if database.CheckIsAdmin(ctx.Extra.UserID) || asyncStruct.AuthorID == ctx.Extra.UserID {
-				*asyncStruct.Channel <- ctx.Extra.UserInfo.FullName
+				*asyncStruct.Channel <- ctx.Extra.UserInfo.Nickname
 			} else {
 				utility.SendMessageTemp(ctx.Extra.TargetID, "", commandCtx.Common.AuthorID, "这不是你创建的消息，你没有权限终止它。")
 			}
