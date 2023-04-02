@@ -140,16 +140,22 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		AsyncChan: make(chan string),
 		StopChan:  make(chan string),
 	}
-	GPTAsyncMap["GPTTrace:"+spanID] = &g.StopChan
+	GPTAsyncMap["GPTTrace:"+spanID] = AsyncMapValue{authorID, &g.StopChan}
 	go func(ctx context.Context, curMsgID, quoteID, spanID string, cardMessageDupStruct kook.CardMessage) {
 		ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 		defer span.End()
+		defer delete(GPTAsyncMap, "GPTTrace:"+spanID)
 
 		returnedMsg := ""
 		for {
 			select {
 			case s, open := <-g.AsyncChan:
 				if !open {
+					if g.StopAuthor != "" {
+						returnedMsg += "\n回答已停止，停止原因: `" + g.StopAuthor + "`点击了终止按钮。"
+					} else {
+						returnedMsg += "\n回答已停止，停止原因: **回答结束。**"
+					}
 					updateMessage(curMsgID, quoteID, returnedMsg, spanID, cardMessageDupStruct, true)
 					g.Messages = append(g.Messages, Message{
 						Role:    "assistant",

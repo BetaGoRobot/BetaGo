@@ -13,10 +13,18 @@ import (
 
 var apiKey = os.Getenv("GPT_TOKEN")
 
-// GPTAsyncMap 异步map
-var GPTAsyncMap = make(map[string]*chan string)
+type AsyncMapValue struct {
+	AuthorID string
+	Channel  *chan string
+}
 
-// CreateChatCompletion
+// GPTAsyncMap 异步map
+var GPTAsyncMap = make(map[string]AsyncMapValue)
+
+// TraceUserMap  1
+var TraceUserMap = make(map[string]string)
+
+// CreateChatCompletion 1
 //
 //	@param msg
 //	@return message

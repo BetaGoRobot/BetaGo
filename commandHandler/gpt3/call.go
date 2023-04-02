@@ -43,11 +43,12 @@ type Message struct {
 
 // GPTClient GPT的请求体
 type GPTClient struct {
-	Model     string      `json:"model"`
-	Messages  []Message   `json:"messages"`
-	Stream    bool        `json:"stream,omitempty"`
-	AsyncChan chan string `json:"-"`
-	StopChan  chan string `json:"-"`
+	Model      string      `json:"model"`
+	Messages   []Message   `json:"messages"`
+	Stream     bool        `json:"stream,omitempty"`
+	AsyncChan  chan string `json:"-"`
+	StopChan   chan string `json:"-"`
+	StopAuthor string      `json:"-"`
 }
 
 // SetContent 设置内容
@@ -186,7 +187,7 @@ func (g *GPTClient) PostWithStream(ctx context.Context) (err error) {
 				log.Println(err.Error())
 			}
 			select {
-			case <-g.StopChan:
+			case g.StopAuthor = <-g.StopChan:
 				close(g.AsyncChan)
 				close(g.StopChan)
 				return nil
