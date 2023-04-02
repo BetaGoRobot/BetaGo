@@ -415,7 +415,9 @@ func RestartHandler(ctx context.Context, targetID, quoteID, authorID string, arg
 		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))
 	}
 	redis.GetRedisClient().Set(context.Background(), "RestartMsgID", quoteID, -1)
-	redis.GetRedisClient().Set(context.Background(), "RestartTargetID", quoteID, -1)
+	redis.GetRedisClient().Set(context.Background(), "RestartTargetID", targetID, -1)
+	redis.GetRedisClient().Set(context.Background(), "RestartAuthorID", authorID, -1)
+
 	os.Exit(0)
 	return
 }
