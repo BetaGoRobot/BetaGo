@@ -1,4 +1,4 @@
-FROM kevinmatt/betago-alpine-golang:1.20.1 as builder
+FROM ghcr.io/betagorobot/betago-golang:master as builder
 
 COPY betago.zip /data/
 
@@ -10,7 +10,7 @@ RUN CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s" -o betaGo-source ./*.go 
     upx -9 -o betaGo betaGo-source
 
 
-FROM alpine as runner
+FROM ghcr.io/betagorobot/betago-chrome:master as runner
 # FROM scratch as runner
 
 ARG BOTAPI \
@@ -59,10 +59,6 @@ COPY --from=builder ./data/fonts /data/fonts
 COPY --from=builder ./data/images /data/images
 
 COPY --from=builder  /usr/share/zoneinfo/ /usr/share/zoneinfo
-
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
-    apk update && \
-    apk add chromium
 
 WORKDIR /
 

@@ -70,7 +70,7 @@ jobs:
              --build-arg GOTIFY_APPLICATION_TOKEN=${{ secrets.GOTIFY_APPLICATION_TOKEN }} \
              --build-arg GITHUB_SHA=$GITHUB_SHA \
              . \
-             --file scripts/Dockerfile \
+             --file scripts/betago/Dockerfile \
              --tag $IMAGE_NAME
       - name: Push image
         uses: nick-fields/retry@v2
