@@ -22,6 +22,7 @@ env:
   NETEASE_PHONE: "${{ secrets.NETEASE_PHONE }}"
   NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
   TENCENT_HEADER: ccr.ccs.tencentyun.com
+  REGISTRY: ghcr.io
 jobs:
   Build_Push:
     runs-on: ubuntu-latest
