@@ -22,4 +22,5 @@ const (
 	CommandContextTypeDailyRate   = "RATE"
 	CommandContextTypeGPT         = "GPT"
 	CommandContextTypeNews        = "NEWS"
+	CommandContextTypeNotify      = "NOTI"
 )
