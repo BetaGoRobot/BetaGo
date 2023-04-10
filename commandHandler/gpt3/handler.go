@@ -3,7 +3,6 @@ package gpt3
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -62,7 +61,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 	// defer span.RecordError(err)
 	defer span.End()
 	spanID := span.SpanContext().TraceID().String()
-	return fmt.Errorf("很抱歉，由于近期OpenAI针对ChatGPT账号展开了大规模封禁并暂时禁止了新账户的注册，我们将暂时停止提供ChatGPT的对话服务。")
+	// return fmt.Errorf("很抱歉，由于近期OpenAI针对ChatGPT账号展开了大规模封禁并暂时禁止了新账户的注册，我们将暂时停止提供ChatGPT的对话服务。")
 	msg := strings.Join(args, " ")
 	if msg == "RESET" {
 		err = database.GetDbConnection().

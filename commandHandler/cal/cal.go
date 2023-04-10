@@ -457,7 +457,7 @@ func DrawPieChartWithAPI(ctx context.Context, inputMap map[string]time.Duration,
 // DrawPieChartWithLocal 本地获取频道的时间分布
 //
 //	@return {}
-func DrawPieChartWithLocal(ctx context.Context, inputMap map[string]time.Duration, userName string) (string, error) {
+func DrawPieChartWithLocal1(ctx context.Context, inputMap map[string]time.Duration, userName string) (string, error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
@@ -515,6 +515,49 @@ func DrawPieChartWithLocal(ctx context.Context, inputMap map[string]time.Duratio
 	defer f.Close()
 	err := pie.Render(chart.PNG, f)
 
+	fileURL, err := utility.UploadFileToCos(filePath)
+	if err != nil {
+		return "", err
+	}
+	return fileURL, err
+}
+
+// DrawPieChartWithMermaid  12
+//
+//	@param ctx
+//	@param inputMap
+//	@param userName
+//	@return string
+//	@return error
+func DrawPieChartWithLocal(ctx context.Context, inputMap map[string]time.Duration, userName string) (string, error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	if len(inputMap) == 0 {
+		return "", fmt.Errorf("No Data Found")
+	}
+
+	title := "pie title " + userName + "Online Time"
+	body := make([]string, 0, len(inputMap))
+	for k, v := range inputMap {
+		timeConv, _ := time.ParseDuration(fmt.Sprintf("%.1fs", v.Seconds()))
+
+		body = append(body, fmt.Sprintf(`"%s:%s" : %d`, k, timeConv.String(), int(v.Seconds())))
+	}
+	sort.Slice(body, func(i, j int) bool {
+		return body[i] > body[j]
+	})
+	fullStr := strings.Join(append([]string{title}, body...), "\n")
+	resp, err := betagovar.HttpClient.R().SetBody(fullStr).Post("http://betago-server-ix-chart.ix-betago-server:8088/make-charts")
+	if err != nil {
+		return "", err
+	}
+
+	fileName := time.Now().Format(time.RFC3339) + "_" + userName + "_chtime.png"
+	filePath := filepath.Join(betagovar.ImagePath, fileName)
+	f, _ := os.OpenFile(filePath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o666)
+	defer f.Close()
+	f.Write(resp.Body())
 	fileURL, err := utility.UploadFileToCos(filePath)
 	if err != nil {
 		return "", err
