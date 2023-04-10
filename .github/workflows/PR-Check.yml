@@ -1,7 +1,7 @@
-name: PR-Check
+name: Docker
 
 on:
-  pull_request:
+  push:
     branches: [master]
     paths-ignore:
       - "neteaseapi/netease-api-service/*"
@@ -22,10 +22,18 @@ env:
   NETEASE_PHONE: "${{ secrets.NETEASE_PHONE }}"
   NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
   TENCENT_HEADER: ccr.ccs.tencentyun.com
+  REGISTRY: ghcr.io
 jobs:
-  Build:
+  Build_Push:
     runs-on: ubuntu-latest
     steps:
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build image
@@ -61,6 +69,5 @@ jobs:
              --build-arg GOTIFY_APPLICATION_TOKEN=${{ secrets.GOTIFY_APPLICATION_TOKEN }} \
              --build-arg GITHUB_SHA=$GITHUB_SHA \
              . \
-             --file scripts/Dockerfile \
+             --file scripts/betago/Dockerfile \
              --tag $IMAGE_NAME
-          
