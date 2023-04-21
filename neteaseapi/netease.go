@@ -420,6 +420,7 @@ func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keyw
 			},
 		).
 		SetCookies(neteaseCtx.cookies).
+		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Post(NetEaseAPIBaseURL + "/cloudsearch")
 	if err != nil {
 		log.Println(err.Error())
