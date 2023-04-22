@@ -89,31 +89,19 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 					Modules: append(
 						modulesNetese,
 						&kook.CardMessageDivider{},
-						&kook.CardMessageSection{
+						kook.CardMessageSection{
 							Mode: kook.CardMessageSectionModeRight,
 							Text: &kook.CardMessageElementKMarkdown{
-								Content: "音乐失效？点击按钮刷新",
+								Content: "`音乐无法正常播放？试试刷新音源`",
 							},
 							Accessory: kook.CardMessageElementButton{
-								Theme: kook.CardThemeSuccess,
+								Theme: kook.CardThemePrimary,
 								Value: "Refresh",
 								Click: string(kook.CardMessageElementButtonClickReturnVal),
 								Text:  "刷新音源",
 							},
 						},
-						&kook.CardMessageDivider{},
-						&kook.CardMessageSection{
-							Mode: kook.CardMessageSectionModeRight,
-							Text: &kook.CardMessageElementKMarkdown{
-								Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
-							},
-							Accessory: kook.CardMessageElementButton{
-								Theme: kook.CardThemeSuccess,
-								Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
-								Click: "link",
-								Text:  "链路追踪",
-							},
-						},
+						utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
 					),
 				},
 			)
@@ -149,17 +137,8 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 					Modules: append(
 						modulesQQ,
 						&kook.CardMessageDivider{},
-						&kook.CardMessageSection{
-							Mode: kook.CardMessageSectionModeRight,
-							Text: &kook.CardMessageElementKMarkdown{
-								Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
-							},
-							Accessory: kook.CardMessageElementButton{
-								Theme: kook.CardThemeSuccess,
-								Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
-								Click: "link",
-								Text:  "链路追踪",
-							},
+						&kook.CardMessageActionGroup{
+							utility.GenerateTraceButton(span.SpanContext().TraceID().String()),
 						},
 					),
 				},

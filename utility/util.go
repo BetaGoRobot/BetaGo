@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -25,6 +26,30 @@ var MicrosoftYaHei *truetype.Font
 
 func init() {
 	InitGlowSansSCFontType()
+}
+
+func GenerateTraceButton(traceInfo string) (b kook.CardMessageElementButton) {
+	return kook.CardMessageElementButton{
+		Theme: kook.CardThemeInfo,
+		Value: "https://jaeger.kevinmatt.top/trace/" + traceInfo,
+		Click: "link",
+		Text:  url.PathEscape("TraceID:" + traceInfo),
+	}
+}
+
+func GenerateTraceButtonSection(traceInfo string) kook.CardMessageSection {
+	return kook.CardMessageSection{
+		Mode: kook.CardMessageSectionModeRight,
+		Text: &kook.CardMessageElementKMarkdown{
+			Content: "TraceID: `" + traceInfo + "`",
+		},
+		Accessory: kook.CardMessageElementButton{
+			Theme: kook.CardThemeInfo,
+			Value: "https://jaeger.kevinmatt.top/trace/" + traceInfo,
+			Click: "link",
+			Text:  "链路追踪",
+		},
+	}
 }
 
 // InitGlowSansSCFontType 初始化字体类型

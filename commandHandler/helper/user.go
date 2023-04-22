@@ -45,18 +45,7 @@ func GetUserInfoHandler(ctx context.Context, targetID, quoteID, authorID string,
 		Modules: append(
 			cardMessageModules,
 			&kook.CardMessageDivider{},
-			&kook.CardMessageSection{
-				Mode: kook.CardMessageSectionModeRight,
-				Text: &kook.CardMessageElementKMarkdown{
-					Content: "TraceID: `" + span.SpanContext().TraceID().String() + "`",
-				},
-				Accessory: kook.CardMessageElementButton{
-					Theme: kook.CardThemeSuccess,
-					Value: "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
-					Click: "link",
-					Text:  "链路追踪",
-				},
-			},
+			utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
 		),
 	}}.BuildMessage()
 	if err != nil {

@@ -70,18 +70,15 @@ func DailyRecommand() {
 				}{"plain-text", "每日8点-音乐推荐~"},
 			},
 			&kook.CardMessageDivider{},
-			&kook.CardMessageSection{
-				Mode: kook.CardMessageSectionModeRight,
-				Text: &kook.CardMessageElementKMarkdown{
-					Content: "音乐失效？点击按钮刷新",
-				},
-				Accessory: kook.CardMessageElementButton{
+			&kook.CardMessageActionGroup{
+				kook.CardMessageElementButton{
 					Theme: kook.CardThemeSuccess,
 					Value: "Refresh",
 					Click: string(kook.CardMessageElementButtonClickReturnVal),
 					Text:  "刷新音源",
 				},
-			})
+			},
+		)
 		messageType = kook.MessageTypeCard
 		for _, song := range res {
 			modules = append(modules, betagovar.CardMessageModule{
