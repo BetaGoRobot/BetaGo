@@ -3,6 +3,7 @@ package music
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
@@ -92,7 +93,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 						kook.CardMessageSection{
 							Mode: kook.CardMessageSectionModeRight,
 							Text: &kook.CardMessageElementKMarkdown{
-								Content: "`音乐无法正常播放？试试刷新音源`",
+								Content: fmt.Sprintf("> 音乐无法播放？试试刷新音源\n> 当前音源版本:`%s`", time.Now().Local().Format("01-02T15:04:05")),
 							},
 							Accessory: kook.CardMessageElementButton{
 								Theme: kook.CardThemePrimary,
@@ -137,9 +138,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 					Modules: append(
 						modulesQQ,
 						&kook.CardMessageDivider{},
-						&kook.CardMessageActionGroup{
-							utility.GenerateTraceButton(span.SpanContext().TraceID().String()),
-						},
+						utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
 					),
 				},
 			)

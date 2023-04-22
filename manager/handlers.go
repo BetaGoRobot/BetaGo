@@ -2,6 +2,7 @@ package manager
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -76,10 +77,40 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 				r.Parent().AppendObject("src", ajson.StringNode("", info.URL))
 			}
 		}
+		res, err = root.JSONPath("$..modules[(@.length-2)].text")
+		if err != nil {
+			return
+		}
+		res[0].DeleteKey("content")
+
+		// tmpStruct := struct {
+		// 	Type string `json:"type"`
+		// 	Text struct {
+		// 		Type    string `json:"type"`
+		// 		Content string `json:"content"`
+		// 	} `json:"text"`
+		// }{
+		// 	Type: "section",
+		// 	Text: struct {
+		// 		Type    string "json:\"type\""
+		// 		Content string "json:\"content\""
+		// 	}{
+		// 		Type:    "kmarkdown",
+		// 		Content: "",
+		// 	},
+		// }
+		res[0].AppendObject("content", ajson.StringNode("", fmt.Sprintf("> 音乐无法播放？试试刷新音源\n> 当前音源版本:`%s`", time.Now().Local().Format("01-02T15:04:05"))))
+		// j, err := json.Marshal(tmpStruct)
+		// if err != nil {
+		// 	return
+		// }
+		// node, err := ajson.Unmarshal(j)
+		// res[0].AppendArray(node)
 		r, err := ajson.Marshal(root)
 		if err != nil {
 			return
 		}
+		fmt.Println(string(r))
 		err = betagovar.GlobalSession.MessageUpdate(&kook.MessageUpdate{
 			MessageUpdateBase: kook.MessageUpdateBase{
 				MsgID:   ctx.Extra.MsgID,
@@ -87,6 +118,7 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 			},
 		})
 		if err != nil {
+			utility.ZapLogger.Error(err.Error())
 			return
 		}
 		return
