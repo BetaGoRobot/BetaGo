@@ -82,30 +82,7 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 			return
 		}
 		res[0].DeleteKey("content")
-
-		// tmpStruct := struct {
-		// 	Type string `json:"type"`
-		// 	Text struct {
-		// 		Type    string `json:"type"`
-		// 		Content string `json:"content"`
-		// 	} `json:"text"`
-		// }{
-		// 	Type: "section",
-		// 	Text: struct {
-		// 		Type    string "json:\"type\""
-		// 		Content string "json:\"content\""
-		// 	}{
-		// 		Type:    "kmarkdown",
-		// 		Content: "",
-		// 	},
-		// }
 		res[0].AppendObject("content", ajson.StringNode("", fmt.Sprintf("> 音乐无法播放？试试刷新音源\n> 当前音源版本:`%s`", time.Now().Local().Format("01-02T15:04:05"))))
-		// j, err := json.Marshal(tmpStruct)
-		// if err != nil {
-		// 	return
-		// }
-		// node, err := ajson.Unmarshal(j)
-		// res[0].AppendArray(node)
 		r, err := ajson.Marshal(root)
 		if err != nil {
 			return
