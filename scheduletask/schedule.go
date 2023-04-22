@@ -61,18 +61,32 @@ func DailyRecommand() {
 	var cardStr string
 	var messageType kook.MessageType
 	if len(res) != 0 {
-		modules = append(modules, betagovar.CardMessageTextModule{
-			Type: "header",
-			Text: struct {
-				Type    string "json:\"type\""
-				Content string "json:\"content\""
-			}{"plain-text", "每日8点-音乐推荐~"},
-		})
+		modules = append(modules,
+			betagovar.CardMessageTextModule{
+				Type: "header",
+				Text: struct {
+					Type    string "json:\"type\""
+					Content string "json:\"content\""
+				}{"plain-text", "每日8点-音乐推荐~"},
+			},
+			&kook.CardMessageDivider{},
+			&kook.CardMessageSection{
+				Mode: kook.CardMessageSectionModeRight,
+				Text: &kook.CardMessageElementKMarkdown{
+					Content: "音乐失效？点击按钮刷新",
+				},
+				Accessory: kook.CardMessageElementButton{
+					Theme: kook.CardThemeSuccess,
+					Value: "Refresh",
+					Click: string(kook.CardMessageElementButtonClickReturnVal),
+					Text:  "刷新音源",
+				},
+			})
 		messageType = kook.MessageTypeCard
 		for _, song := range res {
 			modules = append(modules, betagovar.CardMessageModule{
 				Type:  "audio",
-				Title: song.Name + " - " + song.ArtistName,
+				Title: song.Name + " - " + song.ArtistName + " - " + song.ID,
 				Src:   song.SongURL,
 				Cover: song.PicURL,
 			})

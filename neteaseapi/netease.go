@@ -370,22 +370,14 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (Inf
 		}
 		id += key
 	}
-	resp, err := httptool.PostWithTimestamp(
-		httptool.RequestInfo{
-			URL:     NetEaseAPIBaseURL + "/song/url",
-			Cookies: neteaseCtx.cookies,
-			Params:  map[string][]string{"id": {id}, "br": {"128000"}},
-		})
-	if err != nil {
-		return
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	r, err := betagovar.HttpClient.R().SetQueryParams(
+		map[string]string{
+			"id":        id,
+			"level":     "standard",
+			"timestamp": fmt.Sprint(time.Now().UnixNano()),
+		},
+	).SetCookies(neteaseCtx.cookies).Post(NetEaseAPIBaseURL + "/song/url/v1")
+	body := r.Body()
 	music := musicList{}
 	json.Unmarshal(body, &music)
 	for index := range music.Data {

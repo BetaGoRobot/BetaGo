@@ -10,10 +10,12 @@ import (
 	errorsender "github.com/BetaGoRobot/BetaGo/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/gpt3"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/wordcontrol"
+	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/lonelyevil/kook"
+	"github.com/spyzhov/ajson"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -47,6 +49,45 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 			}
 		} else {
 			utility.SendMessageTemp(ctx.Extra.TargetID, "", commandCtx.Common.AuthorID, "消息已经终止，请不要再尝试点击。")
+		}
+		return
+	}
+	if command == "Refresh" {
+		m, err := betagovar.GlobalSession.MessageView(ctx.Extra.MsgID)
+		if err != nil {
+			return
+		}
+		root, err := ajson.Unmarshal([]byte(m.Content))
+		res, err := root.JSONPath("$..title")
+		if err != nil {
+			return
+		}
+		for _, r := range res {
+			str := strings.Trim(r.String(), "\"")
+			sp := strings.Split(str, "- ")
+			id := sp[len(sp)-1]
+			name := strings.Join(sp[:len(sp)-1], "- ")
+			r.Parent().DeleteKey("src")
+			infoList, err := neteaseapi.NetEaseGCtx.GetMusicURLByID(map[string]string{id: name})
+			if err != nil {
+				return
+			}
+			for _, info := range infoList {
+				r.Parent().AppendObject("src", ajson.StringNode("", info.URL))
+			}
+		}
+		r, err := ajson.Marshal(root)
+		if err != nil {
+			return
+		}
+		err = betagovar.GlobalSession.MessageUpdate(&kook.MessageUpdate{
+			MessageUpdateBase: kook.MessageUpdateBase{
+				MsgID:   ctx.Extra.MsgID,
+				Content: string(r),
+			},
+		})
+		if err != nil {
+			return
 		}
 		return
 	}

@@ -67,7 +67,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 			modulesNetese = append(modulesNetese, kook.CardMessageFile{
 				Type:  kook.CardMessageFileTypeAudio,
 				Src:   song.SongURL,
-				Title: song.Name + " - " + song.ArtistName,
+				Title: song.Name + " - " + song.ArtistName + " - " + song.ID,
 				Cover: song.PicURL,
 			})
 			tempMap[song.Name+" - "+song.ArtistName] = 0
@@ -88,6 +88,19 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 					Size:  kook.CardSizeLg,
 					Modules: append(
 						modulesNetese,
+						&kook.CardMessageDivider{},
+						&kook.CardMessageSection{
+							Mode: kook.CardMessageSectionModeRight,
+							Text: &kook.CardMessageElementKMarkdown{
+								Content: "音乐失效？点击按钮刷新",
+							},
+							Accessory: kook.CardMessageElementButton{
+								Theme: kook.CardThemeSuccess,
+								Value: "Refresh",
+								Click: string(kook.CardMessageElementButtonClickReturnVal),
+								Text:  "刷新音源",
+							},
+						},
 						&kook.CardMessageDivider{},
 						&kook.CardMessageSection{
 							Mode: kook.CardMessageSectionModeRight,
