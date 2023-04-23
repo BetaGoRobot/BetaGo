@@ -28,13 +28,13 @@ var DailyTaskCache = cache.New(time.Hour*3, time.Minute)
 
 func DailyTask() {
 	for {
-		time.Sleep(time.Second * 40)
 		if time.Now().UTC().Format("15:04") == "00:00" {
 			DailyGetSen()
 			DailyRecommand()
 			DailyNews()
 			DailyRate()
 		}
+		time.Sleep(time.Minute)
 	}
 }
 
