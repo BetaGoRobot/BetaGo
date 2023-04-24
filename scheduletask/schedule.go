@@ -72,20 +72,6 @@ func DailyRecommand() {
 					Content string "json:\"content\""
 				}{"plain-text", "每日8点-音乐推荐~"},
 			},
-			&kook.CardMessageDivider{},
-			kook.CardMessageSection{
-				Mode: kook.CardMessageSectionModeRight,
-				Text: &kook.CardMessageElementKMarkdown{
-					Content: fmt.Sprintf("> 音乐无法播放？试试刷新音源\n> 当前音源版本:`%s`", time.Now().Local().Format("01-02T15:04:05")),
-				},
-				Accessory: kook.CardMessageElementButton{
-					Theme: kook.CardThemePrimary,
-					Value: "Refresh",
-					Click: string(kook.CardMessageElementButtonClickReturnVal),
-					Text:  "刷新音源",
-				},
-			},
-			utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
 		)
 		messageType = kook.MessageTypeCard
 		for _, song := range res {
@@ -99,9 +85,23 @@ func DailyRecommand() {
 		cardMessage = append(
 			cardMessage,
 			&kook.CardMessageCard{
-				Theme:   kook.CardThemePrimary,
-				Size:    kook.CardSizeLg,
-				Modules: modules,
+				Theme: kook.CardThemePrimary,
+				Size:  kook.CardSizeLg,
+				Modules: append(modules,
+					&kook.CardMessageDivider{},
+					&kook.CardMessageSection{
+						Mode: kook.CardMessageSectionModeRight,
+						Text: &kook.CardMessageElementKMarkdown{
+							Content: fmt.Sprintf("> 音乐无法播放？试试刷新音源\n> 当前音源版本:`%s`", time.Now().Local().Format("01-02T15:04:05")),
+						},
+						Accessory: kook.CardMessageElementButton{
+							Theme: kook.CardThemePrimary,
+							Value: "Refresh",
+							Click: string(kook.CardMessageElementButtonClickReturnVal),
+							Text:  "刷新音源",
+						},
+					},
+					utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String())),
 			},
 		)
 		cardStr, err = cardMessage.BuildMessage()
