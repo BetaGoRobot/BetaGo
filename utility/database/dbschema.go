@@ -37,6 +37,12 @@ type CommandInfo struct {
 	UpdatedAt       time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
+// DynamicConfig is the struct of dynamic command info
+type DynamicConfig struct {
+	Key   string `json:"key" gorm:"primaryKey"`
+	Value string `json:"value" gorm:"primaryKey"`
+}
+
 // ChannelLogExt  is the struct of channel log
 type ChannelLogExt struct {
 	UserID      string `json:"user_id" gorm:"primaryKey"`
@@ -75,7 +81,7 @@ func init() {
 
 	// migrate
 	db := GetDbConnection()
-	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLogExt{}, &AlertList{}, &ChatContextRecord{}, &ChatRecordLog{})
+	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLogExt{}, &AlertList{}, &ChatContextRecord{}, &ChatRecordLog{}, &DynamicConfig{})
 	if err != nil {
 		utility.ZapLogger.Error("init", zaplog.Error(err))
 	}

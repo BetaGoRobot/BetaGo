@@ -4,6 +4,7 @@ package scheduletask
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,20 +30,30 @@ var DailyTaskCache = cache.New(time.Hour*3, time.Minute)
 func DailyTask() {
 	for {
 		if time.Now().UTC().Format("15:04") == "00:00" {
-			DailyGetSen()
-			DailyRecommand()
-			DailyNews()
-			DailyRate()
+			var (
+				v     = make([]string, 0)
+				rList = make([]string, 0)
+			)
+			betagovar.GlobalDBConn.Table("betago.dynamic_configs").Select("value").Where("key=?", "Schedule_notifier_IDs").Find(&v)
+			if len(v) > 0 {
+				rList = strings.Split(v[0], ",")
+			}
+			for _, id := range rList {
+				DailyGetSen(id)
+				DailyRecommand(id)
+				DailyNews(id)
+				DailyRate(id)
+			}
 		}
 		time.Sleep(time.Minute)
 	}
 }
 
 // DailyGetSen 每小时发送
-func DailyGetSen() {
+func DailyGetSen(TargetID string) {
 	commandCtx := &command_context.CommandContext{
 		Common: &command_context.CommandCommonContext{
-			TargetID: "3241026226723225",
+			TargetID: TargetID,
 		},
 		Extra: &command_context.CommandExtraContext{},
 	}
@@ -50,7 +61,7 @@ func DailyGetSen() {
 }
 
 // DailyRecommand 每日发送歌曲推荐
-func DailyRecommand() {
+func DailyRecommand(TargetID string) {
 	_, span := jaeger_client.BetaGoCommandTracer.Start(context.Background(), utility.GetCurrentFunc())
 	defer span.End()
 	res, err := neteaseapi.NetEaseGCtx.GetNewRecommendMusic()
@@ -114,15 +125,15 @@ func DailyRecommand() {
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     messageType,
-				TargetID: "3241026226723225",
+				TargetID: TargetID,
 				Content:  cardStr,
 			},
 		})
 }
 
 // DailyRate 每日排行
-func DailyRate() {
-	dailyrate.GetRateHandler(context.Background(), "3241026226723225", "", "")
+func DailyRate(TargetID string) {
+	dailyrate.GetRateHandler(context.Background(), TargetID, "", "")
 }
 
 func getOrSetCache(key string) bool {
@@ -134,8 +145,8 @@ func getOrSetCache(key string) bool {
 }
 
 // DailyNews 每日新闻
-func DailyNews() {
-	news.Handler(context.Background(), "3241026226723225", "", "", "morning")
+func DailyNews(TargetID string) {
+	news.Handler(context.Background(), TargetID, "", "", "morning")
 }
 
 // OnlineTest 在线测试
