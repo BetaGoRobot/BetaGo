@@ -52,6 +52,19 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 			utility.SendMessageTemp(ctx.Extra.TargetID, "", commandCtx.Common.AuthorID, "消息已经终止，请不要再尝试点击。")
 		}
 		return
+	} else if strings.HasPrefix(command, "GPTRetry:") {
+		list := strings.Split(command, ":")
+		rawMsg := list[1]
+		msgDetail, err := betagovar.GlobalSession.MessageView(ctx.Extra.MsgID)
+		if err != nil {
+			return
+		}
+		msgQuoted, err := betagovar.GlobalSession.MessageView(msgDetail.Quote.ID)
+		if err != nil {
+			return
+		}
+		gpt3.ClientHandlerStreamUpdate(baseCtx, ctx.Extra.GuildID, msgDetail.Quote.ID, msgQuoted.Author.ID, ctx.Extra.MsgID, rawMsg)
+		return
 	}
 	if command == "Refresh" {
 		m, err := betagovar.GlobalSession.MessageView(ctx.Extra.MsgID)

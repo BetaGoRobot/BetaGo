@@ -63,7 +63,7 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 		newsType = args[0]
 	}
 	if newsType == "morning" {
-		MorningHandler(ctx, targetID, quoteID, authorID)
+		return MorningHandler(ctx, targetID, quoteID, authorID)
 	}
 	var res NewsDataRaw
 	if resCache, found := newsCache.Get(newsType); found {

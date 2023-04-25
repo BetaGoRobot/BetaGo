@@ -30,10 +30,6 @@ var TraceUserMap = make(map[string]string)
 //	@return message
 //	@return err
 func CreateChatCompletion(ctx context.Context, msg, authorID string) (message string, err error) {
-	// if sessionID := GetExsistConversation(ctx, authorID); sessionID != "" {
-	// } else {
-	// 	// create a new conversation
-	// }
 	moderationRes := ModerationCheck(ctx, msg)
 	if len(moderationRes) > 0 {
 		return fmt.Sprintf("很遗憾, 您的对话无法被发送到OpenAI服务器, \n文本违反了以下条例: \n`%s`", strings.Join(moderationRes, "\t")), nil

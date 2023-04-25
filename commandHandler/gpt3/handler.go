@@ -3,6 +3,7 @@ package gpt3
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -145,7 +146,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 					} else {
 						returnedMsg += "\n回答已停止，停止原因: **回答结束。**"
 					}
-					updateMessage(curMsgID, quoteID, returnedMsg, spanID, cardMessageDupStruct, true)
+					updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageDupStruct, true, false)
 					g.Messages = append(g.Messages, Message{
 						Role:    "assistant",
 						Content: returnedMsg,
@@ -165,7 +166,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 				}
 				returnedMsg += s
 			}
-			updateMessage(curMsgID, quoteID, returnedMsg, spanID, cardMessageDupStruct, false)
+			updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageDupStruct, false, false)
 		}
 	}(ctx, curMsgID, quoteID, spanID, cardMessageDupStruct)
 	if chatMsg, ok := chatCache.Get(authorID); ok {
@@ -174,9 +175,11 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		recordLog := struct {
 			RecordStr string `json:"record_str"`
 		}{}
-		database.GetDbConnection().Table("betago.chat_record_logs").Find(&recordLog, &database.ChatRecordLog{
-			AuthorID: authorID,
-		})
+		database.GetDbConnection().
+			Table("betago.chat_record_logs").
+			Find(&recordLog, &database.ChatRecordLog{
+				AuthorID: authorID,
+			})
 		if recordLog.RecordStr != "" {
 			oldMessages := make([]Message, 0)
 			err = json.Unmarshal([]byte(recordLog.RecordStr), &oldMessages)
@@ -191,12 +194,165 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		}
 	}
 	if err = g.PostWithStream(ctx); err != nil {
-		return
+		span.RecordError(err)
+		if strings.Contains(err.Error(), "EOF") {
+			err = fmt.Errorf("> 连接到ChatGPT服务器EOF，节点网络中断...请稍后再试")
+		} else if strings.Contains(err.Error(), "timeout") {
+			err = fmt.Errorf("> 连接到ChatGPT服务器**超时**...请稍后再试")
+		} else {
+			err = fmt.Errorf("> 特殊网络错误，请等待开发者检查修复")
+		}
+		updateMessage(curMsgID, quoteID,
+			`> 请求OpenAI时发生错误，请稍后再试
+`+err.Error(), spanID, msg, cardMessageDupStruct, true, true)
+		return nil
 	}
 	return
 }
 
-func updateMessage(curMsgID, quoteID, lastMsg, spanID string, cardMessageDupStruct kook.CardMessage, noButton bool) {
+// ClientHandlerStreamUpdate 1
+//
+//	@param ctx
+//	@param targetID
+//	@param quoteID
+//	@param authorID
+//	@param args
+//	@return err
+func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID, msgID, msg string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("msg").String(msg))
+	// defer span.RecordError(err)
+	defer span.End()
+	spanID := span.SpanContext().TraceID().String()
+	// return fmt.Errorf("很抱歉，由于近期OpenAI针对ChatGPT账号展开了大规模封禁并暂时禁止了新账户的注册，我们将暂时停止提供ChatGPT的对话服务。")
+
+	cardMessageDupStruct := kook.CardMessage{
+		&kook.CardMessageCard{
+			Theme: "info",
+			Size:  "lg",
+			Modules: []interface{}{
+				kook.CardMessageHeader{
+					Text: kook.CardMessageElementText{
+						Content: emoji.Robot.String() + "GPT来帮你",
+						Emoji:   false,
+					},
+				},
+				kook.CardMessageSection{
+					Mode: kook.CardMessageSectionModeRight,
+					Text: kook.CardMessageElementKMarkdown{
+						Content: "",
+					},
+					Accessory: kook.CardMessageElementButton{
+						Theme: kook.CardThemeSecondary,
+						Value: "GPTTrace:" + spanID,
+						Click: "return-val",
+						Text:  emoji.StopSign.String() + "Stop",
+					},
+				},
+				&kook.CardMessageDivider{},
+				utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
+			},
+		},
+	}
+	cardMessageStrDup, err := cardMessageDupStruct.BuildMessage()
+
+	err = betagovar.GlobalSession.MessageUpdate(
+		&kook.MessageUpdate{
+			MessageUpdateBase: kook.MessageUpdateBase{
+				MsgID:   msgID,
+				Content: cardMessageStrDup,
+				Quote:   quoteID,
+			},
+		},
+	)
+	if err != nil {
+		return
+	}
+
+	g := &GPTClient{
+		Model: "gpt-3.5-turbo",
+		Messages: []Message{{
+			Role:    "user",
+			Content: msg,
+		}},
+		Stream:    true,
+		AsyncChan: make(chan string),
+		StopChan:  make(chan string),
+	}
+	GPTAsyncMap["GPTTrace:"+spanID] = AsyncMapValue{authorID, &g.StopChan}
+	go func(ctx context.Context, curMsgID, quoteID, spanID string, cardMessageDupStruct kook.CardMessage) {
+		ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+		defer span.End()
+		defer delete(GPTAsyncMap, "GPTTrace:"+spanID)
+
+		returnedMsg := ""
+		for {
+			select {
+			case s, open := <-g.AsyncChan:
+				if !open {
+					if g.StopAuthor != "" {
+						returnedMsg += "\n回答已停止，停止原因: `" + g.StopAuthor + "`点击了终止按钮。"
+					} else {
+						returnedMsg += "\n回答已停止，停止原因: **回答结束。**"
+					}
+					updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageDupStruct, true, false)
+					g.Messages = append(g.Messages, Message{
+						Role:    "assistant",
+						Content: returnedMsg,
+					})
+					fromCache, _ := chatCache.Get(authorID)
+					chatCache.SetDefault(
+						authorID,
+						append(
+							fromCache.([]Message),
+							[]Message{
+								{"user", msg},
+								{"assistant", returnedMsg},
+							}...,
+						),
+					)
+					return
+				}
+				returnedMsg += s
+			}
+			updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageDupStruct, false, false)
+		}
+	}(ctx, msgID, quoteID, spanID, cardMessageDupStruct)
+	if chatMsg, ok := chatCache.Get(authorID); ok {
+		g.Messages = append(chatMsg.([]Message), g.Messages...)
+	} else {
+		recordLog := struct {
+			RecordStr string `json:"record_str"`
+		}{}
+		database.GetDbConnection().
+			Table("betago.chat_record_logs").
+			Find(&recordLog, &database.ChatRecordLog{
+				AuthorID: authorID,
+			})
+		if recordLog.RecordStr != "" {
+			oldMessages := make([]Message, 0)
+			err = json.Unmarshal([]byte(recordLog.RecordStr), &oldMessages)
+			if err != nil {
+				return
+			}
+			g.Messages = append(oldMessages, g.Messages...)
+			chatCache.SetDefault(authorID, g.Messages)
+		} else {
+			// 缓存和DB均为空，填入空值
+			chatCache.SetDefault(authorID, []Message{})
+		}
+	}
+	if err = g.PostWithStream(ctx); err != nil {
+		updateMessage(msgID, quoteID,
+			`请求OpenAI时发生错误，请稍后再试
+			`+err.Error(), spanID, msg, cardMessageDupStruct, true, true)
+		span.RecordError(err)
+		return nil
+	}
+	return
+}
+
+func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDupStruct kook.CardMessage, noButton, retryButton bool) {
 	if noButton {
 		cardMessageDupStruct[0].Modules[1] = kook.CardMessageSection{
 			Text: kook.CardMessageElementKMarkdown{
@@ -217,7 +373,18 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID string, cardMessageDupStru
 			},
 		}
 	}
-
+	if retryButton {
+		(*cardMessageDupStruct[0]).Modules = append(
+			(*cardMessageDupStruct[0]).Modules[:len((*cardMessageDupStruct[0]).Modules)-1],
+			kook.CardMessageActionGroup{{
+				Theme: kook.CardThemePrimary,
+				Value: "GPTRetry:" + msg,
+				Click: string(kook.CardMessageElementButtonClickReturnVal),
+				Text:  "点击重试",
+			}},
+			(*cardMessageDupStruct[0]).Modules[len((*cardMessageDupStruct[0]).Modules)-1],
+		)
+	}
 	betagovar.GlobalSession.MessageUpdate(&kook.MessageUpdate{
 		MessageUpdateBase: kook.MessageUpdateBase{
 			MsgID:   curMsgID,
