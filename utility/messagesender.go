@@ -168,7 +168,7 @@ func SendMessage(targetID, QuoteID, authorID string, message string) {
 func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ctx context.Context) {
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
-			Theme: "danger",
+			Theme: kook.CardThemeSecondary,
 			Size:  "lg",
 			Modules: []interface{}{
 				kook.CardMessageHeader{

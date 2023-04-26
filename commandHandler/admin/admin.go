@@ -392,7 +392,7 @@ func ReconnectHandler(ctx context.Context, targetID, quoteID, authorID string, a
 //	@param authorID
 //	@param args
 func RestartHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	if !database.CheckIsAdmin(authorID) {
+	if authorID != "" && !database.CheckIsAdmin(authorID) {
 		// 不存在则不处理，返回信息
 		return fmt.Errorf(fmt.Sprintf(`(met)%s(met) 不是管理员`, authorID))
 	}

@@ -29,26 +29,60 @@ func WebHookHandler(ctx *fasthttp.RequestCtx) {
 	}
 	body := ctx.Request.Body()
 	json.Unmarshal(body, &a)
-	status, _ := ajson.JSONPath(body, "$.action")
-	workflowRun, _ := ajson.JSONPath(body, "$.workflow_run")
-	path, _ := workflowRun[0].JSONPath("@.path")
-	name, _ := workflowRun[0].JSONPath("@.name")
-	headCommit, _ := workflowRun[0].JSONPath("@.head_commit")
-	commitHash, _ := headCommit[0].JSONPath("@.id")
-	authorName, _ := headCommit[0].JSONPath("@.author.name")
-	htmlURL, _ := workflowRun[0].JSONPath("@.html_url")
-	conclusion, _ := workflowRun[0].JSONPath("@.conclusion")
+	status, err := ajson.JSONPath(body, "$.action")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	workflowRun, err := ajson.JSONPath(body, "$.workflow_run")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	path, err := workflowRun[0].JSONPath("@.path")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	name, err := workflowRun[0].JSONPath("@.name")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	headCommit, err := workflowRun[0].JSONPath("@.head_commit")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	commitHash, err := headCommit[0].JSONPath("@.id")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	authorName, err := headCommit[0].JSONPath("@.author.name")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	htmlURL, err := workflowRun[0].JSONPath("@.html_url")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+	conclusion, err := workflowRun[0].JSONPath("@.conclusion")
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
 	utility.SendMessageWithTitle(
 		GithubNotifyChan,
 		"",
 		"",
 		strings.Join([]string{
-			"**Commit:**\t`" + commitHash[0].MustString()[:12] + "`",
+			"**Commit:**\t" + fmt.Sprintf("[%s](%s)", commitHash[0].MustString()[:12], "https://github.com/BetaGoRobot/BetaGo/commit/"+commitHash[0].MustString()),
 			"**Author:**\t" + fmt.Sprintf("[%s](https://github.com/%s)", authorName[0].MustString(), authorName[0].MustString()),
-			"**Action:**\t`" + name[0].MustString() + "`",
-			"**Stage:**\t`" + status[0].MustString() + "`",
-			"**Conclusion:**\t`" + conclusion[0].MustString() + "`",
-			"[ActionURL](" + htmlURL[0].MustString() + ")",
+			"**Action:**\t" + fmt.Sprintf("[%s](%s)", name[0].String(), htmlURL[0].MustString()),
+			"**Status:**\t`" + status[0].MustString() + "`-`" + conclusion[0].MustString() + "`",
 		},
 			"\n"),
 		"New GitHub Action Event"+emoji.Pushpin.String(),
