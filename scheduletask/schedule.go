@@ -153,6 +153,16 @@ func DailyNews(TargetID string) {
 func OnlineTest() {
 	for {
 		once.Do(func() {
+			ms, _ := betagovar.GlobalSession.MessageList(
+				betagovar.TestChanID,
+				kook.MessageListWithPageSize(100),
+				kook.MessageListWithFlag(kook.MessageListFlagBefore),
+			)
+			for _, m := range ms {
+				if m.Author.ID == betagovar.RobotID && strings.Contains(m.Content, "self check message") {
+					betagovar.GlobalSession.MessageDelete(m.ID)
+				}
+			}
 			time.Sleep(time.Second * 5)
 		})
 		selfCheckInner()

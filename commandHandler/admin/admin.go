@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -300,6 +301,7 @@ func DeleteAllMessageHandler(ctx context.Context, targetID, quoteID, authorID st
 	defer span.RecordError(err)
 	defer span.End()
 
+	time.Sleep(1 * time.Second)
 	var (
 		ec         utility.ErrorCollector
 		messageNum int
@@ -315,20 +317,33 @@ func DeleteAllMessageHandler(ctx context.Context, targetID, quoteID, authorID st
 			return
 		}
 	}
+	// curMsgID := quoteID
 	if messageNum > 50 {
-		for i := 0; i < messageNum/50; i++ {
-			ms, err := betagovar.GlobalSession.MessageList(targetID, kook.MessageListWithPageSize(50))
+		cnt := 0
+		for i := 0; i < messageNum/100; i++ {
+			ms, err := betagovar.GlobalSession.MessageList(
+				targetID,
+				kook.MessageListWithPageSize(100),
+				kook.MessageListWithFlag(kook.MessageListFlagBefore),
+			)
 			if err != nil {
 				ec.Collect(err)
 			}
-			for i := len(ms) - 1; i >= 0; i-- {
+			for i := 0; i < len(ms) && cnt <= messageNum; i++ {
 				err := betagovar.GlobalSession.MessageDelete(ms[i].ID)
 				backupData(ms[i].Author.Username, ms[i].Content, ms[i].ID, targetID)
 				ec.Collect(err)
+				// curMsgID = ms[i].ID
+				cnt++
 			}
 		}
 	} else {
-		ms, err := betagovar.GlobalSession.MessageList(targetID, kook.MessageListWithPageSize(messageNum))
+		ms, err := betagovar.GlobalSession.MessageList(
+			targetID,
+			kook.MessageListWithPageSize(100),
+			kook.MessageListWithFlag(kook.MessageListFlagBefore),
+		)
+		ms = ms[:messageNum]
 		if err != nil {
 			ec.Collect(err)
 		}
@@ -337,15 +352,15 @@ func DeleteAllMessageHandler(ctx context.Context, targetID, quoteID, authorID st
 			err = fmt.Errorf("若全部删除，需要删除的消息数量>50，高危操作，请确认后`指定需要删除的消息数量`完成操作")
 			return err
 		}
-		for i := len(ms) - 1; i >= 0; i-- {
+		for i := 0; i < len(ms); i++ {
 			err := betagovar.GlobalSession.MessageDelete(ms[i].ID)
 			ec.Collect(err)
-			msg, err := getStringFromNode(ms[i].Content)
-			ec.Collect(err)
+			msg := ms[i].Content
 			backupData(ms[i].Author.Username, msg, ms[i].ID, targetID)
 		}
 	}
-	return ec.CheckError()
+	err = ec.CheckError()
+	return
 }
 
 // ReconnectHandler 重连

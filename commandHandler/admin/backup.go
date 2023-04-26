@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/spyzhov/ajson"
 )
 
@@ -32,7 +33,11 @@ func backupData(UserName, Msg, MsgID, GuildID string) {
 
 func writeBackups(toWrite []*content) {
 	// 写入备份文件中
-	f, err := os.OpenFile("/msg-backups/"+time.Now().Format(time.RFC3339)+".json", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o666)
+	dirPrefix := "/msg-backups/"
+	if betagovar.IsTest {
+		dirPrefix = "/mnt/Storage/betago/backup/"
+	}
+	f, err := os.OpenFile(dirPrefix+time.Now().Format(time.RFC3339)+".json", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o666)
 	if err != nil {
 		panic(err)
 	}
