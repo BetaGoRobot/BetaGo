@@ -25,7 +25,7 @@ require (
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phuslu/log v1.0.83
-	github.com/prometheus/client_golang v1.14.0
+	github.com/prometheus/client_golang v1.15.0
 	github.com/redis/go-redis/v9 v9.0.3
 	github.com/spyzhov/ajson v0.8.0
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
@@ -35,7 +35,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.14.0
 	go.opentelemetry.io/otel/trace v1.14.0
 	gorm.io/driver/postgres v1.5.0
-	gorm.io/gorm v1.24.7-0.20230306060331-85eaf9eeda11
+	gorm.io/gorm v1.25.0
 )
 
 require (
