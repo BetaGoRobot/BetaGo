@@ -92,8 +92,10 @@ func WebHookHandler(ctx *fasthttp.RequestCtx) {
 	if conclusion[0].MustString() == "success" && status[0].MustString() == "completed" && path[0].MustString() == ".github/workflows/docker-image.yml" {
 		// 是构建完成
 		// 是正确的构建, 等待五秒后重启拉取最新的镜像
-		time.Sleep(5 * time.Second)
-		admin.RestartHandler(ctx, "", "", "")
+		go func() {
+			time.Sleep(5 * time.Second)
+			admin.RestartHandler(ctx, "", "", "")
+		}()
 	}
 }
 
