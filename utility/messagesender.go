@@ -165,13 +165,50 @@ func SendMessage(targetID, QuoteID, authorID string, message string) {
 	)
 }
 
-// SendMessageWithTitle 发送消息
+func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ctx context.Context) {
+	cardMessageStr, err := kook.CardMessage{
+		&kook.CardMessageCard{
+			Theme: "danger",
+			Size:  "lg",
+			Modules: []interface{}{
+				kook.CardMessageHeader{
+					Text: kook.CardMessageElementText{
+						Content: title,
+						Emoji:   true,
+					},
+				},
+				kook.CardMessageDivider{},
+				kook.CardMessageSection{
+					Text: kook.CardMessageElementKMarkdown{
+						Content: message,
+					},
+				},
+			},
+		},
+	}.BuildMessage()
+	if err != nil {
+		ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		return
+	}
+	betagovar.GlobalSession.MessageCreate(
+		&kook.MessageCreate{
+			MessageCreateBase: kook.MessageCreateBase{
+				Type:     kook.MessageTypeCard,
+				TargetID: targetID,
+				Content:  cardMessageStr,
+				Quote:    QuoteID,
+			},
+		},
+	)
+}
+
+// SendErrorMessageWithTitle 发送消息
 //
 //	@param targetID 目标ID
 //	@param QuoteID 引用ID
 //	@param authorID 作者ID
 //	@param message
-func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ctx context.Context) {
+func SendErrorMessageWithTitle(targetID, QuoteID, authorID, message, title string, ctx context.Context) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 

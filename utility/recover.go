@@ -29,7 +29,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 		JSONStr := ForceMarshalJSON(ctx)
 		SendEmail("Panic-Collected!", fmt.Sprintf("%v\n%s", string(debug.Stack()), JSONStr))
 		// // 测试频道不用脱敏
-		SendMessageWithTitle(betagovar.TestChanID, "", "",
+		SendErrorMessageWithTitle(betagovar.TestChanID, "", "",
 			emoji.ExclamationMark.String()+
 				"发生Panic, 请联系开发者并提供此ID\n\nTraceID: `"+
 				span.SpanContext().TraceID().String()+"`\n",
@@ -42,7 +42,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 				TargetID, err, removeSensitiveInfo(debug.Stack()), JSONStr), "\n", "\n\n"),
 			7)
 		if TargetID != betagovar.TestChanID {
-			SendMessageWithTitle(TargetID, "", "",
+			SendErrorMessageWithTitle(TargetID, "", "",
 				fmt.Sprintf(emoji.ExclamationMark.String()+"发生Panic, 请联系开发者并提供此ID\n\nTraceID: "+span.SpanContext().TraceID().String()),
 				fmt.Sprintf("%s Panic-Collected!",
 					emoji.Warning.String()), ctx)

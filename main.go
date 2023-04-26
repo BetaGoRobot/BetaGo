@@ -12,7 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/check"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/notifier"
-	"github.com/BetaGoRobot/BetaGo/manager"
+	"github.com/BetaGoRobot/BetaGo/server"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/kevinmatthe/zaplog"
 )
@@ -27,11 +27,11 @@ func init() {
 	go func() {
 		http.ListenAndServe(":6060", nil)
 	}()
+	server.Start()
 }
 
 func main() {
 	check.CheckEnv()
-	go manager.ReconnectUsingChan()
 	e := betagovar.GlobalSession.Open()
 	if e != nil {
 		utility.ZapLogger.Error("连接失败", zaplog.Error(e))
