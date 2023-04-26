@@ -139,6 +139,13 @@ func (g *GPTClient) Post() (msg string, err error) {
 	return
 }
 
+var ErrorMaxToken = fmt.Errorf(
+	`	你的会话token数量已经达到了GPT-3.5-turbo的4096 token上限, 请使用指令` + "`" + ".gpt RESET" + "`" + `或点击按钮来重置会话并重试。
+请注意: 为了保护你的隐私,
+***目前***我们不会保存你与ChatGPT交流的历史会话。在后续BetaGo上线OAuth鉴权后, 你可能需要同意[EULA协议]来允许我们保存你的历史会话。
+`,
+)
+
 // PostWithStream  流式请求
 //
 //	@receiver g
@@ -170,12 +177,7 @@ func (g *GPTClient) PostWithStream(ctx context.Context) (err error) {
 		}
 		lineJSON := bytes.TrimLeft(line, "data: ")
 		if bytes.Contains(lineJSON, []byte("maximum")) {
-			err = fmt.Errorf(
-				`		你的会话已经达到了GPT-3.5-turbo的4096 token上限, 请使用指令` + "`" + ".gpt RESET" + "`" + `来重置会话。
-		请注意: 为了保护你的隐私,
-***目前***我们不会保存你与ChatGPT交流的历史会话。在后续BetaGo上线OAuth鉴权后, 你可能需要同意[EULA协议]来允许我们保存你的历史会话。
-`,
-			)
+			err = ErrorMaxToken
 			break
 		}
 		res, err := ajson.JSONPath(lineJSON, "$..content")

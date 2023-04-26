@@ -312,7 +312,7 @@ func GetCurrentFunc() string {
 	pcCache[pc] = runtime.FuncForPC(pc).Name()
 	return pcCache[pc]
 }
-func  BuildCardMessage
+
 // BuildCardMessage 1
 //
 //	@return string

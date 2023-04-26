@@ -14,6 +14,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/enescakir/emoji"
+	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 	"github.com/patrickmn/go-cache"
 	"go.opentelemetry.io/otel/attribute"
@@ -72,7 +73,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		if err != nil {
 			return
 		}
-		utility.SendMessageTempAndDelete(targetID, quoteID, authorID, "重置ChatGPT会话成功")
+		utility.SendMessageTempAndDelete(targetID, quoteID, authorID, "重置ChatGPT会话成功,现在你可以点击重试")
 		chatCache = cache.New(time.Minute*30, time.Minute*1)
 		return
 	}
@@ -138,7 +139,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 					} else {
 						returnedMsg += "\n回答已停止，停止原因: **回答结束。**"
 					}
-					updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, true, false)
+					updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, true, false, false)
 					g.Messages = append(g.Messages, Message{
 						Role:    "assistant",
 						Content: returnedMsg,
@@ -158,7 +159,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 				}
 				returnedMsg += s
 			}
-			updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, false, false)
+			updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, false, false, false)
 		}
 	}(ctx, curMsgID, quoteID, spanID, cardMessageStruct)
 	if chatMsg, ok := chatCache.Get(authorID); ok {
@@ -186,8 +187,11 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		}
 	}
 	if err = g.PostWithStream(ctx); err != nil {
+		resetButton := false
 		span.RecordError(err)
-		if strings.Contains(err.Error(), "EOF") {
+		if err == ErrorMaxToken {
+			resetButton = true
+		} else if strings.Contains(err.Error(), "EOF") {
 			err = fmt.Errorf("> 连接到ChatGPT服务器EOF，节点网络中断...请稍后再试")
 		} else if strings.Contains(err.Error(), "timeout") {
 			err = fmt.Errorf("> 连接到ChatGPT服务器**超时**...请稍后再试")
@@ -196,7 +200,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		}
 		updateMessage(curMsgID, quoteID,
 			`> 请求OpenAI时发生错误，请稍后再试
-`+err.Error(), spanID, msg, cardMessageStruct, true, true)
+`+err.Error(), spanID, msg, cardMessageStruct, true, true, resetButton)
 		return nil
 	}
 	return
@@ -278,7 +282,7 @@ func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID,
 					} else {
 						returnedMsg += "\n回答已停止，停止原因: **回答结束。**"
 					}
-					updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, true, false)
+					updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, true, false, false)
 					g.Messages = append(g.Messages, Message{
 						Role:    "assistant",
 						Content: returnedMsg,
@@ -298,7 +302,7 @@ func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID,
 				}
 				returnedMsg += s
 			}
-			updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, false, false)
+			updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, false, false, false)
 		}
 	}(ctx, msgID, quoteID, spanID, cardMessageStruct)
 	if chatMsg, ok := chatCache.Get(authorID); ok {
@@ -326,16 +330,26 @@ func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID,
 		}
 	}
 	if err = g.PostWithStream(ctx); err != nil {
-		updateMessage(msgID, quoteID,
-			`请求OpenAI时发生错误，请稍后再试
-			`+err.Error(), spanID, msg, cardMessageStruct, true, true)
+		resetButton := false
 		span.RecordError(err)
+		if err == ErrorMaxToken {
+			resetButton = true
+		} else if strings.Contains(err.Error(), "EOF") {
+			err = fmt.Errorf("> 连接到ChatGPT服务器EOF，节点网络中断...请稍后再试")
+		} else if strings.Contains(err.Error(), "timeout") {
+			err = fmt.Errorf("> 连接到ChatGPT服务器**超时**...请稍后再试")
+		} else {
+			err = fmt.Errorf("> 特殊网络错误，请等待开发者检查修复")
+		}
+		updateMessage(msgID, quoteID,
+			`> 请求OpenAI时发生错误，请稍后再试
+`+err.Error(), spanID, msg, cardMessageStruct, true, true, resetButton)
 		return nil
 	}
 	return
 }
 
-func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDupStruct kook.CardMessageSection, noButton, retryButton bool) {
+func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDupStruct kook.CardMessageSection, noButton, retryButton, resetButton bool) {
 	modules := make([]interface{}, 0)
 	if noButton {
 		cardMessageDupStruct = kook.CardMessageSection{
@@ -359,13 +373,30 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 	}
 	modules = append(modules, cardMessageDupStruct)
 	if retryButton {
-		modules = append(modules, kook.CardMessageActionGroup{{
+		actionGroup := kook.CardMessageActionGroup{{
 			Theme: kook.CardThemePrimary,
 			Value: "GPTRetry:" + msg,
 			Click: string(kook.CardMessageElementButtonClickReturnVal),
 			Text:  "点击重试",
-		}})
+		}}
+		m, err := betagovar.GlobalSession.MessageView(quoteID)
+		if err != nil {
+			utility.ZapLogger.Error("MessageView error", zaplog.Error(err))
+			return
+		}
+
+		if resetButton {
+			actionGroup = append(actionGroup, kook.CardMessageElementButton{
+				Theme: kook.CardThemeWarning,
+				Value: "GPTReset:" + m.Author.ID,
+				Click: string(kook.CardMessageElementButtonClickReturnVal),
+				Text:  "重置会话",
+			})
+		}
+		modules = append(modules, actionGroup)
+
 	}
+
 	cardMessageStrDup, err := utility.BuildCardMessage(
 		"info",
 		"lg",
