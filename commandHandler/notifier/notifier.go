@@ -40,6 +40,7 @@ func StartUpMessage(session *kook.Session) (err error) {
 	}
 	go func() {
 		title := emoji.DesertIsland.String() + "Online Notifacation" + emoji.Information.String()
+
 		content := strings.Join(
 			[]string{
 				"Name: \t**", betagovar.RobotName, "**\n",
