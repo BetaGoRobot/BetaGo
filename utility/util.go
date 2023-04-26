@@ -19,6 +19,7 @@ import (
 	"github.com/lonelyevil/kook"
 	"github.com/lonelyevil/kook/log_adapter/plog"
 	"github.com/phuslu/log"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // MicrosoftYaHei  字体类型,未来荧黑
@@ -310,4 +311,81 @@ func GetCurrentFunc() string {
 	}
 	pcCache[pc] = runtime.FuncForPC(pc).Name()
 	return pcCache[pc]
+}
+func  BuildCardMessage
+// BuildCardMessage 1
+//
+//	@return string
+func BuildCardMessage(theme, size, title, quoteID string, span interface{}, modules ...interface{}) (cardMessageStr string, err error) {
+	var inputCommand interface{}
+	cardMessageCard := &kook.CardMessageCard{
+		Theme:   kook.CardTheme(theme),
+		Size:    "lg",
+		Modules: make([]interface{}, 0),
+	}
+	cardMessage := kook.CardMessage{cardMessageCard}
+	if quoteID != "" {
+		m, err := betagovar.GlobalSession.MessageView(quoteID)
+		if err != nil {
+			ZapLogger.Error("MessageView Error", zaplog.Error(err))
+		}
+		prevCardMessage := make(kook.CardMessage, 0)
+		err = json.UnmarshalFromString(m.Content, &prevCardMessage)
+		if err != nil {
+			// 不是卡片消息
+			if len(m.MentionInfo.MentionPart) > 0 {
+				m.Content = "@" + m.MentionInfo.MentionPart[0].Username + m.Content[strings.LastIndex(m.Content, "(met)")+5:]
+			}
+			m.Content = "`" + m.Content + "`"
+			inputCommand = kook.CardMessageSection{
+				Mode: kook.CardMessageSectionModeLeft,
+				Text: kook.CardMessageElementKMarkdown{
+					Content: m.Content,
+				},
+			}
+		} else {
+			inputCommand = prevCardMessage[0].Modules
+		}
+	}
+	var titleModule interface{}
+	if title != "" {
+		titleModule = &kook.CardMessageHeader{
+			Text: kook.CardMessageElementText{
+				Content: title,
+				Emoji:   false,
+			},
+		}
+	}
+
+	var traceModule interface{}
+	if span != nil {
+		if spanTrace, ok := span.(trace.Span); ok {
+			traceModule = GenerateTraceButtonSection(spanTrace.SpanContext().TraceID().String())
+		} else if spanStr, ok := span.(string); ok {
+			traceModule = GenerateTraceButtonSection(spanStr)
+		}
+	}
+	resModules := make([]interface{}, 0)
+	resModules = append(resModules,
+		kook.CardMessageSection{
+			Text: kook.CardMessageElementText{
+				Content: "你的输入：",
+			},
+		})
+	if _, ok := inputCommand.([]interface{}); ok {
+		resModules = append(resModules, inputCommand.([]interface{})...)
+	} else {
+		resModules = append(resModules, inputCommand)
+	}
+	resModules = append(resModules, kook.CardMessageDivider{})
+	if titleModule != nil {
+		resModules = append(resModules, titleModule, kook.CardMessageDivider{})
+	}
+	resModules = append(resModules, modules...)
+	if traceModule != nil {
+		resModules = append(resModules, kook.CardMessageDivider{}, traceModule)
+	}
+	cardMessageCard.Modules = resModules
+
+	return cardMessage.BuildMessage()
 }

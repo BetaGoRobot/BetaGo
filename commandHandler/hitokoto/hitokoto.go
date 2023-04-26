@@ -91,28 +91,25 @@ func GetHitokotoHandler(ctx context.Context, targetID, quoteID, authorID string,
 	if err != nil {
 		return
 	}
-	cardMessageStr, err := kook.CardMessage{
-		&kook.CardMessageCard{
-			Theme: "info",
-			Size:  "lg",
-			Modules: []interface{}{
-				kook.CardMessageHeader{
-					Text: kook.CardMessageElementText{
-						Content: fmt.Sprintf("%s 很喜欢《%s》中的一句话", emoji.Mountain.String(), hitokotoRes.From),
-						Emoji:   true,
-					},
-				},
-				kook.CardMessageSection{
-					Text: kook.CardMessageElementText{
-						Content: hitokotoRes.Hitokoto + "\n",
-						Emoji:   true,
-					},
-				},
-				&kook.CardMessageDivider{},
-				utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
+	cardMessageStr, err := utility.BuildCardMessage(
+		"info",
+		"lg",
+		"",
+		quoteID,
+		span,
+		kook.CardMessageHeader{
+			Text: kook.CardMessageElementText{
+				Content: fmt.Sprintf("%s 很喜欢《%s》中的一句话", emoji.Mountain.String(), hitokotoRes.From),
+				Emoji:   true,
 			},
 		},
-	}.BuildMessage()
+		kook.CardMessageSection{
+			Text: kook.CardMessageElementText{
+				Content: hitokotoRes.Hitokoto + "\n",
+				Emoji:   true,
+			},
+		},
+	)
 	if err != nil {
 		return
 	}

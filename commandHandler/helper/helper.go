@@ -65,24 +65,19 @@ func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID 
 		if database.GetDbConnection().Table("betago.command_infos").Where("command_name = ?", "`"+strings.ToUpper(args[0])+"`").Find(&commandInfo).RowsAffected == 0 {
 			return fmt.Errorf("没有找到指令: %s", args[0])
 		}
-		cardMessageStr, err = kook.CardMessage{&kook.CardMessageCard{
-			Theme: "info",
-			Size:  kook.CardSizeLg,
-			Modules: []interface{}{
-				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeRight,
-					Text: &kook.CardMessageElementKMarkdown{
-						Content: commandInfo.CommandName + ": " + commandInfo.CommandDesc,
-					},
-				},
-				&kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeRight,
-					Text: &kook.CardMessageElementKMarkdown{
-						Content: "TraceID: " + span.SpanContext().TraceID().String(),
-					},
+		cardMessageStr, err = utility.BuildCardMessage(
+			"info",
+			string(kook.CardSizeLg),
+			"",
+			quoteID,
+			span,
+			&kook.CardMessageSection{
+				Mode: kook.CardMessageSectionModeRight,
+				Text: &kook.CardMessageElementKMarkdown{
+					Content: commandInfo.CommandName + ": " + commandInfo.CommandDesc,
 				},
 			},
-		}}.BuildMessage()
+		)
 		if err != nil {
 			return err
 		}
@@ -183,23 +178,18 @@ func AdminCommandHelperHandler(ctx context.Context, targetID, quoteID, authorID 
 			},
 		)
 	}
-
-	cardMessageStr, err := kook.CardMessage{
-		&kook.CardMessageCard{
-			Theme: "secondary",
-			Size:  "lg",
-			Modules: append(
-				modules,
-				&kook.CardMessageDivider{},
-				utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
-			),
-		},
-	}.BuildMessage()
+	cardMessageStr, err := utility.BuildCardMessage(
+		"secondary",
+		"lg",
+		"",
+		quoteID,
+		span,
+		modules...,
+	)
 	if err != nil {
 		err = fmt.Errorf("building cardMessage error %s", err.Error())
 		return
 	}
-
 	betagovar.GlobalSession.MessageCreate(
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{

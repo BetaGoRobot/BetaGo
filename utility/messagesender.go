@@ -18,49 +18,26 @@ import (
 //	@param authorID
 //	@param message
 func SendMessageTempAndDelete(targetID, QuoteID, authorID, newMsg string) {
-	oldMsgView, err := betagovar.GlobalSession.MessageView(QuoteID)
-	if err != nil {
-		log.Println(err.Error())
-		oldMsgView = &kook.DetailedChannelMessage{}
-	}
-	oldMsg := oldMsgView.Content
-	cardMessageStr, err := kook.CardMessage{
-		&kook.CardMessageCard{
-			Theme: "danger",
-			Size:  "lg",
-			Modules: []interface{}{
-				kook.CardMessageHeader{
-					Text: kook.CardMessageElementText{
-						Content: emoji.Information.String() + " Your Message:",
-						Emoji:   true,
-					},
-				},
-				kook.CardMessageDivider{},
-				kook.CardMessageSection{
-					Text: kook.CardMessageElementKMarkdown{
-						Content: oldMsg,
-					},
-				},
-				kook.CardMessageDivider{},
-				kook.CardMessageSection{
-					Text: kook.CardMessageElementKMarkdown{
-						Content: newMsg,
-					},
-				},
-				kook.CardMessageDivider{},
-				kook.CardMessageSection{
-					Text: kook.CardMessageElementKMarkdown{
-						Content: "> 注意：这是一条临时消息，仅你可见",
-					},
-				},
+	cardMessageStr, err := BuildCardMessage(
+		"danger",
+		"lg",
+		"重启更新",
+		QuoteID, nil, kook.CardMessageSection{
+			Text: kook.CardMessageElementKMarkdown{
+				Content: newMsg,
 			},
 		},
-	}.BuildMessage()
+		kook.CardMessageDivider{},
+		kook.CardMessageSection{
+			Text: kook.CardMessageElementKMarkdown{
+				Content: "> 注意：这是一条临时消息，仅你可见",
+			},
+		})
 	if err != nil {
 		ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
-	betagovar.GlobalSession.MessageCreate(
+	_, err = betagovar.GlobalSession.MessageCreate(
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     kook.MessageTypeCard,

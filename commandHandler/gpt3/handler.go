@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -75,35 +76,26 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		chatCache = cache.New(time.Minute*30, time.Minute*1)
 		return
 	}
-	cardMessageDupStruct := kook.CardMessage{
-		&kook.CardMessageCard{
-			Theme: "info",
-			Size:  "lg",
-			Modules: []interface{}{
-				kook.CardMessageHeader{
-					Text: kook.CardMessageElementText{
-						Content: emoji.Robot.String() + "GPT来帮你",
-						Emoji:   false,
-					},
-				},
-				kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeRight,
-					Text: kook.CardMessageElementKMarkdown{
-						Content: "",
-					},
-					Accessory: kook.CardMessageElementButton{
-						Theme: kook.CardThemeSecondary,
-						Value: "GPTTrace:" + spanID,
-						Click: "return-val",
-						Text:  emoji.StopSign.String() + "Stop",
-					},
-				},
-				&kook.CardMessageDivider{},
-				utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
-			},
+	cardMessageStruct := kook.CardMessageSection{
+		Mode: kook.CardMessageSectionModeRight,
+		Text: kook.CardMessageElementKMarkdown{
+			Content: "",
+		},
+		Accessory: kook.CardMessageElementButton{
+			Theme: kook.CardThemeSecondary,
+			Value: "GPTTrace:" + spanID,
+			Click: "return-val",
+			Text:  emoji.StopSign.String() + "Stop",
 		},
 	}
-	cardMessageStrDup, err := cardMessageDupStruct.BuildMessage()
+	cardMessageStrDup, err := utility.BuildCardMessage(
+		"info",
+		"lg",
+		emoji.Robot.String()+"GPT来帮你",
+		quoteID,
+		span,
+		cardMessageStruct,
+	)
 
 	resp, err := betagovar.GlobalSession.MessageCreate(
 		&kook.MessageCreate{
@@ -131,7 +123,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		StopChan:  make(chan string),
 	}
 	GPTAsyncMap["GPTTrace:"+spanID] = AsyncMapValue{authorID, &g.StopChan}
-	go func(ctx context.Context, curMsgID, quoteID, spanID string, cardMessageDupStruct kook.CardMessage) {
+	go func(ctx context.Context, curMsgID, quoteID, spanID string, cardMessageStruct kook.CardMessageSection) {
 		ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 		defer span.End()
 		defer delete(GPTAsyncMap, "GPTTrace:"+spanID)
@@ -146,7 +138,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 					} else {
 						returnedMsg += "\n回答已停止，停止原因: **回答结束。**"
 					}
-					updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageDupStruct, true, false)
+					updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, true, false)
 					g.Messages = append(g.Messages, Message{
 						Role:    "assistant",
 						Content: returnedMsg,
@@ -166,9 +158,9 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 				}
 				returnedMsg += s
 			}
-			updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageDupStruct, false, false)
+			updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, false, false)
 		}
-	}(ctx, curMsgID, quoteID, spanID, cardMessageDupStruct)
+	}(ctx, curMsgID, quoteID, spanID, cardMessageStruct)
 	if chatMsg, ok := chatCache.Get(authorID); ok {
 		g.Messages = append(chatMsg.([]Message), g.Messages...)
 	} else {
@@ -204,7 +196,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 		}
 		updateMessage(curMsgID, quoteID,
 			`> 请求OpenAI时发生错误，请稍后再试
-`+err.Error(), spanID, msg, cardMessageDupStruct, true, true)
+`+err.Error(), spanID, msg, cardMessageStruct, true, true)
 		return nil
 	}
 	return
@@ -226,35 +218,26 @@ func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID,
 	spanID := span.SpanContext().TraceID().String()
 	// return fmt.Errorf("很抱歉，由于近期OpenAI针对ChatGPT账号展开了大规模封禁并暂时禁止了新账户的注册，我们将暂时停止提供ChatGPT的对话服务。")
 
-	cardMessageDupStruct := kook.CardMessage{
-		&kook.CardMessageCard{
-			Theme: "info",
-			Size:  "lg",
-			Modules: []interface{}{
-				kook.CardMessageHeader{
-					Text: kook.CardMessageElementText{
-						Content: emoji.Robot.String() + "GPT来帮你",
-						Emoji:   false,
-					},
-				},
-				kook.CardMessageSection{
-					Mode: kook.CardMessageSectionModeRight,
-					Text: kook.CardMessageElementKMarkdown{
-						Content: "",
-					},
-					Accessory: kook.CardMessageElementButton{
-						Theme: kook.CardThemeSecondary,
-						Value: "GPTTrace:" + spanID,
-						Click: "return-val",
-						Text:  emoji.StopSign.String() + "Stop",
-					},
-				},
-				&kook.CardMessageDivider{},
-				utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
-			},
+	cardMessageStruct := kook.CardMessageSection{
+		Mode: kook.CardMessageSectionModeRight,
+		Text: kook.CardMessageElementKMarkdown{
+			Content: "",
+		},
+		Accessory: kook.CardMessageElementButton{
+			Theme: kook.CardThemeSecondary,
+			Value: "GPTTrace:" + spanID,
+			Click: "return-val",
+			Text:  emoji.StopSign.String() + "Stop",
 		},
 	}
-	cardMessageStrDup, err := cardMessageDupStruct.BuildMessage()
+	cardMessageStrDup, err := utility.BuildCardMessage(
+		"info",
+		"lg",
+		emoji.Robot.String()+"GPT来帮你",
+		quoteID,
+		span,
+		cardMessageStruct,
+	)
 
 	err = betagovar.GlobalSession.MessageUpdate(
 		&kook.MessageUpdate{
@@ -280,7 +263,7 @@ func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID,
 		StopChan:  make(chan string),
 	}
 	GPTAsyncMap["GPTTrace:"+spanID] = AsyncMapValue{authorID, &g.StopChan}
-	go func(ctx context.Context, curMsgID, quoteID, spanID string, cardMessageDupStruct kook.CardMessage) {
+	go func(ctx context.Context, curMsgID, quoteID, spanID string, cardMessageDupStruct kook.CardMessageSection) {
 		ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 		defer span.End()
 		defer delete(GPTAsyncMap, "GPTTrace:"+spanID)
@@ -295,7 +278,7 @@ func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID,
 					} else {
 						returnedMsg += "\n回答已停止，停止原因: **回答结束。**"
 					}
-					updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageDupStruct, true, false)
+					updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, true, false)
 					g.Messages = append(g.Messages, Message{
 						Role:    "assistant",
 						Content: returnedMsg,
@@ -315,9 +298,9 @@ func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID,
 				}
 				returnedMsg += s
 			}
-			updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageDupStruct, false, false)
+			updateMessage(curMsgID, quoteID, returnedMsg, spanID, msg, cardMessageStruct, false, false)
 		}
-	}(ctx, msgID, quoteID, spanID, cardMessageDupStruct)
+	}(ctx, msgID, quoteID, spanID, cardMessageStruct)
 	if chatMsg, ok := chatCache.Get(authorID); ok {
 		g.Messages = append(chatMsg.([]Message), g.Messages...)
 	} else {
@@ -345,22 +328,23 @@ func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID,
 	if err = g.PostWithStream(ctx); err != nil {
 		updateMessage(msgID, quoteID,
 			`请求OpenAI时发生错误，请稍后再试
-			`+err.Error(), spanID, msg, cardMessageDupStruct, true, true)
+			`+err.Error(), spanID, msg, cardMessageStruct, true, true)
 		span.RecordError(err)
 		return nil
 	}
 	return
 }
 
-func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDupStruct kook.CardMessage, noButton, retryButton bool) {
+func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDupStruct kook.CardMessageSection, noButton, retryButton bool) {
+	modules := make([]interface{}, 0)
 	if noButton {
-		cardMessageDupStruct[0].Modules[1] = kook.CardMessageSection{
+		cardMessageDupStruct = kook.CardMessageSection{
 			Text: kook.CardMessageElementKMarkdown{
 				Content: lastMsg,
 			},
 		}
 	} else {
-		cardMessageDupStruct[0].Modules[1] = kook.CardMessageSection{
+		cardMessageDupStruct = kook.CardMessageSection{
 			Mode: kook.CardMessageSectionModeRight,
 			Text: kook.CardMessageElementKMarkdown{
 				Content: lastMsg,
@@ -373,24 +357,35 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 			},
 		}
 	}
+	modules = append(modules, cardMessageDupStruct)
 	if retryButton {
-		(*cardMessageDupStruct[0]).Modules = append(
-			(*cardMessageDupStruct[0]).Modules[:len((*cardMessageDupStruct[0]).Modules)-1],
-			kook.CardMessageActionGroup{{
-				Theme: kook.CardThemePrimary,
-				Value: "GPTRetry:" + msg,
-				Click: string(kook.CardMessageElementButtonClickReturnVal),
-				Text:  "点击重试",
-			}},
-			(*cardMessageDupStruct[0]).Modules[len((*cardMessageDupStruct[0]).Modules)-1],
-		)
+		modules = append(modules, kook.CardMessageActionGroup{{
+			Theme: kook.CardThemePrimary,
+			Value: "GPTRetry:" + msg,
+			Click: string(kook.CardMessageElementButtonClickReturnVal),
+			Text:  "点击重试",
+		}})
 	}
-	betagovar.GlobalSession.MessageUpdate(&kook.MessageUpdate{
+	cardMessageStrDup, err := utility.BuildCardMessage(
+		"info",
+		"lg",
+		emoji.Robot.String()+"GPT来帮你",
+		quoteID,
+		spanID,
+		modules...,
+	)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	err = betagovar.GlobalSession.MessageUpdate(&kook.MessageUpdate{
 		MessageUpdateBase: kook.MessageUpdateBase{
 			MsgID:   curMsgID,
-			Content: cardMessageDupStruct.MustBuildMessage(),
+			Content: cardMessageStrDup,
 		},
 	})
+	if err != nil {
+		log.Println(err.Error())
+	}
 }
 
 // ClientHandler 1

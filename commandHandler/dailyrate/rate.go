@@ -110,17 +110,14 @@ func GetRateHandler(ctx context.Context, targetID, quoteID, authorID string, arg
 				},
 			)
 		}
-		cardMessageStr, err := kook.CardMessage{
-			&kook.CardMessageCard{
-				Theme: "secondary",
-				Size:  "lg",
-				Modules: append(
-					modules,
-					&kook.CardMessageDivider{},
-					utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
-				),
-			},
-		}.BuildMessage()
+		cardMessageStr, err := utility.BuildCardMessage(
+			"secondary",
+			"lg",
+			"",
+			quoteID,
+			span,
+			modules...,
+		)
 		if err != nil {
 			return err
 		}
