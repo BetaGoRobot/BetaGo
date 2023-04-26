@@ -165,7 +165,7 @@ func SendMessage(targetID, QuoteID, authorID string, message string) {
 	)
 }
 
-func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ctx context.Context) {
+func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ctx context.Context) (msgID string) {
 	cardMessageStr, err := kook.CardMessage{
 		&kook.CardMessageCard{
 			Theme: kook.CardThemeSecondary,
@@ -190,7 +190,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
-	betagovar.GlobalSession.MessageCreate(
+	resp, err := betagovar.GlobalSession.MessageCreate(
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     kook.MessageTypeCard,
@@ -200,6 +200,10 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 			},
 		},
 	)
+	if err != nil {
+		log.Println(err)
+	}
+	return resp.MsgID
 }
 
 // SendErrorMessageWithTitle 发送消息

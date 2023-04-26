@@ -29,6 +29,11 @@ func WebHookHandler(ctx *fasthttp.RequestCtx) {
 	}
 	body := ctx.Request.Body()
 	json.Unmarshal(body, &a)
+	defer func() {
+		if e := recover(); e != nil {
+			log.Println(a, e)
+		}
+	}()
 	status, err := ajson.JSONPath(body, "$.action")
 	if err != nil {
 		log.Println(err.Error())
@@ -74,7 +79,7 @@ func WebHookHandler(ctx *fasthttp.RequestCtx) {
 		log.Println(err.Error())
 		return
 	}
-	utility.SendMessageWithTitle(
+	msgID := utility.SendMessageWithTitle(
 		GithubNotifyChan,
 		"",
 		"",
@@ -94,7 +99,7 @@ func WebHookHandler(ctx *fasthttp.RequestCtx) {
 		// 是正确的构建, 等待五秒后重启拉取最新的镜像
 		go func() {
 			time.Sleep(5 * time.Second)
-			admin.RestartHandler(ctx, "", "", "")
+			admin.RestartHandler(ctx, GithubNotifyChan, msgID, "")
 		}()
 	}
 }
