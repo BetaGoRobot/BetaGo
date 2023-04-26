@@ -66,6 +66,7 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 		gpt3.ClientHandlerStreamUpdate(baseCtx, ctx.Extra.GuildID, msgDetail.Quote.ID, msgQuoted.Author.ID, ctx.Extra.MsgID, rawMsg)
 		return
 	} else if strings.HasPrefix(command, "GPTReset:") {
+
 		authorID := strings.Split(command, ":")[1]
 		if authorID != ctx.Common.AuthorID {
 			utility.SendMessageTemp(ctx.Extra.TargetID, "", ctx.Common.AuthorID, "你点击了别人的重置按钮，这将不会生效。")
