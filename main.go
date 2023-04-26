@@ -27,7 +27,7 @@ func init() {
 	go func() {
 		http.ListenAndServe(":6060", nil)
 	}()
-	server.Start()
+	go server.Start()
 }
 
 func main() {

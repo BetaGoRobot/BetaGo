@@ -103,5 +103,5 @@ func Start() {
 	r := router.New()
 	r.GET("/", Index)
 	r.POST("/webhook", WebHookHandler)
-	go log.Fatal(fasthttp.ListenAndServe(":8899", r.Handler))
+	log.Fatal(fasthttp.ListenAndServe(":8899", r.Handler))
 }
