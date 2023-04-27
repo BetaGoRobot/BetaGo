@@ -29,20 +29,6 @@ var DailyTaskCache = cache.New(time.Hour*3, time.Minute)
 
 func DailyTask() {
 	for {
-		var (
-			v     = make([]string, 0)
-			rList = make([]string, 0)
-		)
-		betagovar.GlobalDBConn.Table("betago.dynamic_configs").Select("value").Where("key=?", "Schedule_notifier_IDs").Find(&v)
-		if len(v) > 0 {
-			rList = strings.Split(v[0], ",")
-		}
-		for _, id := range rList {
-			DailyGetSen(id)
-			DailyRecommand(id)
-			DailyNews(id)
-			DailyRate(id)
-		}
 		if time.Now().UTC().Format("15:04") == "00:00" {
 			var (
 				v     = make([]string, 0)
