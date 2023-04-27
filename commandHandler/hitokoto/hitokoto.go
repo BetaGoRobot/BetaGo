@@ -121,6 +121,7 @@ func GetHitokotoHandler(ctx context.Context, targetID, quoteID, authorID string,
 			Quote:    quoteID,
 		},
 	})
+	fmt.Println(cardMessageStr)
 	return
 }
 

@@ -366,16 +366,18 @@ func BuildCardMessage(theme, size, title, quoteID string, span interface{}, modu
 		}
 	}
 	resModules := make([]interface{}, 0)
-	resModules = append(resModules,
-		kook.CardMessageSection{
-			Text: kook.CardMessageElementText{
-				Content: "你的输入：",
-			},
-		})
-	if _, ok := inputCommand.([]interface{}); ok {
-		resModules = append(resModules, inputCommand.([]interface{})...)
-	} else {
-		resModules = append(resModules, inputCommand)
+	if inputCommand != nil {
+		resModules = append(resModules,
+			kook.CardMessageSection{
+				Text: kook.CardMessageElementText{
+					Content: "你的输入：",
+				},
+			})
+		if _, ok := inputCommand.([]interface{}); ok {
+			resModules = append(resModules, inputCommand.([]interface{})...)
+		} else {
+			resModules = append(resModules, inputCommand)
+		}
 	}
 	resModules = append(resModules, kook.CardMessageDivider{})
 	if titleModule != nil {
