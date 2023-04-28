@@ -197,15 +197,14 @@ func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID st
 			},
 		)
 	}
-	cardMessageStr, err := kook.CardMessage{&kook.CardMessageCard{
-		Theme: kook.CardThemeInfo,
-		Size:  kook.CardSizeLg,
-		Modules: []interface{}{
-			cardContainer,
-			&kook.CardMessageDivider{},
-			utility.GenerateTraceButtonSection(span.SpanContext().TraceID().String()),
-		},
-	}}.BuildMessage()
+	cardMessageStr, err := utility.BuildCardMessage(
+		string(kook.CardThemeInfo),
+		string(kook.CardSizeLg),
+		"频道时间统计图",
+		quoteID,
+		span,
+		cardContainer,
+	)
 	if err != nil {
 		return
 	}

@@ -11,7 +11,7 @@ on:
   push:
     branches: [ "master" ]
     paths:
-     - "scripts/chrome_docker"
+     - "scripts/chrome_docker/*"
      - ".github/workflows/docker_chrome.yaml"
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]

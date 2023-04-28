@@ -1,4 +1,10 @@
 FROM alpine:edge
 
-RUN apk update && \  
-    apk add chromium 
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
+    apk update && \
+    apk add -U tzdata && \
+    apk add upx && \
+    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone
+
+RUN apk add chromium 
