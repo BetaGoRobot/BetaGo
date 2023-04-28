@@ -9,4 +9,5 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositorie
     apk update && \
     apk add -U tzdata && \
     apk add upx && \
-    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+    cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
+    echo "Asia/Shanghai" > /etc/timezone

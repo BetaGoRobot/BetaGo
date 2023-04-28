@@ -33,6 +33,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
 	ParsedProxyURL = parsedProxyURL
 	HTTPClientWithProxy = &http.Client{
 		Transport: &http.Transport{
