@@ -11,7 +11,7 @@ on:
   push:
     branches: [ "master" ]
     paths:
-     - "scripts/golang_docker"
+     - "scripts/golang_docker/Dockerfile"
      - ".github/workflows/docker_golang.yml"
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
