@@ -202,7 +202,7 @@ github.com/patrickmn/go-cache
 # github.com/phuslu/log v1.0.85
 ## explicit; go 1.18
 github.com/phuslu/log
-# github.com/prometheus/client_golang v1.15.0
+# github.com/prometheus/client_golang v1.15.1
 ## explicit; go 1.17
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
