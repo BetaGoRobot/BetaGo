@@ -6,6 +6,7 @@ import (
 	"io"
 	stdLog "log"
 	"net"
+	"net/netip"
 	"os"
 	"reflect"
 	"runtime"
@@ -1495,6 +1496,45 @@ func (e *Entry) MACAddr(key string, ha net.HardwareAddr) *Entry {
 	return e
 }
 
+// NetIPAddr adds IPv4 or IPv6 Address to the entry.
+func (e *Entry) NetIPAddr(key string, ip netip.Addr) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':', '"')
+	e.buf = ip.AppendTo(e.buf)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
+// NetIPAddrPort adds IPv4 or IPv6 with Port Address to the entry.
+func (e *Entry) NetIPAddrPort(key string, ipPort netip.AddrPort) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':', '"')
+	e.buf = ipPort.AppendTo(e.buf)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
+// NetIPPrefix adds IPv4 or IPv6 Prefix (address and mask) to the entry.
+func (e *Entry) NetIPPrefix(key string, pfx netip.Prefix) *Entry {
+	if e == nil {
+		return nil
+	}
+	e.buf = append(e.buf, ',', '"')
+	e.buf = append(e.buf, key...)
+	e.buf = append(e.buf, '"', ':', '"')
+	e.buf = pfx.AppendTo(e.buf)
+	e.buf = append(e.buf, '"')
+	return e
+}
+
 // Type adds type of the key using reflection to the entry.
 func (e *Entry) Type(key string, v interface{}) *Entry {
 	if e == nil {
@@ -1869,7 +1909,7 @@ func (e *Entry) EmbedObject(obj ObjectMarshaler) *Entry {
 }
 
 // Any adds the field key with f as an any value to the entry.
-func (e *Entry) any(key string, value interface{}) *Entry {
+func (e *Entry) Any(key string, value interface{}) *Entry {
 	if value == nil || (*[2]uintptr)(unsafe.Pointer(&value))[1] == 0 {
 		e.buf = append(e.buf, ',', '"')
 		e.buf = append(e.buf, key...)
@@ -1963,7 +2003,7 @@ func (e *Entry) KeysAndValues(keysAndValues ...interface{}) *Entry {
 			key, _ = v.(string)
 			continue
 		}
-		e.any(key, v)
+		e.Any(key, v)
 	}
 	return e
 }
@@ -1977,7 +2017,7 @@ func (e *Entry) Fields(fields Fields) *Entry {
 		return nil
 	}
 	for key, value := range fields {
-		e.any(key, value)
+		e.Any(key, value)
 	}
 	return e
 }
@@ -1994,6 +2034,9 @@ func NewContext(dst []byte) (e *Entry) {
 
 // Value builds the contextual fields.
 func (e *Entry) Value() Context {
+	if e == nil {
+		return nil
+	}
 	return e.buf
 }
 
