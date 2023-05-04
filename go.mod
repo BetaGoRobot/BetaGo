@@ -32,7 +32,7 @@ require (
 	github.com/valyala/fasthttp v1.45.0
 	github.com/wcharczuk/go-chart/v2 v2.1.0
 	go.opentelemetry.io/otel v1.15.1
-	go.opentelemetry.io/otel/exporters/jaeger v1.14.0
+	go.opentelemetry.io/otel/exporters/jaeger v1.15.1
 	go.opentelemetry.io/otel/sdk v1.15.1
 	go.opentelemetry.io/otel/trace v1.15.1
 	gorm.io/driver/postgres v1.5.0
