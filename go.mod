@@ -24,7 +24,7 @@ require (
 	github.com/lonelyevil/kook/log_adapter/plog v0.0.31
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/phuslu/log v1.0.85
+	github.com/phuslu/log v1.0.86
 	github.com/prometheus/client_golang v1.15.1
 	github.com/redis/go-redis/v9 v9.0.3
 	github.com/spyzhov/ajson v0.8.0
