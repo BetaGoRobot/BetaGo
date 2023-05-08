@@ -26,7 +26,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phuslu/log v1.0.85
 	github.com/prometheus/client_golang v1.15.1
-	github.com/redis/go-redis/v9 v9.0.3
+	github.com/redis/go-redis/v9 v9.0.4
 	github.com/spyzhov/ajson v0.8.0
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
 	github.com/valyala/fasthttp v1.47.0
