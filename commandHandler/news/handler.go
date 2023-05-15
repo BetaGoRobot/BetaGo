@@ -28,7 +28,7 @@ var apiKey = os.Getenv("NEWS_API_KEY")
 
 var apiBaseURL = "https://api.itapi.cn/api/hotnews/all"
 
-var apiDailyMorningReport = "https://api.itapi.cn/api/news/zaobao"
+var apiDailyMorningReport = "https://v2.alapi.cn/api/zaobao"
 
 // NewsData a
 type NewsData struct {
@@ -163,11 +163,12 @@ func MorningHandler(ctx context.Context, targetID, quoteID, authorID string, arg
 		newsList = newsList[1:]
 	} else {
 		resp, err := betagovar.HttpClient.R().
-			SetQueryParam("key", apiKey).
-			Get(apiDailyMorningReport)
-		if err != nil {
+			SetHeader("Content-Type", "application/x-www-form-urlencoded").
+			SetBody(fmt.Sprintf("token=%s&format=json", apiKey)).
+			Post(apiDailyMorningReport)
+		if err != nil || resp.StatusCode() != 200 {
 			zapLogger.Error("获取新闻失败...", zaplog.Error(err))
-			return err
+			return fmt.Errorf("StatusCode: %d, err is %v", resp.StatusCode(), err)
 		}
 		fmt.Println(resp)
 		newsNode, err := ajson.JSONPath(resp.Body(), "$.data.news")
