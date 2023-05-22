@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/carlmjohnson/requests/internal/core"
 	"github.com/carlmjohnson/requests/internal/minitrue"
 	"github.com/carlmjohnson/requests/internal/slicex"
 )
@@ -30,7 +29,7 @@ import (
 // # Build an http.Request with Builder.Request
 //
 // Set the method for a request with [Builder.Method]
-// or use the [Builder.Delete], [Builder.Head], [Builder.Patch], and [Builder.Put] methods.
+// or use the [Builder.Delete], [Builder.Head], [Builder.Patch], [Builder.Post], and [Builder.Put] methods.
 // By default, requests without a body are GET,
 // and those with a body are POST.
 //
@@ -74,8 +73,8 @@ import (
 //
 // The zero value of Builder is usable.
 type Builder struct {
-	ub         core.URLBuilder
-	rb         core.RequestBuilder
+	ub         urlBuilder
+	rb         requestBuilder
 	cl         *http.Client
 	rt         http.RoundTripper
 	validators []ResponseHandler
@@ -223,32 +222,32 @@ func (rb *Builder) Request(ctx context.Context) (req *http.Request, err error) {
 
 // Do calls the underlying http.Client and validates and handles any resulting response. The response body is closed after all validators and the handler run.
 func (rb *Builder) Do(req *http.Request) (err error) {
-	cl := minitrue.First(rb.cl, http.DefaultClient)
+	cl := minitrue.Or(rb.cl, http.DefaultClient)
 	if rb.rt != nil {
 		cl2 := *cl
 		cl2.Transport = rb.rt
 		cl = &cl2
 	}
-	res, err := cl.Do(req)
-	if err != nil {
-		return joinerrs(ErrTransport, err)
-	}
-	defer res.Body.Close()
-
 	validators := rb.validators
 	if len(validators) == 0 {
 		validators = []ResponseHandler{DefaultValidator}
 	}
-	if err = ChainHandlers(validators...)(res); err != nil {
-		return joinerrs(ErrValidator, err)
-	}
 	h := minitrue.Cond(rb.handler != nil,
 		rb.handler,
 		consumeBody)
-	if err = h(res); err != nil {
-		return joinerrs(ErrHandler, err)
+
+	code, err := do(cl, req, validators, h)
+	switch code {
+	case doOK:
+		return nil
+	case doConnect:
+		err = joinerrs(ErrTransport, err)
+	case doValidate:
+		err = joinerrs(ErrValidator, err)
+	case doHandle:
+		err = joinerrs(ErrHandler, err)
 	}
-	return nil
+	return err
 }
 
 // Fetch builds a request, sends it, and handles the response.
