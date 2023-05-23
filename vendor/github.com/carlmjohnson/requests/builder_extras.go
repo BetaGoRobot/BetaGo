@@ -30,6 +30,13 @@ func (rb *Builder) Head() *Builder {
 	return rb.Method(http.MethodHead)
 }
 
+// Post sets HTTP method to POST.
+//
+// Note that setting a Body causes a request to be POST by default.
+func (rb *Builder) Post() *Builder {
+	return rb.Method(http.MethodPost)
+}
+
 // Put sets HTTP method to PUT.
 func (rb *Builder) Put() *Builder {
 	return rb.Method(http.MethodPut)
@@ -61,6 +68,22 @@ func (rb *Builder) Pathf(format string, a ...any) *Builder {
 // ParamInt converts value to a string and calls Param.
 func (rb *Builder) ParamInt(key string, value int) *Builder {
 	return rb.Param(key, strconv.Itoa(value))
+}
+
+// Params calls Param with all the members of m.
+func (rb *Builder) Params(m map[string][]string) *Builder {
+	for k, vv := range m {
+		rb.Param(k, vv...)
+	}
+	return rb
+}
+
+// Headers calls Header with all the members of m.
+func (rb *Builder) Headers(m map[string][]string) *Builder {
+	for k, vv := range m {
+		rb.Header(k, vv...)
+	}
+	return rb
 }
 
 // Accept sets the Accept header for a request.
