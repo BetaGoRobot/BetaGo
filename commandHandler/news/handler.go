@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -26,21 +27,23 @@ var (
 
 var apiKey = os.Getenv("NEWS_API_KEY")
 
-var apiBaseURL = "https://api.itapi.cn/api/hotnews/all"
+var apiBaseURL = "https://v2.alapi.cn/api/tophub/get"
 
 var apiDailyMorningReport = "https://v2.alapi.cn/api/zaobao"
 
 // NewsData a
 type NewsData struct {
-	Rank    int         `json:"rank"`
-	Name    string      `json:"name"`
-	ViewNum interface{} `json:"viewnum"`
-	URL     string      `json:"url"`
+	// Rank    int         `json:"rank"`
+	Name    string      `json:"title"`
+	ViewNum interface{} `json:"other"`
+	Link    string      `json:"link"`
 }
 
 // NewsDataRaw 原始
 type NewsDataRaw struct {
-	Data []NewsData `json:"data"`
+	Data struct {
+		List []NewsData `json:"list"`
+	} `json:"data"`
 }
 
 var newsCache = cache.New(5*time.Hour, time.Hour)
@@ -70,7 +73,7 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 		res = resCache.(NewsDataRaw)
 	} else {
 		resp, err := betagovar.HttpClient.R().
-			SetQueryParam("key", apiKey).
+			SetQueryParam("token", apiKey).
 			SetQueryParam("type", newsType).
 			Get(apiBaseURL)
 		if err != nil {
@@ -79,8 +82,11 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 		}
 
 		res = NewsDataRaw{
-			Data: make([]NewsData, 0),
+			Data: struct {
+				List []NewsData "json:\"list\""
+			}{List: make([]NewsData, 0)},
 		}
+		fmt.Println(string(resp.Body()))
 		err = json.Unmarshal(resp.Body(), &res)
 		if err != nil {
 			zapLogger.Error("Unmarshal err", zaplog.Error(err))
@@ -90,7 +96,7 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 	}
 
 	title := fmt.Sprintf("每日%s热榜", newsType)
-	if len(res.Data) != 0 {
+	if len(res.Data.List) != 0 {
 		modules := make([]interface{}, 0)
 		modules = append(modules, betagovar.CardMessageTextModule{
 			Type: "header",
@@ -99,14 +105,21 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 				Content string "json:\"content\""
 			}{"plain-text", title + emoji.Newspaper.String()},
 		})
-		for _, data := range res.Data[:10] {
-			if !strings.HasPrefix(data.URL, "http") {
-				data.URL = "http:" + data.URL
+		for i, data := range res.Data.List[:10] {
+			data.Link, _ = url.PathUnescape(data.Link)
+			if !strings.HasPrefix(data.Link, "http") {
+				data.Link = "http:" + data.Link
+			}
+			if data.ViewNum == "" {
+				data.ViewNum = "*无热度数据"
+			}
+			if a := strings.Split(data.ViewNum.(string), " "); len(a) > 0 {
+				data.ViewNum = a[len(a)-1]
 			}
 			modules = append(modules,
 				kook.CardMessageSection{
 					Text: kook.CardMessageElementKMarkdown{
-						Content: fmt.Sprintf("%d. %s [%s](%s) **%s**", data.Rank, data.Name, data.URL, data.URL, data.ViewNum),
+						Content: fmt.Sprintf("%d. [%s](%s) **%s**", i+1, data.Name, data.Link, data.ViewNum),
 					},
 				},
 			)
