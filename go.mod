@@ -29,7 +29,7 @@ require (
 	github.com/redis/go-redis/v9 v9.0.5
 	github.com/spyzhov/ajson v0.8.0
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.41
-	github.com/valyala/fasthttp v1.47.0
+	github.com/valyala/fasthttp v1.48.0
 	github.com/wcharczuk/go-chart/v2 v2.1.0
 	go.opentelemetry.io/otel v1.16.0
 	go.opentelemetry.io/otel/exporters/jaeger v1.15.1
