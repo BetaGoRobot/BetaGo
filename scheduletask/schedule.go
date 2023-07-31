@@ -40,17 +40,21 @@ func DailyTask() {
 			}
 			for _, id := range rList {
 				DailyGetSen(id)
+				time.Sleep(time.Second * 1)
 				DailyRecommand(id)
+				time.Sleep(time.Second * 1)
 				DailyNews(id)
+				time.Sleep(time.Second * 1)
 				DailyRate(id)
 			}
 		}
-		time.Sleep(time.Minute)
+		time.Sleep(time.Minute * 2)
 	}
 }
 
 // DailyGetSen 每小时发送
 func DailyGetSen(TargetID string) {
+	defer utility.CollectPanic(context.Background(), nil, TargetID, "", "")
 	commandCtx := &command_context.CommandContext{
 		Common: &command_context.CommandCommonContext{
 			TargetID: TargetID,
@@ -62,6 +66,7 @@ func DailyGetSen(TargetID string) {
 
 // DailyRecommand 每日发送歌曲推荐
 func DailyRecommand(TargetID string) {
+	defer utility.CollectPanic(context.Background(), nil, TargetID, "", "")
 	_, span := jaeger_client.BetaGoCommandTracer.Start(context.Background(), utility.GetCurrentFunc())
 	defer span.End()
 	res, err := neteaseapi.NetEaseGCtx.GetNewRecommendMusic()
@@ -133,6 +138,7 @@ func DailyRecommand(TargetID string) {
 
 // DailyRate 每日排行
 func DailyRate(TargetID string) {
+	defer utility.CollectPanic(context.Background(), nil, TargetID, "", "")
 	dailyrate.GetRateHandler(context.Background(), TargetID, "", "")
 }
 
@@ -146,6 +152,8 @@ func getOrSetCache(key string) bool {
 
 // DailyNews 每日新闻
 func DailyNews(TargetID string) {
+	defer utility.CollectPanic(context.Background(), nil, TargetID, "", "")
+	panic("test")
 	news.Handler(context.Background(), TargetID, "", "", "morning")
 }
 
