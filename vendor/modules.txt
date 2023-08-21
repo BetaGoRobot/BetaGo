@@ -30,7 +30,7 @@ github.com/dgryski/go-rendezvous
 # github.com/enescakir/emoji v1.0.0
 ## explicit; go 1.13
 github.com/enescakir/emoji
-# github.com/fasthttp/router v1.4.19
+# github.com/fasthttp/router v1.4.20
 ## explicit; go 1.17
 github.com/fasthttp/router
 github.com/fasthttp/router/radix

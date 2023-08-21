@@ -13,7 +13,7 @@ replace (
 require (
 	github.com/carlmjohnson/requests v0.23.4
 	github.com/enescakir/emoji v1.0.0
-	github.com/fasthttp/router v1.4.19
+	github.com/fasthttp/router v1.4.20
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gotify/go-api-client/v2 v2.0.4
