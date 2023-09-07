@@ -13,6 +13,8 @@ github.com/bits-and-blooms/bitset
 # github.com/bits-and-blooms/bloom/v3 v3.3.1
 ## explicit; go 1.14
 github.com/bits-and-blooms/bloom/v3
+# github.com/blend/go-sdk v1.20220411.3
+## explicit; go 1.17
 # github.com/carlmjohnson/requests v0.23.4
 ## explicit; go 1.20
 github.com/carlmjohnson/requests
@@ -250,7 +252,7 @@ github.com/valyala/bytebufferpool
 github.com/valyala/fasthttp
 github.com/valyala/fasthttp/fasthttputil
 github.com/valyala/fasthttp/stackless
-# github.com/wcharczuk/go-chart/v2 v2.1.0
+# github.com/wcharczuk/go-chart/v2 v2.1.1
 ## explicit; go 1.15
 github.com/wcharczuk/go-chart/v2
 github.com/wcharczuk/go-chart/v2/drawing
@@ -320,7 +322,7 @@ go.uber.org/zap/zapcore
 # golang.org/x/crypto v0.8.0
 ## explicit; go 1.17
 golang.org/x/crypto/pbkdf2
-# golang.org/x/image v0.6.0
+# golang.org/x/image v0.11.0
 ## explicit; go 1.12
 golang.org/x/image/draw
 golang.org/x/image/font
@@ -337,7 +339,7 @@ golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
-# golang.org/x/text v0.9.0
+# golang.org/x/text v0.12.0
 ## explicit; go 1.17
 golang.org/x/text/cases
 golang.org/x/text/internal
