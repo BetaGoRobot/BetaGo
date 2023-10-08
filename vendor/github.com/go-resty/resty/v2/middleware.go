@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2021 Jeevanandam M (jeeva@myjeeva.com), All rights reserved.
+// Copyright (c) 2015-2023 Jeevanandam M (jeeva@myjeeva.com), All rights reserved.
 // resty source code and usage is governed by a MIT style
 // license that can be found in the LICENSE file.
 
@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -39,6 +38,18 @@ func parseRequestURL(c *Client, r *Request) error {
 		}
 	}
 
+	// GitHub #663 Raw Path Params
+	if len(r.RawPathParams) > 0 {
+		for p, v := range r.RawPathParams {
+			r.URL = strings.Replace(r.URL, "{"+p+"}", v, -1)
+		}
+	}
+	if len(c.RawPathParams) > 0 {
+		for p, v := range c.RawPathParams {
+			r.URL = strings.Replace(r.URL, "{"+p+"}", v, -1)
+		}
+	}
+
 	// Parsing request URL
 	reqURL, err := url.Parse(r.URL)
 	if err != nil {
@@ -53,7 +64,12 @@ func parseRequestURL(c *Client, r *Request) error {
 			r.URL = "/" + r.URL
 		}
 
-		reqURL, err = url.Parse(c.HostURL + r.URL)
+		// TODO: change to use c.BaseURL only in v3.0.0
+		baseURL := c.BaseURL
+		if len(baseURL) == 0 {
+			baseURL = c.HostURL
+		}
+		reqURL, err = url.Parse(baseURL + r.URL)
 		if err != nil {
 			return err
 		}
@@ -100,27 +116,20 @@ func parseRequestURL(c *Client, r *Request) error {
 }
 
 func parseRequestHeader(c *Client, r *Request) error {
-	hdr := make(http.Header)
-	for k := range c.Header {
-		hdr[k] = append(hdr[k], c.Header[k]...)
+	for k, v := range c.Header {
+		if _, ok := r.Header[k]; ok {
+			continue
+		}
+		r.Header[k] = v[:]
 	}
 
-	for k := range r.Header {
-		hdr.Del(k)
-		hdr[k] = append(hdr[k], r.Header[k]...)
+	if IsStringEmpty(r.Header.Get(hdrUserAgentKey)) {
+		r.Header.Set(hdrUserAgentKey, hdrUserAgentValue)
 	}
 
-	if IsStringEmpty(hdr.Get(hdrUserAgentKey)) {
-		hdr.Set(hdrUserAgentKey, hdrUserAgentValue)
+	if ct := r.Header.Get(hdrContentTypeKey); IsStringEmpty(r.Header.Get(hdrAcceptKey)) && !IsStringEmpty(ct) && (IsJSONType(ct) || IsXMLType(ct)) {
+		r.Header.Set(hdrAcceptKey, r.Header.Get(hdrContentTypeKey))
 	}
-
-	ct := hdr.Get(hdrContentTypeKey)
-	if IsStringEmpty(hdr.Get(hdrAcceptKey)) && !IsStringEmpty(ct) &&
-		(IsJSONType(ct) || IsXMLType(ct)) {
-		hdr.Set(hdrAcceptKey, hdr.Get(hdrContentTypeKey))
-	}
-
-	r.Header = hdr
 
 	return nil
 }
@@ -128,7 +137,7 @@ func parseRequestHeader(c *Client, r *Request) error {
 func parseRequestBody(c *Client, r *Request) (err error) {
 	if isPayloadSupported(r.Method, c.AllowGetMethodPayload) {
 		// Handling Multipart
-		if r.isMultiPart && !(r.Method == MethodPatch) {
+		if r.isMultiPart {
 			if err = handleMultipart(c, r); err != nil {
 				return
 			}
@@ -155,8 +164,12 @@ func parseRequestBody(c *Client, r *Request) (err error) {
 
 CL:
 	// by default resty won't set content length, you can if you want to :)
-	if (c.setContentLength || r.setContentLength) && r.bodyBuf != nil {
-		r.Header.Set(hdrContentLengthKey, fmt.Sprintf("%d", r.bodyBuf.Len()))
+	if c.setContentLength || r.setContentLength {
+		if r.bodyBuf == nil {
+			r.Header.Set(hdrContentLengthKey, "0")
+		} else {
+			r.Header.Set(hdrContentLengthKey, fmt.Sprintf("%d", r.bodyBuf.Len()))
+		}
 	}
 
 	return
@@ -164,7 +177,7 @@ CL:
 
 func createHTTPRequest(c *Client, r *Request) (err error) {
 	if r.bodyBuf == nil {
-		if reader, ok := r.Body.(io.Reader); ok {
+		if reader, ok := r.Body.(io.Reader); ok && isPayloadSupported(r.Method, c.AllowGetMethodPayload) {
 			r.RawRequest, err = http.NewRequest(r.Method, r.URL, reader)
 		} else if c.setContentLength || r.setContentLength {
 			r.RawRequest, err = http.NewRequest(r.Method, r.URL, http.NoBody)
@@ -172,7 +185,9 @@ func createHTTPRequest(c *Client, r *Request) (err error) {
 			r.RawRequest, err = http.NewRequest(r.Method, r.URL, nil)
 		}
 	} else {
-		r.RawRequest, err = http.NewRequest(r.Method, r.URL, r.bodyBuf)
+		// fix data race: must deep copy.
+		bodyBuf := bytes.NewBuffer(append([]byte{}, r.bodyBuf.Bytes()...))
+		r.RawRequest, err = http.NewRequest(r.Method, r.URL, bodyBuf)
 	}
 
 	if err != nil {
@@ -214,7 +229,7 @@ func createHTTPRequest(c *Client, r *Request) (err error) {
 	// assign get body func for the underlying raw request instance
 	r.RawRequest.GetBody = func() (io.ReadCloser, error) {
 		if bodyCopy != nil {
-			return ioutil.NopCloser(bytes.NewReader(bodyCopy.Bytes())), nil
+			return io.NopCloser(bytes.NewReader(bodyCopy.Bytes())), nil
 		}
 		return nil, nil
 	}
@@ -235,7 +250,7 @@ func addCredentials(c *Client, r *Request) error {
 
 	if !c.DisableWarn {
 		if isBasicAuth && !strings.HasPrefix(r.URL, "https") {
-			c.log.Warnf("Using Basic Auth in HTTP mode is not secure, use HTTPS")
+			r.log.Warnf("Using Basic Auth in HTTP mode is not secure, use HTTPS")
 		}
 	}
 
@@ -260,7 +275,7 @@ func addCredentials(c *Client, r *Request) error {
 }
 
 func requestLogger(c *Client, r *Request) error {
-	if c.Debug {
+	if r.Debug {
 		rr := r.RawRequest
 		rl := &RequestLog{Header: copyHeaders(rr.Header), Body: r.fmtBodyString(c.debugBodySizeLimit)}
 		if c.requestLog != nil {
@@ -290,7 +305,7 @@ func requestLogger(c *Client, r *Request) error {
 //_______________________________________________________________________
 
 func responseLogger(c *Client, res *Response) error {
-	if c.Debug {
+	if res.Request.Debug {
 		rl := &ResponseLog{Header: copyHeaders(res.Header()), Body: res.fmtBodyString(c.debugBodySizeLimit)}
 		if c.responseLog != nil {
 			if err := c.responseLog(rl); err != nil {
@@ -313,7 +328,7 @@ func responseLogger(c *Client, res *Response) error {
 		}
 		debugLog += "==============================================================================\n"
 
-		c.log.Debugf("%s", debugLog)
+		res.Request.log.Debugf("%s", debugLog)
 	}
 
 	return nil
@@ -321,6 +336,7 @@ func responseLogger(c *Client, res *Response) error {
 
 func parseResponseBody(c *Client, res *Response) (err error) {
 	if res.StatusCode() == http.StatusNoContent {
+		res.Request.Error = nil
 		return
 	}
 	// Handles only JSON or XML content type
@@ -343,7 +359,10 @@ func parseResponseBody(c *Client, res *Response) (err error) {
 			}
 
 			if res.Request.Error != nil {
-				err = Unmarshalc(c, ct, res.body, res.Request.Error)
+				unmarshalErr := Unmarshalc(c, ct, res.body, res.Request.Error)
+				if unmarshalErr != nil {
+					c.log.Warnf("Cannot unmarshal response body: %s", unmarshalErr)
+				}
 			}
 		}
 	}
@@ -521,20 +540,25 @@ func saveResponseIntoFile(c *Client, res *Response) error {
 func getBodyCopy(r *Request) (*bytes.Buffer, error) {
 	// If r.bodyBuf present, return the copy
 	if r.bodyBuf != nil {
-		return bytes.NewBuffer(r.bodyBuf.Bytes()), nil
+		bodyCopy := acquireBuffer()
+		if _, err := io.Copy(bodyCopy, bytes.NewReader(r.bodyBuf.Bytes())); err != nil {
+			// cannot use io.Copy(bodyCopy, r.bodyBuf) because io.Copy reset r.bodyBuf
+			return nil, err
+		}
+		return bodyCopy, nil
 	}
 
 	// Maybe body is `io.Reader`.
 	// Note: Resty user have to watchout for large body size of `io.Reader`
 	if r.RawRequest.Body != nil {
-		b, err := ioutil.ReadAll(r.RawRequest.Body)
+		b, err := io.ReadAll(r.RawRequest.Body)
 		if err != nil {
 			return nil, err
 		}
 
 		// Restore the Body
 		closeq(r.RawRequest.Body)
-		r.RawRequest.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+		r.RawRequest.Body = io.NopCloser(bytes.NewBuffer(b))
 
 		// Return the Body bytes
 		return bytes.NewBuffer(b), nil
