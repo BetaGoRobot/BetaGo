@@ -28,7 +28,7 @@ require (
 	github.com/prometheus/client_golang v1.17.0
 	github.com/redis/go-redis/v9 v9.2.1
 	github.com/spyzhov/ajson v0.9.0
-	github.com/tencentyun/cos-go-sdk-v5 v0.7.43
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.45
 	github.com/valyala/fasthttp v1.50.0
 	github.com/wcharczuk/go-chart/v2 v2.1.1
 	go.opentelemetry.io/otel v1.19.0
