@@ -40,8 +40,8 @@ github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cu
 github.com/docker/go-units v0.3.3/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/enescakir/emoji v1.0.0 h1:W+HsNql8swfCQFtioDGDHCHri8nudlK1n5p2rHCJoog=
 github.com/enescakir/emoji v1.0.0/go.mod h1:Bt1EKuLnKDTYpLALApstIkAjdDrS/8IAgTkKp+WKFD0=
-github.com/fasthttp/router v1.4.20 h1:yPeNxz5WxZGojzolKqiP15DTXnxZce9Drv577GBrDgU=
-github.com/fasthttp/router v1.4.20/go.mod h1:um867yNQKtERxBm+C+yzgWxjspTiQoA8z86Ec3fK/tc=
+github.com/fasthttp/router v1.4.21 h1:Ysgck9aZwaovqxsfhv7nPx9EgsYvB7t3nthrBMQoeIg=
+github.com/fasthttp/router v1.4.21/go.mod h1:wtOlZHmOSGD048li7Nkuhw+ov40rr0tY2+IjT+mN9p4=
 github.com/globalsign/mgo v0.0.0-20180905125535-1ca0a4f7cbcb/go.mod h1:xkRDCp4j0OGD1HRkm4kmhM+pmpv3AKq5SU7GMg4oO/Q=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
 github.com/go-logr/logr v1.2.4 h1:g01GSCwiDw2xSZfjJ2/T9M+S6pFdcNtFYsp+Y43HYDQ=
