@@ -153,7 +153,6 @@ func getOrSetCache(key string) bool {
 // DailyNews 每日新闻
 func DailyNews(TargetID string) {
 	defer utility.CollectPanic(context.Background(), nil, TargetID, "", "")
-	panic("test")
 	news.Handler(context.Background(), TargetID, "", "", "morning")
 }
 
