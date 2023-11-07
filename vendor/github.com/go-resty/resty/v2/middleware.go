@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -26,27 +27,76 @@ const debugRequestLogKey = "__restyDebugRequestLog"
 //_______________________________________________________________________
 
 func parseRequestURL(c *Client, r *Request) error {
-	// GitHub #103 Path Params
-	if len(r.PathParams) > 0 {
-		for p, v := range r.PathParams {
-			r.URL = strings.Replace(r.URL, "{"+p+"}", url.PathEscape(v), -1)
-		}
-	}
-	if len(c.PathParams) > 0 {
-		for p, v := range c.PathParams {
-			r.URL = strings.Replace(r.URL, "{"+p+"}", url.PathEscape(v), -1)
-		}
-	}
+	if l := len(c.PathParams) + len(c.RawPathParams) + len(r.PathParams) + len(r.RawPathParams); l > 0 {
+		params := make(map[string]string, l)
 
-	// GitHub #663 Raw Path Params
-	if len(r.RawPathParams) > 0 {
-		for p, v := range r.RawPathParams {
-			r.URL = strings.Replace(r.URL, "{"+p+"}", v, -1)
+		// GitHub #103 Path Params
+		for p, v := range r.PathParams {
+			params[p] = url.PathEscape(v)
 		}
-	}
-	if len(c.RawPathParams) > 0 {
+		for p, v := range c.PathParams {
+			if _, ok := params[p]; !ok {
+				params[p] = url.PathEscape(v)
+			}
+		}
+
+		// GitHub #663 Raw Path Params
+		for p, v := range r.RawPathParams {
+			if _, ok := params[p]; !ok {
+				params[p] = v
+			}
+		}
 		for p, v := range c.RawPathParams {
-			r.URL = strings.Replace(r.URL, "{"+p+"}", v, -1)
+			if _, ok := params[p]; !ok {
+				params[p] = v
+			}
+		}
+
+		if len(params) > 0 {
+			var prev int
+			buf := acquireBuffer()
+			defer releaseBuffer(buf)
+			// search for the next or first opened curly bracket
+			for curr := strings.Index(r.URL, "{"); curr > prev; curr = prev + strings.Index(r.URL[prev:], "{") {
+				// write everything form the previous position up to the current
+				if curr > prev {
+					buf.WriteString(r.URL[prev:curr])
+				}
+				// search for the closed curly bracket from current position
+				next := curr + strings.Index(r.URL[curr:], "}")
+				// if not found, then write the remainder and exit
+				if next < curr {
+					buf.WriteString(r.URL[curr:])
+					prev = len(r.URL)
+					break
+				}
+				// special case for {}, without parameter's name
+				if next == curr+1 {
+					buf.WriteString("{}")
+				} else {
+					// check for the replacement
+					key := r.URL[curr+1 : next]
+					value, ok := params[key]
+					/// keep the original string if the replacement not found
+					if !ok {
+						value = r.URL[curr : next+1]
+					}
+					buf.WriteString(value)
+				}
+
+				// set the previous position after the closed curly bracket
+				prev = next + 1
+				if prev >= len(r.URL) {
+					break
+				}
+			}
+			if buf.Len() > 0 {
+				// write remainder
+				if prev < len(r.URL) {
+					buf.WriteString(r.URL[prev:])
+				}
+				r.URL = buf.String()
+			}
 		}
 	}
 
@@ -81,32 +131,26 @@ func parseRequestURL(c *Client, r *Request) error {
 	}
 
 	// Adding Query Param
-	query := make(url.Values)
-	for k, v := range c.QueryParam {
-		for _, iv := range v {
-			query.Add(k, iv)
+	if len(c.QueryParam)+len(r.QueryParam) > 0 {
+		for k, v := range c.QueryParam {
+			// skip query parameter if it was set in request
+			if _, ok := r.QueryParam[k]; ok {
+				continue
+			}
+
+			r.QueryParam[k] = v[:]
 		}
-	}
 
-	for k, v := range r.QueryParam {
-		// remove query param from client level by key
-		// since overrides happens for that key in the request
-		query.Del(k)
-
-		for _, iv := range v {
-			query.Add(k, iv)
-		}
-	}
-
-	// GitHub #123 Preserve query string order partially.
-	// Since not feasible in `SetQuery*` resty methods, because
-	// standard package `url.Encode(...)` sorts the query params
-	// alphabetically
-	if len(query) > 0 {
-		if IsStringEmpty(reqURL.RawQuery) {
-			reqURL.RawQuery = query.Encode()
-		} else {
-			reqURL.RawQuery = reqURL.RawQuery + "&" + query.Encode()
+		// GitHub #123 Preserve query string order partially.
+		// Since not feasible in `SetQuery*` resty methods, because
+		// standard package `url.Encode(...)` sorts the query params
+		// alphabetically
+		if len(r.QueryParam) > 0 {
+			if IsStringEmpty(reqURL.RawQuery) {
+				reqURL.RawQuery = r.QueryParam.Encode()
+			} else {
+				reqURL.RawQuery = reqURL.RawQuery + "&" + r.QueryParam.Encode()
+			}
 		}
 	}
 
@@ -134,45 +178,34 @@ func parseRequestHeader(c *Client, r *Request) error {
 	return nil
 }
 
-func parseRequestBody(c *Client, r *Request) (err error) {
+func parseRequestBody(c *Client, r *Request) error {
 	if isPayloadSupported(r.Method, c.AllowGetMethodPayload) {
-		// Handling Multipart
-		if r.isMultiPart {
-			if err = handleMultipart(c, r); err != nil {
-				return
+		switch {
+		case r.isMultiPart: // Handling Multipart
+			if err := handleMultipart(c, r); err != nil {
+				return err
 			}
-
-			goto CL
-		}
-
-		// Handling Form Data
-		if len(c.FormData) > 0 || len(r.FormData) > 0 {
+		case len(c.FormData) > 0 || len(r.FormData) > 0: // Handling Form Data
 			handleFormData(c, r)
-
-			goto CL
-		}
-
-		// Handling Request body
-		if r.Body != nil {
+		case r.Body != nil: // Handling Request body
 			handleContentType(c, r)
 
-			if err = handleRequestBody(c, r); err != nil {
-				return
+			if err := handleRequestBody(c, r); err != nil {
+				return err
 			}
 		}
 	}
 
-CL:
 	// by default resty won't set content length, you can if you want to :)
 	if c.setContentLength || r.setContentLength {
 		if r.bodyBuf == nil {
 			r.Header.Set(hdrContentLengthKey, "0")
 		} else {
-			r.Header.Set(hdrContentLengthKey, fmt.Sprintf("%d", r.bodyBuf.Len()))
+			r.Header.Set(hdrContentLengthKey, strconv.Itoa(r.bodyBuf.Len()))
 		}
 	}
 
-	return
+	return nil
 }
 
 func createHTTPRequest(c *Client, r *Request) (err error) {
@@ -277,13 +310,23 @@ func addCredentials(c *Client, r *Request) error {
 func requestLogger(c *Client, r *Request) error {
 	if r.Debug {
 		rr := r.RawRequest
-		rl := &RequestLog{Header: copyHeaders(rr.Header), Body: r.fmtBodyString(c.debugBodySizeLimit)}
+		rh := copyHeaders(rr.Header)
+		if c.GetClient().Jar != nil {
+			for _, cookie := range c.GetClient().Jar.Cookies(r.RawRequest.URL) {
+				s := fmt.Sprintf("%s=%s", cookie.Name, cookie.Value)
+				if c := rh.Get("Cookie"); c != "" {
+					rh.Set("Cookie", c+"; "+s)
+				} else {
+					rh.Set("Cookie", s)
+				}
+			}
+		}
+		rl := &RequestLog{Header: rh, Body: r.fmtBodyString(c.debugBodySizeLimit)}
 		if c.requestLog != nil {
 			if err := c.requestLog(rl); err != nil {
 				return err
 			}
 		}
-		// fmt.Sprintf("COOKIES:\n%s\n", composeCookies(c.GetClient().Jar, *rr.URL)) +
 
 		reqLog := "\n==============================================================================\n" +
 			"~~~ REQUEST ~~~\n" +
@@ -370,13 +413,13 @@ func parseResponseBody(c *Client, res *Response) (err error) {
 	return
 }
 
-func handleMultipart(c *Client, r *Request) (err error) {
+func handleMultipart(c *Client, r *Request) error {
 	r.bodyBuf = acquireBuffer()
 	w := multipart.NewWriter(r.bodyBuf)
 
 	for k, v := range c.FormData {
 		for _, iv := range v {
-			if err = w.WriteField(k, iv); err != nil {
+			if err := w.WriteField(k, iv); err != nil {
 				return err
 			}
 		}
@@ -385,12 +428,11 @@ func handleMultipart(c *Client, r *Request) (err error) {
 	for k, v := range r.FormData {
 		for _, iv := range v {
 			if strings.HasPrefix(k, "@") { // file
-				err = addFile(w, k[1:], iv)
-				if err != nil {
-					return
+				if err := addFile(w, k[1:], iv); err != nil {
+					return err
 				}
 			} else { // form value
-				if err = w.WriteField(k, iv); err != nil {
+				if err := w.WriteField(k, iv); err != nil {
 					return err
 				}
 			}
@@ -398,50 +440,33 @@ func handleMultipart(c *Client, r *Request) (err error) {
 	}
 
 	// #21 - adding io.Reader support
-	if len(r.multipartFiles) > 0 {
-		for _, f := range r.multipartFiles {
-			err = addFileReader(w, f)
-			if err != nil {
-				return
-			}
+	for _, f := range r.multipartFiles {
+		if err := addFileReader(w, f); err != nil {
+			return err
 		}
 	}
 
 	// GitHub #130 adding multipart field support with content type
-	if len(r.multipartFields) > 0 {
-		for _, mf := range r.multipartFields {
-			if err = addMultipartFormField(w, mf); err != nil {
-				return
-			}
+	for _, mf := range r.multipartFields {
+		if err := addMultipartFormField(w, mf); err != nil {
+			return err
 		}
 	}
 
 	r.Header.Set(hdrContentTypeKey, w.FormDataContentType())
-	err = w.Close()
-
-	return
+	return w.Close()
 }
 
 func handleFormData(c *Client, r *Request) {
-	formData := url.Values{}
-
 	for k, v := range c.FormData {
-		for _, iv := range v {
-			formData.Add(k, iv)
+		if _, ok := r.FormData[k]; ok {
+			continue
 		}
+		r.FormData[k] = v[:]
 	}
 
-	for k, v := range r.FormData {
-		// remove form data field from client level by key
-		// since overrides happens for that key in the request
-		formData.Del(k)
-
-		for _, iv := range v {
-			formData.Add(k, iv)
-		}
-	}
-
-	r.bodyBuf = bytes.NewBuffer([]byte(formData.Encode()))
+	r.bodyBuf = acquireBuffer()
+	r.bodyBuf.WriteString(r.FormData.Encode())
 	r.Header.Set(hdrContentTypeKey, formContentType)
 	r.isFormData = true
 }
@@ -454,45 +479,43 @@ func handleContentType(c *Client, r *Request) {
 	}
 }
 
-func handleRequestBody(c *Client, r *Request) (err error) {
+func handleRequestBody(c *Client, r *Request) error {
 	var bodyBytes []byte
-	contentType := r.Header.Get(hdrContentTypeKey)
-	kind := kindOf(r.Body)
+	releaseBuffer(r.bodyBuf)
 	r.bodyBuf = nil
 
-	if reader, ok := r.Body.(io.Reader); ok {
+	switch body := r.Body.(type) {
+	case io.Reader:
 		if c.setContentLength || r.setContentLength { // keep backward compatibility
 			r.bodyBuf = acquireBuffer()
-			_, err = r.bodyBuf.ReadFrom(reader)
+			if _, err := r.bodyBuf.ReadFrom(body); err != nil {
+				return err
+			}
 			r.Body = nil
 		} else {
 			// Otherwise buffer less processing for `io.Reader`, sounds good.
-			return
+			return nil
 		}
-	} else if b, ok := r.Body.([]byte); ok {
-		bodyBytes = b
-	} else if s, ok := r.Body.(string); ok {
-		bodyBytes = []byte(s)
-	} else if IsJSONType(contentType) &&
-		(kind == reflect.Struct || kind == reflect.Map || kind == reflect.Slice) {
-		r.bodyBuf, err = jsonMarshal(c, r, r.Body)
-		if err != nil {
-			return
+	case []byte:
+		bodyBytes = body
+	case string:
+		bodyBytes = []byte(body)
+	default:
+		contentType := r.Header.Get(hdrContentTypeKey)
+		kind := kindOf(r.Body)
+		var err error
+		if IsJSONType(contentType) && (kind == reflect.Struct || kind == reflect.Map || kind == reflect.Slice) {
+			r.bodyBuf, err = jsonMarshal(c, r, r.Body)
+		} else if IsXMLType(contentType) && (kind == reflect.Struct) {
+			bodyBytes, err = c.XMLMarshal(r.Body)
 		}
-	} else if IsXMLType(contentType) && (kind == reflect.Struct) {
-		bodyBytes, err = c.XMLMarshal(r.Body)
 		if err != nil {
-			return
+			return err
 		}
 	}
 
 	if bodyBytes == nil && r.bodyBuf == nil {
-		err = errors.New("unsupported 'Body' type/value")
-	}
-
-	// if any errors during body bytes handling, return it
-	if err != nil {
-		return
+		return errors.New("unsupported 'Body' type/value")
 	}
 
 	// []byte into Buffer
@@ -501,7 +524,7 @@ func handleRequestBody(c *Client, r *Request) (err error) {
 		_, _ = r.bodyBuf.Write(bodyBytes)
 	}
 
-	return
+	return nil
 }
 
 func saveResponseIntoFile(c *Client, res *Response) error {

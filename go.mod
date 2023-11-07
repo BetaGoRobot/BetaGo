@@ -13,8 +13,8 @@ replace (
 require (
 	github.com/carlmjohnson/requests v0.23.5
 	github.com/enescakir/emoji v1.0.0
-	github.com/fasthttp/router v1.4.20
-	github.com/go-resty/resty/v2 v2.9.1
+	github.com/fasthttp/router v1.4.21
+	github.com/go-resty/resty/v2 v2.10.0
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gotify/go-api-client/v2 v2.0.4
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
@@ -26,7 +26,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phuslu/log v1.0.88
 	github.com/prometheus/client_golang v1.17.0
-	github.com/redis/go-redis/v9 v9.2.1
+	github.com/redis/go-redis/v9 v9.3.0
 	github.com/spyzhov/ajson v0.9.0
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.45
 	github.com/valyala/fasthttp v1.50.0
