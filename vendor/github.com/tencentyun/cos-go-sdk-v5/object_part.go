@@ -33,15 +33,26 @@ type InitiateMultipartUploadResult struct {
 //
 // https://www.qcloud.com/document/product/436/7746
 func (s *ObjectService) InitiateMultipartUpload(ctx context.Context, name string, opt *InitiateMultipartUploadOptions) (*InitiateMultipartUploadResult, *Response, error) {
+	var buff bytes.Buffer
 	var res InitiateMultipartUploadResult
 	sendOpt := sendOptions{
 		baseURL:   s.client.BaseURL.BucketURL,
 		uri:       "/" + encodeURIComponent(name) + "?uploads",
 		method:    http.MethodPost,
 		optHeader: opt,
-		result:    &res,
+		result:    &buff,
 	}
 	resp, err := s.client.doRetry(ctx, &sendOpt)
+	if err == nil {
+		err = xml.Unmarshal(buff.Bytes(), &res)
+		if err != nil {
+			// xml body存在非法字符(key存在非法字符)
+			if _, ok := err.(*xml.SyntaxError); ok {
+				err = UnmarshalInitMultiUploadResult(buff.Bytes(), &res)
+				return &res, resp, err
+			}
+		}
+	}
 	return &res, resp, err
 }
 
@@ -60,6 +71,9 @@ type ObjectUploadPartOptions struct {
 	XOptionHeader *http.Header `header:"-,omitempty" url:"-" xml:"-"`
 	// 上传进度, ProgressCompleteEvent不能表示对应API调用成功，API是否调用成功的判断标准为返回err==nil
 	Listener ProgressListener `header:"-" url:"-" xml:"-"`
+
+	// Upload方法使用
+	innerSwitchURL *url.URL `header:"-" url:"-" xml:"-"`
 }
 
 // UploadPart 请求实现在初始化以后的分块上传，支持的块的数量为1到10000，块的大小为1 MB 到5 GB。
@@ -93,22 +107,51 @@ func (s *ObjectService) UploadPart(ctx context.Context, name, uploadID string, p
 			opt.ContentLength = totalBytes
 		}
 	}
-	reader := TeeReader(r, nil, totalBytes, nil)
-	if s.client.Conf.EnableCRC {
-		reader.writer = crc64.New(crc64.MakeTable(crc64.ECMA))
+	// 如果是io.Seeker，则重试
+	count := 1
+	var position int64
+	if seeker, ok := r.(io.Seeker); ok {
+		// 记录原始位置
+		position, err = seeker.Seek(0, io.SeekCurrent)
+		if err == nil && s.client.Conf.RetryOpt.Count > 0 {
+			count = s.client.Conf.RetryOpt.Count
+		}
 	}
-	if opt != nil && opt.Listener != nil {
-		reader.listener = opt.Listener
+	var resp *Response
+	var retrieable bool
+	sUrl := s.client.BaseURL.BucketURL
+	if opt.innerSwitchURL != nil {
+		sUrl = opt.innerSwitchURL
 	}
-	u := fmt.Sprintf("/%s?partNumber=%d&uploadId=%s", encodeURIComponent(name), partNumber, uploadID)
-	sendOpt := sendOptions{
-		baseURL:   s.client.BaseURL.BucketURL,
-		uri:       u,
-		method:    http.MethodPut,
-		optHeader: opt,
-		body:      reader,
+	for nr := 0; nr < count; nr++ {
+		reader := TeeReader(r, nil, totalBytes, nil)
+		if s.client.Conf.EnableCRC {
+			reader.writer = crc64.New(crc64.MakeTable(crc64.ECMA))
+		}
+		if opt != nil && opt.Listener != nil {
+			reader.listener = opt.Listener
+		}
+		u := fmt.Sprintf("/%s?partNumber=%d&uploadId=%s", encodeURIComponent(name), partNumber, uploadID)
+		sendOpt := sendOptions{
+			baseURL:   sUrl,
+			uri:       u,
+			method:    http.MethodPut,
+			optHeader: opt,
+			body:      reader,
+		}
+		resp, err = s.client.send(ctx, &sendOpt)
+		sUrl, retrieable = s.client.CheckRetrieable(sUrl, resp, err)
+		if retrieable && nr+1 < count {
+			if seeker, ok := r.(io.Seeker); ok {
+				_, e := seeker.Seek(position, io.SeekStart)
+				if e != nil {
+					break
+				}
+				continue
+			}
+		}
+		break
 	}
-	resp, err := s.client.send(ctx, &sendOpt)
 	return resp, err
 }
 
@@ -201,6 +244,7 @@ func (o ObjectList) Less(i, j int) bool { // rewrite the Less method from small 
 // https://www.qcloud.com/document/product/436/7742
 func (s *ObjectService) CompleteMultipartUpload(ctx context.Context, name, uploadID string, opt *CompleteMultipartUploadOptions) (*CompleteMultipartUploadResult, *Response, error) {
 	u := fmt.Sprintf("/%s?uploadId=%s", encodeURIComponent(name), uploadID)
+	var buff bytes.Buffer
 	var res CompleteMultipartUploadResult
 	sendOpt := sendOptions{
 		baseURL:   s.client.BaseURL.BucketURL,
@@ -208,13 +252,23 @@ func (s *ObjectService) CompleteMultipartUpload(ctx context.Context, name, uploa
 		method:    http.MethodPost,
 		optHeader: opt,
 		body:      opt,
-		result:    &res,
+		result:    &buff,
 	}
 	resp, err := s.client.doRetry(ctx, &sendOpt)
 	// If the error occurs during the copy operation, the error response is embedded in the 200 OK response. This means that a 200 OK response can contain either a success or an error.
 	if err == nil && resp.StatusCode == 200 {
+		err = xml.Unmarshal(buff.Bytes(), &res)
+		if err != nil {
+			// xml body存在非法字符(key存在非法字符)
+			if _, ok := err.(*xml.SyntaxError); ok {
+				err = UnmarshalCompleteMultiUploadResult(buff.Bytes(), &res)
+				if err != nil {
+					return &res, resp, err
+				}
+			}
+		}
 		if res.ETag == "" {
-			return &res, resp, errors.New("response 200 OK, but body contains an error")
+			return &res, resp, fmt.Errorf("response 200 OK, but body contains an error, %v", buff.Bytes())
 		}
 	}
 	return &res, resp, err
