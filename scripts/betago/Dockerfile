@@ -6,7 +6,7 @@ WORKDIR /data/
 
 RUN unzip betago.zip
 
-RUN CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s" -o betaGo-source ./*.go &&\
+RUN cd cmd/betago CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s" -o betaGo-source ./*.go &&\
     upx -9 -o betaGo betaGo-source
 
 
