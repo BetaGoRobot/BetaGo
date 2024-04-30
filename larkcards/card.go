@@ -262,7 +262,7 @@ func GenFullLyricsCard(ctx context.Context, title, artist, leftLyrics, rightLyri
 	jsonpath.Set(jsonData, "i18n_header.zh_cn.title.content", title)
 	jsonpath.Set(jsonData, "i18n_header.zh_cn.subtitle.content", artist)
 	jsonpath.Set(jsonData, "i18n_elements.zh_cn[1].actions[0].text.content", "Jaeger Tracer - "+span.SpanContext().TraceID().String())
-	jsonpath.Set(jsonData, "i18n_elements.zh_cn[1].actions[0].multi_url.url", "https://jaeger.kevinmatt.top/trace/"+span.SpanContext().TraceID().String())
+	jsonpath.Set(jsonData, "i18n_elements.zh_cn[1].actions[0].multi_url.url", "https://jaeger.kmhomelab.cn/trace/"+span.SpanContext().TraceID().String())
 
 	var s string
 	s, err = sonic.MarshalString(jsonData)
@@ -293,7 +293,7 @@ func GenerateMusicCardByStruct(ctx context.Context, imgKey, title, artist, playU
 	jsonpath.Set(jsonData, "i18n_elements.zh_cn[0].columns[0].elements[1].content", lyrics)
 	jsonpath.Set(jsonData, "i18n_elements.zh_cn[1].actions[0].value", map[string]interface{}{"music_id": musicID})
 	jsonpath.Set(jsonData, "i18n_elements.zh_cn[2].actions[0].text.content", "Jaeger Tracer - "+span.SpanContext().TraceID().String())
-	jsonpath.Set(jsonData, "i18n_elements.zh_cn[2].actions[0].multi_url.url", "https://jaeger.kevinmatt.top/trace/"+span.SpanContext().TraceID().String())
+	jsonpath.Set(jsonData, "i18n_elements.zh_cn[2].actions[0].multi_url.url", "https://jaeger.kmhomelab.cn/trace/"+span.SpanContext().TraceID().String())
 
 	var s string
 	s, err = sonic.MarshalString(jsonData)

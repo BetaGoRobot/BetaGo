@@ -165,12 +165,12 @@ func (c *SearchListCard) AddJaegerTracer(ctx context.Context, span trace.Span) {
 			}{
 				"plain_text", "Jaeger Tracer - " + span.SpanContext().TraceID().String(),
 			},
-			Type:               "danger_filled",
+			Type:               "primary_filled",
 			ComplexInteraction: true,
 			Width:              "default",
 			Size:               "tiny",
 			MultiURL: MultiURLStruct{
-				URL:        "https://jaeger.kevinmatt.top/trace/" + span.SpanContext().TraceID().String(),
+				URL:        "https://jaeger.kmhomelab.cn/trace/" + span.SpanContext().TraceID().String(),
 				PcURL:      "",
 				IosURL:     "",
 				AndroidURL: "",
