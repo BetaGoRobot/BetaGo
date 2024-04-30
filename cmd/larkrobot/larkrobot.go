@@ -32,6 +32,7 @@ var larkClient *lark.Client = lark.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Get
 
 func uploadPic(ctx context.Context, imageURL string) (key string, err error) {
 	picResp, err := http.Get(imageURL)
+
 	req := larkim.NewCreateImageReqBuilder().
 		Body(
 			larkim.NewCreateImageReqBodyBuilder().

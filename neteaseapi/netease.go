@@ -36,6 +36,7 @@ func init() {
 	} else if betagovar.IsCluster {
 		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
 	}
+	time.Sleep(time.Second * 10)
 	NetEaseGCtx.TryGetLastCookie()
 	err := NetEaseGCtx.LoginNetEase()
 	if err != nil {
