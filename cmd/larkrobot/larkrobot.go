@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -60,6 +61,7 @@ func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg 
 	listMsg := larkcards.NewSearchListCard()
 	var (
 		tmpChan = make(chan *struct {
+			Index    int
 			imageKey string
 			Name     string
 			Artist   string
@@ -68,36 +70,49 @@ func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg 
 		wg = &sync.WaitGroup{}
 	)
 	go func() {
-		for _, r := range res {
+		for i, r := range res {
 			wg.Add(1)
-			go func(res neteaseapi.SearchMusicRes) {
+			go func(index int, res neteaseapi.SearchMusicRes) {
 				imageKey, err := uploadPic(ctx, res.PicURL)
 				if err != nil {
 					return
 				}
 				tmpChan <- &struct {
+					Index    int
 					imageKey string
 					Name     string
 					Artist   string
 					ID       string
 				}{
+					Index:    index,
 					imageKey: imageKey,
 					Name:     res.Name,
 					Artist:   res.ArtistName,
 					ID:       res.ID,
 				}
 				wg.Done()
-			}(*r)
+			}(i, *r)
 
 		}
 		wg.Wait()
 		close(tmpChan)
 	}()
-
+	tmpList := make([]*struct {
+		Index    int
+		imageKey string
+		Name     string
+		Artist   string
+		ID       string
+	}, 0)
 	for item := range tmpChan {
+		tmpList = append(tmpList, item)
+	}
+	sort.Slice(tmpList, func(i, j int) bool {
+		return tmpList[i].Index < tmpList[j].Index
+	})
+	for _, item := range tmpList {
 		listMsg.AddColumn(ctx, item.imageKey, item.Name, item.Artist, item.ID)
 	}
-
 	listMsg.AddJaegerTracer(ctx, span)
 	cardStr, err := sonic.MarshalString(listMsg)
 	if err != nil {
