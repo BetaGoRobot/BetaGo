@@ -31,10 +31,13 @@ func init() {
 		betaGoJaegerProvider, _ = tracerProvider("http://jaeger-all-in-one-ix-chart.ix-jaeger-all-in-one:14268/api/traces")
 	}
 	BetaGoCommandTracer = betaGoJaegerProvider.Tracer("command-handler")
+	LarkRobotTracer = betaGoJaegerProvider.Tracer("larkrobot-handler")
 }
 
 // BetaGoCommandTracer a
 var BetaGoCommandTracer trace.Tracer
+
+var LarkRobotTracer trace.Tracer
 
 // tracerProvider returns an OpenTelemetry TracerProvider configured to use
 // the Jaeger exporter that will send spans to the provided url. The returned

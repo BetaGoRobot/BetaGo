@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -394,6 +395,51 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (Inf
 	return
 }
 
+func (neteaseCtx *NetEaseContext) GetMusicURL(ID string) (url string, err error) {
+	r, err := betagovar.HttpClient.R().SetQueryParams(
+		map[string]string{
+			"id":        ID,
+			"level":     "standard",
+			"timestamp": fmt.Sprint(time.Now().UnixNano()),
+		},
+	).SetCookies(neteaseCtx.cookies).Post(NetEaseAPIBaseURL + "/song/url/v1")
+	body := r.Body()
+	music := musicList{}
+	err = json.Unmarshal(body, &music)
+	if err != nil {
+		return "", err
+	}
+	return music.Data[0].URL, err
+}
+
+func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, songID string) (musicDetail *MusicDetail) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("songID").String(songID))
+	defer span.End()
+
+	resp, err := betagovar.HttpClient.R().
+		SetFormDataFromValues(
+			map[string][]string{
+				"ids": {songID},
+			},
+		).
+		SetCookies(neteaseCtx.cookies).
+		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
+		Post(NetEaseAPIBaseURL + "/song/detail")
+	if err != nil {
+		log.Println(err.Error())
+	}
+	musicDetail = &MusicDetail{}
+	err = jsoniter.Unmarshal(resp.Body(), musicDetail)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	if len(musicDetail.Songs) == 0 {
+		return nil
+	}
+	return
+}
+
 func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) (lyrics string) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("songID").String(songID))
@@ -426,7 +472,7 @@ func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) 
 //	@param keywords
 //	@return result
 //	@return err
-func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keywords ...string) (result []SearchMusicRes, err error) {
+func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keywords ...string) (result []*SearchMusicRes, err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("keywords").StringSlice(keywords))
 	defer span.End()
@@ -434,7 +480,7 @@ func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keyw
 	resp1, err := betagovar.HttpClient.R().
 		SetFormDataFromValues(
 			map[string][]string{
-				"limit":    {"3"},
+				"limit":    {"5"},
 				"type":     {"1"},
 				"keywords": {strings.Join(keywords, " ")},
 			},
@@ -448,30 +494,48 @@ func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keyw
 
 	searchMusic := searchMusic{}
 	jsoniter.Unmarshal(resp1.Body(), &searchMusic)
-	for _, song := range searchMusic.Result.Songs {
-		var ArtistName string
-		for _, name := range song.Ar {
-			if ArtistName != "" {
-				ArtistName += ","
-			}
-			ArtistName += name.Name
+
+	urlChan := make(chan *SearchMusicRes)
+	wg := &sync.WaitGroup{}
+	go func() {
+		for i, song := range searchMusic.Result.Songs {
+			wg.Add(1)
+			go func(index int, song Song) {
+				defer wg.Done()
+				var ArtistName string
+				for _, name := range song.Ar {
+					if ArtistName != "" {
+						ArtistName += ","
+					}
+					ArtistName += name.Name
+				}
+				SongURL, errIn := neteaseCtx.GetMusicURLByID(map[string]string{strconv.Itoa(song.ID): song.Name})
+				if errIn != nil {
+					err = errIn
+					return
+				}
+				if len(SongURL) == 0 {
+					return
+				}
+				urlChan <- &SearchMusicRes{
+					Index:      index,
+					ID:         strconv.Itoa(song.ID),
+					Name:       song.Name,
+					ArtistName: ArtistName,
+					PicURL:     song.Al.PicURL,
+					SongURL:    SongURL[0].URL,
+				}
+			}(i, song)
 		}
-		SongURL, errIn := neteaseCtx.GetMusicURLByID(map[string]string{strconv.Itoa(song.ID): song.Name})
-		if errIn != nil {
-			err = errIn
-			return
-		}
-		if len(SongURL) == 0 {
-			continue
-		}
-		result = append(result, SearchMusicRes{
-			ID:         strconv.Itoa(song.ID),
-			Name:       song.Name,
-			ArtistName: ArtistName,
-			PicURL:     song.Al.PicURL,
-			SongURL:    SongURL[0].URL,
-		})
+		wg.Wait()
+		close(urlChan)
+	}()
+	for res := range urlChan {
+		result = append(result, res)
 	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Index < result[j].Index
+	})
 	return
 }
 
@@ -501,7 +565,7 @@ func (neteaseCtx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicRes, 
 			ArtistName += name.Name
 		}
 		SongURL, errIn := neteaseCtx.GetMusicURLByID(map[string]string{strconv.Itoa(result.Song.ID): result.Song.Name})
-		if err != nil {
+		if errIn != nil {
 			err = errIn
 			return
 		}
