@@ -91,6 +91,45 @@ type GlobRecommendMusicRes struct {
 	} `json:"result"`
 }
 
+type SearchLyrics struct {
+	Sgc       bool `json:"sgc"`
+	Sfy       bool `json:"sfy"`
+	Qfy       bool `json:"qfy"`
+	TransUser struct {
+		ID       int    `json:"id"`
+		Status   int    `json:"status"`
+		Demand   int    `json:"demand"`
+		Userid   int    `json:"userid"`
+		Nickname string `json:"nickname"`
+		Uptime   int64  `json:"uptime"`
+	} `json:"transUser"`
+	LyricUser struct {
+		ID       int    `json:"id"`
+		Status   int    `json:"status"`
+		Demand   int    `json:"demand"`
+		Userid   int    `json:"userid"`
+		Nickname string `json:"nickname"`
+		Uptime   int64  `json:"uptime"`
+	} `json:"lyricUser"`
+	Lrc struct {
+		Version int    `json:"version"`
+		Lyric   string `json:"lyric"`
+	} `json:"lrc"`
+	Klyric struct {
+		Version int    `json:"version"`
+		Lyric   string `json:"lyric"`
+	} `json:"klyric"`
+	Tlyric struct {
+		Version int    `json:"version"`
+		Lyric   string `json:"lyric"`
+	} `json:"tlyric"`
+	Romalrc struct {
+		Version int    `json:"version"`
+		Lyric   string `json:"lyric"`
+	} `json:"romalrc"`
+	Code int `json:"code"`
+}
+
 // NetEaseAPIBaseURL 网易云API基础URL
 var NetEaseAPIBaseURL = "http://netease-api:3335"
 

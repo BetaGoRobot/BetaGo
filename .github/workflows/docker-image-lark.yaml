@@ -1,0 +1,96 @@
+name: Docker
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - "neteaseapi/netease-api-service/*"
+      - "qqmusicapi/qqmusic-api-service/*"
+      - "README.md"
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "触发用途"
+        required: true
+        default: "测试"
+
+env:
+  IMAGE_NAME: kevinmatt/larkbot
+  ROBOT_NAME: BetaGo
+  NETEASE_PHONE: "${{ secrets.NETEASE_PHONE }}"
+  NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
+  TENCENT_HEADER: ccr.ccs.tencentyun.com
+  REGISTRY: ghcr.io
+jobs:
+  Build_Push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log into registry
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 15
+          command: | 
+            echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login ccr.ccs.tencentyun.com -u 100016072032 --password-stdin
+            echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u kevinmatt --password-stdin
+      - name: Log into registry ${{ env.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build image
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 15
+          command:  |
+            zip \
+            -r \
+            -9 \
+            -q betago.zip \
+            . \
+            -x ".git/*" \
+            -x "qqmusicapi/qqmusic-api-service/*" \
+            -x "neteaseapi/netease-api-service/*"
+            DOCKER_BUILDKIT=1 docker build \
+             . \
+             --file scripts/larkrobot/Dockerfile \
+             --tag $IMAGE_NAME
+      - name: Push image
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 15
+          command:  |
+            current=`date "+%Y-%m-%d %H:%M:%S"`
+            timeStamp=`date -d "$current" +%s` 
+            #将current转换为时间戳，精确到毫秒  
+            currentTimeStamp=$((timeStamp*1000+`date "+%N"`/1000000)) 
+
+            IMAGE_ID=$IMAGE_NAME
+            
+            # 将所有的大写字母转为小写
+            IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+
+            # 从 tag 名字中替换 v 字符
+            [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+
+            # 设置镜像 id 和版本号
+            docker tag $IMAGE_NAME $IMAGE_NAME:latest
+            
+            # 进行 push
+            docker push $IMAGE_NAME:latest
+            docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest-$currentTimeStamp
+            docker push $IMAGE_NAME:latest-$currentTimeStamp
+
+            # docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest 
+            # docker push $TENCENT_HEADER/$IMAGE_NAME:latest
+            # docker tag $TENCENT_HEADER/$IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
+            # docker push $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp

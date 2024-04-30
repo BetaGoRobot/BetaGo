@@ -37,9 +37,12 @@ func init() {
 	}
 	NetEaseGCtx.TryGetLastCookie()
 	err := NetEaseGCtx.LoginNetEase()
-	err = NetEaseGCtx.LoginNetEaseQR()
 	if err != nil {
 		log.Println("error in init loginNetease", err)
+	}
+	err = NetEaseGCtx.LoginNetEaseQR()
+	if err != nil {
+		log.Println("error in init loginNeteaseQR", err)
 	}
 	go func() {
 		for {
@@ -391,6 +394,31 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (Inf
 	return
 }
 
+func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) (lyrics string) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("songID").String(songID))
+	defer span.End()
+
+	resp, err := betagovar.HttpClient.R().
+		SetFormDataFromValues(
+			map[string][]string{
+				"id": {songID},
+			},
+		).
+		SetCookies(neteaseCtx.cookies).
+		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
+		Post(NetEaseAPIBaseURL + "/lyric")
+	if err != nil {
+		log.Println(err.Error())
+	}
+	searchLyrics := &SearchLyrics{}
+	err = jsoniter.Unmarshal(resp.Body(), searchLyrics)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	return searchLyrics.Lrc.Lyric
+}
+
 // SearchMusicByKeyWord 通过关键字搜索歌曲
 //
 //	@receiver neteaseCtx
@@ -398,7 +426,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (Inf
 //	@param keywords
 //	@return result
 //	@return err
-func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keywords []string) (result []SearchMusicRes, err error) {
+func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keywords ...string) (result []SearchMusicRes, err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("keywords").StringSlice(keywords))
 	defer span.End()

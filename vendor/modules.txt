@@ -15,38 +15,33 @@ github.com/bits-and-blooms/bitset
 github.com/bits-and-blooms/bloom/v3
 # github.com/blend/go-sdk v1.20220411.3
 ## explicit; go 1.17
-# github.com/bytedance/go-tagexpr/v2 v2.9.2
-## explicit; go 1.14
-github.com/bytedance/go-tagexpr/v2
-github.com/bytedance/go-tagexpr/v2/validator
-# github.com/bytedance/gopkg v0.0.0-20220413063733-65bf48ffb3a7
+# github.com/bytedance/sonic v1.11.6
 ## explicit; go 1.16
-github.com/bytedance/gopkg/internal/runtimex
-github.com/bytedance/gopkg/lang/fastrand
-github.com/bytedance/gopkg/lang/mcache
-github.com/bytedance/gopkg/util/gopool
-github.com/bytedance/gopkg/util/logger
-# github.com/bytedance/sonic v1.8.1
-## explicit; go 1.15
 github.com/bytedance/sonic
 github.com/bytedance/sonic/ast
 github.com/bytedance/sonic/decoder
 github.com/bytedance/sonic/encoder
 github.com/bytedance/sonic/internal/caching
 github.com/bytedance/sonic/internal/cpu
+github.com/bytedance/sonic/internal/decoder
+github.com/bytedance/sonic/internal/encoder
 github.com/bytedance/sonic/internal/jit
-github.com/bytedance/sonic/internal/loader
 github.com/bytedance/sonic/internal/native
 github.com/bytedance/sonic/internal/native/avx
 github.com/bytedance/sonic/internal/native/avx2
+github.com/bytedance/sonic/internal/native/neon
 github.com/bytedance/sonic/internal/native/sse
 github.com/bytedance/sonic/internal/native/types
 github.com/bytedance/sonic/internal/resolver
 github.com/bytedance/sonic/internal/rt
-github.com/bytedance/sonic/loader
 github.com/bytedance/sonic/option
 github.com/bytedance/sonic/unquote
 github.com/bytedance/sonic/utf8
+# github.com/bytedance/sonic/loader v0.1.1
+## explicit; go 1.16
+github.com/bytedance/sonic/loader
+github.com/bytedance/sonic/loader/internal/abi
+github.com/bytedance/sonic/loader/internal/rt
 # github.com/carlmjohnson/requests v0.23.5
 ## explicit; go 1.20
 github.com/carlmjohnson/requests
@@ -55,58 +50,16 @@ github.com/carlmjohnson/requests/internal/slicex
 # github.com/cespare/xxhash/v2 v2.2.0
 ## explicit; go 1.11
 github.com/cespare/xxhash/v2
-# github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311
-## explicit; go 1.15
-github.com/chenzhuoyu/base64x
 # github.com/clbanning/mxj v1.8.4
 ## explicit
 github.com/clbanning/mxj
-# github.com/cloudwego/hertz v0.8.1
+# github.com/cloudwego/base64x v0.1.4
 ## explicit; go 1.16
-github.com/cloudwego/hertz/internal/bytesconv
-github.com/cloudwego/hertz/internal/bytestr
-github.com/cloudwego/hertz/internal/nocopy
-github.com/cloudwego/hertz/internal/stats
-github.com/cloudwego/hertz/pkg/app
-github.com/cloudwego/hertz/pkg/app/client/retry
-github.com/cloudwego/hertz/pkg/app/middlewares/server/recovery
-github.com/cloudwego/hertz/pkg/app/server
-github.com/cloudwego/hertz/pkg/app/server/binding
-github.com/cloudwego/hertz/pkg/app/server/binding/internal/decoder
-github.com/cloudwego/hertz/pkg/app/server/registry
-github.com/cloudwego/hertz/pkg/app/server/render
-github.com/cloudwego/hertz/pkg/common/bytebufferpool
-github.com/cloudwego/hertz/pkg/common/compress
-github.com/cloudwego/hertz/pkg/common/config
-github.com/cloudwego/hertz/pkg/common/errors
-github.com/cloudwego/hertz/pkg/common/hlog
-github.com/cloudwego/hertz/pkg/common/json
-github.com/cloudwego/hertz/pkg/common/stackless
-github.com/cloudwego/hertz/pkg/common/timer
-github.com/cloudwego/hertz/pkg/common/tracer
-github.com/cloudwego/hertz/pkg/common/tracer/stats
-github.com/cloudwego/hertz/pkg/common/tracer/traceinfo
-github.com/cloudwego/hertz/pkg/common/utils
-github.com/cloudwego/hertz/pkg/network
-github.com/cloudwego/hertz/pkg/network/dialer
-github.com/cloudwego/hertz/pkg/network/netpoll
-github.com/cloudwego/hertz/pkg/network/standard
-github.com/cloudwego/hertz/pkg/protocol
-github.com/cloudwego/hertz/pkg/protocol/client
-github.com/cloudwego/hertz/pkg/protocol/consts
-github.com/cloudwego/hertz/pkg/protocol/http1
-github.com/cloudwego/hertz/pkg/protocol/http1/ext
-github.com/cloudwego/hertz/pkg/protocol/http1/factory
-github.com/cloudwego/hertz/pkg/protocol/http1/proxy
-github.com/cloudwego/hertz/pkg/protocol/http1/req
-github.com/cloudwego/hertz/pkg/protocol/http1/resp
-github.com/cloudwego/hertz/pkg/protocol/suite
-github.com/cloudwego/hertz/pkg/route
-github.com/cloudwego/hertz/pkg/route/consts
-github.com/cloudwego/hertz/pkg/route/param
-# github.com/cloudwego/netpoll v0.5.0
-## explicit; go 1.15
-github.com/cloudwego/netpoll
+github.com/cloudwego/base64x
+# github.com/cloudwego/iasm v0.2.0
+## explicit; go 1.16
+github.com/cloudwego/iasm/expr
+github.com/cloudwego/iasm/x86_64
 # github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f
 ## explicit
 github.com/dgryski/go-rendezvous
@@ -117,9 +70,6 @@ github.com/enescakir/emoji
 ## explicit; go 1.18
 github.com/fasthttp/router
 github.com/fasthttp/router/radix
-# github.com/fsnotify/fsnotify v1.5.4
-## explicit; go 1.16
-github.com/fsnotify/fsnotify
 # github.com/go-logr/logr v1.3.0
 ## explicit; go 1.18
 github.com/go-logr/logr
@@ -175,13 +125,15 @@ github.com/go-openapi/validate
 # github.com/go-resty/resty/v2 v2.11.0
 ## explicit; go 1.16
 github.com/go-resty/resty/v2
+# github.com/gogo/protobuf v1.3.2
+## explicit; go 1.15
+github.com/gogo/protobuf/gogoproto
+github.com/gogo/protobuf/proto
+github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 # github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 ## explicit
 github.com/golang/freetype/raster
 github.com/golang/freetype/truetype
-# github.com/golang/protobuf v1.5.3
-## explicit; go 1.9
-github.com/golang/protobuf/proto
 # github.com/google/go-querystring v1.1.0
 ## explicit; go 1.10
 github.com/google/go-querystring/query
@@ -200,13 +152,6 @@ github.com/gotify/go-api-client/v2/client/user
 github.com/gotify/go-api-client/v2/client/version
 github.com/gotify/go-api-client/v2/gotify
 github.com/gotify/go-api-client/v2/models
-# github.com/henrylee2cn/ameda v1.4.10
-## explicit; go 1.13
-github.com/henrylee2cn/ameda
-# github.com/henrylee2cn/goutil v0.0.0-20210127050712-89660552f6f8
-## explicit; go 1.12
-github.com/henrylee2cn/goutil
-github.com/henrylee2cn/goutil/errors
 # github.com/jackc/pgpassfile v1.0.0
 ## explicit; go 1.12
 github.com/jackc/pgpassfile
@@ -253,6 +198,107 @@ github.com/klauspost/compress/zlib
 # github.com/klauspost/cpuid/v2 v2.0.9
 ## explicit; go 1.13
 github.com/klauspost/cpuid/v2
+# github.com/larksuite/oapi-sdk-go/v3 v3.2.4
+## explicit; go 1.13
+github.com/larksuite/oapi-sdk-go/v3
+github.com/larksuite/oapi-sdk-go/v3/cache
+github.com/larksuite/oapi-sdk-go/v3/card
+github.com/larksuite/oapi-sdk-go/v3/core
+github.com/larksuite/oapi-sdk-go/v3/event
+github.com/larksuite/oapi-sdk-go/v3/event/dispatcher
+github.com/larksuite/oapi-sdk-go/v3/service/acs
+github.com/larksuite/oapi-sdk-go/v3/service/acs/v1
+github.com/larksuite/oapi-sdk-go/v3/service/admin
+github.com/larksuite/oapi-sdk-go/v3/service/admin/v1
+github.com/larksuite/oapi-sdk-go/v3/service/application
+github.com/larksuite/oapi-sdk-go/v3/service/application/v6
+github.com/larksuite/oapi-sdk-go/v3/service/approval
+github.com/larksuite/oapi-sdk-go/v3/service/approval/v4
+github.com/larksuite/oapi-sdk-go/v3/service/attendance
+github.com/larksuite/oapi-sdk-go/v3/service/attendance/v1
+github.com/larksuite/oapi-sdk-go/v3/service/auth
+github.com/larksuite/oapi-sdk-go/v3/service/auth/v3
+github.com/larksuite/oapi-sdk-go/v3/service/authen
+github.com/larksuite/oapi-sdk-go/v3/service/authen/v1
+github.com/larksuite/oapi-sdk-go/v3/service/baike
+github.com/larksuite/oapi-sdk-go/v3/service/baike/v1
+github.com/larksuite/oapi-sdk-go/v3/service/bitable
+github.com/larksuite/oapi-sdk-go/v3/service/bitable/v1
+github.com/larksuite/oapi-sdk-go/v3/service/block
+github.com/larksuite/oapi-sdk-go/v3/service/block/v2
+github.com/larksuite/oapi-sdk-go/v3/service/board
+github.com/larksuite/oapi-sdk-go/v3/service/board/v1
+github.com/larksuite/oapi-sdk-go/v3/service/calendar
+github.com/larksuite/oapi-sdk-go/v3/service/calendar/v4
+github.com/larksuite/oapi-sdk-go/v3/service/contact
+github.com/larksuite/oapi-sdk-go/v3/service/contact/v3
+github.com/larksuite/oapi-sdk-go/v3/service/corehr
+github.com/larksuite/oapi-sdk-go/v3/service/corehr/v1
+github.com/larksuite/oapi-sdk-go/v3/service/corehr/v2
+github.com/larksuite/oapi-sdk-go/v3/service/document_ai
+github.com/larksuite/oapi-sdk-go/v3/service/document_ai/v1
+github.com/larksuite/oapi-sdk-go/v3/service/docx
+github.com/larksuite/oapi-sdk-go/v3/service/docx/v1
+github.com/larksuite/oapi-sdk-go/v3/service/drive
+github.com/larksuite/oapi-sdk-go/v3/service/drive/v1
+github.com/larksuite/oapi-sdk-go/v3/service/drive/v2
+github.com/larksuite/oapi-sdk-go/v3/service/ehr
+github.com/larksuite/oapi-sdk-go/v3/service/ehr/v1
+github.com/larksuite/oapi-sdk-go/v3/service/event
+github.com/larksuite/oapi-sdk-go/v3/service/event/v1
+github.com/larksuite/oapi-sdk-go/v3/service/ext
+github.com/larksuite/oapi-sdk-go/v3/service/gray_test_open_sg
+github.com/larksuite/oapi-sdk-go/v3/service/gray_test_open_sg/v1
+github.com/larksuite/oapi-sdk-go/v3/service/helpdesk
+github.com/larksuite/oapi-sdk-go/v3/service/helpdesk/v1
+github.com/larksuite/oapi-sdk-go/v3/service/hire
+github.com/larksuite/oapi-sdk-go/v3/service/hire/v1
+github.com/larksuite/oapi-sdk-go/v3/service/human_authentication
+github.com/larksuite/oapi-sdk-go/v3/service/human_authentication/v1
+github.com/larksuite/oapi-sdk-go/v3/service/im
+github.com/larksuite/oapi-sdk-go/v3/service/im/v1
+github.com/larksuite/oapi-sdk-go/v3/service/lingo
+github.com/larksuite/oapi-sdk-go/v3/service/lingo/v1
+github.com/larksuite/oapi-sdk-go/v3/service/mail
+github.com/larksuite/oapi-sdk-go/v3/service/mail/v1
+github.com/larksuite/oapi-sdk-go/v3/service/mdm
+github.com/larksuite/oapi-sdk-go/v3/service/mdm/v1
+github.com/larksuite/oapi-sdk-go/v3/service/meeting_room
+github.com/larksuite/oapi-sdk-go/v3/service/meeting_room/v1
+github.com/larksuite/oapi-sdk-go/v3/service/okr
+github.com/larksuite/oapi-sdk-go/v3/service/okr/v1
+github.com/larksuite/oapi-sdk-go/v3/service/optical_char_recognition
+github.com/larksuite/oapi-sdk-go/v3/service/optical_char_recognition/v1
+github.com/larksuite/oapi-sdk-go/v3/service/passport
+github.com/larksuite/oapi-sdk-go/v3/service/passport/v1
+github.com/larksuite/oapi-sdk-go/v3/service/personal_settings
+github.com/larksuite/oapi-sdk-go/v3/service/personal_settings/v1
+github.com/larksuite/oapi-sdk-go/v3/service/report
+github.com/larksuite/oapi-sdk-go/v3/service/report/v1
+github.com/larksuite/oapi-sdk-go/v3/service/search
+github.com/larksuite/oapi-sdk-go/v3/service/search/v2
+github.com/larksuite/oapi-sdk-go/v3/service/security_and_compliance
+github.com/larksuite/oapi-sdk-go/v3/service/security_and_compliance/v1
+github.com/larksuite/oapi-sdk-go/v3/service/sheets
+github.com/larksuite/oapi-sdk-go/v3/service/sheets/v3
+github.com/larksuite/oapi-sdk-go/v3/service/speech_to_text
+github.com/larksuite/oapi-sdk-go/v3/service/speech_to_text/v1
+github.com/larksuite/oapi-sdk-go/v3/service/task
+github.com/larksuite/oapi-sdk-go/v3/service/task/v1
+github.com/larksuite/oapi-sdk-go/v3/service/task/v2
+github.com/larksuite/oapi-sdk-go/v3/service/tenant
+github.com/larksuite/oapi-sdk-go/v3/service/tenant/v2
+github.com/larksuite/oapi-sdk-go/v3/service/translation
+github.com/larksuite/oapi-sdk-go/v3/service/translation/v1
+github.com/larksuite/oapi-sdk-go/v3/service/vc
+github.com/larksuite/oapi-sdk-go/v3/service/vc/v1
+github.com/larksuite/oapi-sdk-go/v3/service/verification
+github.com/larksuite/oapi-sdk-go/v3/service/verification/v1
+github.com/larksuite/oapi-sdk-go/v3/service/wiki
+github.com/larksuite/oapi-sdk-go/v3/service/wiki/v2
+github.com/larksuite/oapi-sdk-go/v3/service/workplace
+github.com/larksuite/oapi-sdk-go/v3/service/workplace/v1
+github.com/larksuite/oapi-sdk-go/v3/ws
 # github.com/lonelyevil/kook v0.0.33
 ## explicit; go 1.16
 github.com/lonelyevil/kook
@@ -267,6 +313,9 @@ github.com/mailru/easyjson/jwriter
 # github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0
 ## explicit; go 1.19
 github.com/matttproud/golang_protobuf_extensions/v2/pbutil
+# github.com/mdaverde/jsonpath v0.2.1
+## explicit; go 1.16
+github.com/mdaverde/jsonpath
 # github.com/mitchellh/mapstructure v1.5.0
 ## explicit; go 1.14
 github.com/mitchellh/mapstructure
@@ -279,9 +328,6 @@ github.com/modern-go/reflect2
 # github.com/mozillazg/go-httpheader v0.3.1
 ## explicit; go 1.11
 github.com/mozillazg/go-httpheader
-# github.com/nyaruka/phonenumbers v1.0.55
-## explicit; go 1.13
-github.com/nyaruka/phonenumbers
 # github.com/oklog/ulid v1.3.1
 ## explicit
 github.com/oklog/ulid
@@ -338,15 +384,8 @@ github.com/spyzhov/ajson/internal
 # github.com/tencentyun/cos-go-sdk-v5 v0.7.45
 ## explicit; go 1.12
 github.com/tencentyun/cos-go-sdk-v5
-# github.com/tidwall/gjson v1.14.4
-## explicit; go 1.12
-github.com/tidwall/gjson
-# github.com/tidwall/match v1.1.1
-## explicit; go 1.15
-github.com/tidwall/match
 # github.com/tidwall/pretty v1.2.0
 ## explicit; go 1.16
-github.com/tidwall/pretty
 # github.com/twitchyliquid64/golang-asm v0.15.1
 ## explicit; go 1.13
 github.com/twitchyliquid64/golang-asm/asm/arch
@@ -503,12 +542,10 @@ google.golang.org/protobuf/internal/set
 google.golang.org/protobuf/internal/strs
 google.golang.org/protobuf/internal/version
 google.golang.org/protobuf/proto
-google.golang.org/protobuf/reflect/protodesc
 google.golang.org/protobuf/reflect/protoreflect
 google.golang.org/protobuf/reflect/protoregistry
 google.golang.org/protobuf/runtime/protoiface
 google.golang.org/protobuf/runtime/protoimpl
-google.golang.org/protobuf/types/descriptorpb
 google.golang.org/protobuf/types/known/timestamppb
 # gopkg.in/natefinch/lumberjack.v2 v2.2.1
 ## explicit; go 1.13
