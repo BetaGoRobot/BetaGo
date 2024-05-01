@@ -178,8 +178,9 @@ func (c *SearchListCard) AddTitleColumn(ctx context.Context, searchKeyword strin
 			Template string              "json:\"template,omitempty\""
 		}{
 			Title: &i18nHeaderTitle{
-				Tag:     "plain_text",
-				Content: searchKeyword,
+				Tag:      "plain_text",
+				Content:  searchKeyword,
+				Template: "blue",
 			},
 		},
 	}
