@@ -201,7 +201,7 @@ var (
                             "type": "default",
                             "complex_interaction": true,
                             "width": "default",
-                            "size": "medium",
+                            "size": "tiny",
                             "value": "last_page_x",
                             "disabled": false
                         }
