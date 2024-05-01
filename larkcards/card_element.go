@@ -102,7 +102,7 @@ func NewSearchListCard() *SearchListCard {
 		I18NElements: struct {
 			ZhCn []*ZhcnItem "json:\"zh_cn\""
 		}{},
-		I18NHeader: struct{}{},
+		I18NHeader: i18nHeader{},
 	}
 }
 
