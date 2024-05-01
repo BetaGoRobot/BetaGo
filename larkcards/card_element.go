@@ -14,8 +14,27 @@ type SearchListCard struct {
 	I18NElements struct {
 		ZhCn []*ZhcnItem `json:"zh_cn"`
 	} `json:"i18n_elements"`
-	I18NHeader struct{} `json:"i18n_header"`
+	I18NHeader i18nHeader `json:"i18n_header"`
 }
+
+type i18nHeader struct {
+	ZhCn struct {
+		Title    *i18nHeaderTitle    `json:"title,omitempty"`
+		Subtitle *i18nHeaderSubtitle `json:"subtitle,omitempty"`
+		Template string              `json:"template,omitempty"`
+	} `json:"zh_cn,omitempty"`
+}
+
+type i18nHeaderTitle struct {
+	Tag     string `json:"tag,omitempty"`
+	Content string `json:"content,omitempty"`
+}
+
+type i18nHeaderSubtitle struct {
+	Tag     string `json:"tag,omitempty"`
+	Content string `json:"content,omitempty"`
+}
+
 type ZhcnItem struct {
 	Tag             string             `json:"tag,omitempty"`
 	FlexMode        string             `json:"flex_mode,omitempty"`
@@ -149,6 +168,21 @@ func (c *SearchListCard) AddColumn(ctx context.Context, imgKey, title, artist, m
 		},
 		Margin: "16px 0px 0px 0px",
 	})
+}
+
+func (c *SearchListCard) AddTitleColumn(ctx context.Context, searchKeyword string) {
+	c.I18NHeader = i18nHeader{
+		ZhCn: struct {
+			Title    *i18nHeaderTitle    "json:\"title,omitempty\""
+			Subtitle *i18nHeaderSubtitle "json:\"subtitle,omitempty\""
+			Template string              "json:\"template,omitempty\""
+		}{
+			Title: &i18nHeaderTitle{
+				Tag:     "plain_text",
+				Content: searchKeyword,
+			},
+		},
+	}
 }
 
 func (c *SearchListCard) AddJaegerTracer(ctx context.Context, span trace.Span) {
