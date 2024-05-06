@@ -25,7 +25,7 @@ var (
 func init() {
 	var err error
 	// if betagovar.IsTest {
-	// 	endPoint = "localhost:29000"
+	// 	endPoint = "192.168.31.74:29000"
 	// 	useSSL = false
 	// } else {
 	endPoint = "minioapi.kmhomelab.cn"

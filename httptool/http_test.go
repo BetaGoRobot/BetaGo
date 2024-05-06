@@ -9,7 +9,7 @@ import (
 	"github.com/kevinmatthe/zaplog"
 )
 
-const NetEaseAPIBaseURL = "http://localhost:3335"
+const NetEaseAPIBaseURL = "http://192.168.31.74:3335"
 
 func TestPostWithParamsWithTimestamp(t *testing.T) {
 	resp, err := PostWithTimestamp(RequestInfo{

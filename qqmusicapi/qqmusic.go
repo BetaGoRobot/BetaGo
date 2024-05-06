@@ -19,7 +19,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 func init() {
 	if betagovar.IsTest {
-		qqmusicBaseURL = "http://localhost:3300"
+		qqmusicBaseURL = "http://192.168.31.74:3300"
 	} else if betagovar.IsCluster {
 		qqmusicBaseURL = "http://kubernetes.default:3300"
 	}

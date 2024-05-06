@@ -37,7 +37,7 @@ const (
 	// DBHostCluster k8s的PGHost
 	DBHostCluster = "host=kubernetes.default"
 	// DBHostTest 本地测试的PGHost
-	DBHostTest = "host=localhost"
+	DBHostTest = "host=192.168.31.74"
 
 	// SelfCheckMessage 自我健康检查
 	SelfCheckMessage = "self check message"

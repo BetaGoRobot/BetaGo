@@ -33,7 +33,7 @@ const netEaseQRTmpFile = "/data/tmp"
 func init() {
 	// 测试环境，使用本地网易云代理
 	if betagovar.IsTest {
-		NetEaseAPIBaseURL = "http://localhost:3335"
+		NetEaseAPIBaseURL = "http://192.168.31.74:3335"
 	} else if betagovar.IsCluster {
 		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
 	}
