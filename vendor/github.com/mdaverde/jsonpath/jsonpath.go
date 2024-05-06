@@ -15,10 +15,8 @@ func (d DoesNotExist) Error() string {
 	return "path not found"
 }
 
-var (
-	errInvalidObj = errors.New("invalid object")
-	pathDelimiter = "."
-)
+var errInvalidObj = errors.New("invalid object")
+var pathDelimiter = "."
 
 func tokenizePath(path string) ([]string, error) {
 	var tokens []string

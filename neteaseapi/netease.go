@@ -3,6 +3,7 @@ package neteaseapi
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,19 +18,16 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/betagovar/env"
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/bytedance/sonic"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kevinmatthe/zaplog"
 	"go.opentelemetry.io/otel/attribute"
 )
-
-var (
-	NETEASE_EMAIL    = os.Getenv("NETEASE_EMAIL")
-	NETEASE_PASSWORD = os.Getenv("NETEASE_PASSWORD")
-)
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const netEaseQRTmpFile = "/data/tmp"
 
@@ -40,34 +38,39 @@ func init() {
 	} else if betagovar.IsCluster {
 		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
 	}
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 10) // 等待本地网络启动
+	NetEaseGCtx.SetContext(context.Background())
 	NetEaseGCtx.TryGetLastCookie()
 	err := NetEaseGCtx.LoginNetEase()
 	if err != nil {
-		log.Println("error in init loginNetease", err)
+		utility.ZapLogger.Info("error in init loginNetease", zaplog.Error(err))
 	}
 	err = NetEaseGCtx.LoginNetEaseQR()
 	if err != nil {
-		log.Println("error in init loginNeteaseQR", err)
+		utility.ZapLogger.Info("error in init loginNeteaseQR", zaplog.Error(err))
 	}
+
 	go func() {
 		for {
-			time.Sleep(time.Second * 15)
 			if NetEaseGCtx.loginType == "qr" {
-				// if !NetEaseGCtx.CheckIfLogin() {
-				// 	NetEaseGCtx.LoginNetEaseQR()
-				// }
+				if !NetEaseGCtx.CheckIfLogin() {
+					NetEaseGCtx.LoginNetEaseQR()
+				}
 			} else {
 				NetEaseGCtx.RefreshLogin()
 				if NetEaseGCtx.CheckIfLogin() {
 					NetEaseGCtx.SaveCookie()
 				} else {
-					log.Println("error in refresh login")
-					// NetEaseGCtx.LoginNetEaseQR()
+					utility.ZapLogger.Info("error in refresh login")
 				}
 			}
+			time.Sleep(time.Second * 60)
 		}
 	}()
+}
+
+func (neteaseCtx *NetEaseContext) SetContext(ctx context.Context) {
+	neteaseCtx.Context = ctx
 }
 
 // RefreshLogin 刷新登录
@@ -107,7 +110,7 @@ func (neteaseCtx *NetEaseContext) getUniKey() (err error) {
 	data, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	respMap := make(map[string]interface{})
-	if err = json.Unmarshal(data, &respMap); err != nil {
+	if err = sonic.Unmarshal(data, &respMap); err != nil {
 		return
 	}
 	neteaseCtx.qrStruct.uniKey = respMap["data"].(map[string]interface{})["unikey"].(string)
@@ -133,7 +136,7 @@ func (neteaseCtx *NetEaseContext) getQRBase64() (err error) {
 	data, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	respMap := make(map[string]interface{})
-	if err = json.Unmarshal(data, &respMap); err != nil {
+	if err = sonic.Unmarshal(data, &respMap); err != nil {
 		return
 	}
 	neteaseCtx.qrStruct.qrBase64 = respMap["data"].(map[string]interface{})["qrimg"].(string)
@@ -145,43 +148,41 @@ func (neteaseCtx *NetEaseContext) checkQRStatus() (err error) {
 		once := &sync.Once{}
 		for {
 
-			time.Sleep(time.Second)
-			resp, err := httptool.PostWithTimestamp(
-				httptool.RequestInfo{
-					URL: NetEaseAPIBaseURL + "/login/qr/check",
-					Params: map[string][]string{
-						"key": {neteaseCtx.qrStruct.uniKey},
-					},
-				},
-			)
-			if err != nil || resp.StatusCode != 200 {
+			time.Sleep(time.Second * 1)
+			resp, err := betagovar.HttpClient.R().
+				SetFormData(map[string]string{"key": neteaseCtx.qrStruct.uniKey}).
+				SetQueryParam("timestamp", fmt.Sprint(time.Now().Unix())).
+				SetContext(neteaseCtx).
+				Post(NetEaseAPIBaseURL + "/login/qr/check")
+
+			if err != nil || resp.StatusCode() != 200 {
 				if err == nil {
-					return fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
+					return fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode())
 				}
 				return err
 			}
-			data, _ := ioutil.ReadAll(resp.Body)
-			defer resp.Body.Close()
+			data := resp.Body()
 			respMap := make(map[string]interface{})
-			if err = json.Unmarshal(data, &respMap); err != nil {
+			if err = sonic.Unmarshal(data, &respMap); err != nil {
 				return err
 			}
 			switch respMap["code"].(float64) {
 			case 801:
-				once.Do(func() { log.Println("Waiting for scan") })
+				once.Do(func() { utility.ZapLogger.Info("Waiting for scan") })
 			case 800:
 				once.Do(func() {
-					log.Println("二维码已失效")
+					utility.ZapLogger.Info("二维码已失效")
 					neteaseCtx.qrStruct.isOutDated = true
 				})
 				return err
 			case 802:
-				once.Do(func() { log.Println("扫描未确认") })
+				once.Do(func() { utility.ZapLogger.Info("扫描未确认") })
 			case 803:
-				log.Println("登陆成功！")
+				utility.ZapLogger.Info("登陆成功！")
 				neteaseCtx.cookies = resp.Cookies()
 				neteaseCtx.SaveCookie()
 				neteaseCtx.loginType = "qr"
+				gotify.SendMessage("网易云登录", "登陆成功！", 7)
 				return nil
 			}
 		}
@@ -217,13 +218,13 @@ func SaveQRImg(imgBase64 string) (filename string) {
 	os.MkdirAll(netEaseQRTmpFile, 0o777)
 	f, err := os.Create(filename)
 	if err != nil {
-		log.Println("error in create qr img", err)
+		utility.ZapLogger.Info("error in create qr img", zaplog.Error(err))
 		return ""
 	}
 	defer f.Close()
 	_, err = io.Copy(f, d)
 	if err != nil {
-		log.Println("error in copy qr img", err)
+		utility.ZapLogger.Info("error in copy qr img", zaplog.Error(err))
 		return ""
 	}
 	return
@@ -237,39 +238,32 @@ func (neteaseCtx *NetEaseContext) LoginNetEase() (err error) {
 	if len(neteaseCtx.cookies) > 0 {
 		return
 	}
-	if phoneNum, password := os.Getenv("NETEASE_EMAIL"), NETEASE_PASSWORD; phoneNum == "" && password == "" {
-		log.Println("Empty NetEase account and password")
+	if phoneNum, password := env.NETEASE_EMAIL, env.NETEASE_PASSWORD; phoneNum == "" && password == "" {
+		utility.ZapLogger.Info("Empty NetEase account and password")
 		return
 	}
-	var resp *http.Response
 	// !Step1:检查登陆状态
 	if neteaseCtx.CheckIfLogin() {
+		utility.ZapLogger.Info("Already login")
 		// 已登陆，刷新登陆
 		err = neteaseCtx.RefreshLogin()
 		return
 	}
+
 	// !Step2:未登陆，启动登陆
-	resp, err = httptool.PostWithTimestamp(
-		httptool.RequestInfo{
-			URL: NetEaseAPIBaseURL + "/login",
-			Params: map[string][]string{
-				"email":    {os.Getenv("NETEASE_EMAIL")},
-				"password": {NETEASE_PASSWORD},
+	resp, err := betagovar.HttpClient.R().
+		SetCookies(neteaseCtx.cookies).
+		SetFormData(
+			map[string]string{
+				"email":    env.NETEASE_EMAIL,
+				"password": env.NETEASE_PASSWORD,
 			},
-		},
-	)
-	// resp, err = httptool.PostWithTimestamp(
-	// 	httptool.RequestInfo{
-	// 		URL: NetEaseAPIBaseURL + "/login/cellphone",
-	// 		Params: map[string][]string{
-	// 			"phone":    {os.Getenv("NETEASE_PHONE")},
-	// 			"password": {NETEASE_PASSWORD},
-	// 		},
-	// 	},
-	// )
-	if err != nil || resp.StatusCode != 200 {
+		).
+		SetQueryParam("timestamp", fmt.Sprint(time.Now().Unix())).
+		Post(NetEaseAPIBaseURL + "/login")
+	if err != nil || resp.StatusCode() != 200 {
 		if err == nil {
-			err = fmt.Errorf("LoginNetEase error, StatusCode %d", resp.StatusCode)
+			err = fmt.Errorf("LoginNetEase error, with msg %v, StatusCode %d", string(resp.Body()), resp.StatusCode())
 		}
 		return
 	}
@@ -283,21 +277,19 @@ func (neteaseCtx *NetEaseContext) LoginNetEase() (err error) {
 //	@receiver ctx
 //	@return bool
 func (neteaseCtx *NetEaseContext) CheckIfLogin() bool {
-	resp, err := httptool.PostWithTimestamp(
-		httptool.RequestInfo{
-			URL:     NetEaseAPIBaseURL + "/login/status",
-			Params:  map[string][]string{},
-			Cookies: neteaseCtx.cookies,
-		},
-	)
-	if err != nil || resp.StatusCode != 200 {
+	resp, err := betagovar.HttpClient.R().
+		SetCookies(neteaseCtx.cookies).
+		SetContext(neteaseCtx).
+		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
+		Get(NetEaseAPIBaseURL + "/login/status")
+	if err != nil || resp.StatusCode() != 200 {
 		log.Printf("%#v", resp)
 		return false
 	}
-	data, _ := ioutil.ReadAll(resp.Body)
+	data := resp.Body()
 	loginStatus := LoginStatusStruct{}
-	if err = json.Unmarshal(data, &loginStatus); err != nil {
-		log.Println("error in unmarshal loginStatus", err)
+	if err = sonic.Unmarshal(data, &loginStatus); err != nil {
+		utility.ZapLogger.Info("error in unmarshal loginStatus", zaplog.Error(err))
 	} else {
 		if loginStatus.Data.Account != nil {
 			return true
@@ -313,7 +305,7 @@ func (neteaseCtx *NetEaseContext) CheckIfLogin() bool {
 func (neteaseCtx *NetEaseContext) TryGetLastCookie() {
 	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
-		log.Println("error in open last_cookie.json", err)
+		utility.ZapLogger.Info("error in open last_cookie.json", zaplog.Error(err))
 		return
 	}
 	defer f.Close()
@@ -323,8 +315,8 @@ func (neteaseCtx *NetEaseContext) TryGetLastCookie() {
 		utility.ZapLogger.Info("No cookieData, skip json marshal")
 		return
 	}
-	if err = json.Unmarshal(cookieData, &neteaseCtx.cookies); err != nil {
-		log.Println("error in unmarshal cookieData", err)
+	if err = sonic.Unmarshal(cookieData, &neteaseCtx.cookies); err != nil {
+		utility.ZapLogger.Info("error in unmarshal cookieData", zaplog.Error(err))
 	}
 }
 
@@ -334,7 +326,7 @@ func (neteaseCtx *NetEaseContext) TryGetLastCookie() {
 func (neteaseCtx *NetEaseContext) SaveCookie() {
 	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
-		log.Println("error in open last_cookie.json", err)
+		utility.ZapLogger.Info("error in open last_cookie.json", zaplog.Error(err))
 		return
 	}
 	defer f.Close()
@@ -367,7 +359,7 @@ func (neteaseCtx *NetEaseContext) GetDailyRecommendID() (musicIDs map[string]str
 		_ = resp.Body.Close()
 	}()
 	music := dailySongs{}
-	json.Unmarshal(body, &music)
+	sonic.Unmarshal(body, &music)
 	for index := range music.Data.DailySongs {
 		musicIDs[strconv.Itoa(music.Data.DailySongs[index].ID)] = music.Data.DailySongs[index].Name
 	}
@@ -397,7 +389,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(IDName map[string]string) (Inf
 	).SetCookies(neteaseCtx.cookies).Post(NetEaseAPIBaseURL + "/song/url/v1")
 	body := r.Body()
 	music := musicList{}
-	json.Unmarshal(body, &music)
+	sonic.Unmarshal(body, &music)
 	for index := range music.Data {
 		ID := strconv.Itoa(music.Data[index].ID)
 		InfoList = append(InfoList, MusicInfo{
@@ -419,7 +411,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ID string) (url string, err error)
 	).SetCookies(neteaseCtx.cookies).Post(NetEaseAPIBaseURL + "/song/url/v1")
 	body := r.Body()
 	music := musicList{}
-	err = json.Unmarshal(body, &music)
+	err = sonic.Unmarshal(body, &music)
 	if err != nil {
 		return "", err
 	}
@@ -441,12 +433,12 @@ func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, songID string) 
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Post(NetEaseAPIBaseURL + "/song/detail")
 	if err != nil {
-		log.Println(err.Error())
+		utility.ZapLogger.Info(err.Error())
 	}
 	musicDetail = &MusicDetail{}
 	err = jsoniter.Unmarshal(resp.Body(), musicDetail)
 	if err != nil {
-		log.Println(err.Error())
+		utility.ZapLogger.Info(err.Error())
 	}
 	if len(musicDetail.Songs) == 0 {
 		return nil
@@ -469,12 +461,12 @@ func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) 
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Post(NetEaseAPIBaseURL + "/lyric")
 	if err != nil {
-		log.Println(err.Error())
+		utility.ZapLogger.Info(err.Error())
 	}
 	searchLyrics := &SearchLyrics{}
 	err = jsoniter.Unmarshal(resp.Body(), searchLyrics)
 	if err != nil {
-		log.Println(err.Error())
+		utility.ZapLogger.Info(err.Error())
 	}
 	return searchLyrics.Lrc.Lyric
 }
@@ -503,7 +495,7 @@ func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keyw
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Post(NetEaseAPIBaseURL + "/cloudsearch")
 	if err != nil {
-		log.Println(err.Error())
+		utility.ZapLogger.Info(err.Error())
 	}
 
 	searchMusic := searchMusic{}
@@ -569,7 +561,7 @@ func (neteaseCtx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicRes, 
 	}
 
 	music := &GlobRecommendMusicRes{}
-	json.Unmarshal(resp.Body(), music)
+	sonic.Unmarshal(resp.Body(), music)
 	for _, result := range music.Result {
 		var ArtistName string
 		for _, name := range result.Song.Artists {

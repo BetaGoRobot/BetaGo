@@ -1,6 +1,7 @@
 package neteaseapi
 
 import (
+	"context"
 	"net/http"
 	"os"
 )
@@ -19,6 +20,7 @@ type LoginStatusStruct struct {
 
 // NetEaseContext 网易云API调用封装
 type NetEaseContext struct {
+	context.Context
 	cookies  []*http.Cookie
 	err      error
 	retryCnt int
