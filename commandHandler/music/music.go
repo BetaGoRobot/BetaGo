@@ -42,12 +42,12 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 	}
 
 	// 使用QQ音乐搜索
-	qqmusicCtx := qqmusicapi.QQmusicContext{}
-	resQQmusic, err := qqmusicCtx.SearchMusic(ctx, args)
-	if err != nil {
-		return
-	}
-
+	// qqmusicCtx := qqmusicapi.QQmusicContext{}
+	// resQQmusic, err := qqmusicCtx.SearchMusic(ctx, args)
+	// if err != nil {
+	// 	return
+	// }
+	resQQmusic := make([]qqmusicapi.SearchMusicRes, 0)
 	var (
 		cardMessage   = make(kook.CardMessage, 0)
 		modulesNetese = make([]interface{}, 0)
