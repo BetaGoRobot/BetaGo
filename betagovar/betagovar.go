@@ -11,7 +11,10 @@ import (
 )
 
 // NotifierChanID 发送消息的频道ID
-var NotifierChanID = "2472013302648680"
+var (
+	NotifierChanID = "2472013302648680"
+	BotIdentifier  = "BetaGo"
+)
 
 const (
 	TimeFormat = "2006-01-02T15:04:05"

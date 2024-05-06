@@ -13,17 +13,11 @@ import (
 	"github.com/BetaGoRobot/BetaGo/check"
 	"github.com/BetaGoRobot/BetaGo/commandHandler/notifier"
 	"github.com/BetaGoRobot/BetaGo/server"
-	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
 )
 
-var (
-	zapLogger   = utility.ZapLogger
-	sugerLogger = utility.SugerLogger
-)
-
 func init() {
-	utility.InitLogger()
 	go func() {
 		http.ListenAndServe(":6060", nil)
 	}()
@@ -34,7 +28,7 @@ func main() {
 	check.CheckEnv()
 	e := betagovar.GlobalSession.Open()
 	if e != nil {
-		utility.ZapLogger.Error("连接失败", zaplog.Error(e))
+		log.ZapLogger.Error("连接失败", zaplog.Error(e))
 		panic(e)
 	}
 	notifier.StartAutoService()

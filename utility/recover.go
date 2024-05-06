@@ -11,6 +11,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
+
 	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
 	"go.opentelemetry.io/otel/attribute"
@@ -36,6 +38,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 			fmt.Sprintf("%s Panic-Collected!",
 				emoji.Warning.String()), ctx)
 		gotify.SendMessage(
+			ctx,
 			fmt.Sprintf("%s Panic-Collected!",
 				emoji.Warning.String()),
 			strings.ReplaceAll(fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%s`\n```go\n%s```\nRecord:\n```json\n%s\n```",
@@ -47,7 +50,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 				fmt.Sprintf("%s Panic-Collected!",
 					emoji.Warning.String()), ctx)
 		}
-		SugerLogger.Errorf("=====Panic====== %s", string(debug.Stack()))
+		log.SugerLogger.Errorf("=====Panic====== %s", string(debug.Stack()))
 	}
 }
 

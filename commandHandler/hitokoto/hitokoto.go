@@ -9,6 +9,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/httptool"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kevinmatthe/zaplog"
@@ -16,10 +17,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var (
-	zapLogger   = utility.ZapLogger
-	sugerLogger = utility.SugerLogger
-)
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const (
@@ -136,7 +133,7 @@ func GetHitokoto(field ...string) (hitokotoRes RespBody, err error) {
 		},
 	})
 	if err != nil {
-		zapLogger.Error("获取一言失败", zaplog.Error(err))
+		log.ZapLogger.Error("获取一言失败", zaplog.Error(err))
 		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
@@ -145,7 +142,7 @@ func GetHitokoto(field ...string) (hitokotoRes RespBody, err error) {
 	}
 	defer resp.Body.Close()
 	if err = json.Unmarshal(body, &hitokotoRes); err != nil {
-		zapLogger.Error("获取一言失败", zaplog.Error(err))
+		log.ZapLogger.Error("获取一言失败", zaplog.Error(err))
 		return
 	}
 	return

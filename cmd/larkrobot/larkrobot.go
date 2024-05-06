@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/larkcards"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -31,6 +32,10 @@ import (
 var larkClient *lark.Client = lark.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Getenv("LARK_SECRET"))
 
 func uploadPic(ctx context.Context, imageURL string) (key string, err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
+	defer span.End()
+
 	picResp, err := http.Get(imageURL)
 
 	req := larkim.NewCreateImageReqBuilder().
@@ -193,7 +198,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 		maxSingleLineLen = 48
 		maxPageSize      = 9
 	)
-	musicURL, err := neteaseapi.NetEaseGCtx.GetMusicURL(musicID)
+	musicURL, err := neteaseapi.NetEaseGCtx.GetMusicURL(ctx, musicID)
 	if err != nil {
 		log.Println(err)
 		return ""
@@ -256,6 +261,10 @@ func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) 
 }
 
 func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("musicID").String(musicID))
+	defer span.End()
+
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]
 
 	lyric := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
@@ -304,6 +313,7 @@ func webHook() {
 }
 
 func main() {
+	betagovar.BotIdentifier = "LARKROBOT"
 	go longConn()
 	go webHook()
 	select {}

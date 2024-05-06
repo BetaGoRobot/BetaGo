@@ -1,7 +1,10 @@
 package gotify
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestSendMessage(t *testing.T) {
-	SendMessage("", "SourceChannelID: `7485159615915618596`", 5)
+	SendMessage(context.Background(), "", "SourceChannelID: `7485159615915618596`", 5)
 }

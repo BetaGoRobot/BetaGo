@@ -2,10 +2,10 @@ package utility
 
 import (
 	"context"
-	"log"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
@@ -34,7 +34,7 @@ func SendMessageTempAndDelete(targetID, QuoteID, authorID, newMsg string) {
 			},
 		})
 	if err != nil {
-		ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
 	_, err = betagovar.GlobalSession.MessageCreate(
@@ -84,7 +84,7 @@ func SendMessageTemp(targetID, QuoteID, authorID, newMsg string) {
 		},
 	}.BuildMessage()
 	if err != nil {
-		ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
 	betagovar.GlobalSession.MessageCreate(
@@ -127,7 +127,7 @@ func SendMessage(targetID, QuoteID, authorID string, message string) {
 		},
 	}.BuildMessage()
 	if err != nil {
-		ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
 	betagovar.GlobalSession.MessageCreate(
@@ -164,7 +164,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		},
 	}.BuildMessage()
 	if err != nil {
-		ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
 	resp, err := betagovar.GlobalSession.MessageCreate(
@@ -178,7 +178,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		},
 	)
 	if err != nil {
-		log.Println(err)
+		log.ZapLogger.Error("Send msg failed", zaplog.Error(err))
 	}
 	return resp.MsgID
 }
@@ -210,7 +210,7 @@ func SendErrorMessageWithTitle(targetID, QuoteID, authorID, message, title strin
 		},
 	}.BuildMessage()
 	if err != nil {
-		ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
 	betagovar.GlobalSession.MessageCreate(

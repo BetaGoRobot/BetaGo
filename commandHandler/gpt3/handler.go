@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
@@ -25,7 +25,7 @@ var chatCache = cache.New(time.Minute*30, time.Minute*1)
 func init() {
 	go func() {
 		for {
-			utility.ZapLogger.Info("Syncing chat cache to db...")
+			log.ZapLogger.Info("Syncing chat cache to db...")
 			for authorID, messages := range chatCache.Items() {
 				m, err := json.Marshal(messages.Object.([]Message))
 				if err != nil {
@@ -381,7 +381,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		}}
 		m, err := betagovar.GlobalSession.MessageView(quoteID)
 		if err != nil {
-			utility.ZapLogger.Error("MessageView error", zaplog.Error(err))
+			log.ZapLogger.Error("MessageView error", zaplog.Error(err))
 			return
 		}
 
@@ -406,7 +406,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		modules...,
 	)
 	if err != nil {
-		log.Println(err.Error())
+		log.ZapLogger.Error(err.Error())
 	}
 	err = betagovar.GlobalSession.MessageUpdate(&kook.MessageUpdate{
 		MessageUpdateBase: kook.MessageUpdateBase{
@@ -415,7 +415,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		},
 	})
 	if err != nil {
-		log.Println(err.Error())
+		log.ZapLogger.Error(err.Error())
 	}
 }
 

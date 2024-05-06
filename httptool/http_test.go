@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar/env"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
 )
 
@@ -19,10 +20,10 @@ func TestPostWithParamsWithTimestamp(t *testing.T) {
 		},
 	})
 	if err != nil || resp.StatusCode != 200 {
-		zapLogger.Error("登录失败", zaplog.Error(err))
+		log.ZapLogger.Error("登录失败", zaplog.Error(err))
 	}
 	data, _ := ioutil.ReadAll(resp.Body)
-	zapLogger.Error("登录成功", zaplog.Error(err), zaplog.String("data", string(data)))
+	log.ZapLogger.Error("登录成功", zaplog.Error(err), zaplog.String("data", string(data)))
 	resp, err = PostWithTimestamp(
 		RequestInfo{
 			URL:     NetEaseAPIBaseURL + "/login/status",
@@ -31,10 +32,10 @@ func TestPostWithParamsWithTimestamp(t *testing.T) {
 		},
 	)
 	if err != nil || resp.StatusCode != 200 {
-		zapLogger.Error("获取登录状态失败", zaplog.Error(err))
+		log.ZapLogger.Error("获取登录状态失败", zaplog.Error(err))
 	}
 	data, _ = ioutil.ReadAll(resp.Body)
-	zapLogger.Info("获取登录状态成功", zaplog.String("data", string(data)))
+	log.ZapLogger.Info("获取登录状态成功", zaplog.String("data", string(data)))
 }
 
 func TestGet(t *testing.T) {
@@ -43,9 +44,9 @@ func TestGet(t *testing.T) {
 		Params: map[string][]string{},
 	})
 	if err != nil || resp.StatusCode != 200 {
-		zapLogger.Error("获取ip失败", zaplog.Error(err))
+		log.ZapLogger.Error("获取ip失败", zaplog.Error(err))
 	}
 	data, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
-	zapLogger.Info("获取ip成功", zaplog.String("data", string(data)))
+	log.ZapLogger.Info("获取ip成功", zaplog.String("data", string(data)))
 }

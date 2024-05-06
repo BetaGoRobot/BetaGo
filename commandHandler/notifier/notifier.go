@@ -70,7 +70,7 @@ func StartUpMessage(session *kook.Session) (err error) {
 				},
 			},
 		}.BuildMessage()
-		gotify.SendMessage(title, content, 5)
+		gotify.SendMessage(context.Background(), title, content, 5)
 		session.MessageCreate(
 			&kook.MessageCreate{
 				MessageCreateBase: kook.MessageCreateBase{
@@ -161,7 +161,7 @@ func OfflineMessage(session *kook.Session) (err error) {
 			},
 		},
 	}.BuildMessage()
-	gotify.SendMessage(title, content, 5)
+	gotify.SendMessage(context.Background(), title, content, 5)
 	session.MessageCreate(
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{

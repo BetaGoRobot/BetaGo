@@ -15,12 +15,19 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/bytedance/sonic"
 	"github.com/lonelyevil/kook"
 	"github.com/spyzhov/ajson"
 	"go.opentelemetry.io/otel/attribute"
 )
 
 func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickContext) {
+	baseCtx, span := jaeger_client.BetaGoCommandTracer.Start(baseCtx, utility.GetCurrentFunc())
+	s, _ := sonic.MarshalString(ctx)
+	span.SetAttributes(attribute.Key("ClickEvent").String(s))
+	defer span.End()
+
 	if err := betagovar.FlowControl.Top(); err != nil {
 		errorsender.SendErrorInfo(ctx.Extra.TargetID, "", "", err, context.Background())
 		return
@@ -91,7 +98,7 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 			id := sp[len(sp)-1]
 			name := strings.Join(sp[:len(sp)-1], "- ")
 			r.Parent().DeleteKey("src")
-			infoList, err := neteaseapi.NetEaseGCtx.GetMusicURLByID(map[string]string{id: name})
+			infoList, err := neteaseapi.NetEaseGCtx.GetMusicURLByID(baseCtx, map[string]string{id: name})
 			if err != nil {
 				return
 			}
@@ -117,7 +124,7 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 			},
 		})
 		if err != nil {
-			utility.ZapLogger.Error(err.Error())
+			log.ZapLogger.Error(err.Error())
 			return
 		}
 		return

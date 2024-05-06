@@ -14,11 +14,13 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/golang/freetype/truetype"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 	"github.com/lonelyevil/kook/log_adapter/plog"
-	"github.com/phuslu/log"
+	p_log "github.com/phuslu/log"
+
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -58,12 +60,12 @@ func InitGlowSansSCFontType() {
 	fontFile := filepath.Join(betagovar.FontPath, "Microsoft Yahei.ttf")
 	fontBytes, err := ioutil.ReadFile(fontFile)
 	if err != nil {
-		ZapLogger.Info("errot init font", zaplog.Error(err))
+		log.ZapLogger.Info("errot init font", zaplog.Error(err))
 		return
 	}
 	MicrosoftYaHei, err = truetype.Parse(fontBytes)
 	if err != nil {
-		ZapLogger.Info("errot init font", zaplog.Error(err))
+		log.ZapLogger.Info("errot init font", zaplog.Error(err))
 		return
 	}
 }
@@ -144,7 +146,7 @@ func GetUserInfo(userID, guildID string) (userInfo *kook.User, err error) {
 func GetGuildIDFromChannelID(channelID string) (GuildID string) {
 	c, err := betagovar.GlobalSession.ChannelView(channelID)
 	if err != nil {
-		ZapLogger.Error("Error getting guild", zaplog.Error(err))
+		log.ZapLogger.Error("Error getting guild", zaplog.Error(err))
 	}
 	return c.GuildID
 }
@@ -264,9 +266,9 @@ func Reconnect() (err error) {
 		return
 	}
 	time.Sleep(time.Second)
-	betagovar.GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
-		Level:  log.InfoLevel,
-		Writer: &log.ConsoleWriter{},
+	betagovar.GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&p_log.Logger{
+		Level:  p_log.InfoLevel,
+		Writer: &p_log.ConsoleWriter{},
 	}))
 
 	err = betagovar.GlobalSession.Open()
@@ -286,7 +288,7 @@ func Reconnect() (err error) {
 	// 		return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
 	// 	}
 	// }
-	ZapLogger.Info("Reconnecting successfully")
+	log.ZapLogger.Info("Reconnecting successfully")
 	time.Sleep(time.Second * 5)
 	return
 }
@@ -327,7 +329,7 @@ func BuildCardMessage(theme, size, title, quoteID string, span interface{}, modu
 	if quoteID != "" {
 		m, err := betagovar.GlobalSession.MessageView(quoteID)
 		if err != nil {
-			ZapLogger.Error("MessageView Error", zaplog.Error(err))
+			log.ZapLogger.Error("MessageView Error", zaplog.Error(err))
 		}
 		prevCardMessage := make(kook.CardMessage, 0)
 		err = json.UnmarshalFromString(m.Content, &prevCardMessage)

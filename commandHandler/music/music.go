@@ -10,15 +10,11 @@ import (
 	"github.com/BetaGoRobot/BetaGo/qqmusicapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 	"go.opentelemetry.io/otel/attribute"
-)
-
-var (
-	zapLogger   = utility.ZapLogger
-	sugerLogger = utility.SugerLogger
 )
 
 // SearchMusicByRobot  搜索音乐
@@ -39,7 +35,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 	// 使用网易云搜索
 	resNetease, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(ctx, args...)
 	if err != nil {
-		if !neteaseapi.NetEaseGCtx.CheckIfLogin() {
+		if !neteaseapi.NetEaseGCtx.CheckIfLogin(ctx) {
 		}
 		return
 	}
@@ -148,7 +144,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 		}
 		cardStr, err = cardMessage.BuildMessage()
 		if err != nil {
-			zapLogger.Error("构建消息失败", zaplog.Error(err))
+			log.ZapLogger.Error("构建消息失败", zaplog.Error(err))
 			return
 		}
 	} else {

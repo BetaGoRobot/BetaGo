@@ -1,6 +1,7 @@
 package neteaseapi
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -17,7 +18,7 @@ func TestNetEaseContext_getNewCommendMusic(t *testing.T) {
 	os.Setenv("NETEASE_PASSWORD", "heyuheng1.22.3")
 	os.Setenv("NETEASE_PHONE", "18681655914")
 	ctx := &NetEaseContext{}
-	ctx.LoginNetEase()
+	ctx.LoginNetEase(context.Background())
 	ctx.GetNewRecommendMusic()
 }
 
@@ -51,7 +52,7 @@ func TestNetEaseContext_LoginNetEase(t *testing.T) {
 				cookies: tt.fields.cookies,
 				err:     tt.fields.err,
 			}
-			if err := ctx.LoginNetEase(); (err != nil) != tt.wantErr {
+			if err := ctx.LoginNetEase(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("NetEaseContext.LoginNetEase() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

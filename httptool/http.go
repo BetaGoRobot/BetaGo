@@ -11,13 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
-)
-
-var (
-	zapLogger   = utility.ZapLogger
-	sugerLogger = utility.SugerLogger
 )
 
 // HTTP Client variables
@@ -70,15 +65,15 @@ func GetPubIP() (ip string, err error) {
 	})
 	if err != nil || resp.StatusCode != 200 {
 		if err != nil {
-			zapLogger.Error("获取ip失败", zaplog.Error(err))
+			log.ZapLogger.Error("获取ip失败", zaplog.Error(err))
 		} else {
-			zapLogger.Error("获取ip失败", zaplog.Int("StatusCode", resp.StatusCode))
+			log.ZapLogger.Error("获取ip失败", zaplog.Int("StatusCode", resp.StatusCode))
 		}
 	}
 	data, _ := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	ip = string(data)
-	zapLogger.Info("获取ip成功", zaplog.String("data", ip))
+	log.ZapLogger.Info("获取ip成功", zaplog.String("data", ip))
 	return
 }
 
@@ -179,7 +174,7 @@ func PostWithTimestamp(info RequestInfo) (resp *http.Response, err error) {
 
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
-		zapLogger.Error(err.Error())
+		log.ZapLogger.Error("post with timestamp error", zaplog.Error(err))
 		return
 	}
 	return
@@ -213,7 +208,7 @@ func postWithParamsInner(info RequestInfo, client *http.Client) (resp *http.Resp
 	}
 	resp, _ = client.Do(req)
 	if err != nil {
-		zapLogger.Error(err.Error())
+		log.ZapLogger.Error(err.Error())
 		return
 	}
 	return

@@ -1,4 +1,4 @@
-package utility
+package log
 
 import "github.com/kevinmatthe/zaplog"
 
@@ -9,7 +9,7 @@ var (
 )
 
 // InitLogger 初始化日志
-func InitLogger() {
+func init() {
 	if ZapLogger == nil {
 		ZapLogger = zaplog.NewLogger("/data/log/betago")
 	}

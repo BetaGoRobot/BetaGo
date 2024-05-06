@@ -1,15 +1,16 @@
 package manager
 
 import (
+	"context"
 	"os"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/lonelyevil/kook"
 	"github.com/lonelyevil/kook/log_adapter/plog"
-	"github.com/phuslu/log"
+	p_log "github.com/phuslu/log"
 )
 
 // SendMessageToTestChannel  is a async handler for message event
@@ -33,7 +34,7 @@ func ReconnectUsingChan() {
 		case <-betagovar.ReconnectChan:
 			err := Reconnect()
 			if err != nil {
-				gotify.SendMessage("", "Reconnect failed, error is "+err.Error(), 7)
+				gotify.SendMessage(context.Background(), "", "Reconnect failed, error is "+err.Error(), 7)
 			}
 		}
 	}
@@ -46,9 +47,9 @@ func Reconnect() (err error) {
 		return
 	}
 	time.Sleep(time.Second)
-	betagovar.GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&log.Logger{
-		Level:  log.InfoLevel,
-		Writer: &log.ConsoleWriter{},
+	betagovar.GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&p_log.Logger{
+		Level:  p_log.InfoLevel,
+		Writer: &p_log.ConsoleWriter{},
 	}))
 	AddAllHandler()
 	err = betagovar.GlobalSession.Open()
@@ -68,7 +69,7 @@ func Reconnect() (err error) {
 	// 		return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
 	// 	}
 	// }
-	utility.ZapLogger.Info("Reconnecting successfully")
+	log.ZapLogger.Info("Reconnecting successfully")
 	time.Sleep(time.Second * 5)
 	return
 }

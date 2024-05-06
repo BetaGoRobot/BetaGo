@@ -7,16 +7,13 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 )
 
 // var  zapLogger = zaplog.New("errorsender")
-var (
-	ZapLogger   = utility.ZapLogger
-	SugerLogger = utility.SugerLogger
-)
 
 // SendErrorInfo 发送错误信息
 //
@@ -84,7 +81,7 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx cont
 	}
 
 	if err != nil {
-		ZapLogger.Error("SendErrorInfo", zaplog.Error(sourceErr))
+		log.ZapLogger.Error("SendErrorInfo", zaplog.Error(sourceErr))
 		return
 	}
 	betagovar.GlobalSession.MessageCreate(&kook.MessageCreate{
@@ -96,5 +93,5 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx cont
 		},
 		// TempTargetID: authorID,
 	})
-	gotify.SendMessage(emoji.Warning.String()+"CommandError", sourceErr.Error()+"\n"+"[追踪链接](https://jaeger.kevinmatt.top/trace/"+span.SpanContext().TraceID().String()+")", 6)
+	gotify.SendMessage(ctx, emoji.Warning.String()+"CommandError", sourceErr.Error()+"\n"+"[追踪链接](https://jaeger.kevinmatt.top/trace/"+span.SpanContext().TraceID().String()+")", 6)
 }

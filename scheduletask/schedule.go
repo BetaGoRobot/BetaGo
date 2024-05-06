@@ -16,6 +16,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
+
 	"github.com/lonelyevil/kook"
 	"github.com/patrickmn/go-cache"
 )
@@ -199,9 +201,9 @@ func selfCheckInner() {
 	time.Sleep(time.Second * 1)
 	select {
 	case <-betagovar.SelfCheckChan:
-		utility.ZapLogger.Info("Self check successful")
+		log.ZapLogger.Info("Self check successful")
 	default:
-		gotify.SendMessage("", "Self check failed, reconnecting...", 7)
+		gotify.SendMessage(context.Background(), "", "Self check failed, reconnecting...", 7)
 		betagovar.ReconnectChan <- "reconnect"
 	}
 }

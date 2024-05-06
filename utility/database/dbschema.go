@@ -1,12 +1,12 @@
 package database
 
 import (
-	"log"
 	"os"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -75,7 +75,7 @@ var (
 func init() {
 	// try get db conn
 	if GetDbConnection() == nil {
-		utility.ZapLogger.Error("get db connection error")
+		log.ZapLogger.Error("get db connection error")
 		os.Exit(-1)
 	}
 
@@ -83,12 +83,12 @@ func init() {
 	db := GetDbConnection()
 	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLogExt{}, &AlertList{}, &ChatContextRecord{}, &ChatRecordLog{}, &DynamicConfig{})
 	if err != nil {
-		utility.ZapLogger.Error("init", zaplog.Error(err))
+		log.ZapLogger.Error("init", zaplog.Error(err))
 	}
 	utility.GetReceieverEmailList(betagovar.GlobalDBConn)
 	sqlDb, err := db.DB()
 	if err != nil {
-		log.Panicln(" get sql db error")
+		log.ZapLogger.Panic(" get sql db error")
 	}
 	sqlDb.SetMaxIdleConns(2)
 	sqlDb.SetMaxOpenConns(5)
@@ -123,7 +123,7 @@ func GetDbConnection() *gorm.DB {
 		},
 	})
 	if err != nil {
-		utility.ZapLogger.Error("get db connection error, will try local version", zaplog.Error(err))
+		log.ZapLogger.Error("get db connection error, will try local version", zaplog.Error(err))
 		return nil
 	}
 	betagovar.GlobalDBConn = db

@@ -1,16 +1,19 @@
 package gotify
 
 import (
-	"log"
+	"context"
 	"net/http"
 	"net/url"
 	"os"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/gotify/go-api-client/v2/auth"
 	"github.com/gotify/go-api-client/v2/client"
 	"github.com/gotify/go-api-client/v2/client/message"
 	"github.com/gotify/go-api-client/v2/gotify"
 	"github.com/gotify/go-api-client/v2/models"
+	"github.com/kevinmatthe/zaplog"
 )
 
 var (
@@ -28,10 +31,11 @@ func init() {
 	DefaultGotifyClient = gotify.NewClient(gotifyURLParsed, &http.Client{})
 }
 
-func SendMessage(title, msg string, priority int) {
+func SendMessage(ctx context.Context, title, msg string, priority int) {
 	if title == "" {
 		title = "BetaGo Notification"
 	}
+	title = "[" + betagovar.BotIdentifier + "]" + title
 	params := message.NewCreateMessageParams()
 	params.Body = &models.MessageExternal{
 		Title:    title,
@@ -44,8 +48,8 @@ func SendMessage(title, msg string, priority int) {
 
 	_, err := DefaultGotifyClient.Message.CreateMessage(params, tokenParsed)
 	if err != nil {
-		log.Panicf("Could not send message %v", err)
+		log.ZapLogger.Error("Could not send message %v", zaplog.Error(err))
 		return
 	}
-	log.Println("Message Sent!")
+	log.ZapLogger.Info("Gotify Message Sent!")
 }
