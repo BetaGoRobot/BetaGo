@@ -247,13 +247,22 @@ func (neteaseCtx *NetEaseContext) LoginNetEase() (err error) {
 	// !Step2:未登陆，启动登陆
 	resp, err = httptool.PostWithTimestamp(
 		httptool.RequestInfo{
-			URL: NetEaseAPIBaseURL + "/login/cellphone",
+			URL: NetEaseAPIBaseURL + "/login",
 			Params: map[string][]string{
-				"phone":    {os.Getenv("NETEASE_PHONE")},
+				"email":    {os.Getenv("NETEASE_EMAIL")},
 				"password": {os.Getenv("NETEASE_PASSWORD")},
 			},
 		},
 	)
+	// resp, err = httptool.PostWithTimestamp(
+	// 	httptool.RequestInfo{
+	// 		URL: NetEaseAPIBaseURL + "/login/cellphone",
+	// 		Params: map[string][]string{
+	// 			"phone":    {os.Getenv("NETEASE_PHONE")},
+	// 			"password": {os.Getenv("NETEASE_PASSWORD")},
+	// 		},
+	// 	},
+	// )
 	if err != nil || resp.StatusCode != 200 {
 		if err == nil {
 			err = fmt.Errorf("LoginNetEase error, StatusCode %d", resp.StatusCode)
