@@ -421,10 +421,17 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, IDName ma
 	sonic.Unmarshal(body, &music)
 	for index := range music.Data {
 		ID := strconv.Itoa(music.Data[index].ID)
+		url := music.Data[index].URL
+		u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic-music", music.Data[index].URL, ID+filepath.Ext(music.Data[index].URL))
+		if err != nil {
+			log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
+		} else {
+			url = u.User.String()
+		}
 		InfoList = append(InfoList, MusicInfo{
 			ID:   ID,
 			Name: IDName[ID],
-			URL:  music.Data[index].URL,
+			URL:  url,
 		})
 	}
 	return
@@ -448,7 +455,12 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ctx context.Context, ID string) (u
 	if err != nil {
 		return "", err
 	}
-	return music.Data[0].URL, err
+	url = music.Data[0].URL
+	u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic-music", music.Data[0].URL, ID+filepath.Ext(music.Data[0].URL))
+	if err != nil {
+		url = u.User.String()
+	}
+	return url, err
 }
 
 func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, songID string) (musicDetail *MusicDetail) {
