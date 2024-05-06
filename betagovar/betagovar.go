@@ -13,7 +13,7 @@ import (
 // NotifierChanID 发送消息的频道ID
 var (
 	NotifierChanID = "2472013302648680"
-	BotIdentifier  = "BetaGo"
+	BotIdentifier  = os.Getenv("BOT_IDENTIFY")
 )
 
 const (

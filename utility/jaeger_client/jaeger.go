@@ -16,7 +16,6 @@ func init() {
 }
 
 const (
-	service     = "BetaGo"
 	environment = "production"
 	id          = 1
 )
@@ -55,7 +54,7 @@ func tracerProvider(url string) (*tracesdk.TracerProvider, error) {
 		// Record information about this application in a Resource.
 		tracesdk.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceName(service),
+			semconv.ServiceName(betagovar.BotIdentifier),
 			attribute.String("environment", environment),
 			attribute.Int64("ID", id),
 		)),

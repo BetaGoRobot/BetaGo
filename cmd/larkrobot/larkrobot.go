@@ -12,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/larkcards"
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -313,7 +312,6 @@ func webHook() {
 }
 
 func main() {
-	betagovar.BotIdentifier = "LARKROBOT"
 	go longConn()
 	go webHook()
 	select {}
