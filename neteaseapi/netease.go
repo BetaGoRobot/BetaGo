@@ -3,7 +3,6 @@ package neteaseapi
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -44,10 +43,10 @@ func init() {
 	err := NetEaseGCtx.LoginNetEase(startUpCtx)
 	if err != nil {
 		log.ZapLogger.Info("error in init loginNetease", zaplog.Error(err))
-	}
-	err = NetEaseGCtx.LoginNetEaseQR(startUpCtx)
-	if err != nil {
-		log.ZapLogger.Info("error in init loginNeteaseQR", zaplog.Error(err))
+		err = NetEaseGCtx.LoginNetEaseQR(startUpCtx)
+		if err != nil {
+			log.ZapLogger.Info("error in init loginNeteaseQR", zaplog.Error(err))
+		}
 	}
 
 	go func() {
@@ -86,9 +85,27 @@ func (neteaseCtx *NetEaseContext) RefreshLogin(ctx context.Context) error {
 		log.SugerLogger.Errorf("%s\n", string(resp.Body()))
 		return err
 	}
-	neteaseCtx.cookies = make([]*http.Cookie, 0)
-	neteaseCtx.cookies = resp.Cookies()
-	neteaseCtx.SaveCookie(ctx)
+	respMap := make(map[string]interface{})
+	err = sonic.Unmarshal(resp.Body(), &resp)
+	if err != nil {
+		return err
+	}
+
+	if code, ok := respMap["code"]; ok {
+		if code != 200 {
+			return fmt.Errorf("RefreshLogin error, with msg %v", respMap["msg"])
+		}
+	}
+
+	if neteaseCtx.cookies == nil {
+		neteaseCtx.cookies = make([]*http.Cookie, 0)
+	}
+	newCookies := resp.Cookies()
+	if len(newCookies) > 0 {
+		neteaseCtx.cookies = newCookies
+		neteaseCtx.SaveCookie(ctx)
+	}
+
 	return err
 }
 
@@ -326,21 +343,27 @@ func (neteaseCtx *NetEaseContext) TryGetLastCookie(ctx context.Context) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
-	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
+	f, err := os.Open("/data/last_cookie.json")
 	if err != nil {
 		log.ZapLogger.Info("error in open last_cookie.json", zaplog.Error(err))
 		return
 	}
 	defer f.Close()
 	cookieData := make([]byte, 0)
-	cookieData, err = ioutil.ReadAll(f)
+	cookieData, err = io.ReadAll(f)
 	if len(cookieData) == 0 {
 		log.ZapLogger.Info("No cookieData, skip json marshal")
 		return
 	}
-	if err = sonic.Unmarshal(cookieData, &neteaseCtx.cookies); err != nil {
+	cookie := make(map[string]string)
+
+	if err = sonic.Unmarshal(cookieData, &cookie); err != nil {
 		log.ZapLogger.Info("error in unmarshal cookieData", zaplog.Error(err))
 	}
+	for k, v := range cookie {
+		neteaseCtx.cookies = append(neteaseCtx.cookies, &http.Cookie{Name: k, Value: v})
+	}
+	neteaseCtx.loginType = "qr"
 }
 
 // SaveCookie 保存Cookie
@@ -349,14 +372,24 @@ func (neteaseCtx *NetEaseContext) TryGetLastCookie(ctx context.Context) {
 func (neteaseCtx *NetEaseContext) SaveCookie(ctx context.Context) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-
+	if neteaseCtx.cookies == nil && len(neteaseCtx.cookies) == 0 {
+		return
+	}
 	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		log.ZapLogger.Info("error in open last_cookie.json", zaplog.Error(err))
 		return
 	}
 	defer f.Close()
-	cookieData, _ := json.Marshal(neteaseCtx.cookies)
+
+	toWriteMap := make(map[string]string)
+	for _, cookie := range neteaseCtx.cookies {
+		toWriteMap[cookie.Name] = cookie.Value
+	}
+	cookieData, err := sonic.Marshal(toWriteMap)
+	if err != nil {
+		log.ZapLogger.Error(err.Error())
+	}
 	f.Write(cookieData)
 }
 
