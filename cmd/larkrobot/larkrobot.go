@@ -58,8 +58,7 @@ func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg 
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
 
-	msg = strings.Split(msg, " ")[1]
-	res, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(ctx, msg)
+	res, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(ctx, strings.Split(msg, " ")[1:]...)
 	if err != nil {
 		return err
 	}
