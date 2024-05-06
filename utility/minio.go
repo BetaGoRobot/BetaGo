@@ -101,7 +101,6 @@ func MinioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.
 
 	_, err = minioClient.StatObject(ctx, bucketName, ObjName, minio.StatObjectOptions{})
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
 		return
 	}
 	return PresignObj(ctx, bucketName, ObjName)
