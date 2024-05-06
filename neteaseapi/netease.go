@@ -459,7 +459,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, IDName ma
 		if err != nil {
 			log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 		} else {
-			url = u.User.String()
+			url = u.String()
 		}
 		InfoList = append(InfoList, MusicInfo{
 			ID:   ID,
@@ -489,11 +489,11 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ctx context.Context, ID string) (u
 		return "", err
 	}
 	url = music.Data[0].URL
-	u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic-music", music.Data[0].URL, ID+filepath.Ext(music.Data[0].URL))
+	u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic-music", url, ID+filepath.Ext(url))
 	if err != nil {
 		log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 	} else {
-		url = u.User.String()
+		url = u.String()
 	}
 	return url, err
 }

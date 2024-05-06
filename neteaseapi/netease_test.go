@@ -58,3 +58,7 @@ func TestNetEaseContext_LoginNetEase(t *testing.T) {
 		})
 	}
 }
+
+func TestNetEaseContext_GetMusicURL(t *testing.T) {
+	NetEaseGCtx.GetMusicURL(context.Background(), "423228325")
+}
