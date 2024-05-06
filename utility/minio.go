@@ -31,7 +31,7 @@ func init() {
 	endPoint = "minioapi.kmhomelab.cn"
 	useSSL = true
 	if betagovar.IsCluster {
-		endPoint = "http://kubernetes.default:29000"
+		endPoint = "kubernetes.default:29000"
 		useSSL = false
 	}
 	// }
