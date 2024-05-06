@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/betagovar"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -29,6 +30,10 @@ func init() {
 	// } else {
 	endPoint = "minioapi.kmhomelab.cn"
 	useSSL = true
+	if betagovar.IsCluster {
+		endPoint = "http://kubernetes.default:29000"
+		useSSL = false
+	}
 	// }
 	minioClient, err = minio.New(endPoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
