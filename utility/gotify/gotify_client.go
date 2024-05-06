@@ -35,7 +35,7 @@ func init() {
 func SendMessage(ctx context.Context, title, msg string, priority int) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, "SendMessage")
 	defer span.End()
-	log.ZapLogger.Info("SendMessage...", zaplog.String("spanid", span.SpanContext().SpanID().String()))
+	log.ZapLogger.Info("SendMessage...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
 	if title == "" {
 		title = "BetaGo Notification"

@@ -76,7 +76,7 @@ func init() {
 func (neteaseCtx *NetEaseContext) RefreshLogin(ctx context.Context) error {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-	log.ZapLogger.Info("RefreshLogin...", zaplog.String("spanid", span.SpanContext().SpanID().String()))
+	log.ZapLogger.Info("RefreshLogin...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
 	resp, err := betagovar.HttpClient.R().
 		SetCookies(neteaseCtx.cookies).
@@ -95,7 +95,7 @@ func (neteaseCtx *NetEaseContext) RefreshLogin(ctx context.Context) error {
 func (neteaseCtx *NetEaseContext) getUniKey(ctx context.Context) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-	log.ZapLogger.Info("getUniKey...", zaplog.String("spanid", span.SpanContext().SpanID().String()))
+	log.ZapLogger.Info("getUniKey...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
@@ -121,7 +121,7 @@ func (neteaseCtx *NetEaseContext) getUniKey(ctx context.Context) (err error) {
 func (neteaseCtx *NetEaseContext) getQRBase64(ctx context.Context) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-	log.ZapLogger.Info("getQRBase64...", zaplog.String("spanid", span.SpanContext().SpanID().String()))
+	log.ZapLogger.Info("getQRBase64...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
 	resp, err := httptool.PostWithTimestamp(
 		httptool.RequestInfo{
@@ -203,7 +203,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
-	log.ZapLogger.Info("LoginNetEaseQR...", zaplog.String("spanid", span.SpanContext().SpanID().String()))
+	log.ZapLogger.Info("LoginNetEaseQR...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 	neteaseCtx.getUniKey(ctx)
 
 	neteaseCtx.getQRBase64(ctx)
@@ -250,7 +250,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEase(ctx context.Context) (err error) 
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
-	log.ZapLogger.Info("LoginNetEase...", zaplog.String("spanid", span.SpanContext().SpanID().String()))
+	log.ZapLogger.Info("LoginNetEase...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 	if len(neteaseCtx.cookies) > 0 {
 		return
 	}
@@ -295,7 +295,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEase(ctx context.Context) (err error) 
 func (neteaseCtx *NetEaseContext) CheckIfLogin(ctx context.Context) bool {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-	log.ZapLogger.Info("ChekIfLogin...", zaplog.String("spanid", span.SpanContext().SpanID().String()))
+	log.ZapLogger.Info("ChekIfLogin...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
 	resp, err := betagovar.HttpClient.R().
 		SetCookies(neteaseCtx.cookies).
