@@ -3,6 +3,7 @@ package music
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
@@ -63,7 +64,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 			}
 			modulesNetese = append(modulesNetese, kook.CardMessageFile{
 				Type:  kook.CardMessageFileTypeAudio,
-				Src:   song.SongURL,
+				Src:   strings.Replace(song.SongURL, "https", "http", 1),
 				Title: song.Name + " - " + song.ArtistName + " - " + song.ID,
 				Cover: song.PicURL,
 			})
@@ -111,7 +112,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 			}
 			modulesQQ = append(modulesQQ, kook.CardMessageFile{
 				Type:  kook.CardMessageFileTypeAudio,
-				Src:   song.SongURL,
+				Src:   strings.Replace(song.SongURL, "https", "http", 1),
 				Title: song.Name + " - " + song.ArtistName,
 				Cover: song.PicURL,
 			})

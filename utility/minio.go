@@ -46,14 +46,13 @@ func init() {
 	}
 }
 
-func MinioUploadFile(ctx context.Context, bucketName, filePath, objName string) (err error) {
+func MinioUploadFile(ctx context.Context, bucketName, filePath, objName, contentType string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("MinioUploadFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
 	// Upload the test file
 	// Change the value of filePath if the file is in another location
-	contentType := "application/octet-stream"
 
 	// Upload the test file with FPutObject
 	info, err := minioClient.FPutObject(ctx, bucketName, objName, filePath, minio.PutObjectOptions{ContentType: contentType})
@@ -106,7 +105,7 @@ func MinioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.
 	return PresignObj(ctx, bucketName, ObjName)
 }
 
-func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName string) (u *url.URL, err error) {
+func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName, contentType string) (u *url.URL, err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("MinioUploadFileFromURL...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
@@ -132,7 +131,7 @@ func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName st
 		return
 	}
 
-	err = MinioUploadFile(ctx, bucketName, "/tmp/"+objName, objName)
+	err = MinioUploadFile(ctx, bucketName, "/tmp/"+objName, objName, contentType)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 		return

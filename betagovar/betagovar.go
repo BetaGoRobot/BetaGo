@@ -16,6 +16,21 @@ var (
 	BotIdentifier  = os.Getenv("BOT_IDENTIFY")
 )
 
+// Database
+const (
+	DBHostCompose = "host=pg.kmhomelab.cn"
+	// DBHostCluster k8s的PGHost
+	DBHostCluster = "host=kubernetes.default"
+	// DBHostTest 本地测试的PGHost
+	DBHostTest = "host=pg.kmhomelab.cn"
+)
+
+// netease
+
+const (
+	NetEaseAPIDomainCompose = "http://n"
+)
+
 const (
 	TimeFormat = "2006-01-02T15:04:05"
 	// BetaGoUpdateChanID  发送更新消息的频道ID
@@ -33,11 +48,6 @@ const (
 	// PublicIPURL 获取公网IP的URL
 	PublicIPURL = "http://ifconfig.me"
 	// DBHostCompose DockerCompose的PGHost
-	DBHostCompose = "host=betago-pg"
-	// DBHostCluster k8s的PGHost
-	DBHostCluster = "host=kubernetes.default"
-	// DBHostTest 本地测试的PGHost
-	DBHostTest = "host=192.168.31.74"
 
 	// SelfCheckMessage 自我健康检查
 	SelfCheckMessage = "self check message"

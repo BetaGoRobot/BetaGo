@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -108,13 +109,13 @@ func GetDbConnection() *gorm.DB {
 	if betagovar.GlobalDBConn != nil {
 		return betagovar.GlobalDBConn
 	}
-	var dsn string = " user=postgres password=heyuheng1.22.3 dbname=betago port=5432 sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
+	var dsn string = " user=postgres password=heyuheng1.22.3 dbname=betago port=%s sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
 	if betagovar.IsTest {
-		dsn = betagovar.DBHostTest + dsn
+		dsn = betagovar.DBHostTest + fmt.Sprintf(dsn, "3033")
 	} else if betagovar.IsCluster {
-		dsn = betagovar.DBHostCluster + dsn
+		dsn = betagovar.DBHostCluster + fmt.Sprintf(dsn, "5432")
 	} else {
-		dsn = betagovar.DBHostCompose + dsn
+		dsn = betagovar.DBHostCompose + fmt.Sprintf(dsn, "3033")
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{

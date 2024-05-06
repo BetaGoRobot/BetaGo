@@ -454,17 +454,17 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, IDName ma
 	sonic.Unmarshal(body, &music)
 	for index := range music.Data {
 		ID := strconv.Itoa(music.Data[index].ID)
-		url := music.Data[index].URL
-		u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic-music", music.Data[index].URL, ID+filepath.Ext(music.Data[index].URL))
+		URL := music.Data[index].URL
+		u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic", music.Data[index].URL, ID+filepath.Ext(music.Data[index].URL), "audio/mpeg;charset=UTF-8")
 		if err != nil {
 			log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 		} else {
-			url = u.String()
+			URL = u.String()
 		}
 		InfoList = append(InfoList, MusicInfo{
 			ID:   ID,
 			Name: IDName[ID],
-			URL:  url,
+			URL:  URL,
 		})
 	}
 	return
@@ -488,14 +488,14 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ctx context.Context, ID string) (u
 	if err != nil {
 		return "", err
 	}
-	url = music.Data[0].URL
-	u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic-music", url, ID+filepath.Ext(url))
+	URL := music.Data[0].URL
+	u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic", URL, ID+filepath.Ext(URL), "audio/mpeg;charset=UTF-8")
 	if err != nil {
 		log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 	} else {
 		url = u.String()
 	}
-	return url, err
+	return URL, err
 }
 
 func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, songID string) (musicDetail *MusicDetail) {
