@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/gotify/go-api-client/v2/auth"
 	"github.com/gotify/go-api-client/v2/client"
@@ -32,6 +33,10 @@ func init() {
 }
 
 func SendMessage(ctx context.Context, title, msg string, priority int) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, "SendMessage")
+	defer span.End()
+	log.ZapLogger.Info("SendMessage...", zaplog.String("spanid", span.SpanContext().SpanID().String()))
+
 	if title == "" {
 		title = "BetaGo Notification"
 	}

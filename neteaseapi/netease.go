@@ -185,9 +185,9 @@ func (neteaseCtx *NetEaseContext) checkQRStatus(ctx context.Context) (err error)
 			case 803:
 				log.ZapLogger.Info("登陆成功！")
 				neteaseCtx.cookies = resp.Cookies()
-				neteaseCtx.SaveCookie(neteaseCtx)
+				neteaseCtx.SaveCookie(ctx)
 				neteaseCtx.loginType = "qr"
-				gotify.SendMessage(neteaseCtx, "网易云登录", "登陆成功！", 7)
+				gotify.SendMessage(ctx, "网易云登录", "登陆成功！", 7)
 				return nil
 			}
 		}
@@ -211,7 +211,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 	if err != nil {
 		return err
 	}
-	gotify.SendMessage(neteaseCtx, "网易云登录", fmt.Sprintf("![QRCode](%s)", linkURL), 7)
+	gotify.SendMessage(ctx, "网易云登录", fmt.Sprintf("![QRCode](%s)", linkURL), 7)
 	go neteaseCtx.checkQRStatus(ctx)
 	return
 }

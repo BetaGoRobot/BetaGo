@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
@@ -301,18 +302,19 @@ func GetFuncFromInstance(ctxFunc interface{}) string {
 	return r[len(r)-1]
 }
 
-var pcCache = make(map[uintptr]string)
+var pcCache = &sync.Map{}
 
 // GetCurrentFunc 1
 //
 //	@return string
 func GetCurrentFunc() string {
 	pc, _, _, _ := runtime.Caller(1)
-	if name, ok := pcCache[pc]; ok {
-		return name
+	if name, ok := pcCache.Load(pc); ok {
+		return name.(string)
 	}
-	pcCache[pc] = runtime.FuncForPC(pc).Name()
-	return pcCache[pc]
+
+	name, _ := pcCache.LoadOrStore(pc, runtime.FuncForPC(pc).Name())
+	return name.(string)
 }
 
 // BuildCardMessage 1
