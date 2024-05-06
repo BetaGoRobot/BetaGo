@@ -493,7 +493,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ctx context.Context, ID string) (u
 	if err != nil {
 		log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 	} else {
-		url = u.String()
+		URL = u.String()
 	}
 	return URL, err
 }
