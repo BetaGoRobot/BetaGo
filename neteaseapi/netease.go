@@ -491,6 +491,8 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ctx context.Context, ID string) (u
 	url = music.Data[0].URL
 	u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic-music", music.Data[0].URL, ID+filepath.Ext(music.Data[0].URL))
 	if err != nil {
+		log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
+	} else {
 		url = u.User.String()
 	}
 	return url, err
