@@ -25,6 +25,10 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
+var (
+	NETEASE_EMAIL    = os.Getenv("NETEASE_EMAIL")
+	NETEASE_PASSWORD = os.Getenv("NETEASE_PASSWORD")
+)
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 const netEaseQRTmpFile = "/data/tmp"
@@ -233,7 +237,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEase() (err error) {
 	if len(neteaseCtx.cookies) > 0 {
 		return
 	}
-	if phoneNum, password := os.Getenv("NETEASE_PHONE"), os.Getenv("NETEASE_PASSWORD"); phoneNum == "" && password == "" {
+	if phoneNum, password := os.Getenv("NETEASE_EMAIL"), NETEASE_PASSWORD; phoneNum == "" && password == "" {
 		log.Println("Empty NetEase account and password")
 		return
 	}
@@ -250,7 +254,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEase() (err error) {
 			URL: NetEaseAPIBaseURL + "/login",
 			Params: map[string][]string{
 				"email":    {os.Getenv("NETEASE_EMAIL")},
-				"password": {os.Getenv("NETEASE_PASSWORD")},
+				"password": {NETEASE_PASSWORD},
 			},
 		},
 	)
@@ -259,7 +263,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEase() (err error) {
 	// 		URL: NetEaseAPIBaseURL + "/login/cellphone",
 	// 		Params: map[string][]string{
 	// 			"phone":    {os.Getenv("NETEASE_PHONE")},
-	// 			"password": {os.Getenv("NETEASE_PASSWORD")},
+	// 			"password": {NETEASE_PASSWORD},
 	// 		},
 	// 	},
 	// )

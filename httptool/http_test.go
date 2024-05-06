@@ -2,9 +2,9 @@ package httptool
 
 import (
 	"io/ioutil"
-	"os"
 	"testing"
 
+	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/kevinmatthe/zaplog"
 )
 
@@ -14,8 +14,8 @@ func TestPostWithParamsWithTimestamp(t *testing.T) {
 	resp, err := PostWithTimestamp(RequestInfo{
 		URL: NetEaseAPIBaseURL + "/login/cellphone",
 		Params: map[string][]string{
-			"phone":    {os.Getenv("NETEASE_PHONE")},
-			"password": {os.Getenv("NETEASE_PASSWORD")},
+			"email":    {neteaseapi.NETEASE_EMAIL},
+			"password": {neteaseapi.NETEASE_PASSWORD},
 		},
 	})
 	if err != nil || resp.StatusCode != 200 {
