@@ -455,11 +455,17 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, IDName ma
 	for index := range music.Data {
 		ID := strconv.Itoa(music.Data[index].ID)
 		URL := music.Data[index].URL
-		u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic", music.Data[index].URL, ID+filepath.Ext(music.Data[index].URL), "audio/mpeg;charset=UTF-8")
+		musicUrl, err := utility.MinioUploadFileFromURL(
+			ctx,
+			"cloudmusic",
+			music.Data[index].URL,
+			"music/"+ID+filepath.Ext(music.Data[index].URL),
+			"audio/mpeg;charset=UTF-8",
+		)
 		if err != nil {
 			log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 		} else {
-			URL = u.String()
+			URL = musicUrl.String()
 		}
 		InfoList = append(InfoList, MusicInfo{
 			ID:   ID,
@@ -489,7 +495,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ctx context.Context, ID string) (u
 		return "", err
 	}
 	URL := music.Data[0].URL
-	u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic", URL, ID+filepath.Ext(URL), "audio/mpeg;charset=UTF-8")
+	u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic", URL, "music/"+ID+filepath.Ext(URL), "audio/mpeg;charset=UTF-8")
 	if err != nil {
 		log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 	} else {
@@ -498,15 +504,15 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ctx context.Context, ID string) (u
 	return URL, err
 }
 
-func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, songID string) (musicDetail *MusicDetail) {
+func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, musicID string) (musicDetail *MusicDetail) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
-	span.SetAttributes(attribute.Key("songID").String(songID))
+	span.SetAttributes(attribute.Key("songID").String(musicID))
 	defer span.End()
 
 	resp, err := betagovar.HttpClient.R().
 		SetFormDataFromValues(
 			map[string][]string{
-				"ids": {songID},
+				"ids": {musicID},
 			},
 		).
 		SetCookies(neteaseCtx.cookies).
@@ -523,10 +529,23 @@ func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, songID string) 
 	if len(musicDetail.Songs) == 0 {
 		return nil
 	}
+	for _, song := range musicDetail.Songs {
+		picURL := song.Al.PicURL
+		_, err = utility.MinioUploadFileFromURL(
+			ctx,
+			"cloudmusic",
+			picURL,
+			"picture/"+musicID+filepath.Ext(picURL),
+			"image/jpg",
+		)
+		if err != nil {
+			log.ZapLogger.Error(err.Error())
+		}
+	}
 	return
 }
 
-func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) (lyrics string) {
+func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) (lyrics string, lyricsURL string) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("songID").String(songID))
 	defer span.End()
@@ -548,7 +567,24 @@ func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) 
 	if err != nil {
 		log.ZapLogger.Info(err.Error())
 	}
-	return searchLyrics.Lrc.Lyric
+	// lyricJson, err := utility.ExtractLyrics(searchLyrics.Lrc.Lyric)
+	// if err != nil {
+	// 	log.ZapLogger.Warn("extract lyrics error", zaplog.Error(err))
+	// }
+	// lyricJson, err := sonic.MarshalString(map[string]interface{}{"lrc": map[string]interface{}{
+	// 	"lyric": searchLyrics.Lrc.Lyric,
+	// }})
+	lyricJson := string(resp.Body())
+	if err != nil {
+		log.ZapLogger.Error("marshal lyrics error", zaplog.Error(err))
+	}
+	l, err := utility.MinioUploadTextFile(ctx, "cloudmusic", lyricJson, "lyrics/"+songID+".json", "text/plain")
+	if err != nil {
+		log.ZapLogger.Error("upload lyrics failed", zaplog.Error(err))
+		return
+	}
+
+	return searchLyrics.Lrc.Lyric, l.String()
 }
 
 // SearchMusicByKeyWord 通过关键字搜索歌曲

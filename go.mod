@@ -15,6 +15,7 @@ replace (
 require (
 	github.com/bytedance/sonic v1.11.6
 	github.com/carlmjohnson/requests v0.23.5
+	github.com/dlclark/regexp2 v1.11.0
 	github.com/enescakir/emoji v1.0.0
 	github.com/fasthttp/router v1.4.22
 	github.com/go-resty/resty/v2 v2.11.0

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"sort"
@@ -16,6 +15,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/kevinmatthe/zaplog"
+
 	"github.com/bytedance/sonic"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkcard "github.com/larksuite/oapi-sdk-go/v3/card"
@@ -30,7 +32,7 @@ import (
 
 var larkClient *lark.Client = lark.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Getenv("LARK_SECRET"))
 
-func uploadPic(ctx context.Context, imageURL string) (key string, err error) {
+func uploadPic2Lark(ctx context.Context, imageURL, musicID string, uploadOSS bool) (key string, ossURL string, err error) { // also minio
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
 	defer span.End()
@@ -47,10 +49,21 @@ func uploadPic(ctx context.Context, imageURL string) (key string, err error) {
 		Build()
 	resp, err := larkClient.Im.Image.Create(ctx, req)
 	if err != nil {
-		log.Println(err)
+		log.ZapLogger.Error(err.Error())
 		return
 	}
-	return *resp.Data.ImageKey, err
+	if uploadOSS {
+		u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic", imageURL, "picture/"+*resp.Data.ImageKey, "image/jpeg")
+		if err != nil {
+			log.ZapLogger.Warn("upload pic to minio error", zaplog.String("imageURL", imageURL), zaplog.String("imageKey", *resp.Data.ImageKey))
+			err = nil
+		}
+		if u != nil {
+			ossURL = u.String()
+		}
+	}
+
+	return *resp.Data.ImageKey, ossURL, err
 }
 
 func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg string) (err error) {
@@ -77,7 +90,7 @@ func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg 
 		for i, r := range res {
 			wg.Add(1)
 			go func(index int, res neteaseapi.SearchMusicRes) {
-				imageKey, err := uploadPic(ctx, res.PicURL)
+				imageKey, _, err := uploadPic2Lark(ctx, res.PicURL, r.ID, false)
 				if err != nil {
 					return
 				}
@@ -198,22 +211,33 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 	)
 	musicURL, err := neteaseapi.NetEaseGCtx.GetMusicURL(ctx, musicID)
 	if err != nil {
-		log.Println(err)
+		log.ZapLogger.Error(err.Error())
 		return ""
 	}
 
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]
 	picURL := songDetail.Al.PicURL
-	imageKey, err := uploadPic(ctx, picURL)
+	imageKey, ossURL, err := uploadPic2Lark(ctx, picURL, musicID, true)
 	if err != nil {
-		log.Println(err)
+		log.ZapLogger.Error(err.Error())
 		return ""
 	}
-	lyric := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
-	lyric = larkcards.TrimLyrics(lyric)
+
+	lyrics, lyricsURL := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
+	lyrics = larkcards.TrimLyrics(lyrics)
+
+	artistNameLissst := make([]map[string]string, 0)
+	for _, ar := range songDetail.Ar {
+		artistNameLissst = append(artistNameLissst, map[string]string{"name": ar.Name})
+	}
+	artistJSON, err := sonic.MarshalString(artistNameLissst)
+	if err != nil {
+		log.ZapLogger.Error(err.Error())
+	}
+	lyricsURL = utility.BuildURL(lyricsURL, musicURL, ossURL, songDetail.Al.Name, songDetail.Name, artistJSON, songDetail.Dt)
 	// eg: page = 1
 	quotaRemain := maxPageSize
-	lyricList := strings.Split(lyric, "\n")
+	lyricList := strings.Split(lyrics, "\n")
 	newList := make([]string, 0)
 	curPage := 1
 	for _, l := range lyricList {
@@ -233,10 +257,10 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 		}
 	}
 
-	lyric = strings.Join(newList, "\n")
+	lyrics = strings.Join(newList, "\n")
 
-	lyric = strings.ReplaceAll(lyric, "\n", "\n\n")
-	cardStr := larkcards.GenerateMusicCardByStruct(ctx, imageKey, songDetail.Name, songDetail.Ar[0].Name, musicURL, lyric, musicID)
+	lyrics = strings.ReplaceAll(lyrics, "\n", "\n\n")
+	cardStr := larkcards.GenerateMusicCardByStruct(ctx, imageKey, songDetail.Name, songDetail.Ar[0].Name, lyricsURL, lyrics, musicID)
 	return cardStr
 }
 
@@ -265,7 +289,7 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]
 
-	lyric := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
+	lyric, _ := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
 	lyric = larkcards.TrimLyrics(lyric)
 	sp := strings.Split(lyric, "\n")
 	left := strings.Join(sp[:len(sp)/2], "\n\n")

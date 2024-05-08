@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/betagovar"
@@ -65,13 +67,25 @@ func MinioUploadFile(ctx context.Context, bucketName, filePath, objName, content
 	return
 }
 
-func downloadFile(ctx context.Context, filepath string, url string) (err error) {
+func downloadFile(ctx context.Context, path string, url string) (err error) {
 	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("downloadFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
+	_, err = os.Stat(filepath.Dir(path))
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.Mkdir(filepath.Dir(path), 0o755)
+			if err != nil {
+				return
+			}
+		} else {
+			return
+		}
+	}
+
 	// Create the file
-	out, err := os.Create(filepath)
+	out, err := os.Create(path)
 	if err != nil {
 		return err
 	}
@@ -91,6 +105,18 @@ func downloadFile(ctx context.Context, filepath string, url string) (err error) 
 	}
 
 	return nil
+}
+
+func removeTmpFile(ctx context.Context, path string) (err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+	defer span.End()
+	log.ZapLogger.Info("removeFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+
+	err = os.Remove(path)
+	if err != nil {
+		log.ZapLogger.Error(err.Error())
+	}
+	return
 }
 
 func MinioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.URL, err error) {
@@ -130,6 +156,7 @@ func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName, c
 		log.ZapLogger.Error(err.Error())
 		return
 	}
+	defer removeTmpFile(ctx, "/tmp/"+objName)
 
 	err = MinioUploadFile(ctx, bucketName, "/tmp/"+objName, objName, contentType)
 	if err != nil {
@@ -140,11 +167,47 @@ func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName, c
 	return PresignObj(ctx, bucketName, objName)
 }
 
+func MinioUploadTextFile(ctx context.Context, bucketName, text, objName, contentType string) (u *url.URL, err error) {
+	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+	defer span.End()
+	log.ZapLogger.Info("MinioUploadTextFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+
+	shareURL, err := MinioTryGetFile(ctx, bucketName, objName)
+	if err != nil {
+		if e, ok := err.(minio.ErrorResponse); ok {
+			err = nil
+			log.ZapLogger.Warn(e.Error())
+		} else {
+			log.ZapLogger.Error(err.Error())
+			return
+		}
+	}
+	if shareURL != nil {
+		u = shareURL
+		return
+	}
+
+	_, err = minioClient.PutObject(ctx, bucketName, objName, io.NopCloser(strings.NewReader(text)), int64(len(text)), minio.PutObjectOptions{ContentType: contentType})
+	if err != nil {
+		log.ZapLogger.Error("PutObject failed", zaplog.Error(err))
+		return
+	}
+	log.ZapLogger.Info("Successfully uploaded text file", zaplog.String("objName", objName))
+	return PresignObj(ctx, bucketName, objName)
+}
+
 func PresignObj(ctx context.Context, bucketName, objName string) (u *url.URL, err error) {
 	u, err = minioClient.PresignedGetObject(ctx, bucketName, objName, time.Hour, nil)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 		return
 	}
+
+	newURL := GenAKA(u)
+	if newURL != nil {
+		u = newURL
+	}
+
+	log.ZapLogger.Info("Presined file with url", zaplog.String("presigned_url", u.String()))
 	return
 }
