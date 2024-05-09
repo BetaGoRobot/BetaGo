@@ -11,11 +11,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/larkcards"
-	"github.com/BetaGoRobot/BetaGo/neteaseapi"
+	"github.com/BetaGoRobot/BetaGo/dal/larkcards"
+	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/kevinmatthe/zaplog"
 
 	"github.com/bytedance/sonic"
@@ -33,7 +33,7 @@ import (
 var larkClient *lark.Client = lark.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Getenv("LARK_SECRET"))
 
 func uploadPic2Lark(ctx context.Context, imageURL, musicID string, uploadOSS bool) (key string, ossURL string, err error) { // also minio
-	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
 	defer span.End()
 
@@ -67,7 +67,7 @@ func uploadPic2Lark(ctx context.Context, imageURL, musicID string, uploadOSS boo
 }
 
 func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg string) (err error) {
-	ctx, span := jaeger_client.LarkRobotTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
 
@@ -161,7 +161,7 @@ func longConn() { // 注册事件回调
 	eventHandler := dispatcher.NewEventDispatcher("", "").
 		OnP2MessageReceiveV1(
 			func(ctx context.Context, event *larkim.P2MessageReceiveV1) error {
-				ctx, span := jaeger_client.LarkRobotTracer.Start(ctx, utility.GetCurrentFunc())
+				ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 				span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 				defer span.End()
 				stamp, err := strconv.ParseInt(*event.Event.Message.CreateTime, 10, 64)
@@ -201,7 +201,7 @@ func longConn() { // 注册事件回调
 }
 
 func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
-	ctx, span := jaeger_client.LarkRobotTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
 
@@ -265,7 +265,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 }
 
 func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) {
-	ctx, span := jaeger_client.LarkRobotTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
 
@@ -283,7 +283,7 @@ func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) 
 }
 
 func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
-	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("musicID").String(musicID))
 	defer span.End()
 
@@ -309,7 +309,7 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 func webHook() {
 	// 创建 card 处理器
 	cardHandler := larkcard.NewCardActionHandler(os.Getenv("LARK_VERIFICATION"), os.Getenv("LARK_ENCRYPTION"), func(ctx context.Context, cardAction *larkcard.CardAction) (interface{}, error) {
-		ctx, span := jaeger_client.LarkRobotTracer.Start(ctx, utility.GetCurrentFunc())
+		ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 		span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(cardAction)))
 		defer span.End()
 

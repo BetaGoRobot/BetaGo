@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/golang/freetype/truetype"
 	"github.com/kevinmatthe/zaplog"
@@ -58,7 +58,7 @@ func GenerateTraceButtonSection(traceInfo string) kook.CardMessageSection {
 
 // InitGlowSansSCFontType 初始化字体类型
 func InitGlowSansSCFontType() {
-	fontFile := filepath.Join(betagovar.FontPath, "Microsoft Yahei.ttf")
+	fontFile := filepath.Join(consts.FontPath, "Microsoft Yahei.ttf")
 	fontBytes, err := ioutil.ReadFile(fontFile)
 	if err != nil {
 		log.ZapLogger.Info("errot init font", zaplog.Error(err))
@@ -130,9 +130,9 @@ func MustAtoI(str string) int {
 //	@return userInfo
 func GetUserInfo(userID, guildID string) (userInfo *kook.User, err error) {
 	if guildID != "" {
-		userInfo, err = betagovar.GlobalSession.UserView(userID, kook.UserViewWithGuildID(guildID))
+		userInfo, err = consts.GlobalSession.UserView(userID, kook.UserViewWithGuildID(guildID))
 	} else {
-		userInfo, err = betagovar.GlobalSession.UserView(userID)
+		userInfo, err = consts.GlobalSession.UserView(userID)
 	}
 	if err != nil {
 		return
@@ -145,7 +145,7 @@ func GetUserInfo(userID, guildID string) (userInfo *kook.User, err error) {
 //	@param channelID
 //	@return GuildID
 func GetGuildIDFromChannelID(channelID string) (GuildID string) {
-	c, err := betagovar.GlobalSession.ChannelView(channelID)
+	c, err := consts.GlobalSession.ChannelView(channelID)
 	if err != nil {
 		log.ZapLogger.Error("Error getting guild", zaplog.Error(err))
 	}
@@ -158,7 +158,7 @@ func GetGuildIDFromChannelID(channelID string) (GuildID string) {
 //	@return guildInfo
 //	@return err
 func GetGuildInfo(guildID string) (guildInfo *kook.Guild, err error) {
-	guildInfo, err = betagovar.GlobalSession.GuildView(guildID)
+	guildInfo, err = consts.GlobalSession.GuildView(guildID)
 	if err != nil {
 		return
 	}
@@ -171,7 +171,7 @@ func GetGuildInfo(guildID string) (guildInfo *kook.Guild, err error) {
 //	@return channelInfo
 //	@return err
 func GetChannnelInfo(channelID string) (channelInfo *kook.Channel, err error) {
-	channelInfo, err = betagovar.GlobalSession.ChannelView(channelID)
+	channelInfo, err = consts.GlobalSession.ChannelView(channelID)
 	if err != nil {
 		return
 	}
@@ -262,17 +262,17 @@ func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (
 
 // Reconnect 重建链接
 func Reconnect() (err error) {
-	err = betagovar.GlobalSession.Close()
+	err = consts.GlobalSession.Close()
 	if err != nil {
 		return
 	}
 	time.Sleep(time.Second)
-	betagovar.GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&p_log.Logger{
+	consts.GlobalSession = kook.New(os.Getenv("BOTAPI"), plog.NewLogger(&p_log.Logger{
 		Level:  p_log.InfoLevel,
 		Writer: &p_log.ConsoleWriter{},
 	}))
 
-	err = betagovar.GlobalSession.Open()
+	err = consts.GlobalSession.Open()
 	// retryCnt := 0
 	// for err != nil {
 	// 	time.Sleep(100 * time.Millisecond)
@@ -329,7 +329,7 @@ func BuildCardMessage(theme, size, title, quoteID string, span interface{}, modu
 	}
 	cardMessage := kook.CardMessage{cardMessageCard}
 	if quoteID != "" {
-		m, err := betagovar.GlobalSession.MessageView(quoteID)
+		m, err := consts.GlobalSession.MessageView(quoteID)
 		if err != nil {
 			log.ZapLogger.Error("MessageView Error", zaplog.Error(err))
 		}

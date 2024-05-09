@@ -6,9 +6,9 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/gotify/go-api-client/v2/auth"
 	"github.com/gotify/go-api-client/v2/client"
 	"github.com/gotify/go-api-client/v2/client/message"
@@ -33,14 +33,14 @@ func init() {
 }
 
 func SendMessage(ctx context.Context, title, msg string, priority int) {
-	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, "SendMessage")
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, "SendMessage")
 	defer span.End()
 	log.ZapLogger.Info("SendMessage...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
 	if title == "" {
 		title = "BetaGo Notification"
 	}
-	title = "[" + betagovar.BotIdentifier + "]" + title
+	title = "[" + consts.BotIdentifier + "]" + title
 	params := message.NewCreateMessageParams()
 	params.Body = &models.MessageExternal{
 		Title:    title,

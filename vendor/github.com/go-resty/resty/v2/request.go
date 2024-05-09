@@ -958,7 +958,6 @@ func (r *Request) Execute(method, url string) (*Response, error) {
 		RetryHooks(r.client.RetryHooks),
 		ResetMultipartReaders(r.client.RetryResetReaders),
 	)
-
 	if err != nil {
 		r.log.Errorf("%v", err)
 	}

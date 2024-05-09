@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
@@ -86,7 +86,7 @@ func init() {
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))
 	}
-	utility.GetReceieverEmailList(betagovar.GlobalDBConn)
+	utility.GetReceieverEmailList(consts.GlobalDBConn)
 	sqlDb, err := db.DB()
 	if err != nil {
 		log.ZapLogger.Panic(" get sql db error")
@@ -106,16 +106,16 @@ func init() {
 //
 //	@return *gorm.DB
 func GetDbConnection() *gorm.DB {
-	if betagovar.GlobalDBConn != nil {
-		return betagovar.GlobalDBConn
+	if consts.GlobalDBConn != nil {
+		return consts.GlobalDBConn
 	}
-	var dsn string = " user=postgres password=heyuheng1.22.3 dbname=betago port=%s sslmode=disable TimeZone=Asia/Shanghai application_name=" + betagovar.RobotName
-	if betagovar.IsTest {
-		dsn = betagovar.DBHostTest + fmt.Sprintf(dsn, "3033")
-	} else if betagovar.IsCluster {
-		dsn = betagovar.DBHostCluster + fmt.Sprintf(dsn, "5432")
+	var dsn string = " user=postgres password=heyuheng1.22.3 dbname=betago port=%s sslmode=disable TimeZone=Asia/Shanghai application_name=" + consts.RobotName
+	if consts.IsTest {
+		dsn = consts.DBHostTest + fmt.Sprintf(dsn, "3033")
+	} else if consts.IsCluster {
+		dsn = consts.DBHostCluster + fmt.Sprintf(dsn, "5432")
 	} else {
-		dsn = betagovar.DBHostCompose + fmt.Sprintf(dsn, "3033")
+		dsn = consts.DBHostCompose + fmt.Sprintf(dsn, "3033")
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -127,6 +127,6 @@ func GetDbConnection() *gorm.DB {
 		log.ZapLogger.Error("get db connection error, will try local version", zaplog.Error(err))
 		return nil
 	}
-	betagovar.GlobalDBConn = db
-	return betagovar.GlobalDBConn
+	consts.GlobalDBConn = db
+	return consts.GlobalDBConn
 }

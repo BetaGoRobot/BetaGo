@@ -3,9 +3,9 @@ package utility
 import (
 	"context"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
@@ -37,7 +37,7 @@ func SendMessageTempAndDelete(targetID, QuoteID, authorID, newMsg string) {
 		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
-	_, err = betagovar.GlobalSession.MessageCreate(
+	_, err = consts.GlobalSession.MessageCreate(
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     kook.MessageTypeCard,
@@ -47,7 +47,7 @@ func SendMessageTempAndDelete(targetID, QuoteID, authorID, newMsg string) {
 			TempTargetID: authorID,
 		},
 	)
-	betagovar.GlobalSession.MessageDelete(QuoteID)
+	consts.GlobalSession.MessageDelete(QuoteID)
 }
 
 // SendMessageTemp 发送消息
@@ -87,7 +87,7 @@ func SendMessageTemp(targetID, QuoteID, authorID, newMsg string) {
 		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
-	betagovar.GlobalSession.MessageCreate(
+	consts.GlobalSession.MessageCreate(
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     kook.MessageTypeCard,
@@ -130,7 +130,7 @@ func SendMessage(targetID, QuoteID, authorID string, message string) {
 		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
-	betagovar.GlobalSession.MessageCreate(
+	consts.GlobalSession.MessageCreate(
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     kook.MessageTypeCard,
@@ -167,7 +167,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
-	resp, err := betagovar.GlobalSession.MessageCreate(
+	resp, err := consts.GlobalSession.MessageCreate(
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     kook.MessageTypeCard,
@@ -190,7 +190,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 //	@param authorID 作者ID
 //	@param message
 func SendErrorMessageWithTitle(targetID, QuoteID, authorID, message, title string, ctx context.Context) {
-	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 
 	cardMessageStr, err := kook.CardMessage{
@@ -213,7 +213,7 @@ func SendErrorMessageWithTitle(targetID, QuoteID, authorID, message, title strin
 		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
-	betagovar.GlobalSession.MessageCreate(
+	consts.GlobalSession.MessageCreate(
 		&kook.MessageCreate{
 			MessageCreateBase: kook.MessageCreateBase{
 				Type:     kook.MessageTypeCard,

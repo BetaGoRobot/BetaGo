@@ -5,7 +5,7 @@ import (
 	"net/smtp"
 	"os"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/jordan-wright/email"
 	"github.com/kevinmatthe/zaplog"
@@ -25,9 +25,9 @@ var (
 
 // SendEmail  is the function to send email
 func SendEmail(Subject string, Body string) {
-	GetReceieverEmailList(betagovar.GlobalDBConn)
+	GetReceieverEmailList(consts.GlobalDBConn)
 	em := email.NewEmail()
-	em.From = fmt.Sprintf("%s <%s>", betagovar.RobotName, netEaseEmailAddress)
+	em.From = fmt.Sprintf("%s <%s>", consts.RobotName, netEaseEmailAddress)
 	em.To = recevierEmailList
 	em.Subject = Subject
 	em.Text = []byte(Body)
@@ -43,9 +43,9 @@ func SendEmail(Subject string, Body string) {
 //	@param qrimg
 //	@return error
 func SendQRCodeMail(qrimg string) error {
-	GetReceieverEmailList(betagovar.GlobalDBConn)
+	GetReceieverEmailList(consts.GlobalDBConn)
 	em := email.NewEmail()
-	em.From = fmt.Sprintf("%s <%s>", betagovar.RobotName, netEaseEmailAddress)
+	em.From = fmt.Sprintf("%s <%s>", consts.RobotName, netEaseEmailAddress)
 	em.To = recevierEmailList
 	em.Subject = "网易云登陆提醒"
 	em.AttachFile(qrimg)

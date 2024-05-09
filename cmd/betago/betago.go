@@ -9,10 +9,10 @@ import (
 
 	_ "net/http/pprof"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/check"
-	"github.com/BetaGoRobot/BetaGo/commandHandler/notifier"
-	"github.com/BetaGoRobot/BetaGo/server"
+	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/consts/check"
+	"github.com/BetaGoRobot/BetaGo/handler/commandHandler/notifier"
+	server "github.com/BetaGoRobot/BetaGo/handler/webhookserver"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
 )
@@ -26,7 +26,7 @@ func init() {
 
 func main() {
 	check.CheckEnv()
-	e := betagovar.GlobalSession.Open()
+	e := consts.GlobalSession.Open()
 	if e != nil {
 		log.ZapLogger.Error("连接失败", zaplog.Error(e))
 		panic(e)
@@ -39,6 +39,6 @@ func main() {
 	signal.Notify(sc, os.Interrupt, syscall.SIGTERM, syscall.SIGKILL)
 	<-sc
 	// Cleanly close down the KHL session.
-	notifier.OfflineMessage(betagovar.GlobalSession)
-	betagovar.GlobalSession.Close()
+	notifier.OfflineMessage(consts.GlobalSession)
+	consts.GlobalSession.Close()
 }

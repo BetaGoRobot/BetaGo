@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
 )
@@ -15,7 +15,7 @@ import (
 func GenAKA(u *url.URL) (newURL *url.URL) {
 	oldURL := u.String()
 	slug := GetRandomString(8)
-	r, err := betagovar.HttpClient.R().
+	r, err := consts.HttpClient.R().
 		SetHeader("Authorization", os.Getenv("LYNX_API_KEY")).
 		SetCookie(&http.Cookie{
 			Name:  "token",

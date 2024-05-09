@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
-	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -34,7 +34,7 @@ func init() {
 	// } else {
 	endPoint = "minioapi.kmhomelab.cn"
 	useSSL = true
-	if betagovar.IsCluster {
+	if consts.IsCluster {
 		endPoint = "192.168.31.74:29000"
 		useSSL = false
 	}
@@ -49,7 +49,7 @@ func init() {
 }
 
 func MinioUploadFile(ctx context.Context, bucketName, filePath, objName, contentType string) (err error) {
-	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("MinioUploadFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
@@ -68,7 +68,7 @@ func MinioUploadFile(ctx context.Context, bucketName, filePath, objName, content
 }
 
 func downloadFile(ctx context.Context, path string, url string) (err error) {
-	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("downloadFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
@@ -108,7 +108,7 @@ func downloadFile(ctx context.Context, path string, url string) (err error) {
 }
 
 func removeTmpFile(ctx context.Context, path string) (err error) {
-	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("removeFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
@@ -120,7 +120,7 @@ func removeTmpFile(ctx context.Context, path string) (err error) {
 }
 
 func MinioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.URL, err error) {
-	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("MinioTryGetFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
@@ -132,7 +132,7 @@ func MinioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.
 }
 
 func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName, contentType string) (u *url.URL, err error) {
-	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("MinioUploadFileFromURL...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
@@ -168,7 +168,7 @@ func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName, c
 }
 
 func MinioUploadTextFile(ctx context.Context, bucketName, text, objName, contentType string) (u *url.URL, err error) {
-	ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("MinioUploadTextFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 

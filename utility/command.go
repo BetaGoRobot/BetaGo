@@ -3,7 +3,7 @@ package utility
 import (
 	"strings"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/consts"
 )
 
 // GetCommandWithParameters 获取命令及参数
@@ -13,7 +13,7 @@ import (
 //	@return params
 func GetCommandWithParameters(rawCommand string) (command string, params []string) {
 	trueContent := strings.TrimSpace(rawCommand) // test
-	trueContent = strings.Replace(trueContent, betagovar.CommandPrefix, "", 1)
+	trueContent = strings.Replace(trueContent, consts.CommandPrefix, "", 1)
 	trueContent = strings.ReplaceAll(trueContent, "  ", " ")
 	trueContent = strings.Trim(trueContent, ".")
 	trueContent = strings.TrimSpace(trueContent)

@@ -8,10 +8,10 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/BetaGoRobot/BetaGo/betagovar"
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
-	"github.com/BetaGoRobot/BetaGo/utility/jaeger_client"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
 
 	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
@@ -23,7 +23,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 // CollectPanic is the function to collect panic
 func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, UserID string) {
 	if err := recover(); err != nil {
-		ctx, span := jaeger_client.BetaGoCommandTracer.Start(ctx, GetCurrentFunc())
+		ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 		span.SetAttributes(attribute.Key("Panic Stack").String(removeSensitiveInfo(debug.Stack())))
 		defer span.RecordError(fmt.Errorf(err.(string)))
 		defer span.End()
@@ -31,7 +31,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 		JSONStr := ForceMarshalJSON(ctx)
 		SendEmail("Panic-Collected!", fmt.Sprintf("%v\n%s", string(debug.Stack()), JSONStr))
 		// // 测试频道不用脱敏
-		SendErrorMessageWithTitle(betagovar.TestChanID, "", "",
+		SendErrorMessageWithTitle(consts.TestChanID, "", "",
 			emoji.ExclamationMark.String()+
 				"发生Panic, 请联系开发者并提供此ID\n\nTraceID: `"+
 				span.SpanContext().TraceID().String()+"`\n",
@@ -44,7 +44,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 			strings.ReplaceAll(fmt.Sprintf("SourceChannelID: `%s`\nErrorMsg: `%s`\n```go\n%s```\nRecord:\n```json\n%s\n```",
 				TargetID, err, removeSensitiveInfo(debug.Stack()), JSONStr), "\n", "\n\n"),
 			7)
-		if TargetID != betagovar.TestChanID {
+		if TargetID != consts.TestChanID {
 			SendErrorMessageWithTitle(TargetID, "", "",
 				fmt.Sprintf(emoji.ExclamationMark.String()+"发生Panic, 请联系开发者并提供此ID\n\nTraceID: "+span.SpanContext().TraceID().String()),
 				fmt.Sprintf("%s Panic-Collected!",
