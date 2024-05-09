@@ -56,8 +56,8 @@ jobs:
             -q betago.zip \
             . \
             -x ".git/*" \
-            -x "qqmusicapi/qqmusic-api-service/*" \
-            -x "neteaseapi/netease-api-service/*"
+            -x "dal/qqmusicapi/qqmusic-api-service/*" \
+            -x "dal/neteaseapi/netease-api-service/*"
             DOCKER_BUILDKIT=1 docker build \
              . \
              --file scripts/larkrobot/Dockerfile \
