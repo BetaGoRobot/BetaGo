@@ -95,10 +95,10 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 		for _, r := range res {
 			str := strings.Trim(r.String(), "\"")
 			sp := strings.Split(str, "- ")
-			id := sp[len(sp)-1]
-			name := strings.Join(sp[:len(sp)-1], "- ")
+			ID := sp[len(sp)-1]
+			Name := strings.Join(sp[:len(sp)-1], "- ")
 			r.Parent().DeleteKey("src")
-			infoList, err := neteaseapi.NetEaseGCtx.GetMusicURLByID(baseCtx, map[string]string{id: name})
+			infoList, err := neteaseapi.NetEaseGCtx.GetMusicURLByID(baseCtx, []*neteaseapi.MusicIDName{{ID, Name}})
 			if err != nil {
 				return
 			}

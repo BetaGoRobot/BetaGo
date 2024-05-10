@@ -58,6 +58,10 @@ type searchMusic struct {
 	} `json:"result"`
 }
 
+type MusicIDName struct {
+	ID   string
+	Name string
+}
 type Song struct {
 	Name string `json:"name"`
 	ID   int    `json:"id"`
@@ -77,6 +81,7 @@ type SearchMusicRes struct {
 	ArtistName string
 	SongURL    string
 	PicURL     string
+	ImageKey   string
 }
 
 // GlobRecommendMusicRes  推荐音乐返回结果

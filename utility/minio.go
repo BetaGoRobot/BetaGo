@@ -13,9 +13,11 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/BetaGo/utility/requests"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var (
@@ -48,6 +50,25 @@ func init() {
 	}
 }
 
+func MinioUploadReader(ctx context.Context, bucketName string, file io.ReadCloser, objName, contentType string) (err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
+	defer span.End()
+	log.ZapLogger.Info("MinioUploadReader...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+
+	// Upload the test file
+	// Change the value of filePath if the file is in another location
+
+	// Upload the test file with FPutObject
+	info, err := minioClient.PutObject(ctx, bucketName, objName, file, -1, minio.PutObjectOptions{ContentType: contentType})
+	if err != nil {
+		log.ZapLogger.Error(err.Error())
+		return
+	}
+	defer span.SetAttributes(attribute.Key("path").String(objName), attribute.Key("size").Int64(info.Size))
+	log.SugerLogger.Infof("Successfully uploaded %s of size %d\n", objName, info.Size)
+	return
+}
+
 func MinioUploadFile(ctx context.Context, bucketName, filePath, objName, contentType string) (err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
@@ -62,7 +83,7 @@ func MinioUploadFile(ctx context.Context, bucketName, filePath, objName, content
 		log.ZapLogger.Error(err.Error())
 		return
 	}
-
+	defer span.SetAttributes(attribute.Key("path").String(objName), attribute.Key("size").Int64(info.Size))
 	log.SugerLogger.Infof("Successfully uploaded %s of size %d\n", objName, info.Size)
 	return
 }
@@ -151,14 +172,14 @@ func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName, c
 		return
 	}
 
-	err = downloadFile(ctx, "/tmp/"+objName, fileURL)
+	resp, err := requests.Req().SetContext(ctx).SetDoNotParseResponse(true).Get(fileURL)
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
+		log.ZapLogger.Error("Get file failed", zaplog.Error(err))
 		return
 	}
-	defer removeTmpFile(ctx, "/tmp/"+objName)
-
-	err = MinioUploadFile(ctx, bucketName, "/tmp/"+objName, objName, contentType)
+	body := resp.RawResponse.Body
+	defer body.Close()
+	err = MinioUploadReader(ctx, bucketName, body, objName, contentType)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 		return

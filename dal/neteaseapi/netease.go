@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -410,22 +409,72 @@ func (neteaseCtx *NetEaseContext) GetDailyRecommendID() (musicIDs map[string]str
 	return
 }
 
-// GetMusicURLByID 依据ID获取URL/Name
+// GetMusicURLByIDs 依据ID获取URL/Name
 //
 //	@receiver ctx
 //	@param IDName
 //	@return InfoList
 //	@return err
-func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, IDName map[string]string) (InfoList []MusicInfo, err error) {
+func (neteaseCtx *NetEaseContext) GetMusicURLByIDs(ctx context.Context, musicIDs []string) (musicIDURL map[string]string, err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	musicIDURL = make(map[string]string)
+	var fullIDs []string
+
+	for _, ID := range musicIDs {
+		if ID == "" {
+			continue
+		}
+		fullIDs = append(fullIDs, ID)
+	}
+
+	r, err := consts.HttpClient.R().SetQueryParams(
+		map[string]string{
+			"id":        strings.Join(fullIDs, ","),
+			"level":     "standard",
+			"timestamp": fmt.Sprint(time.Now().UnixNano()),
+		},
+	).SetCookies(neteaseCtx.cookies).Post(NetEaseAPIBaseURL + "/song/url/v1")
+	music := &musicList{}
+	sonic.Unmarshal(r.Body(), music)
+
+	for index := range music.Data {
+		ID := strconv.Itoa(music.Data[index].ID)
+		URL := music.Data[index].URL
+		musicURL, err := utility.MinioUploadFileFromURL(
+			ctx,
+			"cloudmusic",
+			music.Data[index].URL,
+			"music/"+ID+filepath.Ext(music.Data[index].URL),
+			"audio/mpeg;charset=UTF-8",
+		)
+		if err != nil {
+			log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
+		} else {
+			URL = musicURL.String()
+		}
+		musicIDURL[ID] = URL
+	}
+	return
+}
+
+// GetMusicURLByID 依据ID获取URL/Name //TODO: replace this method more generic
+//
+//	@receiver ctx
+//	@param IDName
+//	@return InfoList
+//	@return err
+func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, musicIDName []*MusicIDName) (InfoList []MusicInfo, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
 	var id string
-	for key := range IDName {
+	for _, m := range musicIDName {
 		if id != "" {
 			id += ","
 		}
-		id += key
+		id += m.ID
 	}
 	r, err := consts.HttpClient.R().SetQueryParams(
 		map[string]string{
@@ -436,11 +485,12 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, IDName ma
 	).SetCookies(neteaseCtx.cookies).Post(NetEaseAPIBaseURL + "/song/url/v1")
 	body := r.Body()
 	music := musicList{}
-	sonic.Unmarshal(body, &music)
+	sonic.ConfigStd.Unmarshal(body, &music)
+
 	for index := range music.Data {
 		ID := strconv.Itoa(music.Data[index].ID)
 		URL := music.Data[index].URL
-		musicUrl, err := utility.MinioUploadFileFromURL(
+		musicURL, err := utility.MinioUploadFileFromURL(
 			ctx,
 			"cloudmusic",
 			music.Data[index].URL,
@@ -450,11 +500,11 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, IDName ma
 		if err != nil {
 			log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 		} else {
-			URL = musicUrl.String()
+			URL = musicURL.String()
 		}
 		InfoList = append(InfoList, MusicInfo{
 			ID:   ID,
-			Name: IDName[ID],
+			Name: musicIDName[index].Name,
 			URL:  URL,
 		})
 	}
@@ -599,51 +649,93 @@ func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keyw
 		log.ZapLogger.Info(err.Error())
 	}
 
-	searchMusic := searchMusic{}
-	jsoniter.Unmarshal(resp1.Body(), &searchMusic)
+	searchRes := searchMusic{}
+	jsoniter.Unmarshal(resp1.Body(), &searchRes)
 
-	urlChan := make(chan *SearchMusicRes)
-	wg := &sync.WaitGroup{}
-	go func() {
-		for i, song := range searchMusic.Result.Songs {
-			wg.Add(1)
-			go func(index int, song Song) {
-				defer wg.Done()
-				var ArtistName string
-				for _, name := range song.Ar {
-					if ArtistName != "" {
-						ArtistName += ","
-					}
-					ArtistName += name.Name
-				}
-				SongURL, errIn := neteaseCtx.GetMusicURLByID(ctx, map[string]string{strconv.Itoa(song.ID): song.Name})
-				if errIn != nil {
-					err = errIn
-					return
-				}
-				if len(SongURL) == 0 {
-					return
-				}
-				urlChan <- &SearchMusicRes{
-					Index:      index,
-					ID:         strconv.Itoa(song.ID),
-					Name:       song.Name,
-					ArtistName: ArtistName,
-					PicURL:     song.Al.PicURL,
-					SongURL:    SongURL[0].URL,
-				}
-			}(i, song)
-		}
-		wg.Wait()
-		close(urlChan)
-	}()
-	for res := range urlChan {
+	sResChan := make(chan *SearchMusicRes, len(searchRes.Result.Songs))
+
+	go neteaseCtx.asyncGetSearchRes(ctx, searchRes, err, sResChan)
+
+	m := asyncUploadPics(ctx, searchRes)
+	for res := range sResChan {
+		res.ImageKey = m[res.ID]
 		result = append(result, res)
 	}
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Index < result[j].Index
-	})
 	return
+}
+
+func asyncUploadPics(ctx context.Context, musicInfos searchMusic) map[string]string {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+	var (
+		c  = make(chan [2]string)
+		wg = &sync.WaitGroup{}
+		m  = make(map[string]string, 1)
+	)
+	go func() {
+		defer close(c)
+		defer wg.Wait()
+
+		for _, m := range musicInfos.Result.Songs {
+			wg.Add(1)
+			go uploadPicWorker(ctx, wg, m.Al.PicURL, m.ID, c)
+		}
+	}()
+	for res := range c {
+		m[res[1]] = res[0]
+	}
+	return m
+}
+
+func uploadPicWorker(ctx context.Context, wg *sync.WaitGroup, url string, musicID int, c chan [2]string) bool {
+	defer wg.Done()
+	imgKey, _, err := utility.UploadPicAllinOne(ctx, url, strconv.Itoa(musicID), true)
+	if err != nil {
+		log.ZapLogger.Error("upload pic to lark error", zaplog.Error(err))
+		return true
+	}
+	c <- [2]string{imgKey, strconv.Itoa(musicID)}
+	return false
+}
+
+func (neteaseCtx *NetEaseContext) asyncGetSearchRes(ctx context.Context, searchMusic searchMusic, err error, urlChan chan *SearchMusicRes) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+	defer close(urlChan)
+
+	songMap := make(map[string]*Song)
+	songList := make([]string, len(searchMusic.Result.Songs))
+	for i, song := range searchMusic.Result.Songs {
+		songMap[strconv.Itoa(song.ID)] = &searchMusic.Result.Songs[i]
+		songList[i] = strconv.Itoa(song.ID)
+	}
+
+	musicIDURL, err := neteaseCtx.GetMusicURLByIDs(ctx, songList)
+	for _, ID := range songList {
+		songInfo := songMap[ID]
+		urlChan <- &SearchMusicRes{
+			// Index:      index,
+			ID:         ID,
+			Name:       songInfo.Name,
+			ArtistName: genArtistName(songInfo),
+			PicURL:     songInfo.Al.PicURL,
+			SongURL:    musicIDURL[ID],
+		}
+
+	}
+
+	return
+}
+
+func genArtistName(song *Song) (artistName string) {
+	artistList := make([]string, 0, len(song.Ar))
+	for _, s := range song.Ar {
+		if s.Name == "" {
+			continue
+		}
+		artistList = append(artistList, s.Name)
+	}
+	return strings.Join(artistList, ", ")
 }
 
 // GetNewRecommendMusic 获得新的推荐歌曲
@@ -671,7 +763,9 @@ func (neteaseCtx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicRes, 
 			}
 			ArtistName += name.Name
 		}
-		SongURL, errIn := neteaseCtx.GetMusicURLByID(context.Background(), map[string]string{strconv.Itoa(result.Song.ID): result.Song.Name})
+		SongURL, errIn := neteaseCtx.GetMusicURLByID(context.Background(), []*MusicIDName{
+			{strconv.Itoa(result.Song.ID), result.Song.Name},
+		})
 		if errIn != nil {
 			err = errIn
 			return

@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/dal/larkcards"
@@ -16,7 +14,6 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
-	"github.com/kevinmatthe/zaplog"
 
 	"github.com/bytedance/sonic"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
@@ -32,40 +29,6 @@ import (
 
 var larkClient *lark.Client = lark.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Getenv("LARK_SECRET"))
 
-func uploadPic2Lark(ctx context.Context, imageURL, musicID string, uploadOSS bool) (key string, ossURL string, err error) { // also minio
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
-	defer span.End()
-
-	picResp, err := http.Get(imageURL)
-
-	req := larkim.NewCreateImageReqBuilder().
-		Body(
-			larkim.NewCreateImageReqBodyBuilder().
-				ImageType(larkim.ImageTypeMessage).
-				Image(picResp.Body).
-				Build(),
-		).
-		Build()
-	resp, err := larkClient.Im.Image.Create(ctx, req)
-	if err != nil {
-		log.ZapLogger.Error(err.Error())
-		return
-	}
-	if uploadOSS {
-		u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic", imageURL, "picture/"+*resp.Data.ImageKey, "image/jpeg")
-		if err != nil {
-			log.ZapLogger.Warn("upload pic to minio error", zaplog.String("imageURL", imageURL), zaplog.String("imageKey", *resp.Data.ImageKey))
-			err = nil
-		}
-		if u != nil {
-			ossURL = u.String()
-		}
-	}
-
-	return *resp.Data.ImageKey, ossURL, err
-}
-
 func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
@@ -76,59 +39,8 @@ func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg 
 		return err
 	}
 	listMsg := larkcards.NewSearchListCard()
-	var (
-		tmpChan = make(chan *struct {
-			Index    int
-			imageKey string
-			Name     string
-			Artist   string
-			ID       string
-		})
-		wg = &sync.WaitGroup{}
-	)
-	go func() {
-		for i, r := range res {
-			wg.Add(1)
-			go func(index int, res neteaseapi.SearchMusicRes) {
-				imageKey, _, err := uploadPic2Lark(ctx, res.PicURL, r.ID, false)
-				if err != nil {
-					return
-				}
-				tmpChan <- &struct {
-					Index    int
-					imageKey string
-					Name     string
-					Artist   string
-					ID       string
-				}{
-					Index:    index,
-					imageKey: imageKey,
-					Name:     res.Name,
-					Artist:   res.ArtistName,
-					ID:       res.ID,
-				}
-				wg.Done()
-			}(i, *r)
-
-		}
-		wg.Wait()
-		close(tmpChan)
-	}()
-	tmpList := make([]*struct {
-		Index    int
-		imageKey string
-		Name     string
-		Artist   string
-		ID       string
-	}, 0)
-	for item := range tmpChan {
-		tmpList = append(tmpList, item)
-	}
-	sort.Slice(tmpList, func(i, j int) bool {
-		return tmpList[i].Index < tmpList[j].Index
-	})
-	for _, item := range tmpList {
-		listMsg.AddColumn(ctx, item.imageKey, item.Name, item.Artist, item.ID)
+	for _, item := range res {
+		listMsg.AddColumn(ctx, item.ImageKey, item.Name, item.ArtistName, item.ID)
 	}
 	listMsg.AddJaegerTracer(ctx, span)
 	cardStr, err := sonic.MarshalString(listMsg)
@@ -217,7 +129,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]
 	picURL := songDetail.Al.PicURL
-	imageKey, ossURL, err := uploadPic2Lark(ctx, picURL, musicID, true)
+	imageKey, ossURL, err := utility.UploadPicAllinOne(ctx, picURL, musicID, true)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 		return ""
