@@ -1,4 +1,4 @@
-name: Docker
+name: BetaGo
 
 on:
   push:
@@ -98,3 +98,13 @@ jobs:
             # docker push $TENCENT_HEADER/$IMAGE_NAME:latest
             # docker tag $TENCENT_HEADER/$IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
             # docker push $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
+  Notify:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Gotify Notification
+      uses: eikendev/gotify-action@master
+      with:
+        gotify_api_base: '${{ secrets.GOTIFY_URL }}'
+        gotify_app_token: '${{ secrets.GOTIFY_APP_TOKEN }}'
+        notification_title: '${{ env.ROBOT_NAME }} Build Complete'
+        notification_message: 'Your build was completed.'
