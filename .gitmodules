@@ -1,5 +1,5 @@
 [submodule "webhook"]
-	path = webhook
+	path = dal/webhook
 	url = https://github.com/BetaGoRobot/BetaGo-webhook.git
 [submodule "dal/neteaseapi/netease-api-service"]
 	path = dal/neteaseapi/netease-api-service
