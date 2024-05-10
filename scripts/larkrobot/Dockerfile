@@ -2,8 +2,6 @@ FROM ghcr.io/betagorobot/betago-golang:master as builder
 
 COPY betago.zip /data/
 
-COPY ~/.cache/go-build ~/.cache/go-build
-
 WORKDIR /data/
 
 RUN unzip betago.zip
