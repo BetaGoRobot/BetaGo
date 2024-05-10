@@ -1,4 +1,4 @@
-name: Docker
+name: LarkRobot
 
 on:
   push:
@@ -25,10 +25,6 @@ jobs:
   Build_Push:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup Golang with cache
-        uses: magnetikonline/action-golang-cache@v5
-        with:
-          go-version-file: go.mod
       - name: Log into registry
         uses: nick-fields/retry@v2
         with:
@@ -47,6 +43,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Setup Golang with cache
+        uses: magnetikonline/action-golang-cache@v5
+        with:
+          go-version-file: go.mod
       - name: Build image
         uses: nick-fields/retry@v2
         with:
