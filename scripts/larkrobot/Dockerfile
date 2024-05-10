@@ -19,7 +19,7 @@ COPY --from=builder  /data/cmd/larkrobot/betaGo /betaGo
 
 COPY --from=builder ./data/fonts /data/fonts
 
-COPY --from=builder ./data/images /data/images
+COPY --from=builder ./data/assets/images /data/images
 
 COPY --from=builder  /usr/share/zoneinfo/ /usr/share/zoneinfo
 
