@@ -27,9 +27,9 @@ var otelProvider *tracesdk.TracerProvider
 
 func init() {
 	if consts.IsTest {
-		otelProvider, _ = tracerProvider("http://192.168.31.74:14268/api/traces")
+		otelProvider, _ = tracerProvider("http://192.168.31.74:14318/v1/traces")
 	} else {
-		otelProvider, _ = tracerProvider("http://jaeger-all-in-one-ix-chart.ix-jaeger-all-in-one:14268/api/traces")
+		otelProvider, _ = tracerProvider("http://jaeger-all-in-one-ix-chart.ix-jaeger-all-in-one:14318/v1/traces")
 	}
 	BetaGoOtelTracer = otelProvider.Tracer("command-handler")
 	LarkRobotOtelTracer = otelProvider.Tracer("larkrobot-handler")
