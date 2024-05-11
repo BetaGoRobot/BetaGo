@@ -451,18 +451,18 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByIDs(ctx context.Context, musicIDs
 			wg.Add(1)
 			go func(idx int) {
 				defer wg.Done()
-				musicURL, err := utility.MinioUploadFileFromURL(
-					ctx,
-					"cloudmusic",
-					music.Data[idx].URL,
-					"music/"+ID+filepath.Ext(music.Data[idx].URL),
-					"audio/mpeg;charset=UTF-8",
-				)
-				if err != nil {
-					log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
-				} else {
-					URL = musicURL.String()
-				}
+				// musicURL, err := utility.MinioUploadFileFromURL(
+				// 	ctx,
+				// 	"cloudmusic",
+				// 	music.Data[idx].URL,
+				// 	"music/"+ID+filepath.Ext(music.Data[idx].URL),
+				// 	"audio/mpeg;charset=UTF-8",
+				// )
+				// if err != nil {
+				// 	log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
+				// } else {
+				// 	URL = musicURL.String()
+				// }
 				c <- [2]string{ID, URL}
 			}(index)
 		}
