@@ -439,39 +439,30 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByIDs(ctx context.Context, musicIDs
 	music := &musicList{}
 	sonic.Unmarshal(r.Body(), music)
 
-	c := make(chan [2]string)
-	go func() {
-		wg := &sync.WaitGroup{}
-		defer close(c)
-		defer wg.Wait()
-
-		for index := range music.Data {
-			ID := strconv.Itoa(music.Data[index].ID)
-			URL := music.Data[index].URL
-			wg.Add(1)
-			go func(idx int) {
-				defer wg.Done()
-				// musicURL, err := utility.MinioUploadFileFromURL(
-				// 	ctx,
-				// 	"cloudmusic",
-				// 	music.Data[idx].URL,
-				// 	"music/"+ID+filepath.Ext(music.Data[idx].URL),
-				// 	"audio/mpeg;charset=UTF-8",
-				// )
-				// if err != nil {
-				// 	log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
-				// } else {
-				// 	URL = musicURL.String()
-				// }
-				c <- [2]string{ID, URL}
-			}(index)
-		}
-	}()
-
-	for v := range c {
-		musicIDURL[v[0]] = v[1]
+	for index := range music.Data {
+		ID := strconv.Itoa(music.Data[index].ID)
+		URL := music.Data[index].URL
+		musicIDURL[ID] = URL
+		go uploadMusic(ctx, URL, ID)
 	}
 	return
+}
+
+func uploadMusic(ctx context.Context, url string, ID string) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("songID").String(ID))
+	defer span.End()
+
+	_, err := utility.MinioUploadFileFromURL(
+		ctx,
+		"cloudmusic",
+		url,
+		"music/"+ID+filepath.Ext(url),
+		"audio/mpeg;charset=UTF-8",
+	)
+	if err != nil {
+		log.ZapLogger.Warn("[PreUploadMusic] Get minio url failed...", zaplog.Error(err))
+	}
 }
 
 // GetMusicURLByID 依据ID获取URL/Name //TODO: replace this method more generic
