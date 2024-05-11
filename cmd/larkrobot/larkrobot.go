@@ -184,8 +184,8 @@ func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) 
 	cardStr := GetCardMusicByPage(ctx, musicID, page)
 	fmt.Println(cardStr)
 	req := larkim.NewReplyMessageReqBuilder().Body(
-		larkim.NewReplyMessageReqBodyBuilder().Content(cardStr).MsgType(larkim.MsgTypeInteractive).ReplyInThread(false).Uuid(msgID).Build(),
-	).MessageId(msgID + musicID).Build()
+		larkim.NewReplyMessageReqBodyBuilder().Content(cardStr).MsgType(larkim.MsgTypeInteractive).ReplyInThread(false).Uuid(msgID + musicID).Build(),
+	).MessageId(msgID).Build()
 	resp, err := larkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
 		return
