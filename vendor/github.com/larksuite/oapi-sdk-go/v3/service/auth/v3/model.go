@@ -67,6 +67,102 @@ func (builder *DepartmentIdBuilder) Build() *DepartmentId {
 	return req
 }
 
+type RevokeTokenEvent struct {
+	RevokeTokenType *string `json:"revoke_token_type,omitempty"` // 撤销token的类型
+	RevokeReason    *string `json:"revoke_reason,omitempty"`     // 撤销token的原因
+	OpenId          *string `json:"open_id,omitempty"`           // 用户open_id
+	UnionId         *string `json:"union_id,omitempty"`          // 用户union_id
+	UserId          *string `json:"user_id,omitempty"`           // 租户内用户的唯一标识
+}
+
+type RevokeTokenEventBuilder struct {
+	revokeTokenType     string // 撤销token的类型
+	revokeTokenTypeFlag bool
+	revokeReason        string // 撤销token的原因
+	revokeReasonFlag    bool
+	openId              string // 用户open_id
+	openIdFlag          bool
+	unionId             string // 用户union_id
+	unionIdFlag         bool
+	userId              string // 租户内用户的唯一标识
+	userIdFlag          bool
+}
+
+func NewRevokeTokenEventBuilder() *RevokeTokenEventBuilder {
+	builder := &RevokeTokenEventBuilder{}
+	return builder
+}
+
+// 撤销token的类型
+//
+// 示例值：user_access_token refresh_token
+func (builder *RevokeTokenEventBuilder) RevokeTokenType(revokeTokenType string) *RevokeTokenEventBuilder {
+	builder.revokeTokenType = revokeTokenType
+	builder.revokeTokenTypeFlag = true
+	return builder
+}
+
+// 撤销token的原因
+//
+// 示例值：Revoked by security and risk control action.
+func (builder *RevokeTokenEventBuilder) RevokeReason(revokeReason string) *RevokeTokenEventBuilder {
+	builder.revokeReason = revokeReason
+	builder.revokeReasonFlag = true
+	return builder
+}
+
+// 用户open_id
+//
+// 示例值：ou_c99c5f35d542efc7ee492afe11af19ef
+func (builder *RevokeTokenEventBuilder) OpenId(openId string) *RevokeTokenEventBuilder {
+	builder.openId = openId
+	builder.openIdFlag = true
+	return builder
+}
+
+// 用户union_id
+//
+// 示例值：on_cad4860e7af114fb4ff6c5d496d1dd76
+func (builder *RevokeTokenEventBuilder) UnionId(unionId string) *RevokeTokenEventBuilder {
+	builder.unionId = unionId
+	builder.unionIdFlag = true
+	return builder
+}
+
+// 租户内用户的唯一标识
+//
+// 示例值：gg895344
+func (builder *RevokeTokenEventBuilder) UserId(userId string) *RevokeTokenEventBuilder {
+	builder.userId = userId
+	builder.userIdFlag = true
+	return builder
+}
+
+func (builder *RevokeTokenEventBuilder) Build() *RevokeTokenEvent {
+	req := &RevokeTokenEvent{}
+	if builder.revokeTokenTypeFlag {
+		req.RevokeTokenType = &builder.revokeTokenType
+
+	}
+	if builder.revokeReasonFlag {
+		req.RevokeReason = &builder.revokeReason
+
+	}
+	if builder.openIdFlag {
+		req.OpenId = &builder.openId
+
+	}
+	if builder.unionIdFlag {
+		req.UnionId = &builder.unionId
+
+	}
+	if builder.userIdFlag {
+		req.UserId = &builder.userId
+
+	}
+	return req
+}
+
 type TenantAccessToken struct {
 }
 

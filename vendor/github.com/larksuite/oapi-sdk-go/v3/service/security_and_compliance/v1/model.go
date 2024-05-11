@@ -3806,7 +3806,7 @@ func NewOpenapiLogBuilder() *OpenapiLogBuilder {
 
 // openapi日志唯一标识
 //
-// 示例值：111
+// 示例值：10000
 func (builder *OpenapiLogBuilder) Id(id string) *OpenapiLogBuilder {
 	builder.id = id
 	builder.idFlag = true
@@ -3815,7 +3815,7 @@ func (builder *OpenapiLogBuilder) Id(id string) *OpenapiLogBuilder {
 
 // 飞书开放平台定义的API
 //
-// 示例值：POST/open-apis/authen/v1/access_token
+// 示例值：POST/open-apis/demo/v1/example
 func (builder *OpenapiLogBuilder) ApiKey(apiKey string) *OpenapiLogBuilder {
 	builder.apiKey = apiKey
 	builder.apiKeyFlag = true
@@ -3917,7 +3917,7 @@ func NewOpenapiLogDetailBuilder() *OpenapiLogDetailBuilder {
 
 // http请求路径
 //
-// 示例值：/open-apis/auth/v3/app_access_token
+// 示例值：/open-apis/demo/v1/example
 func (builder *OpenapiLogDetailBuilder) Path(path string) *OpenapiLogDetailBuilder {
 	builder.path = path
 	builder.pathFlag = true
@@ -3944,7 +3944,7 @@ func (builder *OpenapiLogDetailBuilder) QueryParam(queryParam string) *OpenapiLo
 
 // http请求体
 //
-// 示例值：{"app_id": "cli_xxx", "app_secret": "xxx", "app_ticket": "xxx"}
+// 示例值：{\"param1\": \"val1\", \"param2\": \"val2\"}
 func (builder *OpenapiLogDetailBuilder) Payload(payload string) *OpenapiLogDetailBuilder {
 	builder.payload = payload
 	builder.payloadFlag = true
@@ -3962,7 +3962,7 @@ func (builder *OpenapiLogDetailBuilder) StatusCode(statusCode int) *OpenapiLogDe
 
 // http响应体，仅返回code，msg，error信息等
 //
-// 示例值：{"code": 0, "msg": "ok"}
+// 示例值：{\"code\": 0, \"msg\": \"ok\"}
 func (builder *OpenapiLogDetailBuilder) Response(response string) *OpenapiLogDetailBuilder {
 	builder.response = response
 	builder.responseFlag = true

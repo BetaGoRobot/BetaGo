@@ -8,9 +8,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
@@ -218,7 +218,7 @@ func MinioUploadTextFile(ctx context.Context, bucketName, text, objName, content
 }
 
 func PresignObj(ctx context.Context, bucketName, objName string) (u *url.URL, err error) {
-	u, err = minioClient.PresignedGetObject(ctx, bucketName, objName, time.Hour, nil)
+	u, err = minioClient.PresignedGetObject(ctx, bucketName, objName, env.OSS_EXPIRATION_TIME, nil)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 		return

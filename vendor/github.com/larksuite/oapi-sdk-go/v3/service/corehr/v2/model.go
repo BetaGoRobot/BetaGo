@@ -112,6 +112,19 @@ const (
 )
 
 const (
+	UserIdTypeQueryTimelineDepartmentUserId         = "user_id"          // 以 user_id 来识别用户
+	UserIdTypeQueryTimelineDepartmentUnionId        = "union_id"         // 以 union_id 来识别用户
+	UserIdTypeQueryTimelineDepartmentOpenId         = "open_id"          // 以 open_id 来识别用户
+	UserIdTypeQueryTimelineDepartmentPeopleCorehrId = "people_corehr_id" // 以飞书人事的 ID 来识别用户
+)
+
+const (
+	DepartmentIdTypeQueryTimelineDepartmentOpenDepartmentId         = "open_department_id"          // 以 open_department_id 来标识部门
+	DepartmentIdTypeQueryTimelineDepartmentDepartmentId             = "department_id"               // 以 department_id 来标识部门
+	DepartmentIdTypeQueryTimelineDepartmentPeopleCorehrDepartmentId = "people_corehr_department_id" // 以 people_corehr_department_id 来标识部门
+)
+
+const (
 	UserIdTypeSearchDepartmentUserId         = "user_id"          // 以 user_id 来识别用户
 	UserIdTypeSearchDepartmentUnionId        = "union_id"         // 以 union_id 来识别用户
 	UserIdTypeSearchDepartmentOpenId         = "open_id"          // 以 open_id 来识别用户
@@ -278,6 +291,17 @@ const (
 	UserIdTypeGetProcessUserId  = "user_id"  // 以 user_id 来识别用户
 	UserIdTypeGetProcessUnionId = "union_id" // 以 union_id 来识别用户
 	UserIdTypeGetProcessOpenId  = "open_id"  // 以 open_id 来识别用户
+)
+
+const (
+	UserIdTypeGetProcessFormVariableDataOpenId  = "open_id"  // 标识一个用户在某个应用中的身份。同一个用户在不同应用中的 Open ID 不同。了解更多：如何获取 Open ID
+	UserIdTypeGetProcessFormVariableDataUnionId = "union_id" // 标识一个用户在某个应用开发商下的身份。同一用户在同一开发商下的应用中的 Union ID 是相同的，在不同开发商下的应用中的 Union ID 是不同的。通过 Union ID，应用开发商可以把同个用户在多个应用中的身份关联起来。了解更多：如何获取 Union ID？
+	UserIdTypeGetProcessFormVariableDataUserId  = "user_id"  // 标识一个用户在某个租户内的身份。同一个用户在租户 A 和租户 B 内的 User ID 是不同的。在同一个租户内，一个用户的 User ID 在所有应用（包括商店应用）中都保持一致。User ID 主要用于在不同的应用间打通用户数据。了解更多：如何获取 User ID？ 默认值：open_id 当值为 user_id，字段权限要求：获取用户 user ID（仅自建应用）
+)
+
+const (
+	DepartmentIdTypeGetProcessFormVariableDataOpenDepartmentId = "open_department_id" // 以 open_department_id 来标识部门
+	DepartmentIdTypeGetProcessFormVariableDataDepartmentId     = "department_id"      // 以 department_id 来标识部门
 )
 
 type AbnormalReason struct {
@@ -8578,6 +8602,84 @@ func (builder *EmploymentBpBuilder) Build() *EmploymentBp {
 	return req
 }
 
+type EmploymentLeaveBalance struct {
+	EmploymentId     *string         `json:"employment_id,omitempty"`      // 雇佣信息ID
+	EmploymentName   []*I18n         `json:"employment_name,omitempty"`    // 员工姓名
+	AsOfDate         *string         `json:"as_of_date,omitempty"`         // 余额查看日期
+	LeaveBalanceList []*LeaveBalance `json:"leave_balance_list,omitempty"` // 假期余额列表
+}
+
+type EmploymentLeaveBalanceBuilder struct {
+	employmentId         string // 雇佣信息ID
+	employmentIdFlag     bool
+	employmentName       []*I18n // 员工姓名
+	employmentNameFlag   bool
+	asOfDate             string // 余额查看日期
+	asOfDateFlag         bool
+	leaveBalanceList     []*LeaveBalance // 假期余额列表
+	leaveBalanceListFlag bool
+}
+
+func NewEmploymentLeaveBalanceBuilder() *EmploymentLeaveBalanceBuilder {
+	builder := &EmploymentLeaveBalanceBuilder{}
+	return builder
+}
+
+// 雇佣信息ID
+//
+// 示例值：4718803945687580505
+func (builder *EmploymentLeaveBalanceBuilder) EmploymentId(employmentId string) *EmploymentLeaveBalanceBuilder {
+	builder.employmentId = employmentId
+	builder.employmentIdFlag = true
+	return builder
+}
+
+// 员工姓名
+//
+// 示例值：
+func (builder *EmploymentLeaveBalanceBuilder) EmploymentName(employmentName []*I18n) *EmploymentLeaveBalanceBuilder {
+	builder.employmentName = employmentName
+	builder.employmentNameFlag = true
+	return builder
+}
+
+// 余额查看日期
+//
+// 示例值：0
+func (builder *EmploymentLeaveBalanceBuilder) AsOfDate(asOfDate string) *EmploymentLeaveBalanceBuilder {
+	builder.asOfDate = asOfDate
+	builder.asOfDateFlag = true
+	return builder
+}
+
+// 假期余额列表
+//
+// 示例值：
+func (builder *EmploymentLeaveBalanceBuilder) LeaveBalanceList(leaveBalanceList []*LeaveBalance) *EmploymentLeaveBalanceBuilder {
+	builder.leaveBalanceList = leaveBalanceList
+	builder.leaveBalanceListFlag = true
+	return builder
+}
+
+func (builder *EmploymentLeaveBalanceBuilder) Build() *EmploymentLeaveBalance {
+	req := &EmploymentLeaveBalance{}
+	if builder.employmentIdFlag {
+		req.EmploymentId = &builder.employmentId
+
+	}
+	if builder.employmentNameFlag {
+		req.EmploymentName = builder.employmentName
+	}
+	if builder.asOfDateFlag {
+		req.AsOfDate = &builder.asOfDate
+
+	}
+	if builder.leaveBalanceListFlag {
+		req.LeaveBalanceList = builder.leaveBalanceList
+	}
+	return req
+}
+
 type Enum struct {
 	EnumName *string `json:"enum_name,omitempty"` // 枚举值
 	Display  []*I18n `json:"display,omitempty"`   // 枚举多语展示
@@ -8625,14 +8727,787 @@ func (builder *EnumBuilder) Build() *Enum {
 	return req
 }
 
-type File struct {
-	Id *string `json:"id,omitempty"` // 上传文件ID
+type FieldVariableSubVlaue struct {
+	Key   *string               `json:"key,omitempty"`   // 用于关联list和record类型变量值中的key
+	Value *FieldVariableValueTo `json:"value,omitempty"` // 变量值
+}
 
+type FieldVariableSubVlaueBuilder struct {
+	key       string // 用于关联list和record类型变量值中的key
+	keyFlag   bool
+	value     *FieldVariableValueTo // 变量值
+	valueFlag bool
+}
+
+func NewFieldVariableSubVlaueBuilder() *FieldVariableSubVlaueBuilder {
+	builder := &FieldVariableSubVlaueBuilder{}
+	return builder
+}
+
+// 用于关联list和record类型变量值中的key
+//
+// 示例值：key1
+func (builder *FieldVariableSubVlaueBuilder) Key(key string) *FieldVariableSubVlaueBuilder {
+	builder.key = key
+	builder.keyFlag = true
+	return builder
+}
+
+// 变量值
+//
+// 示例值：
+func (builder *FieldVariableSubVlaueBuilder) Value(value *FieldVariableValueTo) *FieldVariableSubVlaueBuilder {
+	builder.value = value
+	builder.valueFlag = true
+	return builder
+}
+
+func (builder *FieldVariableSubVlaueBuilder) Build() *FieldVariableSubVlaue {
+	req := &FieldVariableSubVlaue{}
+	if builder.keyFlag {
+		req.Key = &builder.key
+
+	}
+	if builder.valueFlag {
+		req.Value = builder.value
+	}
+	return req
+}
+
+type FieldVariableSubVlaueForReview struct {
+	Key   *string                        `json:"key,omitempty"`   // 用于关联list和record类型变量值中的key
+	Value *FieldVariableValueToForReview `json:"value,omitempty"` // 变量值
+}
+
+type FieldVariableSubVlaueForReviewBuilder struct {
+	key       string // 用于关联list和record类型变量值中的key
+	keyFlag   bool
+	value     *FieldVariableValueToForReview // 变量值
+	valueFlag bool
+}
+
+func NewFieldVariableSubVlaueForReviewBuilder() *FieldVariableSubVlaueForReviewBuilder {
+	builder := &FieldVariableSubVlaueForReviewBuilder{}
+	return builder
+}
+
+// 用于关联list和record类型变量值中的key
+//
+// 示例值：key1
+func (builder *FieldVariableSubVlaueForReviewBuilder) Key(key string) *FieldVariableSubVlaueForReviewBuilder {
+	builder.key = key
+	builder.keyFlag = true
+	return builder
+}
+
+// 变量值
+//
+// 示例值：
+func (builder *FieldVariableSubVlaueForReviewBuilder) Value(value *FieldVariableValueToForReview) *FieldVariableSubVlaueForReviewBuilder {
+	builder.value = value
+	builder.valueFlag = true
+	return builder
+}
+
+func (builder *FieldVariableSubVlaueForReviewBuilder) Build() *FieldVariableSubVlaueForReview {
+	req := &FieldVariableSubVlaueForReview{}
+	if builder.keyFlag {
+		req.Key = &builder.key
+
+	}
+	if builder.valueFlag {
+		req.Value = builder.value
+	}
+	return req
+}
+
+type FieldVariableValue struct {
+	VariableApiName *string                  `json:"variable_api_name,omitempty"` // 变量唯一标识
+	VariableName    *FieldVariableValueI18n  `json:"variable_name,omitempty"`     // 变量名称
+	VariableValue   *FieldVariableValueTo    `json:"variable_value,omitempty"`    // 变量值
+	SubValues       []*FieldVariableSubVlaue `json:"sub_values,omitempty"`        // 在list_values和record_values中引用的变量
+}
+
+type FieldVariableValueBuilder struct {
+	variableApiName     string // 变量唯一标识
+	variableApiNameFlag bool
+	variableName        *FieldVariableValueI18n // 变量名称
+	variableNameFlag    bool
+	variableValue       *FieldVariableValueTo // 变量值
+	variableValueFlag   bool
+	subValues           []*FieldVariableSubVlaue // 在list_values和record_values中引用的变量
+	subValuesFlag       bool
+}
+
+func NewFieldVariableValueBuilder() *FieldVariableValueBuilder {
+	builder := &FieldVariableValueBuilder{}
+	return builder
+}
+
+// 变量唯一标识
+//
+// 示例值：custom123
+func (builder *FieldVariableValueBuilder) VariableApiName(variableApiName string) *FieldVariableValueBuilder {
+	builder.variableApiName = variableApiName
+	builder.variableApiNameFlag = true
+	return builder
+}
+
+// 变量名称
+//
+// 示例值：日期
+func (builder *FieldVariableValueBuilder) VariableName(variableName *FieldVariableValueI18n) *FieldVariableValueBuilder {
+	builder.variableName = variableName
+	builder.variableNameFlag = true
+	return builder
+}
+
+// 变量值
+//
+// 示例值：aa
+func (builder *FieldVariableValueBuilder) VariableValue(variableValue *FieldVariableValueTo) *FieldVariableValueBuilder {
+	builder.variableValue = variableValue
+	builder.variableValueFlag = true
+	return builder
+}
+
+// 在list_values和record_values中引用的变量
+//
+// 示例值：
+func (builder *FieldVariableValueBuilder) SubValues(subValues []*FieldVariableSubVlaue) *FieldVariableValueBuilder {
+	builder.subValues = subValues
+	builder.subValuesFlag = true
+	return builder
+}
+
+func (builder *FieldVariableValueBuilder) Build() *FieldVariableValue {
+	req := &FieldVariableValue{}
+	if builder.variableApiNameFlag {
+		req.VariableApiName = &builder.variableApiName
+
+	}
+	if builder.variableNameFlag {
+		req.VariableName = builder.variableName
+	}
+	if builder.variableValueFlag {
+		req.VariableValue = builder.variableValue
+	}
+	if builder.subValuesFlag {
+		req.SubValues = builder.subValues
+	}
+	return req
+}
+
+type FieldVariableValueI18n struct {
+	ZhCn *string `json:"zh_cn,omitempty"` // 中文值
+	EnUs *string `json:"en_us,omitempty"` // 英文值
+}
+
+type FieldVariableValueI18nBuilder struct {
+	zhCn     string // 中文值
+	zhCnFlag bool
+	enUs     string // 英文值
+	enUsFlag bool
+}
+
+func NewFieldVariableValueI18nBuilder() *FieldVariableValueI18nBuilder {
+	builder := &FieldVariableValueI18nBuilder{}
+	return builder
+}
+
+// 中文值
+//
+// 示例值：北京
+func (builder *FieldVariableValueI18nBuilder) ZhCn(zhCn string) *FieldVariableValueI18nBuilder {
+	builder.zhCn = zhCn
+	builder.zhCnFlag = true
+	return builder
+}
+
+// 英文值
+//
+// 示例值：Beijing
+func (builder *FieldVariableValueI18nBuilder) EnUs(enUs string) *FieldVariableValueI18nBuilder {
+	builder.enUs = enUs
+	builder.enUsFlag = true
+	return builder
+}
+
+func (builder *FieldVariableValueI18nBuilder) Build() *FieldVariableValueI18n {
+	req := &FieldVariableValueI18n{}
+	if builder.zhCnFlag {
+		req.ZhCn = &builder.zhCn
+
+	}
+	if builder.enUsFlag {
+		req.EnUs = &builder.enUs
+
+	}
+	return req
+}
+
+type FieldVariableValueTo struct {
+	TextValue       *string                     `json:"text_value,omitempty"`       // 文本值
+	BoolValue       *bool                       `json:"bool_value,omitempty"`       // 布尔值
+	NumberValue     *string                     `json:"number_value,omitempty"`     // 数字值
+	EnumValue       *string                     `json:"enum_value,omitempty"`       // 枚举值，这里是枚举的id
+	DateValue       *string                     `json:"date_value,omitempty"`       // 从 1970 开始的天数
+	DateTimeValue   *string                     `json:"date_time_value,omitempty"`  // 时间戳，毫秒
+	I18nValue       *FieldVariableValueI18n     `json:"i18n_value,omitempty"`       // 多语字段值
+	ObjectValue     *FieldVariableValueToObject `json:"object_value,omitempty"`     // 对象值，包括对象id和对象类型
+	UserValue       *string                     `json:"user_value,omitempty"`       // 用户id，根据user_type选择对应的用户id
+	DepartmentValue *string                     `json:"department_value,omitempty"` // 部门id，根据入参选择对应的部门id
+	RecordValue     *FieldVariableValueToRecord `json:"record_value,omitempty"`     // 记录类型字段值
+	EmploymentValue *string                     `json:"employment_value,omitempty"` // 员工类型字段值，为用户id，根据入参选择返回的用户id
+	ListValues      []string                    `json:"list_values,omitempty"`      // 数组类型值，里面包含多个值，每个元素都对应subValues中的数组下标
+}
+
+type FieldVariableValueToBuilder struct {
+	textValue           string // 文本值
+	textValueFlag       bool
+	boolValue           bool // 布尔值
+	boolValueFlag       bool
+	numberValue         string // 数字值
+	numberValueFlag     bool
+	enumValue           string // 枚举值，这里是枚举的id
+	enumValueFlag       bool
+	dateValue           string // 从 1970 开始的天数
+	dateValueFlag       bool
+	dateTimeValue       string // 时间戳，毫秒
+	dateTimeValueFlag   bool
+	i18nValue           *FieldVariableValueI18n // 多语字段值
+	i18nValueFlag       bool
+	objectValue         *FieldVariableValueToObject // 对象值，包括对象id和对象类型
+	objectValueFlag     bool
+	userValue           string // 用户id，根据user_type选择对应的用户id
+	userValueFlag       bool
+	departmentValue     string // 部门id，根据入参选择对应的部门id
+	departmentValueFlag bool
+	recordValue         *FieldVariableValueToRecord // 记录类型字段值
+	recordValueFlag     bool
+	employmentValue     string // 员工类型字段值，为用户id，根据入参选择返回的用户id
+	employmentValueFlag bool
+	listValues          []string // 数组类型值，里面包含多个值，每个元素都对应subValues中的数组下标
+	listValuesFlag      bool
+}
+
+func NewFieldVariableValueToBuilder() *FieldVariableValueToBuilder {
+	builder := &FieldVariableValueToBuilder{}
+	return builder
+}
+
+// 文本值
+//
+// 示例值：测试测试
+func (builder *FieldVariableValueToBuilder) TextValue(textValue string) *FieldVariableValueToBuilder {
+	builder.textValue = textValue
+	builder.textValueFlag = true
+	return builder
+}
+
+// 布尔值
+//
+// 示例值：true
+func (builder *FieldVariableValueToBuilder) BoolValue(boolValue bool) *FieldVariableValueToBuilder {
+	builder.boolValue = boolValue
+	builder.boolValueFlag = true
+	return builder
+}
+
+// 数字值
+//
+// 示例值：100
+func (builder *FieldVariableValueToBuilder) NumberValue(numberValue string) *FieldVariableValueToBuilder {
+	builder.numberValue = numberValue
+	builder.numberValueFlag = true
+	return builder
+}
+
+// 枚举值，这里是枚举的id
+//
+// 示例值：home_address
+func (builder *FieldVariableValueToBuilder) EnumValue(enumValue string) *FieldVariableValueToBuilder {
+	builder.enumValue = enumValue
+	builder.enumValueFlag = true
+	return builder
+}
+
+// 从 1970 开始的天数
+//
+// 示例值：19838
+func (builder *FieldVariableValueToBuilder) DateValue(dateValue string) *FieldVariableValueToBuilder {
+	builder.dateValue = dateValue
+	builder.dateValueFlag = true
+	return builder
+}
+
+// 时间戳，毫秒
+//
+// 示例值：1714013877512
+func (builder *FieldVariableValueToBuilder) DateTimeValue(dateTimeValue string) *FieldVariableValueToBuilder {
+	builder.dateTimeValue = dateTimeValue
+	builder.dateTimeValueFlag = true
+	return builder
+}
+
+// 多语字段值
+//
+// 示例值：
+func (builder *FieldVariableValueToBuilder) I18nValue(i18nValue *FieldVariableValueI18n) *FieldVariableValueToBuilder {
+	builder.i18nValue = i18nValue
+	builder.i18nValueFlag = true
+	return builder
+}
+
+// 对象值，包括对象id和对象类型
+//
+// 示例值：1
+func (builder *FieldVariableValueToBuilder) ObjectValue(objectValue *FieldVariableValueToObject) *FieldVariableValueToBuilder {
+	builder.objectValue = objectValue
+	builder.objectValueFlag = true
+	return builder
+}
+
+// 用户id，根据user_type选择对应的用户id
+//
+// 示例值：ou_c57053dad6eea0aea4696c48433d8562
+func (builder *FieldVariableValueToBuilder) UserValue(userValue string) *FieldVariableValueToBuilder {
+	builder.userValue = userValue
+	builder.userValueFlag = true
+	return builder
+}
+
+// 部门id，根据入参选择对应的部门id
+//
+// 示例值：od-a761814f6bc3f14bd3b00905ec1d7c6f
+func (builder *FieldVariableValueToBuilder) DepartmentValue(departmentValue string) *FieldVariableValueToBuilder {
+	builder.departmentValue = departmentValue
+	builder.departmentValueFlag = true
+	return builder
+}
+
+// 记录类型字段值
+//
+// 示例值：1
+func (builder *FieldVariableValueToBuilder) RecordValue(recordValue *FieldVariableValueToRecord) *FieldVariableValueToBuilder {
+	builder.recordValue = recordValue
+	builder.recordValueFlag = true
+	return builder
+}
+
+// 员工类型字段值，为用户id，根据入参选择返回的用户id
+//
+// 示例值：ou_c57053dad6eea0aea4696c48433d8562
+func (builder *FieldVariableValueToBuilder) EmploymentValue(employmentValue string) *FieldVariableValueToBuilder {
+	builder.employmentValue = employmentValue
+	builder.employmentValueFlag = true
+	return builder
+}
+
+// 数组类型值，里面包含多个值，每个元素都对应subValues中的数组下标
+//
+// 示例值：
+func (builder *FieldVariableValueToBuilder) ListValues(listValues []string) *FieldVariableValueToBuilder {
+	builder.listValues = listValues
+	builder.listValuesFlag = true
+	return builder
+}
+
+func (builder *FieldVariableValueToBuilder) Build() *FieldVariableValueTo {
+	req := &FieldVariableValueTo{}
+	if builder.textValueFlag {
+		req.TextValue = &builder.textValue
+
+	}
+	if builder.boolValueFlag {
+		req.BoolValue = &builder.boolValue
+
+	}
+	if builder.numberValueFlag {
+		req.NumberValue = &builder.numberValue
+
+	}
+	if builder.enumValueFlag {
+		req.EnumValue = &builder.enumValue
+
+	}
+	if builder.dateValueFlag {
+		req.DateValue = &builder.dateValue
+
+	}
+	if builder.dateTimeValueFlag {
+		req.DateTimeValue = &builder.dateTimeValue
+
+	}
+	if builder.i18nValueFlag {
+		req.I18nValue = builder.i18nValue
+	}
+	if builder.objectValueFlag {
+		req.ObjectValue = builder.objectValue
+	}
+	if builder.userValueFlag {
+		req.UserValue = &builder.userValue
+
+	}
+	if builder.departmentValueFlag {
+		req.DepartmentValue = &builder.departmentValue
+
+	}
+	if builder.recordValueFlag {
+		req.RecordValue = builder.recordValue
+	}
+	if builder.employmentValueFlag {
+		req.EmploymentValue = &builder.employmentValue
+
+	}
+	if builder.listValuesFlag {
+		req.ListValues = builder.listValues
+	}
+	return req
+}
+
+type FieldVariableValueToEnum struct {
+	Value *string                 `json:"value,omitempty"` // 枚举项唯一id
+	Name  *FieldVariableValueI18n `json:"name,omitempty"`  // 枚举项名称
+}
+
+type FieldVariableValueToEnumBuilder struct {
+	value     string // 枚举项唯一id
+	valueFlag bool
+	name      *FieldVariableValueI18n // 枚举项名称
+	nameFlag  bool
+}
+
+func NewFieldVariableValueToEnumBuilder() *FieldVariableValueToEnumBuilder {
+	builder := &FieldVariableValueToEnumBuilder{}
+	return builder
+}
+
+// 枚举项唯一id
+//
+// 示例值：home_address
+func (builder *FieldVariableValueToEnumBuilder) Value(value string) *FieldVariableValueToEnumBuilder {
+	builder.value = value
+	builder.valueFlag = true
+	return builder
+}
+
+// 枚举项名称
+//
+// 示例值：
+func (builder *FieldVariableValueToEnumBuilder) Name(name *FieldVariableValueI18n) *FieldVariableValueToEnumBuilder {
+	builder.name = name
+	builder.nameFlag = true
+	return builder
+}
+
+func (builder *FieldVariableValueToEnumBuilder) Build() *FieldVariableValueToEnum {
+	req := &FieldVariableValueToEnum{}
+	if builder.valueFlag {
+		req.Value = &builder.value
+
+	}
+	if builder.nameFlag {
+		req.Name = builder.name
+	}
+	return req
+}
+
+type FieldVariableValueToForReview struct {
+	TextValue       *string                     `json:"text_value,omitempty"`       // 文本值
+	BoolValue       *bool                       `json:"bool_value,omitempty"`       // 布尔值
+	NumberValue     *string                     `json:"number_value,omitempty"`     // 数字值
+	EnumValue       *string                     `json:"enum_value,omitempty"`       // 枚举值，这里是枚举的id
+	DateValue       *string                     `json:"date_value,omitempty"`       // 从 1970 开始的天数
+	DateTimeValue   *string                     `json:"date_time_value,omitempty"`  // 时间戳，毫秒
+	I18nValue       *FieldVariableValueI18n     `json:"i18n_value,omitempty"`       // 多语字段值
+	ObjectValue     *FieldVariableValueToObject `json:"object_value,omitempty"`     // 对象值，包括对象id和对象类型
+	DepartmentValue *string                     `json:"department_value,omitempty"` // 部门id，根据入参选择对应的部门id
+	EmploymentValue *string                     `json:"employment_value,omitempty"` // 员工类型字段值，为用户id，根据入参选择返回的用户id
+	ListValues      []string                    `json:"list_values,omitempty"`      // 数组类型值，里面包含多个值，每个元素都对应subValues中的key
+}
+
+type FieldVariableValueToForReviewBuilder struct {
+	textValue           string // 文本值
+	textValueFlag       bool
+	boolValue           bool // 布尔值
+	boolValueFlag       bool
+	numberValue         string // 数字值
+	numberValueFlag     bool
+	enumValue           string // 枚举值，这里是枚举的id
+	enumValueFlag       bool
+	dateValue           string // 从 1970 开始的天数
+	dateValueFlag       bool
+	dateTimeValue       string // 时间戳，毫秒
+	dateTimeValueFlag   bool
+	i18nValue           *FieldVariableValueI18n // 多语字段值
+	i18nValueFlag       bool
+	objectValue         *FieldVariableValueToObject // 对象值，包括对象id和对象类型
+	objectValueFlag     bool
+	departmentValue     string // 部门id，根据入参选择对应的部门id
+	departmentValueFlag bool
+	employmentValue     string // 员工类型字段值，为用户id，根据入参选择返回的用户id
+	employmentValueFlag bool
+	listValues          []string // 数组类型值，里面包含多个值，每个元素都对应subValues中的key
+	listValuesFlag      bool
+}
+
+func NewFieldVariableValueToForReviewBuilder() *FieldVariableValueToForReviewBuilder {
+	builder := &FieldVariableValueToForReviewBuilder{}
+	return builder
+}
+
+// 文本值
+//
+// 示例值：测试测试
+func (builder *FieldVariableValueToForReviewBuilder) TextValue(textValue string) *FieldVariableValueToForReviewBuilder {
+	builder.textValue = textValue
+	builder.textValueFlag = true
+	return builder
+}
+
+// 布尔值
+//
+// 示例值：true
+func (builder *FieldVariableValueToForReviewBuilder) BoolValue(boolValue bool) *FieldVariableValueToForReviewBuilder {
+	builder.boolValue = boolValue
+	builder.boolValueFlag = true
+	return builder
+}
+
+// 数字值
+//
+// 示例值：100
+func (builder *FieldVariableValueToForReviewBuilder) NumberValue(numberValue string) *FieldVariableValueToForReviewBuilder {
+	builder.numberValue = numberValue
+	builder.numberValueFlag = true
+	return builder
+}
+
+// 枚举值，这里是枚举的id
+//
+// 示例值：home_address
+func (builder *FieldVariableValueToForReviewBuilder) EnumValue(enumValue string) *FieldVariableValueToForReviewBuilder {
+	builder.enumValue = enumValue
+	builder.enumValueFlag = true
+	return builder
+}
+
+// 从 1970 开始的天数
+//
+// 示例值：19838
+func (builder *FieldVariableValueToForReviewBuilder) DateValue(dateValue string) *FieldVariableValueToForReviewBuilder {
+	builder.dateValue = dateValue
+	builder.dateValueFlag = true
+	return builder
+}
+
+// 时间戳，毫秒
+//
+// 示例值：1714013877512
+func (builder *FieldVariableValueToForReviewBuilder) DateTimeValue(dateTimeValue string) *FieldVariableValueToForReviewBuilder {
+	builder.dateTimeValue = dateTimeValue
+	builder.dateTimeValueFlag = true
+	return builder
+}
+
+// 多语字段值
+//
+// 示例值：ou_c57053dad6eea0aea4696c48433d8562
+func (builder *FieldVariableValueToForReviewBuilder) I18nValue(i18nValue *FieldVariableValueI18n) *FieldVariableValueToForReviewBuilder {
+	builder.i18nValue = i18nValue
+	builder.i18nValueFlag = true
+	return builder
+}
+
+// 对象值，包括对象id和对象类型
+//
+// 示例值：od-a761814f6bc3f14bd3b00905ec1d7c6f
+func (builder *FieldVariableValueToForReviewBuilder) ObjectValue(objectValue *FieldVariableValueToObject) *FieldVariableValueToForReviewBuilder {
+	builder.objectValue = objectValue
+	builder.objectValueFlag = true
+	return builder
+}
+
+// 部门id，根据入参选择对应的部门id
+//
+// 示例值：od-a761814f6bc3f14bd3b00905ec1d7c6f
+func (builder *FieldVariableValueToForReviewBuilder) DepartmentValue(departmentValue string) *FieldVariableValueToForReviewBuilder {
+	builder.departmentValue = departmentValue
+	builder.departmentValueFlag = true
+	return builder
+}
+
+// 员工类型字段值，为用户id，根据入参选择返回的用户id
+//
+// 示例值：ou_c57053dad6eea0aea4696c48433d8562
+func (builder *FieldVariableValueToForReviewBuilder) EmploymentValue(employmentValue string) *FieldVariableValueToForReviewBuilder {
+	builder.employmentValue = employmentValue
+	builder.employmentValueFlag = true
+	return builder
+}
+
+// 数组类型值，里面包含多个值，每个元素都对应subValues中的key
+//
+// 示例值：
+func (builder *FieldVariableValueToForReviewBuilder) ListValues(listValues []string) *FieldVariableValueToForReviewBuilder {
+	builder.listValues = listValues
+	builder.listValuesFlag = true
+	return builder
+}
+
+func (builder *FieldVariableValueToForReviewBuilder) Build() *FieldVariableValueToForReview {
+	req := &FieldVariableValueToForReview{}
+	if builder.textValueFlag {
+		req.TextValue = &builder.textValue
+
+	}
+	if builder.boolValueFlag {
+		req.BoolValue = &builder.boolValue
+
+	}
+	if builder.numberValueFlag {
+		req.NumberValue = &builder.numberValue
+
+	}
+	if builder.enumValueFlag {
+		req.EnumValue = &builder.enumValue
+
+	}
+	if builder.dateValueFlag {
+		req.DateValue = &builder.dateValue
+
+	}
+	if builder.dateTimeValueFlag {
+		req.DateTimeValue = &builder.dateTimeValue
+
+	}
+	if builder.i18nValueFlag {
+		req.I18nValue = builder.i18nValue
+	}
+	if builder.objectValueFlag {
+		req.ObjectValue = builder.objectValue
+	}
+	if builder.departmentValueFlag {
+		req.DepartmentValue = &builder.departmentValue
+
+	}
+	if builder.employmentValueFlag {
+		req.EmploymentValue = &builder.employmentValue
+
+	}
+	if builder.listValuesFlag {
+		req.ListValues = builder.listValues
+	}
+	return req
+}
+
+type FieldVariableValueToObject struct {
+	WkId      *string `json:"wk_id,omitempty"`       // wukong的对象唯一标识
+	WkApiName *string `json:"wk_api_name,omitempty"` // wukong的元数据唯一标识
+}
+
+type FieldVariableValueToObjectBuilder struct {
+	wkId          string // wukong的对象唯一标识
+	wkIdFlag      bool
+	wkApiName     string // wukong的元数据唯一标识
+	wkApiNameFlag bool
+}
+
+func NewFieldVariableValueToObjectBuilder() *FieldVariableValueToObjectBuilder {
+	builder := &FieldVariableValueToObjectBuilder{}
+	return builder
+}
+
+// wukong的对象唯一标识
+//
+// 示例值：6863326263210149383
+func (builder *FieldVariableValueToObjectBuilder) WkId(wkId string) *FieldVariableValueToObjectBuilder {
+	builder.wkId = wkId
+	builder.wkIdFlag = true
+	return builder
+}
+
+// wukong的元数据唯一标识
+//
+// 示例值：country_region_subdivision
+func (builder *FieldVariableValueToObjectBuilder) WkApiName(wkApiName string) *FieldVariableValueToObjectBuilder {
+	builder.wkApiName = wkApiName
+	builder.wkApiNameFlag = true
+	return builder
+}
+
+func (builder *FieldVariableValueToObjectBuilder) Build() *FieldVariableValueToObject {
+	req := &FieldVariableValueToObject{}
+	if builder.wkIdFlag {
+		req.WkId = &builder.wkId
+
+	}
+	if builder.wkApiNameFlag {
+		req.WkApiName = &builder.wkApiName
+
+	}
+	return req
+}
+
+type FieldVariableValueToRecord struct {
+	VariableApiName *string `json:"variable_api_name,omitempty"` // 变量唯一标识
+	VariableValue   *string `json:"variable_value,omitempty"`    // 变量值，对应subValues中的key
+}
+
+type FieldVariableValueToRecordBuilder struct {
+	variableApiName     string // 变量唯一标识
+	variableApiNameFlag bool
+	variableValue       string // 变量值，对应subValues中的key
+	variableValueFlag   bool
+}
+
+func NewFieldVariableValueToRecordBuilder() *FieldVariableValueToRecordBuilder {
+	builder := &FieldVariableValueToRecordBuilder{}
+	return builder
+}
+
+// 变量唯一标识
+//
+// 示例值：city_v2
+func (builder *FieldVariableValueToRecordBuilder) VariableApiName(variableApiName string) *FieldVariableValueToRecordBuilder {
+	builder.variableApiName = variableApiName
+	builder.variableApiNameFlag = true
+	return builder
+}
+
+// 变量值，对应subValues中的key
+//
+// 示例值：key1
+func (builder *FieldVariableValueToRecordBuilder) VariableValue(variableValue string) *FieldVariableValueToRecordBuilder {
+	builder.variableValue = variableValue
+	builder.variableValueFlag = true
+	return builder
+}
+
+func (builder *FieldVariableValueToRecordBuilder) Build() *FieldVariableValueToRecord {
+	req := &FieldVariableValueToRecord{}
+	if builder.variableApiNameFlag {
+		req.VariableApiName = &builder.variableApiName
+
+	}
+	if builder.variableValueFlag {
+		req.VariableValue = &builder.variableValue
+
+	}
+	return req
+}
+
+type File struct {
+	Id   *string `json:"id,omitempty"`   // 上传文件ID
+	Name *string `json:"name,omitempty"` // 文件名
 }
 
 type FileBuilder struct {
-	id     string // 上传文件ID
-	idFlag bool
+	id       string // 上传文件ID
+	idFlag   bool
+	name     string // 文件名
+	nameFlag bool
 }
 
 func NewFileBuilder() *FileBuilder {
@@ -8649,13 +9524,25 @@ func (builder *FileBuilder) Id(id string) *FileBuilder {
 	return builder
 }
 
+// 文件名
+//
+// 示例值：document.txt
+func (builder *FileBuilder) Name(name string) *FileBuilder {
+	builder.name = name
+	builder.nameFlag = true
+	return builder
+}
+
 func (builder *FileBuilder) Build() *File {
 	req := &File{}
 	if builder.idFlag {
 		req.Id = &builder.id
 
 	}
+	if builder.nameFlag {
+		req.Name = &builder.name
 
+	}
 	return req
 }
 
@@ -11134,6 +12021,116 @@ func (builder *JobFamilyBuilder) Build() *JobFamily {
 	return req
 }
 
+type JobGrade struct {
+	JobGradeId   *string `json:"job_grade_id,omitempty"` // 职等 ID
+	GradeOrder   *int    `json:"grade_order,omitempty"`  // 职等数值
+	Code         *string `json:"code,omitempty"`         // 编码
+	Names        []*I18n `json:"names,omitempty"`        // 名称
+	Descriptions []*I18n `json:"descriptions,omitempty"` // 描述
+	Active       *bool   `json:"active,omitempty"`       // 启用
+}
+
+type JobGradeBuilder struct {
+	jobGradeId       string // 职等 ID
+	jobGradeIdFlag   bool
+	gradeOrder       int // 职等数值
+	gradeOrderFlag   bool
+	code             string // 编码
+	codeFlag         bool
+	names            []*I18n // 名称
+	namesFlag        bool
+	descriptions     []*I18n // 描述
+	descriptionsFlag bool
+	active           bool // 启用
+	activeFlag       bool
+}
+
+func NewJobGradeBuilder() *JobGradeBuilder {
+	builder := &JobGradeBuilder{}
+	return builder
+}
+
+// 职等 ID
+//
+// 示例值：4692446793125560154
+func (builder *JobGradeBuilder) JobGradeId(jobGradeId string) *JobGradeBuilder {
+	builder.jobGradeId = jobGradeId
+	builder.jobGradeIdFlag = true
+	return builder
+}
+
+// 职等数值
+//
+// 示例值：9999
+func (builder *JobGradeBuilder) GradeOrder(gradeOrder int) *JobGradeBuilder {
+	builder.gradeOrder = gradeOrder
+	builder.gradeOrderFlag = true
+	return builder
+}
+
+// 编码
+//
+// 示例值：A01234
+func (builder *JobGradeBuilder) Code(code string) *JobGradeBuilder {
+	builder.code = code
+	builder.codeFlag = true
+	return builder
+}
+
+// 名称
+//
+// 示例值：
+func (builder *JobGradeBuilder) Names(names []*I18n) *JobGradeBuilder {
+	builder.names = names
+	builder.namesFlag = true
+	return builder
+}
+
+// 描述
+//
+// 示例值：
+func (builder *JobGradeBuilder) Descriptions(descriptions []*I18n) *JobGradeBuilder {
+	builder.descriptions = descriptions
+	builder.descriptionsFlag = true
+	return builder
+}
+
+// 启用
+//
+// 示例值：true
+func (builder *JobGradeBuilder) Active(active bool) *JobGradeBuilder {
+	builder.active = active
+	builder.activeFlag = true
+	return builder
+}
+
+func (builder *JobGradeBuilder) Build() *JobGrade {
+	req := &JobGrade{}
+	if builder.jobGradeIdFlag {
+		req.JobGradeId = &builder.jobGradeId
+
+	}
+	if builder.gradeOrderFlag {
+		req.GradeOrder = &builder.gradeOrder
+
+	}
+	if builder.codeFlag {
+		req.Code = &builder.code
+
+	}
+	if builder.namesFlag {
+		req.Names = builder.names
+	}
+	if builder.descriptionsFlag {
+		req.Descriptions = builder.descriptions
+	}
+	if builder.activeFlag {
+		req.Active = &builder.active
+
+	}
+	return req
+}
+
 type JobLevel struct {
 	JobLevelId   *string            `json:"job_level_id,omitempty"`  // 职级 ID
 	LevelOrder   *int               `json:"level_order,omitempty"`   // 职级数值
@@ -11255,6 +12252,1403 @@ func (builder *JobLevelBuilder) Build() *JobLevel {
 	}
 	if builder.customFieldsFlag {
 		req.CustomFields = builder.customFields
+	}
+	return req
+}
+
+type LangText struct {
+	Lang  *string `json:"lang,omitempty"`  // 语言码
+	Value *string `json:"value,omitempty"` // 语言码对应的文本阿
+}
+
+type LangTextBuilder struct {
+	lang      string // 语言码
+	langFlag  bool
+	value     string // 语言码对应的文本阿
+	valueFlag bool
+}
+
+func NewLangTextBuilder() *LangTextBuilder {
+	builder := &LangTextBuilder{}
+	return builder
+}
+
+// 语言码
+//
+// 示例值：cn_zh
+func (builder *LangTextBuilder) Lang(lang string) *LangTextBuilder {
+	builder.lang = lang
+	builder.langFlag = true
+	return builder
+}
+
+// 语言码对应的文本阿
+//
+// 示例值：test
+func (builder *LangTextBuilder) Value(value string) *LangTextBuilder {
+	builder.value = value
+	builder.valueFlag = true
+	return builder
+}
+
+func (builder *LangTextBuilder) Build() *LangText {
+	req := &LangText{}
+	if builder.langFlag {
+		req.Lang = &builder.lang
+
+	}
+	if builder.valueFlag {
+		req.Value = &builder.value
+
+	}
+	return req
+}
+
+type LeaveAccrualRecord struct {
+	Id               *string     `json:"id,omitempty"`                // 授予记录唯一ID
+	EmploymentId     *string     `json:"employment_id,omitempty"`     // 员工ID
+	LeaveTypeId      *string     `json:"leave_type_id,omitempty"`     // 假期类型ID
+	GrantingQuantity *string     `json:"granting_quantity,omitempty"` // 授予数量
+	GrantingUnit     *int        `json:"granting_unit,omitempty"`     // 授予单位，1表示天，2表示小时
+	EffectiveDate    *string     `json:"effective_date,omitempty"`    // 生效日期，格式"2020-01-01"
+	ExpirationDate   *string     `json:"expiration_date,omitempty"`   // 失效日期，格式"2020-01-01"
+	GrantedBy        *int        `json:"granted_by,omitempty"`        // 授予来源，1：系统授予；2：手动授予；3：外部系统授予
+	Reason           []*LangText `json:"reason,omitempty"`            // 授予原因
+	CreatedAt        *string     `json:"created_at,omitempty"`        // 授予记录的创建时间，unix时间戳
+	CreatedBy        *string     `json:"created_by,omitempty"`        // 授予记录的创建人的ID
+	UpdatedAt        *string     `json:"updated_at,omitempty"`        // 授予记录的更新时间，unix时间戳
+	UpdatedBy        *string     `json:"updated_by,omitempty"`        // 授予记录的更新人的ID
+}
+
+type LeaveAccrualRecordBuilder struct {
+	id                   string // 授予记录唯一ID
+	idFlag               bool
+	employmentId         string // 员工ID
+	employmentIdFlag     bool
+	leaveTypeId          string // 假期类型ID
+	leaveTypeIdFlag      bool
+	grantingQuantity     string // 授予数量
+	grantingQuantityFlag bool
+	grantingUnit         int // 授予单位，1表示天，2表示小时
+	grantingUnitFlag     bool
+	effectiveDate        string // 生效日期，格式"2020-01-01"
+	effectiveDateFlag    bool
+	expirationDate       string // 失效日期，格式"2020-01-01"
+	expirationDateFlag   bool
+	grantedBy            int // 授予来源，1：系统授予；2：手动授予；3：外部系统授予
+	grantedByFlag        bool
+	reason               []*LangText // 授予原因
+	reasonFlag           bool
+	createdAt            string // 授予记录的创建时间，unix时间戳
+	createdAtFlag        bool
+	createdBy            string // 授予记录的创建人的ID
+	createdByFlag        bool
+	updatedAt            string // 授予记录的更新时间，unix时间戳
+	updatedAtFlag        bool
+	updatedBy            string // 授予记录的更新人的ID
+	updatedByFlag        bool
+}
+
+func NewLeaveAccrualRecordBuilder() *LeaveAccrualRecordBuilder {
+	builder := &LeaveAccrualRecordBuilder{}
+	return builder
+}
+
+// 授予记录唯一ID
+//
+// 示例值：1
+func (builder *LeaveAccrualRecordBuilder) Id(id string) *LeaveAccrualRecordBuilder {
+	builder.id = id
+	builder.idFlag = true
+	return builder
+}
+
+// 员工ID
+//
+// 示例值：1
+func (builder *LeaveAccrualRecordBuilder) EmploymentId(employmentId string) *LeaveAccrualRecordBuilder {
+	builder.employmentId = employmentId
+	builder.employmentIdFlag = true
+	return builder
+}
+
+// 假期类型ID
+//
+// 示例值：1
+func (builder *LeaveAccrualRecordBuilder) LeaveTypeId(leaveTypeId string) *LeaveAccrualRecordBuilder {
+	builder.leaveTypeId = leaveTypeId
+	builder.leaveTypeIdFlag = true
+	return builder
+}
+
+// 授予数量
+//
+// 示例值：1
+func (builder *LeaveAccrualRecordBuilder) GrantingQuantity(grantingQuantity string) *LeaveAccrualRecordBuilder {
+	builder.grantingQuantity = grantingQuantity
+	builder.grantingQuantityFlag = true
+	return builder
+}
+
+// 授予单位，1表示天，2表示小时
+//
+// 示例值：1
+func (builder *LeaveAccrualRecordBuilder) GrantingUnit(grantingUnit int) *LeaveAccrualRecordBuilder {
+	builder.grantingUnit = grantingUnit
+	builder.grantingUnitFlag = true
+	return builder
+}
+
+// 生效日期，格式"2020-01-01"
+//
+// 示例值：2020-01-01
+func (builder *LeaveAccrualRecordBuilder) EffectiveDate(effectiveDate string) *LeaveAccrualRecordBuilder {
+	builder.effectiveDate = effectiveDate
+	builder.effectiveDateFlag = true
+	return builder
+}
+
+// 失效日期，格式"2020-01-01"
+//
+// 示例值：2020-01-01
+func (builder *LeaveAccrualRecordBuilder) ExpirationDate(expirationDate string) *LeaveAccrualRecordBuilder {
+	builder.expirationDate = expirationDate
+	builder.expirationDateFlag = true
+	return builder
+}
+
+// 授予来源，1：系统授予；2：手动授予；3：外部系统授予
+//
+// 示例值：1
+func (builder *LeaveAccrualRecordBuilder) GrantedBy(grantedBy int) *LeaveAccrualRecordBuilder {
+	builder.grantedBy = grantedBy
+	builder.grantedByFlag = true
+	return builder
+}
+
+// 授予原因
+//
+// 示例值：
+func (builder *LeaveAccrualRecordBuilder) Reason(reason []*LangText) *LeaveAccrualRecordBuilder {
+	builder.reason = reason
+	builder.reasonFlag = true
+	return builder
+}
+
+// 授予记录的创建时间，unix时间戳
+//
+// 示例值：1
+func (builder *LeaveAccrualRecordBuilder) CreatedAt(createdAt string) *LeaveAccrualRecordBuilder {
+	builder.createdAt = createdAt
+	builder.createdAtFlag = true
+	return builder
+}
+
+// 授予记录的创建人的ID
+//
+// 示例值：1
+func (builder *LeaveAccrualRecordBuilder) CreatedBy(createdBy string) *LeaveAccrualRecordBuilder {
+	builder.createdBy = createdBy
+	builder.createdByFlag = true
+	return builder
+}
+
+// 授予记录的更新时间，unix时间戳
+//
+// 示例值：1
+func (builder *LeaveAccrualRecordBuilder) UpdatedAt(updatedAt string) *LeaveAccrualRecordBuilder {
+	builder.updatedAt = updatedAt
+	builder.updatedAtFlag = true
+	return builder
+}
+
+// 授予记录的更新人的ID
+//
+// 示例值：1
+func (builder *LeaveAccrualRecordBuilder) UpdatedBy(updatedBy string) *LeaveAccrualRecordBuilder {
+	builder.updatedBy = updatedBy
+	builder.updatedByFlag = true
+	return builder
+}
+
+func (builder *LeaveAccrualRecordBuilder) Build() *LeaveAccrualRecord {
+	req := &LeaveAccrualRecord{}
+	if builder.idFlag {
+		req.Id = &builder.id
+
+	}
+	if builder.employmentIdFlag {
+		req.EmploymentId = &builder.employmentId
+
+	}
+	if builder.leaveTypeIdFlag {
+		req.LeaveTypeId = &builder.leaveTypeId
+
+	}
+	if builder.grantingQuantityFlag {
+		req.GrantingQuantity = &builder.grantingQuantity
+
+	}
+	if builder.grantingUnitFlag {
+		req.GrantingUnit = &builder.grantingUnit
+
+	}
+	if builder.effectiveDateFlag {
+		req.EffectiveDate = &builder.effectiveDate
+
+	}
+	if builder.expirationDateFlag {
+		req.ExpirationDate = &builder.expirationDate
+
+	}
+	if builder.grantedByFlag {
+		req.GrantedBy = &builder.grantedBy
+
+	}
+	if builder.reasonFlag {
+		req.Reason = builder.reason
+	}
+	if builder.createdAtFlag {
+		req.CreatedAt = &builder.createdAt
+
+	}
+	if builder.createdByFlag {
+		req.CreatedBy = &builder.createdBy
+
+	}
+	if builder.updatedAtFlag {
+		req.UpdatedAt = &builder.updatedAt
+
+	}
+	if builder.updatedByFlag {
+		req.UpdatedBy = &builder.updatedBy
+
+	}
+	return req
+}
+
+type LeaveBalance struct {
+	LeaveTypeId          *string `json:"leave_type_id,omitempty"`          // 假期类型ID
+	LeaveTypeName        []*I18n `json:"leave_type_name,omitempty"`        // 假期类型名称
+	HistoricalCyclesLeft *string `json:"historical_cycles_left,omitempty"` // 结转的历史周期授予时长
+	ThisCycleTotal       *string `json:"this_cycle_total,omitempty"`       // 本周期授予时长
+	ThisCycleTaken       *string `json:"this_cycle_taken,omitempty"`       // 本周期已休时长
+	LeaveBalance         *string `json:"leave_balance,omitempty"`          // 假期余额
+	LeaveDurationUnit    *int    `json:"leave_duration_unit,omitempty"`    // 假期时长的单位
+}
+
+type LeaveBalanceBuilder struct {
+	leaveTypeId              string // 假期类型ID
+	leaveTypeIdFlag          bool
+	leaveTypeName            []*I18n // 假期类型名称
+	leaveTypeNameFlag        bool
+	historicalCyclesLeft     string // 结转的历史周期授予时长
+	historicalCyclesLeftFlag bool
+	thisCycleTotal           string // 本周期授予时长
+	thisCycleTotalFlag       bool
+	thisCycleTaken           string // 本周期已休时长
+	thisCycleTakenFlag       bool
+	leaveBalance             string // 假期余额
+	leaveBalanceFlag         bool
+	leaveDurationUnit        int // 假期时长的单位
+	leaveDurationUnitFlag    bool
+}
+
+func NewLeaveBalanceBuilder() *LeaveBalanceBuilder {
+	builder := &LeaveBalanceBuilder{}
+	return builder
+}
+
+// 假期类型ID
+//
+// 示例值：4718803945687580505
+func (builder *LeaveBalanceBuilder) LeaveTypeId(leaveTypeId string) *LeaveBalanceBuilder {
+	builder.leaveTypeId = leaveTypeId
+	builder.leaveTypeIdFlag = true
+	return builder
+}
+
+// 假期类型名称
+//
+// 示例值：
+func (builder *LeaveBalanceBuilder) LeaveTypeName(leaveTypeName []*I18n) *LeaveBalanceBuilder {
+	builder.leaveTypeName = leaveTypeName
+	builder.leaveTypeNameFlag = true
+	return builder
+}
+
+// 结转的历史周期授予时长
+//
+// 示例值：0
+func (builder *LeaveBalanceBuilder) HistoricalCyclesLeft(historicalCyclesLeft string) *LeaveBalanceBuilder {
+	builder.historicalCyclesLeft = historicalCyclesLeft
+	builder.historicalCyclesLeftFlag = true
+	return builder
+}
+
+// 本周期授予时长
+//
+// 示例值：0
+func (builder *LeaveBalanceBuilder) ThisCycleTotal(thisCycleTotal string) *LeaveBalanceBuilder {
+	builder.thisCycleTotal = thisCycleTotal
+	builder.thisCycleTotalFlag = true
+	return builder
+}
+
+// 本周期已休时长
+//
+// 示例值：0
+func (builder *LeaveBalanceBuilder) ThisCycleTaken(thisCycleTaken string) *LeaveBalanceBuilder {
+	builder.thisCycleTaken = thisCycleTaken
+	builder.thisCycleTakenFlag = true
+	return builder
+}
+
+// 假期余额
+//
+// 示例值：0
+func (builder *LeaveBalanceBuilder) LeaveBalance(leaveBalance string) *LeaveBalanceBuilder {
+	builder.leaveBalance = leaveBalance
+	builder.leaveBalanceFlag = true
+	return builder
+}
+
+// 假期时长的单位
+//
+// 示例值：0
+func (builder *LeaveBalanceBuilder) LeaveDurationUnit(leaveDurationUnit int) *LeaveBalanceBuilder {
+	builder.leaveDurationUnit = leaveDurationUnit
+	builder.leaveDurationUnitFlag = true
+	return builder
+}
+
+func (builder *LeaveBalanceBuilder) Build() *LeaveBalance {
+	req := &LeaveBalance{}
+	if builder.leaveTypeIdFlag {
+		req.LeaveTypeId = &builder.leaveTypeId
+
+	}
+	if builder.leaveTypeNameFlag {
+		req.LeaveTypeName = builder.leaveTypeName
+	}
+	if builder.historicalCyclesLeftFlag {
+		req.HistoricalCyclesLeft = &builder.historicalCyclesLeft
+
+	}
+	if builder.thisCycleTotalFlag {
+		req.ThisCycleTotal = &builder.thisCycleTotal
+
+	}
+	if builder.thisCycleTakenFlag {
+		req.ThisCycleTaken = &builder.thisCycleTaken
+
+	}
+	if builder.leaveBalanceFlag {
+		req.LeaveBalance = &builder.leaveBalance
+
+	}
+	if builder.leaveDurationUnitFlag {
+		req.LeaveDurationUnit = &builder.leaveDurationUnit
+
+	}
+	return req
+}
+
+type LeaveEmployExpireRecord struct {
+	Id                   *string     `json:"id,omitempty"`                     // record id
+	EmploymentId         *string     `json:"employment_id,omitempty"`          // 员工ID
+	LeaveTypeId          *string     `json:"leave_type_id,omitempty"`          // 假期类型ID
+	GrantingQuantity     *string     `json:"granting_quantity,omitempty"`      // 授予余额数量
+	LeftGrantingQuantity *string     `json:"left_granting_quantity,omitempty"` // 授予数量 扣减完后的授予数量
+	GrantingUnit         *int        `json:"granting_unit,omitempty"`          // 授予单位，1表示天，2表示小时
+	EffectiveDate        *string     `json:"effective_date,omitempty"`         // 生效日期，格式"2020-01-01"
+	ExpirationDate       *string     `json:"expiration_date,omitempty"`        // 失效日期，格式"2020-01-01"
+	Reason               []*LangText `json:"reason,omitempty"`                 // 授予原因
+	IsUpdateByExternal   *bool       `json:"is_update_by_external,omitempty"`  // 是否已经被外部系统更改过
+	AccrualSource        *int        `json:"accrual_source,omitempty"`         // 授予来源
+	LeaveSubTypeId       *string     `json:"leave_sub_type_id,omitempty"`      // 假期子类型id
+}
+
+type LeaveEmployExpireRecordBuilder struct {
+	id                       string // record id
+	idFlag                   bool
+	employmentId             string // 员工ID
+	employmentIdFlag         bool
+	leaveTypeId              string // 假期类型ID
+	leaveTypeIdFlag          bool
+	grantingQuantity         string // 授予余额数量
+	grantingQuantityFlag     bool
+	leftGrantingQuantity     string // 授予数量 扣减完后的授予数量
+	leftGrantingQuantityFlag bool
+	grantingUnit             int // 授予单位，1表示天，2表示小时
+	grantingUnitFlag         bool
+	effectiveDate            string // 生效日期，格式"2020-01-01"
+	effectiveDateFlag        bool
+	expirationDate           string // 失效日期，格式"2020-01-01"
+	expirationDateFlag       bool
+	reason                   []*LangText // 授予原因
+	reasonFlag               bool
+	isUpdateByExternal       bool // 是否已经被外部系统更改过
+	isUpdateByExternalFlag   bool
+	accrualSource            int // 授予来源
+	accrualSourceFlag        bool
+	leaveSubTypeId           string // 假期子类型id
+	leaveSubTypeIdFlag       bool
+}
+
+func NewLeaveEmployExpireRecordBuilder() *LeaveEmployExpireRecordBuilder {
+	builder := &LeaveEmployExpireRecordBuilder{}
+	return builder
+}
+
+// record id
+//
+// 示例值：1
+func (builder *LeaveEmployExpireRecordBuilder) Id(id string) *LeaveEmployExpireRecordBuilder {
+	builder.id = id
+	builder.idFlag = true
+	return builder
+}
+
+// 员工ID
+//
+// 示例值：1
+func (builder *LeaveEmployExpireRecordBuilder) EmploymentId(employmentId string) *LeaveEmployExpireRecordBuilder {
+	builder.employmentId = employmentId
+	builder.employmentIdFlag = true
+	return builder
+}
+
+// 假期类型ID
+//
+// 示例值：1
+func (builder *LeaveEmployExpireRecordBuilder) LeaveTypeId(leaveTypeId string) *LeaveEmployExpireRecordBuilder {
+	builder.leaveTypeId = leaveTypeId
+	builder.leaveTypeIdFlag = true
+	return builder
+}
+
+// 授予余额数量
+//
+// 示例值：1
+func (builder *LeaveEmployExpireRecordBuilder) GrantingQuantity(grantingQuantity string) *LeaveEmployExpireRecordBuilder {
+	builder.grantingQuantity = grantingQuantity
+	builder.grantingQuantityFlag = true
+	return builder
+}
+
+// 授予数量 扣减完后的授予数量
+//
+// 示例值：1
+func (builder *LeaveEmployExpireRecordBuilder) LeftGrantingQuantity(leftGrantingQuantity string) *LeaveEmployExpireRecordBuilder {
+	builder.leftGrantingQuantity = leftGrantingQuantity
+	builder.leftGrantingQuantityFlag = true
+	return builder
+}
+
+// 授予单位，1表示天，2表示小时
+//
+// 示例值：1
+func (builder *LeaveEmployExpireRecordBuilder) GrantingUnit(grantingUnit int) *LeaveEmployExpireRecordBuilder {
+	builder.grantingUnit = grantingUnit
+	builder.grantingUnitFlag = true
+	return builder
+}
+
+// 生效日期，格式"2020-01-01"
+//
+// 示例值：2020-01-01
+func (builder *LeaveEmployExpireRecordBuilder) EffectiveDate(effectiveDate string) *LeaveEmployExpireRecordBuilder {
+	builder.effectiveDate = effectiveDate
+	builder.effectiveDateFlag = true
+	return builder
+}
+
+// 失效日期，格式"2020-01-01"
+//
+// 示例值：2020-01-01
+func (builder *LeaveEmployExpireRecordBuilder) ExpirationDate(expirationDate string) *LeaveEmployExpireRecordBuilder {
+	builder.expirationDate = expirationDate
+	builder.expirationDateFlag = true
+	return builder
+}
+
+// 授予原因
+//
+// 示例值：
+func (builder *LeaveEmployExpireRecordBuilder) Reason(reason []*LangText) *LeaveEmployExpireRecordBuilder {
+	builder.reason = reason
+	builder.reasonFlag = true
+	return builder
+}
+
+// 是否已经被外部系统更改过
+//
+// 示例值：true
+func (builder *LeaveEmployExpireRecordBuilder) IsUpdateByExternal(isUpdateByExternal bool) *LeaveEmployExpireRecordBuilder {
+	builder.isUpdateByExternal = isUpdateByExternal
+	builder.isUpdateByExternalFlag = true
+	return builder
+}
+
+// 授予来源
+//
+// 示例值：1
+func (builder *LeaveEmployExpireRecordBuilder) AccrualSource(accrualSource int) *LeaveEmployExpireRecordBuilder {
+	builder.accrualSource = accrualSource
+	builder.accrualSourceFlag = true
+	return builder
+}
+
+// 假期子类型id
+//
+// 示例值：1
+func (builder *LeaveEmployExpireRecordBuilder) LeaveSubTypeId(leaveSubTypeId string) *LeaveEmployExpireRecordBuilder {
+	builder.leaveSubTypeId = leaveSubTypeId
+	builder.leaveSubTypeIdFlag = true
+	return builder
+}
+
+func (builder *LeaveEmployExpireRecordBuilder) Build() *LeaveEmployExpireRecord {
+	req := &LeaveEmployExpireRecord{}
+	if builder.idFlag {
+		req.Id = &builder.id
+
+	}
+	if builder.employmentIdFlag {
+		req.EmploymentId = &builder.employmentId
+
+	}
+	if builder.leaveTypeIdFlag {
+		req.LeaveTypeId = &builder.leaveTypeId
+
+	}
+	if builder.grantingQuantityFlag {
+		req.GrantingQuantity = &builder.grantingQuantity
+
+	}
+	if builder.leftGrantingQuantityFlag {
+		req.LeftGrantingQuantity = &builder.leftGrantingQuantity
+
+	}
+	if builder.grantingUnitFlag {
+		req.GrantingUnit = &builder.grantingUnit
+
+	}
+	if builder.effectiveDateFlag {
+		req.EffectiveDate = &builder.effectiveDate
+
+	}
+	if builder.expirationDateFlag {
+		req.ExpirationDate = &builder.expirationDate
+
+	}
+	if builder.reasonFlag {
+		req.Reason = builder.reason
+	}
+	if builder.isUpdateByExternalFlag {
+		req.IsUpdateByExternal = &builder.isUpdateByExternal
+
+	}
+	if builder.accrualSourceFlag {
+		req.AccrualSource = &builder.accrualSource
+
+	}
+	if builder.leaveSubTypeIdFlag {
+		req.LeaveSubTypeId = &builder.leaveSubTypeId
+
+	}
+	return req
+}
+
+type LeaveGrantingRecord struct {
+	Id               *string `json:"id,omitempty"`                // 假期授予记录 ID
+	EmploymentId     *string `json:"employment_id,omitempty"`     // 员工 ID
+	LeaveTypeId      *string `json:"leave_type_id,omitempty"`     // 假期类型 ID
+	GrantingQuantity *string `json:"granting_quantity,omitempty"` // 授予数量
+	GrantingUnit     *int    `json:"granting_unit,omitempty"`     // 授予时长单位
+	EffectiveDate    *string `json:"effective_date,omitempty"`    // 生效时间
+	ExpirationDate   *string `json:"expiration_date,omitempty"`   // 失效时间（根据休假规则自动计算）
+	GrantedBy        *int    `json:"granted_by,omitempty"`        // 授予来源
+	Reason           []*I18n `json:"reason,omitempty"`            // 授予原因
+	CreatedAt        *string `json:"created_at,omitempty"`        // 授予记录的创建时间，毫秒级unix时间戳
+	CreatedBy        *string `json:"created_by,omitempty"`        // 授予记录的创建人，值为创建人的员工 ID
+	UpdatedAt        *string `json:"updated_at,omitempty"`        // 授予记录的更新时间
+	UpdatedBy        *string `json:"updated_by,omitempty"`        // 授予记录的更新人，值为更新人的员工 ID
+	SectionType      *int    `json:"section_type,omitempty"`      // 是否参与折算
+}
+
+type LeaveGrantingRecordBuilder struct {
+	id                   string // 假期授予记录 ID
+	idFlag               bool
+	employmentId         string // 员工 ID
+	employmentIdFlag     bool
+	leaveTypeId          string // 假期类型 ID
+	leaveTypeIdFlag      bool
+	grantingQuantity     string // 授予数量
+	grantingQuantityFlag bool
+	grantingUnit         int // 授予时长单位
+	grantingUnitFlag     bool
+	effectiveDate        string // 生效时间
+	effectiveDateFlag    bool
+	expirationDate       string // 失效时间（根据休假规则自动计算）
+	expirationDateFlag   bool
+	grantedBy            int // 授予来源
+	grantedByFlag        bool
+	reason               []*I18n // 授予原因
+	reasonFlag           bool
+	createdAt            string // 授予记录的创建时间，毫秒级unix时间戳
+	createdAtFlag        bool
+	createdBy            string // 授予记录的创建人，值为创建人的员工 ID
+	createdByFlag        bool
+	updatedAt            string // 授予记录的更新时间
+	updatedAtFlag        bool
+	updatedBy            string // 授予记录的更新人，值为更新人的员工 ID
+	updatedByFlag        bool
+	sectionType          int // 是否参与折算
+	sectionTypeFlag      bool
+}
+
+func NewLeaveGrantingRecordBuilder() *LeaveGrantingRecordBuilder {
+	builder := &LeaveGrantingRecordBuilder{}
+	return builder
+}
+
+// 假期授予记录 ID
+//
+// 示例值：4718803945687580505
+func (builder *LeaveGrantingRecordBuilder) Id(id string) *LeaveGrantingRecordBuilder {
+	builder.id = id
+	builder.idFlag = true
+	return builder
+}
+
+// 员工 ID
+//
+// 示例值：4718803945687580505
+func (builder *LeaveGrantingRecordBuilder) EmploymentId(employmentId string) *LeaveGrantingRecordBuilder {
+	builder.employmentId = employmentId
+	builder.employmentIdFlag = true
+	return builder
+}
+
+// 假期类型 ID
+//
+// 示例值：4718803945687580505
+func (builder *LeaveGrantingRecordBuilder) LeaveTypeId(leaveTypeId string) *LeaveGrantingRecordBuilder {
+	builder.leaveTypeId = leaveTypeId
+	builder.leaveTypeIdFlag = true
+	return builder
+}
+
+// 授予数量
+//
+// 示例值：4718803945687580505
+func (builder *LeaveGrantingRecordBuilder) GrantingQuantity(grantingQuantity string) *LeaveGrantingRecordBuilder {
+	builder.grantingQuantity = grantingQuantity
+	builder.grantingQuantityFlag = true
+	return builder
+}
+
+// 授予时长单位
+//
+// 示例值：1
+func (builder *LeaveGrantingRecordBuilder) GrantingUnit(grantingUnit int) *LeaveGrantingRecordBuilder {
+	builder.grantingUnit = grantingUnit
+	builder.grantingUnitFlag = true
+	return builder
+}
+
+// 生效时间
+//
+// 示例值：2022-01-01
+func (builder *LeaveGrantingRecordBuilder) EffectiveDate(effectiveDate string) *LeaveGrantingRecordBuilder {
+	builder.effectiveDate = effectiveDate
+	builder.effectiveDateFlag = true
+	return builder
+}
+
+// 失效时间（根据休假规则自动计算）
+//
+// 示例值：2022-01-01
+func (builder *LeaveGrantingRecordBuilder) ExpirationDate(expirationDate string) *LeaveGrantingRecordBuilder {
+	builder.expirationDate = expirationDate
+	builder.expirationDateFlag = true
+	return builder
+}
+
+// 授予来源
+//
+// 示例值：1
+func (builder *LeaveGrantingRecordBuilder) GrantedBy(grantedBy int) *LeaveGrantingRecordBuilder {
+	builder.grantedBy = grantedBy
+	builder.grantedByFlag = true
+	return builder
+}
+
+// 授予原因
+//
+// 示例值：
+func (builder *LeaveGrantingRecordBuilder) Reason(reason []*I18n) *LeaveGrantingRecordBuilder {
+	builder.reason = reason
+	builder.reasonFlag = true
+	return builder
+}
+
+// 授予记录的创建时间，毫秒级unix时间戳
+//
+// 示例值：4718803945687580505
+func (builder *LeaveGrantingRecordBuilder) CreatedAt(createdAt string) *LeaveGrantingRecordBuilder {
+	builder.createdAt = createdAt
+	builder.createdAtFlag = true
+	return builder
+}
+
+// 授予记录的创建人，值为创建人的员工 ID
+//
+// 示例值：1
+func (builder *LeaveGrantingRecordBuilder) CreatedBy(createdBy string) *LeaveGrantingRecordBuilder {
+	builder.createdBy = createdBy
+	builder.createdByFlag = true
+	return builder
+}
+
+// 授予记录的更新时间
+//
+// 示例值：2020-05-02 00:00:00
+func (builder *LeaveGrantingRecordBuilder) UpdatedAt(updatedAt string) *LeaveGrantingRecordBuilder {
+	builder.updatedAt = updatedAt
+	builder.updatedAtFlag = true
+	return builder
+}
+
+// 授予记录的更新人，值为更新人的员工 ID
+//
+// 示例值：123456789
+func (builder *LeaveGrantingRecordBuilder) UpdatedBy(updatedBy string) *LeaveGrantingRecordBuilder {
+	builder.updatedBy = updatedBy
+	builder.updatedByFlag = true
+	return builder
+}
+
+// 是否参与折算
+//
+// 示例值：1
+func (builder *LeaveGrantingRecordBuilder) SectionType(sectionType int) *LeaveGrantingRecordBuilder {
+	builder.sectionType = sectionType
+	builder.sectionTypeFlag = true
+	return builder
+}
+
+func (builder *LeaveGrantingRecordBuilder) Build() *LeaveGrantingRecord {
+	req := &LeaveGrantingRecord{}
+	if builder.idFlag {
+		req.Id = &builder.id
+
+	}
+	if builder.employmentIdFlag {
+		req.EmploymentId = &builder.employmentId
+
+	}
+	if builder.leaveTypeIdFlag {
+		req.LeaveTypeId = &builder.leaveTypeId
+
+	}
+	if builder.grantingQuantityFlag {
+		req.GrantingQuantity = &builder.grantingQuantity
+
+	}
+	if builder.grantingUnitFlag {
+		req.GrantingUnit = &builder.grantingUnit
+
+	}
+	if builder.effectiveDateFlag {
+		req.EffectiveDate = &builder.effectiveDate
+
+	}
+	if builder.expirationDateFlag {
+		req.ExpirationDate = &builder.expirationDate
+
+	}
+	if builder.grantedByFlag {
+		req.GrantedBy = &builder.grantedBy
+
+	}
+	if builder.reasonFlag {
+		req.Reason = builder.reason
+	}
+	if builder.createdAtFlag {
+		req.CreatedAt = &builder.createdAt
+
+	}
+	if builder.createdByFlag {
+		req.CreatedBy = &builder.createdBy
+
+	}
+	if builder.updatedAtFlag {
+		req.UpdatedAt = &builder.updatedAt
+
+	}
+	if builder.updatedByFlag {
+		req.UpdatedBy = &builder.updatedBy
+
+	}
+	if builder.sectionTypeFlag {
+		req.SectionType = &builder.sectionType
+
+	}
+	return req
+}
+
+type LeaveRequest struct {
+	LeaveRequestId        *string               `json:"leave_request_id,omitempty"`         // 请假记录ID
+	EmploymentId          *string               `json:"employment_id,omitempty"`            // 雇佣信息ID
+	EmploymentName        []*I18n               `json:"employment_name,omitempty"`          // 员工姓名
+	LeaveTypeId           *string               `json:"leave_type_id,omitempty"`            // 假期类型ID
+	LeaveTypeName         []*I18n               `json:"leave_type_name,omitempty"`          // 假期类型名称
+	StartTime             *string               `json:"start_time,omitempty"`               // 假期开始时间
+	EndTime               *string               `json:"end_time,omitempty"`                 // 假期结束时间
+	LeaveDuration         *string               `json:"leave_duration,omitempty"`           // 假期时长
+	LeaveDurationUnit     *int                  `json:"leave_duration_unit,omitempty"`      // 假期时长的单位
+	LeaveRequestStatus    *int                  `json:"leave_request_status,omitempty"`     // 请假记录的状态
+	GrantSource           *string               `json:"grant_source,omitempty"`             // 数据来源
+	ReturnTime            *string               `json:"return_time,omitempty"`              // 返岗时间
+	SubmittedAt           *string               `json:"submitted_at,omitempty"`             // 发起时间
+	SubmittedBy           *string               `json:"submitted_by,omitempty"`             // 发起人
+	Notes                 *string               `json:"notes,omitempty"`                    // 备注
+	ApprovalDate          *string               `json:"approval_date,omitempty"`            // 审批通过日期
+	IsDeducted            *bool                 `json:"is_deducted,omitempty"`              // 是否带薪
+	Detail                []*LeaveRequestDetail `json:"detail,omitempty"`                   // 请假详情
+	LeaveTypeCode         *string               `json:"leave_type_code,omitempty"`          // 假期类型枚举
+	ActualEndDate         *string               `json:"actual_end_date,omitempty"`          // 实际结束日期
+	EstimatedEndDate      *string               `json:"estimated_end_date,omitempty"`       // 预估结束日期
+	TimeZone              *string               `json:"time_zone,omitempty"`                // 时区
+	DataSource            *int                  `json:"data_source,omitempty"`              // 请假记录数据来源
+	LeaveProcessId        []string              `json:"leave_process_id,omitempty"`         // 请假申请流程ID
+	LeaveCorrectProcessId []string              `json:"leave_correct_process_id,omitempty"` // 请假更正流程ID
+	LeaveCancelProcessId  []string              `json:"leave_cancel_process_id,omitempty"`  // 请假取消流程ID
+	LeaveReturnProcessId  []string              `json:"leave_return_process_id,omitempty"`  // 请假返岗流程ID
+	WdPaidType            *int                  `json:"wd_paid_type,omitempty"`             // workDay算薪类型
+}
+
+type LeaveRequestBuilder struct {
+	leaveRequestId            string // 请假记录ID
+	leaveRequestIdFlag        bool
+	employmentId              string // 雇佣信息ID
+	employmentIdFlag          bool
+	employmentName            []*I18n // 员工姓名
+	employmentNameFlag        bool
+	leaveTypeId               string // 假期类型ID
+	leaveTypeIdFlag           bool
+	leaveTypeName             []*I18n // 假期类型名称
+	leaveTypeNameFlag         bool
+	startTime                 string // 假期开始时间
+	startTimeFlag             bool
+	endTime                   string // 假期结束时间
+	endTimeFlag               bool
+	leaveDuration             string // 假期时长
+	leaveDurationFlag         bool
+	leaveDurationUnit         int // 假期时长的单位
+	leaveDurationUnitFlag     bool
+	leaveRequestStatus        int // 请假记录的状态
+	leaveRequestStatusFlag    bool
+	grantSource               string // 数据来源
+	grantSourceFlag           bool
+	returnTime                string // 返岗时间
+	returnTimeFlag            bool
+	submittedAt               string // 发起时间
+	submittedAtFlag           bool
+	submittedBy               string // 发起人
+	submittedByFlag           bool
+	notes                     string // 备注
+	notesFlag                 bool
+	approvalDate              string // 审批通过日期
+	approvalDateFlag          bool
+	isDeducted                bool // 是否带薪
+	isDeductedFlag            bool
+	detail                    []*LeaveRequestDetail // 请假详情
+	detailFlag                bool
+	leaveTypeCode             string // 假期类型枚举
+	leaveTypeCodeFlag         bool
+	actualEndDate             string // 实际结束日期
+	actualEndDateFlag         bool
+	estimatedEndDate          string // 预估结束日期
+	estimatedEndDateFlag      bool
+	timeZone                  string // 时区
+	timeZoneFlag              bool
+	dataSource                int // 请假记录数据来源
+	dataSourceFlag            bool
+	leaveProcessId            []string // 请假申请流程ID
+	leaveProcessIdFlag        bool
+	leaveCorrectProcessId     []string // 请假更正流程ID
+	leaveCorrectProcessIdFlag bool
+	leaveCancelProcessId      []string // 请假取消流程ID
+	leaveCancelProcessIdFlag  bool
+	leaveReturnProcessId      []string // 请假返岗流程ID
+	leaveReturnProcessIdFlag  bool
+	wdPaidType                int // workDay算薪类型
+	wdPaidTypeFlag            bool
+}
+
+func NewLeaveRequestBuilder() *LeaveRequestBuilder {
+	builder := &LeaveRequestBuilder{}
+	return builder
+}
+
+// 请假记录ID
+//
+// 示例值：4718803945687580505
+func (builder *LeaveRequestBuilder) LeaveRequestId(leaveRequestId string) *LeaveRequestBuilder {
+	builder.leaveRequestId = leaveRequestId
+	builder.leaveRequestIdFlag = true
+	return builder
+}
+
+// 雇佣信息ID
+//
+// 示例值：4718803945687580505
+func (builder *LeaveRequestBuilder) EmploymentId(employmentId string) *LeaveRequestBuilder {
+	builder.employmentId = employmentId
+	builder.employmentIdFlag = true
+	return builder
+}
+
+// 员工姓名
+//
+// 示例值：
+func (builder *LeaveRequestBuilder) EmploymentName(employmentName []*I18n) *LeaveRequestBuilder {
+	builder.employmentName = employmentName
+	builder.employmentNameFlag = true
+	return builder
+}
+
+// 假期类型ID
+//
+// 示例值：0
+func (builder *LeaveRequestBuilder) LeaveTypeId(leaveTypeId string) *LeaveRequestBuilder {
+	builder.leaveTypeId = leaveTypeId
+	builder.leaveTypeIdFlag = true
+	return builder
+}
+
+// 假期类型名称
+//
+// 示例值：
+func (builder *LeaveRequestBuilder) LeaveTypeName(leaveTypeName []*I18n) *LeaveRequestBuilder {
+	builder.leaveTypeName = leaveTypeName
+	builder.leaveTypeNameFlag = true
+	return builder
+}
+
+// 假期开始时间
+//
+// 示例值：2022-09-09
+func (builder *LeaveRequestBuilder) StartTime(startTime string) *LeaveRequestBuilder {
+	builder.startTime = startTime
+	builder.startTimeFlag = true
+	return builder
+}
+
+// 假期结束时间
+//
+// 示例值：2022-09-09
+func (builder *LeaveRequestBuilder) EndTime(endTime string) *LeaveRequestBuilder {
+	builder.endTime = endTime
+	builder.endTimeFlag = true
+	return builder
+}
+
+// 假期时长
+//
+// 示例值：2
+func (builder *LeaveRequestBuilder) LeaveDuration(leaveDuration string) *LeaveRequestBuilder {
+	builder.leaveDuration = leaveDuration
+	builder.leaveDurationFlag = true
+	return builder
+}
+
+// 假期时长的单位
+//
+// 示例值：2
+func (builder *LeaveRequestBuilder) LeaveDurationUnit(leaveDurationUnit int) *LeaveRequestBuilder {
+	builder.leaveDurationUnit = leaveDurationUnit
+	builder.leaveDurationUnitFlag = true
+	return builder
+}
+
+// 请假记录的状态
+//
+// 示例值：2
+func (builder *LeaveRequestBuilder) LeaveRequestStatus(leaveRequestStatus int) *LeaveRequestBuilder {
+	builder.leaveRequestStatus = leaveRequestStatus
+	builder.leaveRequestStatusFlag = true
+	return builder
+}
+
+// 数据来源
+//
+// 示例值：manual
+func (builder *LeaveRequestBuilder) GrantSource(grantSource string) *LeaveRequestBuilder {
+	builder.grantSource = grantSource
+	builder.grantSourceFlag = true
+	return builder
+}
+
+// 返岗时间
+//
+// 示例值：2022-09-09
+func (builder *LeaveRequestBuilder) ReturnTime(returnTime string) *LeaveRequestBuilder {
+	builder.returnTime = returnTime
+	builder.returnTimeFlag = true
+	return builder
+}
+
+// 发起时间
+//
+// 示例值：2022-09-09
+func (builder *LeaveRequestBuilder) SubmittedAt(submittedAt string) *LeaveRequestBuilder {
+	builder.submittedAt = submittedAt
+	builder.submittedAtFlag = true
+	return builder
+}
+
+// 发起人
+//
+// 示例值：kk
+func (builder *LeaveRequestBuilder) SubmittedBy(submittedBy string) *LeaveRequestBuilder {
+	builder.submittedBy = submittedBy
+	builder.submittedByFlag = true
+	return builder
+}
+
+// 备注
+//
+// 示例值：备注
+func (builder *LeaveRequestBuilder) Notes(notes string) *LeaveRequestBuilder {
+	builder.notes = notes
+	builder.notesFlag = true
+	return builder
+}
+
+// 审批通过日期
+//
+// 示例值：2022-09-09
+func (builder *LeaveRequestBuilder) ApprovalDate(approvalDate string) *LeaveRequestBuilder {
+	builder.approvalDate = approvalDate
+	builder.approvalDateFlag = true
+	return builder
+}
+
+// 是否带薪
+//
+// 示例值：false
+func (builder *LeaveRequestBuilder) IsDeducted(isDeducted bool) *LeaveRequestBuilder {
+	builder.isDeducted = isDeducted
+	builder.isDeductedFlag = true
+	return builder
+}
+
+// 请假详情
+//
+// 示例值：
+func (builder *LeaveRequestBuilder) Detail(detail []*LeaveRequestDetail) *LeaveRequestBuilder {
+	builder.detail = detail
+	builder.detailFlag = true
+	return builder
+}
+
+// 假期类型枚举
+//
+// 示例值：Annual Leave
+func (builder *LeaveRequestBuilder) LeaveTypeCode(leaveTypeCode string) *LeaveRequestBuilder {
+	builder.leaveTypeCode = leaveTypeCode
+	builder.leaveTypeCodeFlag = true
+	return builder
+}
+
+// 实际结束日期
+//
+// 示例值：2022-08-02
+func (builder *LeaveRequestBuilder) ActualEndDate(actualEndDate string) *LeaveRequestBuilder {
+	builder.actualEndDate = actualEndDate
+	builder.actualEndDateFlag = true
+	return builder
+}
+
+// 预估结束日期
+//
+// 示例值：2022-08-02
+func (builder *LeaveRequestBuilder) EstimatedEndDate(estimatedEndDate string) *LeaveRequestBuilder {
+	builder.estimatedEndDate = estimatedEndDate
+	builder.estimatedEndDateFlag = true
+	return builder
+}
+
+// 时区
+//
+// 示例值：Asia/Shanghai
+func (builder *LeaveRequestBuilder) TimeZone(timeZone string) *LeaveRequestBuilder {
+	builder.timeZone = timeZone
+	builder.timeZoneFlag = true
+	return builder
+}
+
+// 请假记录数据来源
+//
+// 示例值：1
+func (builder *LeaveRequestBuilder) DataSource(dataSource int) *LeaveRequestBuilder {
+	builder.dataSource = dataSource
+	builder.dataSourceFlag = true
+	return builder
+}
+
+// 请假申请流程ID
+//
+// 示例值：
+func (builder *LeaveRequestBuilder) LeaveProcessId(leaveProcessId []string) *LeaveRequestBuilder {
+	builder.leaveProcessId = leaveProcessId
+	builder.leaveProcessIdFlag = true
+	return builder
+}
+
+// 请假更正流程ID
+//
+// 示例值：
+func (builder *LeaveRequestBuilder) LeaveCorrectProcessId(leaveCorrectProcessId []string) *LeaveRequestBuilder {
+	builder.leaveCorrectProcessId = leaveCorrectProcessId
+	builder.leaveCorrectProcessIdFlag = true
+	return builder
+}
+
+// 请假取消流程ID
+//
+// 示例值：
+func (builder *LeaveRequestBuilder) LeaveCancelProcessId(leaveCancelProcessId []string) *LeaveRequestBuilder {
+	builder.leaveCancelProcessId = leaveCancelProcessId
+	builder.leaveCancelProcessIdFlag = true
+	return builder
+}
+
+// 请假返岗流程ID
+//
+// 示例值：
+func (builder *LeaveRequestBuilder) LeaveReturnProcessId(leaveReturnProcessId []string) *LeaveRequestBuilder {
+	builder.leaveReturnProcessId = leaveReturnProcessId
+	builder.leaveReturnProcessIdFlag = true
+	return builder
+}
+
+// workDay算薪类型
+//
+// 示例值：1
+func (builder *LeaveRequestBuilder) WdPaidType(wdPaidType int) *LeaveRequestBuilder {
+	builder.wdPaidType = wdPaidType
+	builder.wdPaidTypeFlag = true
+	return builder
+}
+
+func (builder *LeaveRequestBuilder) Build() *LeaveRequest {
+	req := &LeaveRequest{}
+	if builder.leaveRequestIdFlag {
+		req.LeaveRequestId = &builder.leaveRequestId
+
+	}
+	if builder.employmentIdFlag {
+		req.EmploymentId = &builder.employmentId
+
+	}
+	if builder.employmentNameFlag {
+		req.EmploymentName = builder.employmentName
+	}
+	if builder.leaveTypeIdFlag {
+		req.LeaveTypeId = &builder.leaveTypeId
+
+	}
+	if builder.leaveTypeNameFlag {
+		req.LeaveTypeName = builder.leaveTypeName
+	}
+	if builder.startTimeFlag {
+		req.StartTime = &builder.startTime
+
+	}
+	if builder.endTimeFlag {
+		req.EndTime = &builder.endTime
+
+	}
+	if builder.leaveDurationFlag {
+		req.LeaveDuration = &builder.leaveDuration
+
+	}
+	if builder.leaveDurationUnitFlag {
+		req.LeaveDurationUnit = &builder.leaveDurationUnit
+
+	}
+	if builder.leaveRequestStatusFlag {
+		req.LeaveRequestStatus = &builder.leaveRequestStatus
+
+	}
+	if builder.grantSourceFlag {
+		req.GrantSource = &builder.grantSource
+
+	}
+	if builder.returnTimeFlag {
+		req.ReturnTime = &builder.returnTime
+
+	}
+	if builder.submittedAtFlag {
+		req.SubmittedAt = &builder.submittedAt
+
+	}
+	if builder.submittedByFlag {
+		req.SubmittedBy = &builder.submittedBy
+
+	}
+	if builder.notesFlag {
+		req.Notes = &builder.notes
+
+	}
+	if builder.approvalDateFlag {
+		req.ApprovalDate = &builder.approvalDate
+
+	}
+	if builder.isDeductedFlag {
+		req.IsDeducted = &builder.isDeducted
+
+	}
+	if builder.detailFlag {
+		req.Detail = builder.detail
+	}
+	if builder.leaveTypeCodeFlag {
+		req.LeaveTypeCode = &builder.leaveTypeCode
+
+	}
+	if builder.actualEndDateFlag {
+		req.ActualEndDate = &builder.actualEndDate
+
+	}
+	if builder.estimatedEndDateFlag {
+		req.EstimatedEndDate = &builder.estimatedEndDate
+
+	}
+	if builder.timeZoneFlag {
+		req.TimeZone = &builder.timeZone
+
+	}
+	if builder.dataSourceFlag {
+		req.DataSource = &builder.dataSource
+
+	}
+	if builder.leaveProcessIdFlag {
+		req.LeaveProcessId = builder.leaveProcessId
+	}
+	if builder.leaveCorrectProcessIdFlag {
+		req.LeaveCorrectProcessId = builder.leaveCorrectProcessId
+	}
+	if builder.leaveCancelProcessIdFlag {
+		req.LeaveCancelProcessId = builder.leaveCancelProcessId
+	}
+	if builder.leaveReturnProcessIdFlag {
+		req.LeaveReturnProcessId = builder.leaveReturnProcessId
+	}
+	if builder.wdPaidTypeFlag {
+		req.WdPaidType = &builder.wdPaidType
+
+	}
+	return req
+}
+
+type LeaveRequestDetail struct {
+	LeaveRequestId    *string `json:"leave_request_id,omitempty"`    // 请假记录id
+	LeaveDate         *string `json:"leave_date,omitempty"`          // 假期发生日期
+	LeaveDuration     *string `json:"leave_duration,omitempty"`      // 假期时长
+	LeaveDurationUnit *int    `json:"leave_duration_unit,omitempty"` // 假期时长单位，1：天，2：小时
+	PaidType          *int    `json:"paid_type,omitempty"`           // 是否影响算薪，1：不参与算薪计算, 非对应的日期类型或者无对应的假期计划，2：影响算薪，3：不影响算薪
+}
+
+type LeaveRequestDetailBuilder struct {
+	leaveRequestId        string // 请假记录id
+	leaveRequestIdFlag    bool
+	leaveDate             string // 假期发生日期
+	leaveDateFlag         bool
+	leaveDuration         string // 假期时长
+	leaveDurationFlag     bool
+	leaveDurationUnit     int // 假期时长单位，1：天，2：小时
+	leaveDurationUnitFlag bool
+	paidType              int // 是否影响算薪，1：不参与算薪计算, 非对应的日期类型或者无对应的假期计划，2：影响算薪，3：不影响算薪
+	paidTypeFlag          bool
+}
+
+func NewLeaveRequestDetailBuilder() *LeaveRequestDetailBuilder {
+	builder := &LeaveRequestDetailBuilder{}
+	return builder
+}
+
+// 请假记录id
+//
+// 示例值：4718803945687580505
+func (builder *LeaveRequestDetailBuilder) LeaveRequestId(leaveRequestId string) *LeaveRequestDetailBuilder {
+	builder.leaveRequestId = leaveRequestId
+	builder.leaveRequestIdFlag = true
+	return builder
+}
+
+// 假期发生日期
+//
+// 示例值：2022-07-07
+func (builder *LeaveRequestDetailBuilder) LeaveDate(leaveDate string) *LeaveRequestDetailBuilder {
+	builder.leaveDate = leaveDate
+	builder.leaveDateFlag = true
+	return builder
+}
+
+// 假期时长
+//
+// 示例值：1
+func (builder *LeaveRequestDetailBuilder) LeaveDuration(leaveDuration string) *LeaveRequestDetailBuilder {
+	builder.leaveDuration = leaveDuration
+	builder.leaveDurationFlag = true
+	return builder
+}
+
+// 假期时长单位，1：天，2：小时
+//
+// 示例值：1
+func (builder *LeaveRequestDetailBuilder) LeaveDurationUnit(leaveDurationUnit int) *LeaveRequestDetailBuilder {
+	builder.leaveDurationUnit = leaveDurationUnit
+	builder.leaveDurationUnitFlag = true
+	return builder
+}
+
+// 是否影响算薪，1：不参与算薪计算, 非对应的日期类型或者无对应的假期计划，2：影响算薪，3：不影响算薪
+//
+// 示例值：1
+func (builder *LeaveRequestDetailBuilder) PaidType(paidType int) *LeaveRequestDetailBuilder {
+	builder.paidType = paidType
+	builder.paidTypeFlag = true
+	return builder
+}
+
+func (builder *LeaveRequestDetailBuilder) Build() *LeaveRequestDetail {
+	req := &LeaveRequestDetail{}
+	if builder.leaveRequestIdFlag {
+		req.LeaveRequestId = &builder.leaveRequestId
+
+	}
+	if builder.leaveDateFlag {
+		req.LeaveDate = &builder.leaveDate
+
+	}
+	if builder.leaveDurationFlag {
+		req.LeaveDuration = &builder.leaveDuration
+
+	}
+	if builder.leaveDurationUnitFlag {
+		req.LeaveDurationUnit = &builder.leaveDurationUnit
+
+	}
+	if builder.paidTypeFlag {
+		req.PaidType = &builder.paidType
+
 	}
 	return req
 }
@@ -13287,6 +15681,38 @@ func (builder *OnboardingFlowBuilder) Build() *OnboardingFlow {
 	return req
 }
 
+type OnboardingFlowChange struct {
+	AfterStatus *string `json:"after_status,omitempty"` // 入职流程状态变更
+}
+
+type OnboardingFlowChangeBuilder struct {
+	afterStatus     string // 入职流程状态变更
+	afterStatusFlag bool
+}
+
+func NewOnboardingFlowChangeBuilder() *OnboardingFlowChangeBuilder {
+	builder := &OnboardingFlowChangeBuilder{}
+	return builder
+}
+
+// 入职流程状态变更
+//
+// 示例值：in_progress
+func (builder *OnboardingFlowChangeBuilder) AfterStatus(afterStatus string) *OnboardingFlowChangeBuilder {
+	builder.afterStatus = afterStatus
+	builder.afterStatusFlag = true
+	return builder
+}
+
+func (builder *OnboardingFlowChangeBuilder) Build() *OnboardingFlowChange {
+	req := &OnboardingFlowChange{}
+	if builder.afterStatusFlag {
+		req.AfterStatus = &builder.afterStatus
+
+	}
+	return req
+}
+
 type OnboardingQrCode struct {
 	Id              *string                 `json:"id,omitempty"`               // 唯一键
 	Pngs            []string                `json:"pngs,omitempty"`             // 二维码图片链接,文件名区分语言
@@ -13516,6 +15942,54 @@ func (builder *OnboardingTaskBuilder) Build() *OnboardingTask {
 	}
 	if builder.operatorIdFlag {
 		req.OperatorId = &builder.operatorId
+
+	}
+	if builder.taskCodeFlag {
+		req.TaskCode = &builder.taskCode
+
+	}
+	return req
+}
+
+type OnboardingTaskChange struct {
+	AfterStatus *string `json:"after_status,omitempty"` // 变更后任务状态
+	TaskCode    *string `json:"task_code,omitempty"`    // 任务标识
+}
+
+type OnboardingTaskChangeBuilder struct {
+	afterStatus     string // 变更后任务状态
+	afterStatusFlag bool
+	taskCode        string // 任务标识
+	taskCodeFlag    bool
+}
+
+func NewOnboardingTaskChangeBuilder() *OnboardingTaskChangeBuilder {
+	builder := &OnboardingTaskChangeBuilder{}
+	return builder
+}
+
+// 变更后任务状态
+//
+// 示例值：in_progress
+func (builder *OnboardingTaskChangeBuilder) AfterStatus(afterStatus string) *OnboardingTaskChangeBuilder {
+	builder.afterStatus = afterStatus
+	builder.afterStatusFlag = true
+	return builder
+}
+
+// 任务标识
+//
+// 示例值：2
+func (builder *OnboardingTaskChangeBuilder) TaskCode(taskCode string) *OnboardingTaskChangeBuilder {
+	builder.taskCode = taskCode
+	builder.taskCodeFlag = true
+	return builder
+}
+
+func (builder *OnboardingTaskChangeBuilder) Build() *OnboardingTaskChange {
+	req := &OnboardingTaskChange{}
+	if builder.afterStatusFlag {
+		req.AfterStatus = &builder.afterStatus
 
 	}
 	if builder.taskCodeFlag {
@@ -14451,24 +16925,27 @@ func (builder *PersonInfoBuilder) Build() *PersonInfo {
 }
 
 type PersonInfoChn struct {
-	NativeRegion   *string `json:"native_region,omitempty"`    // 籍贯 ID
-	HukouType      *Enum   `json:"hukou_type,omitempty"`       // -| 户口类型，枚举值可查询【获取字段详情】接口获取，按如下参数查询即可： - custom_api_name：hukou_type - object_api_name：person_info_chn
-	HukouLocation  *string `json:"hukou_location,omitempty"`   // 户口所在地
-	FirstEntryTime *string `json:"first_entry_time,omitempty"` // 首次入境日期
-	LeaveTime      *string `json:"leave_time,omitempty"`       // 预计离境日期
+	NativeRegion          *string `json:"native_region,omitempty"`          // 籍贯 ID
+	HukouType             *Enum   `json:"hukou_type,omitempty"`             // -| 户口类型，枚举值可查询【获取字段详情】接口获取，按如下参数查询即可： - custom_api_name：hukou_type - object_api_name：person_info_chn
+	HukouLocation         *string `json:"hukou_location,omitempty"`         // 户口所在地
+	FirstEntryTime        *string `json:"first_entry_time,omitempty"`       // 首次入境日期
+	LeaveTime             *string `json:"leave_time,omitempty"`             // 预计离境日期
+	PoliticalAffiliations []*Enum `json:"political_affiliations,omitempty"` // 政治面貌，枚举值可查询【获取字段详情】接口获取，按如下参数查询即可： - custom_api_name：political_affiliation - object_api_name：person_info_chn
 }
 
 type PersonInfoChnBuilder struct {
-	nativeRegion       string // 籍贯 ID
-	nativeRegionFlag   bool
-	hukouType          *Enum // -| 户口类型，枚举值可查询【获取字段详情】接口获取，按如下参数查询即可： - custom_api_name：hukou_type - object_api_name：person_info_chn
-	hukouTypeFlag      bool
-	hukouLocation      string // 户口所在地
-	hukouLocationFlag  bool
-	firstEntryTime     string // 首次入境日期
-	firstEntryTimeFlag bool
-	leaveTime          string // 预计离境日期
-	leaveTimeFlag      bool
+	nativeRegion              string // 籍贯 ID
+	nativeRegionFlag          bool
+	hukouType                 *Enum // -| 户口类型，枚举值可查询【获取字段详情】接口获取，按如下参数查询即可： - custom_api_name：hukou_type - object_api_name：person_info_chn
+	hukouTypeFlag             bool
+	hukouLocation             string // 户口所在地
+	hukouLocationFlag         bool
+	firstEntryTime            string // 首次入境日期
+	firstEntryTimeFlag        bool
+	leaveTime                 string // 预计离境日期
+	leaveTimeFlag             bool
+	politicalAffiliations     []*Enum // 政治面貌，枚举值可查询【获取字段详情】接口获取，按如下参数查询即可： - custom_api_name：political_affiliation - object_api_name：person_info_chn
+	politicalAffiliationsFlag bool
 }
 
 func NewPersonInfoChnBuilder() *PersonInfoChnBuilder {
@@ -14521,6 +16998,15 @@ func (builder *PersonInfoChnBuilder) LeaveTime(leaveTime string) *PersonInfoChnB
 	return builder
 }
 
+// 政治面貌，枚举值可查询【获取字段详情】接口获取，按如下参数查询即可： - custom_api_name：political_affiliation - object_api_name：person_info_chn
+//
+// 示例值：
+func (builder *PersonInfoChnBuilder) PoliticalAffiliations(politicalAffiliations []*Enum) *PersonInfoChnBuilder {
+	builder.politicalAffiliations = politicalAffiliations
+	builder.politicalAffiliationsFlag = true
+	return builder
+}
+
 func (builder *PersonInfoChnBuilder) Build() *PersonInfoChn {
 	req := &PersonInfoChn{}
 	if builder.nativeRegionFlag {
@@ -14541,6 +17027,9 @@ func (builder *PersonInfoChnBuilder) Build() *PersonInfoChn {
 	if builder.leaveTimeFlag {
 		req.LeaveTime = &builder.leaveTime
 
+	}
+	if builder.politicalAffiliationsFlag {
+		req.PoliticalAffiliations = builder.politicalAffiliations
 	}
 	return req
 }
@@ -17050,11 +19539,11 @@ func (builder *ProbationInfoForSubmitBuilder) Build() *ProbationInfoForSubmit {
 }
 
 type ProcessApprover struct {
-	Status         *int                   `json:"status,omitempty"`          // 将审批任务修改为同意/拒绝
-	UserId         *string                `json:"user_id,omitempty"`         // 按user_id_type类型传递。如果system_approval为false，则必填。否则非必填。
-	SystemApproval *bool                  `json:"system_approval,omitempty"` // true - 使用系统身份审批
-	Reason         *string                `json:"reason,omitempty"`          // 通过原因，长度限制为500
-	FieldValues    []*ProcessFormVariable `json:"field_values,omitempty"`    // 表单字段值
+	Status         *int                     `json:"status,omitempty"`          // 将审批任务修改为同意/拒绝
+	UserId         *string                  `json:"user_id,omitempty"`         // 按user_id_type类型传递。如果system_approval为false，则必填。否则非必填。
+	SystemApproval *bool                    `json:"system_approval,omitempty"` // true - 使用系统身份审批
+	Reason         *string                  `json:"reason,omitempty"`          // 通过原因，长度限制为500
+	FieldValuesV2  []*ProcessFormVariableV2 `json:"field_values_v2,omitempty"` // 表单数据
 }
 
 type ProcessApproverBuilder struct {
@@ -17066,8 +19555,8 @@ type ProcessApproverBuilder struct {
 	systemApprovalFlag bool
 	reason             string // 通过原因，长度限制为500
 	reasonFlag         bool
-	fieldValues        []*ProcessFormVariable // 表单字段值
-	fieldValuesFlag    bool
+	fieldValuesV2      []*ProcessFormVariableV2 // 表单数据
+	fieldValuesV2Flag  bool
 }
 
 func NewProcessApproverBuilder() *ProcessApproverBuilder {
@@ -17111,12 +19600,12 @@ func (builder *ProcessApproverBuilder) Reason(reason string) *ProcessApproverBui
 	return builder
 }
 
-// 表单字段值
+// 表单数据
 //
-// 示例值：原因自定义字符串
-func (builder *ProcessApproverBuilder) FieldValues(fieldValues []*ProcessFormVariable) *ProcessApproverBuilder {
-	builder.fieldValues = fieldValues
-	builder.fieldValuesFlag = true
+// 示例值：
+func (builder *ProcessApproverBuilder) FieldValuesV2(fieldValuesV2 []*ProcessFormVariableV2) *ProcessApproverBuilder {
+	builder.fieldValuesV2 = fieldValuesV2
+	builder.fieldValuesV2Flag = true
 	return builder
 }
 
@@ -17138,8 +19627,8 @@ func (builder *ProcessApproverBuilder) Build() *ProcessApprover {
 		req.Reason = &builder.reason
 
 	}
-	if builder.fieldValuesFlag {
-		req.FieldValues = builder.fieldValues
+	if builder.fieldValuesV2Flag {
+		req.FieldValuesV2 = builder.fieldValuesV2
 	}
 	return req
 }
@@ -17531,6 +20020,68 @@ func (builder *ProcessFormVariableBuilder) Build() *ProcessFormVariable {
 	}
 	if builder.variableValueFlag {
 		req.VariableValue = builder.variableValue
+	}
+	return req
+}
+
+type ProcessFormVariableV2 struct {
+	VariableApiName *string                           `json:"variable_api_name,omitempty"` // 变量唯一标识
+	VariableValue   *FieldVariableValueToForReview    `json:"variable_value,omitempty"`    // 变量值
+	SubValues       []*FieldVariableSubVlaueForReview `json:"sub_values,omitempty"`        // 在list_values和record_values中引用的变量
+}
+
+type ProcessFormVariableV2Builder struct {
+	variableApiName     string // 变量唯一标识
+	variableApiNameFlag bool
+	variableValue       *FieldVariableValueToForReview // 变量值
+	variableValueFlag   bool
+	subValues           []*FieldVariableSubVlaueForReview // 在list_values和record_values中引用的变量
+	subValuesFlag       bool
+}
+
+func NewProcessFormVariableV2Builder() *ProcessFormVariableV2Builder {
+	builder := &ProcessFormVariableV2Builder{}
+	return builder
+}
+
+// 变量唯一标识
+//
+// 示例值：custom123
+func (builder *ProcessFormVariableV2Builder) VariableApiName(variableApiName string) *ProcessFormVariableV2Builder {
+	builder.variableApiName = variableApiName
+	builder.variableApiNameFlag = true
+	return builder
+}
+
+// 变量值
+//
+// 示例值：
+func (builder *ProcessFormVariableV2Builder) VariableValue(variableValue *FieldVariableValueToForReview) *ProcessFormVariableV2Builder {
+	builder.variableValue = variableValue
+	builder.variableValueFlag = true
+	return builder
+}
+
+// 在list_values和record_values中引用的变量
+//
+// 示例值：
+func (builder *ProcessFormVariableV2Builder) SubValues(subValues []*FieldVariableSubVlaueForReview) *ProcessFormVariableV2Builder {
+	builder.subValues = subValues
+	builder.subValuesFlag = true
+	return builder
+}
+
+func (builder *ProcessFormVariableV2Builder) Build() *ProcessFormVariableV2 {
+	req := &ProcessFormVariableV2{}
+	if builder.variableApiNameFlag {
+		req.VariableApiName = &builder.variableApiName
+
+	}
+	if builder.variableValueFlag {
+		req.VariableValue = builder.variableValue
+	}
+	if builder.subValuesFlag {
+		req.SubValues = builder.subValues
 	}
 	return req
 }
@@ -18632,11 +21183,14 @@ func (builder *ProfileSettingCustomGroupItemBuilder) Build() *ProfileSettingCust
 
 type ProfileSettingDataAttachment struct {
 	PersonalRecords []*ProfileSettingPersonalRecord `json:"personal_records,omitempty"` // 资料附件记录
+	CustomGroups    []*ProfileSettingCustomGroup    `json:"custom_groups,omitempty"`    // 自定义分组
 }
 
 type ProfileSettingDataAttachmentBuilder struct {
 	personalRecords     []*ProfileSettingPersonalRecord // 资料附件记录
 	personalRecordsFlag bool
+	customGroups        []*ProfileSettingCustomGroup // 自定义分组
+	customGroupsFlag    bool
 }
 
 func NewProfileSettingDataAttachmentBuilder() *ProfileSettingDataAttachmentBuilder {
@@ -18653,10 +21207,22 @@ func (builder *ProfileSettingDataAttachmentBuilder) PersonalRecords(personalReco
 	return builder
 }
 
+// 自定义分组
+//
+// 示例值：
+func (builder *ProfileSettingDataAttachmentBuilder) CustomGroups(customGroups []*ProfileSettingCustomGroup) *ProfileSettingDataAttachmentBuilder {
+	builder.customGroups = customGroups
+	builder.customGroupsFlag = true
+	return builder
+}
+
 func (builder *ProfileSettingDataAttachmentBuilder) Build() *ProfileSettingDataAttachment {
 	req := &ProfileSettingDataAttachment{}
 	if builder.personalRecordsFlag {
 		req.PersonalRecords = builder.personalRecords
+	}
+	if builder.customGroupsFlag {
+		req.CustomGroups = builder.customGroups
 	}
 	return req
 }
@@ -19342,6 +21908,7 @@ func (builder *ProfileSettingEmpContractRecordBuilder) Build() *ProfileSettingEm
 type ProfileSettingEmpInfoForUpdate struct {
 	BasicInfo     *ProfileSettingEmpBasicInfoForUpdate `json:"basic_info,omitempty"`     // 基本信息
 	ProbationInfo *ProfileSettingProbationInfo         `json:"probation_info,omitempty"` // 试用期信息
+	CustomGroups  []*ProfileSettingCustomGroup         `json:"custom_groups,omitempty"`  // 自定义分组
 }
 
 type ProfileSettingEmpInfoForUpdateBuilder struct {
@@ -19349,6 +21916,8 @@ type ProfileSettingEmpInfoForUpdateBuilder struct {
 	basicInfoFlag     bool
 	probationInfo     *ProfileSettingProbationInfo // 试用期信息
 	probationInfoFlag bool
+	customGroups      []*ProfileSettingCustomGroup // 自定义分组
+	customGroupsFlag  bool
 }
 
 func NewProfileSettingEmpInfoForUpdateBuilder() *ProfileSettingEmpInfoForUpdateBuilder {
@@ -19374,6 +21943,15 @@ func (builder *ProfileSettingEmpInfoForUpdateBuilder) ProbationInfo(probationInf
 	return builder
 }
 
+// 自定义分组
+//
+// 示例值：
+func (builder *ProfileSettingEmpInfoForUpdateBuilder) CustomGroups(customGroups []*ProfileSettingCustomGroup) *ProfileSettingEmpInfoForUpdateBuilder {
+	builder.customGroups = customGroups
+	builder.customGroupsFlag = true
+	return builder
+}
+
 func (builder *ProfileSettingEmpInfoForUpdateBuilder) Build() *ProfileSettingEmpInfoForUpdate {
 	req := &ProfileSettingEmpInfoForUpdate{}
 	if builder.basicInfoFlag {
@@ -19381,6 +21959,9 @@ func (builder *ProfileSettingEmpInfoForUpdateBuilder) Build() *ProfileSettingEmp
 	}
 	if builder.probationInfoFlag {
 		req.ProbationInfo = builder.probationInfo
+	}
+	if builder.customGroupsFlag {
+		req.CustomGroups = builder.customGroups
 	}
 	return req
 }
@@ -19393,6 +21974,7 @@ type ProfileSettingEmploymentBasicInfo struct {
 	SeniorityDate            *string                      `json:"seniority_date,omitempty"`              // 资历起算日期
 	WorkEmail                *string                      `json:"work_email,omitempty"`                  // 工作邮箱
 	Phone                    *ProfileSettingPhone         `json:"phone,omitempty"`                       // 工作电话
+	UserGeo                  *string                      `json:"user_geo,omitempty"`                    // 数据驻留地，开通了飞书数据驻留服务的企业，该字段为必填
 	CustomFields             []*ProfileSettingCustomField `json:"custom_fields,omitempty"`               // 自定义字段
 }
 
@@ -19410,6 +21992,8 @@ type ProfileSettingEmploymentBasicInfoBuilder struct {
 	workEmailFlag                bool
 	phone                        *ProfileSettingPhone // 工作电话
 	phoneFlag                    bool
+	userGeo                      string // 数据驻留地，开通了飞书数据驻留服务的企业，该字段为必填
+	userGeoFlag                  bool
 	customFields                 []*ProfileSettingCustomField // 自定义字段
 	customFieldsFlag             bool
 }
@@ -19473,6 +22057,15 @@ func (builder *ProfileSettingEmploymentBasicInfoBuilder) Phone(phone *ProfileSet
 	return builder
 }
 
+// 数据驻留地，开通了飞书数据驻留服务的企业，该字段为必填
+//
+// 示例值：cn
+func (builder *ProfileSettingEmploymentBasicInfoBuilder) UserGeo(userGeo string) *ProfileSettingEmploymentBasicInfoBuilder {
+	builder.userGeo = userGeo
+	builder.userGeoFlag = true
+	return builder
+}
+
 // 自定义字段
 //
 // 示例值：
@@ -19508,6 +22101,10 @@ func (builder *ProfileSettingEmploymentBasicInfoBuilder) Build() *ProfileSetting
 	if builder.phoneFlag {
 		req.Phone = builder.phone
 	}
+	if builder.userGeoFlag {
+		req.UserGeo = &builder.userGeo
+
+	}
 	if builder.customFieldsFlag {
 		req.CustomFields = builder.customFields
 	}
@@ -19519,6 +22116,7 @@ type ProfileSettingEmploymentInfo struct {
 	ProbationInfo     *ProfileSettingProbationInfo       `json:"probation_info,omitempty"`      // 试用期信息
 	EmploymentRecord  *ProfileSettingEmploymentRecord    `json:"employment_record,omitempty"`   // 任职记录
 	EmpContractRecord *ProfileSettingEmpContractRecord   `json:"emp_contract_record,omitempty"` // 合同记录
+	CustomGroups      []*ProfileSettingCustomGroup       `json:"custom_groups,omitempty"`       // 自定义分组
 }
 
 type ProfileSettingEmploymentInfoBuilder struct {
@@ -19530,6 +22128,8 @@ type ProfileSettingEmploymentInfoBuilder struct {
 	employmentRecordFlag  bool
 	empContractRecord     *ProfileSettingEmpContractRecord // 合同记录
 	empContractRecordFlag bool
+	customGroups          []*ProfileSettingCustomGroup // 自定义分组
+	customGroupsFlag      bool
 }
 
 func NewProfileSettingEmploymentInfoBuilder() *ProfileSettingEmploymentInfoBuilder {
@@ -19573,6 +22173,15 @@ func (builder *ProfileSettingEmploymentInfoBuilder) EmpContractRecord(empContrac
 	return builder
 }
 
+// 自定义分组
+//
+// 示例值：
+func (builder *ProfileSettingEmploymentInfoBuilder) CustomGroups(customGroups []*ProfileSettingCustomGroup) *ProfileSettingEmploymentInfoBuilder {
+	builder.customGroups = customGroups
+	builder.customGroupsFlag = true
+	return builder
+}
+
 func (builder *ProfileSettingEmploymentInfoBuilder) Build() *ProfileSettingEmploymentInfo {
 	req := &ProfileSettingEmploymentInfo{}
 	if builder.basicInfoFlag {
@@ -19586,6 +22195,9 @@ func (builder *ProfileSettingEmploymentInfoBuilder) Build() *ProfileSettingEmplo
 	}
 	if builder.empContractRecordFlag {
 		req.EmpContractRecord = builder.empContractRecord
+	}
+	if builder.customGroupsFlag {
+		req.CustomGroups = builder.customGroups
 	}
 	return req
 }
@@ -27713,6 +30325,185 @@ func (resp *ParentsDepartmentResp) Success() bool {
 	return resp.Code == 0
 }
 
+type QueryTimelineDepartmentReqBodyBuilder struct {
+	departmentIds     []string // 部门 ID 列表
+	departmentIdsFlag bool
+	effectiveDate     string // 生效日期
+	effectiveDateFlag bool
+	fields            []string // 返回数据的字段列表，可选["department_name", "code", "active", "parent_department_id", "manager", "description", "effective_date"]
+	fieldsFlag        bool
+}
+
+func NewQueryTimelineDepartmentReqBodyBuilder() *QueryTimelineDepartmentReqBodyBuilder {
+	builder := &QueryTimelineDepartmentReqBodyBuilder{}
+	return builder
+}
+
+// 部门 ID 列表
+//
+// 示例值：
+func (builder *QueryTimelineDepartmentReqBodyBuilder) DepartmentIds(departmentIds []string) *QueryTimelineDepartmentReqBodyBuilder {
+	builder.departmentIds = departmentIds
+	builder.departmentIdsFlag = true
+	return builder
+}
+
+// 生效日期
+//
+// 示例值：2020-01-01
+func (builder *QueryTimelineDepartmentReqBodyBuilder) EffectiveDate(effectiveDate string) *QueryTimelineDepartmentReqBodyBuilder {
+	builder.effectiveDate = effectiveDate
+	builder.effectiveDateFlag = true
+	return builder
+}
+
+// 返回数据的字段列表，可选["department_name", "code", "active", "parent_department_id", "manager", "description", "effective_date"]
+//
+// 示例值：
+func (builder *QueryTimelineDepartmentReqBodyBuilder) Fields(fields []string) *QueryTimelineDepartmentReqBodyBuilder {
+	builder.fields = fields
+	builder.fieldsFlag = true
+	return builder
+}
+
+func (builder *QueryTimelineDepartmentReqBodyBuilder) Build() *QueryTimelineDepartmentReqBody {
+	req := &QueryTimelineDepartmentReqBody{}
+	if builder.departmentIdsFlag {
+		req.DepartmentIds = builder.departmentIds
+	}
+	if builder.effectiveDateFlag {
+		req.EffectiveDate = &builder.effectiveDate
+	}
+	if builder.fieldsFlag {
+		req.Fields = builder.fields
+	}
+	return req
+}
+
+type QueryTimelineDepartmentPathReqBodyBuilder struct {
+	departmentIds     []string
+	departmentIdsFlag bool
+	effectiveDate     string
+	effectiveDateFlag bool
+	fields            []string
+	fieldsFlag        bool
+}
+
+func NewQueryTimelineDepartmentPathReqBodyBuilder() *QueryTimelineDepartmentPathReqBodyBuilder {
+	builder := &QueryTimelineDepartmentPathReqBodyBuilder{}
+	return builder
+}
+
+// 部门 ID 列表
+//
+// 示例值：
+func (builder *QueryTimelineDepartmentPathReqBodyBuilder) DepartmentIds(departmentIds []string) *QueryTimelineDepartmentPathReqBodyBuilder {
+	builder.departmentIds = departmentIds
+	builder.departmentIdsFlag = true
+	return builder
+}
+
+// 生效日期
+//
+// 示例值：2020-01-01
+func (builder *QueryTimelineDepartmentPathReqBodyBuilder) EffectiveDate(effectiveDate string) *QueryTimelineDepartmentPathReqBodyBuilder {
+	builder.effectiveDate = effectiveDate
+	builder.effectiveDateFlag = true
+	return builder
+}
+
+// 返回数据的字段列表，可选["department_name", "code", "active", "parent_department_id", "manager", "description", "effective_date"]
+//
+// 示例值：
+func (builder *QueryTimelineDepartmentPathReqBodyBuilder) Fields(fields []string) *QueryTimelineDepartmentPathReqBodyBuilder {
+	builder.fields = fields
+	builder.fieldsFlag = true
+	return builder
+}
+
+func (builder *QueryTimelineDepartmentPathReqBodyBuilder) Build() (*QueryTimelineDepartmentReqBody, error) {
+	req := &QueryTimelineDepartmentReqBody{}
+	if builder.departmentIdsFlag {
+		req.DepartmentIds = builder.departmentIds
+	}
+	if builder.effectiveDateFlag {
+		req.EffectiveDate = &builder.effectiveDate
+	}
+	if builder.fieldsFlag {
+		req.Fields = builder.fields
+	}
+	return req, nil
+}
+
+type QueryTimelineDepartmentReqBuilder struct {
+	apiReq *larkcore.ApiReq
+	body   *QueryTimelineDepartmentReqBody
+}
+
+func NewQueryTimelineDepartmentReqBuilder() *QueryTimelineDepartmentReqBuilder {
+	builder := &QueryTimelineDepartmentReqBuilder{}
+	builder.apiReq = &larkcore.ApiReq{
+		PathParams:  larkcore.PathParams{},
+		QueryParams: larkcore.QueryParams{},
+	}
+	return builder
+}
+
+// 用户 ID 类型
+//
+// 示例值：people_corehr_id
+func (builder *QueryTimelineDepartmentReqBuilder) UserIdType(userIdType string) *QueryTimelineDepartmentReqBuilder {
+	builder.apiReq.QueryParams.Set("user_id_type", fmt.Sprint(userIdType))
+	return builder
+}
+
+// 此次调用中使用的部门 ID 类型
+//
+// 示例值：people_corehr_department_id
+func (builder *QueryTimelineDepartmentReqBuilder) DepartmentIdType(departmentIdType string) *QueryTimelineDepartmentReqBuilder {
+	builder.apiReq.QueryParams.Set("department_id_type", fmt.Sprint(departmentIdType))
+	return builder
+}
+
+// 查询任意日期部门信息
+func (builder *QueryTimelineDepartmentReqBuilder) Body(body *QueryTimelineDepartmentReqBody) *QueryTimelineDepartmentReqBuilder {
+	builder.body = body
+	return builder
+}
+
+func (builder *QueryTimelineDepartmentReqBuilder) Build() *QueryTimelineDepartmentReq {
+	req := &QueryTimelineDepartmentReq{}
+	req.apiReq = &larkcore.ApiReq{}
+	req.apiReq.QueryParams = builder.apiReq.QueryParams
+	req.apiReq.Body = builder.body
+	return req
+}
+
+type QueryTimelineDepartmentReqBody struct {
+	DepartmentIds []string `json:"department_ids,omitempty"` // 部门 ID 列表
+	EffectiveDate *string  `json:"effective_date,omitempty"` // 生效日期
+	Fields        []string `json:"fields,omitempty"`         // 返回数据的字段列表，可选["department_name", "code", "active", "parent_department_id", "manager", "description", "effective_date"]
+}
+
+type QueryTimelineDepartmentReq struct {
+	apiReq *larkcore.ApiReq
+	Body   *QueryTimelineDepartmentReqBody `body:""`
+}
+
+type QueryTimelineDepartmentRespData struct {
+	Items []*DepartmentTimeline `json:"items,omitempty"` // 部门信息
+}
+
+type QueryTimelineDepartmentResp struct {
+	*larkcore.ApiResp `json:"-"`
+	larkcore.CodeError
+	Data *QueryTimelineDepartmentRespData `json:"data"` // 业务数据
+}
+
+func (resp *QueryTimelineDepartmentResp) Success() bool {
+	return resp.Code == 0
+}
+
 type SearchDepartmentReqBodyBuilder struct {
 	active                 bool // 是否启用
 	activeFlag             bool
@@ -30570,6 +33361,102 @@ func (resp *CreatePreHireResp) Success() bool {
 	return resp.Code == 0
 }
 
+type DeletePreHireReqBuilder struct {
+	apiReq *larkcore.ApiReq
+}
+
+func NewDeletePreHireReqBuilder() *DeletePreHireReqBuilder {
+	builder := &DeletePreHireReqBuilder{}
+	builder.apiReq = &larkcore.ApiReq{
+		PathParams:  larkcore.PathParams{},
+		QueryParams: larkcore.QueryParams{},
+	}
+	return builder
+}
+
+// 待入职ID
+//
+// 示例值：7345005664477775407
+func (builder *DeletePreHireReqBuilder) PreHireId(preHireId string) *DeletePreHireReqBuilder {
+	builder.apiReq.PathParams.Set("pre_hire_id", fmt.Sprint(preHireId))
+	return builder
+}
+
+func (builder *DeletePreHireReqBuilder) Build() *DeletePreHireReq {
+	req := &DeletePreHireReq{}
+	req.apiReq = &larkcore.ApiReq{}
+	req.apiReq.PathParams = builder.apiReq.PathParams
+	return req
+}
+
+type DeletePreHireReq struct {
+	apiReq *larkcore.ApiReq
+}
+
+type DeletePreHireResp struct {
+	*larkcore.ApiResp `json:"-"`
+	larkcore.CodeError
+}
+
+func (resp *DeletePreHireResp) Success() bool {
+	return resp.Code == 0
+}
+
+type PatchPreHireReqBuilder struct {
+	apiReq        *larkcore.ApiReq
+	prehireUpdate *PrehireUpdate
+}
+
+func NewPatchPreHireReqBuilder() *PatchPreHireReqBuilder {
+	builder := &PatchPreHireReqBuilder{}
+	builder.apiReq = &larkcore.ApiReq{
+		PathParams:  larkcore.PathParams{},
+		QueryParams: larkcore.QueryParams{},
+	}
+	return builder
+}
+
+// 待入职ID
+//
+// 示例值：7345005664477775411
+func (builder *PatchPreHireReqBuilder) PreHireId(preHireId string) *PatchPreHireReqBuilder {
+	builder.apiReq.PathParams.Set("pre_hire_id", fmt.Sprint(preHireId))
+	return builder
+}
+
+// 更新待入职
+func (builder *PatchPreHireReqBuilder) PrehireUpdate(prehireUpdate *PrehireUpdate) *PatchPreHireReqBuilder {
+	builder.prehireUpdate = prehireUpdate
+	return builder
+}
+
+func (builder *PatchPreHireReqBuilder) Build() *PatchPreHireReq {
+	req := &PatchPreHireReq{}
+	req.apiReq = &larkcore.ApiReq{}
+	req.apiReq.PathParams = builder.apiReq.PathParams
+	req.apiReq.Body = builder.prehireUpdate
+	return req
+}
+
+type PatchPreHireReq struct {
+	apiReq        *larkcore.ApiReq
+	PrehireUpdate *PrehireUpdate `body:""`
+}
+
+type PatchPreHireRespData struct {
+	PreHireId *string `json:"pre_hire_id,omitempty"` // 待入职ID
+}
+
+type PatchPreHireResp struct {
+	*larkcore.ApiResp `json:"-"`
+	larkcore.CodeError
+	Data *PatchPreHireRespData `json:"data"` // 业务数据
+}
+
+func (resp *PatchPreHireResp) Success() bool {
+	return resp.Code == 0
+}
+
 type SearchPreHireReqBodyBuilder struct {
 	workerIds               []string // 待入职人员工号列表
 	workerIdsFlag           bool
@@ -32110,6 +34997,69 @@ type ListProcessResp struct {
 }
 
 func (resp *ListProcessResp) Success() bool {
+	return resp.Code == 0
+}
+
+type GetProcessFormVariableDataReqBuilder struct {
+	apiReq *larkcore.ApiReq
+}
+
+func NewGetProcessFormVariableDataReqBuilder() *GetProcessFormVariableDataReqBuilder {
+	builder := &GetProcessFormVariableDataReqBuilder{}
+	builder.apiReq = &larkcore.ApiReq{
+		PathParams:  larkcore.PathParams{},
+		QueryParams: larkcore.QueryParams{},
+	}
+	return builder
+}
+
+// 流程实例id
+//
+// 示例值：7341373094948242956
+func (builder *GetProcessFormVariableDataReqBuilder) ProcessId(processId string) *GetProcessFormVariableDataReqBuilder {
+	builder.apiReq.PathParams.Set("process_id", fmt.Sprint(processId))
+	return builder
+}
+
+// 用户 ID 类型
+//
+// 示例值：open_id
+func (builder *GetProcessFormVariableDataReqBuilder) UserIdType(userIdType string) *GetProcessFormVariableDataReqBuilder {
+	builder.apiReq.QueryParams.Set("user_id_type", fmt.Sprint(userIdType))
+	return builder
+}
+
+// 此次调用中使用的部门 ID 类型
+//
+// 示例值：open_department_id
+func (builder *GetProcessFormVariableDataReqBuilder) DepartmentIdType(departmentIdType string) *GetProcessFormVariableDataReqBuilder {
+	builder.apiReq.QueryParams.Set("department_id_type", fmt.Sprint(departmentIdType))
+	return builder
+}
+
+func (builder *GetProcessFormVariableDataReqBuilder) Build() *GetProcessFormVariableDataReq {
+	req := &GetProcessFormVariableDataReq{}
+	req.apiReq = &larkcore.ApiReq{}
+	req.apiReq.PathParams = builder.apiReq.PathParams
+	req.apiReq.QueryParams = builder.apiReq.QueryParams
+	return req
+}
+
+type GetProcessFormVariableDataReq struct {
+	apiReq *larkcore.ApiReq
+}
+
+type GetProcessFormVariableDataRespData struct {
+	FieldVariableValues []*FieldVariableValue `json:"field_variable_values,omitempty"` // 表单数据
+}
+
+type GetProcessFormVariableDataResp struct {
+	*larkcore.ApiResp `json:"-"`
+	larkcore.CodeError
+	Data *GetProcessFormVariableDataRespData `json:"data"` // 业务数据
+}
+
+func (resp *GetProcessFormVariableDataResp) Success() bool {
 	return resp.Code == 0
 }
 

@@ -423,6 +423,7 @@ type Block struct {
 	AgendaItem        *AgendaItem        `json:"agenda_item,omitempty"`         // 议程项 Block
 	AgendaItemTitle   *AgendaItemTitle   `json:"agenda_item_title,omitempty"`   // 议程项标题 Block
 	AgendaItemContent *AgendaItemContent `json:"agenda_item_content,omitempty"` // 议程项内容 Block
+	LinkPreview       *LinkPreview       `json:"link_preview,omitempty"`        // 链接预览 Block
 }
 
 type BlockBuilder struct {
@@ -532,6 +533,8 @@ type BlockBuilder struct {
 	agendaItemTitleFlag   bool
 	agendaItemContent     *AgendaItemContent // 议程项内容 Block
 	agendaItemContentFlag bool
+	linkPreview           *LinkPreview // 链接预览 Block
+	linkPreviewFlag       bool
 }
 
 func NewBlockBuilder() *BlockBuilder {
@@ -1016,6 +1019,15 @@ func (builder *BlockBuilder) AgendaItemContent(agendaItemContent *AgendaItemCont
 	return builder
 }
 
+// 链接预览 Block
+//
+// 示例值：
+func (builder *BlockBuilder) LinkPreview(linkPreview *LinkPreview) *BlockBuilder {
+	builder.linkPreview = linkPreview
+	builder.linkPreviewFlag = true
+	return builder
+}
+
 func (builder *BlockBuilder) Build() *Block {
 	req := &Block{}
 	if builder.blockIdFlag {
@@ -1179,6 +1191,9 @@ func (builder *BlockBuilder) Build() *Block {
 	}
 	if builder.agendaItemContentFlag {
 		req.AgendaItemContent = builder.agendaItemContent
+	}
+	if builder.linkPreviewFlag {
+		req.LinkPreview = builder.linkPreview
 	}
 	return req
 }
@@ -1651,6 +1666,7 @@ type Document struct {
 	RevisionId     *int                    `json:"revision_id,omitempty"`     // 文档版本 ID
 	Title          *string                 `json:"title,omitempty"`           // 文档标题
 	DisplaySetting *DocumentDisplaySetting `json:"display_setting,omitempty"` // 文档展示设置
+	Cover          *DocumentCover          `json:"cover,omitempty"`           // 文档封面
 }
 
 type DocumentBuilder struct {
@@ -1662,6 +1678,8 @@ type DocumentBuilder struct {
 	titleFlag          bool
 	displaySetting     *DocumentDisplaySetting // 文档展示设置
 	displaySettingFlag bool
+	cover              *DocumentCover // 文档封面
+	coverFlag          bool
 }
 
 func NewDocumentBuilder() *DocumentBuilder {
@@ -1705,6 +1723,15 @@ func (builder *DocumentBuilder) DisplaySetting(displaySetting *DocumentDisplaySe
 	return builder
 }
 
+// 文档封面
+//
+// 示例值：
+func (builder *DocumentBuilder) Cover(cover *DocumentCover) *DocumentBuilder {
+	builder.cover = cover
+	builder.coverFlag = true
+	return builder
+}
+
 func (builder *DocumentBuilder) Build() *Document {
 	req := &Document{}
 	if builder.documentIdFlag {
@@ -1721,6 +1748,73 @@ func (builder *DocumentBuilder) Build() *Document {
 	}
 	if builder.displaySettingFlag {
 		req.DisplaySetting = builder.displaySetting
+	}
+	if builder.coverFlag {
+		req.Cover = builder.cover
+	}
+	return req
+}
+
+type DocumentCover struct {
+	Token        *string  `json:"token,omitempty"`          // 图片 token
+	OffsetRatioX *float64 `json:"offset_ratio_x,omitempty"` // 展示视图在水平方向的偏移比例。其值为距离原图中心的水平方向偏移值 px / 原图宽度 px。 视图在原图中心时，该值为 0； 视图在原图右部分时，该值为正数； 视图在原图左部分时，改值为负数。
+	OffsetRatioY *float64 `json:"offset_ratio_y,omitempty"` // 展示视图在垂直方向的偏移比例。其值为距离原图中心的垂直方向偏移值 px / 原图高度 px。 视图在原图中心时，该值为 0； 视图在原图上部分时，该值为正数； 视图在原图下部分时，改值为负数。
+}
+
+type DocumentCoverBuilder struct {
+	token            string // 图片 token
+	tokenFlag        bool
+	offsetRatioX     float64 // 展示视图在水平方向的偏移比例。其值为距离原图中心的水平方向偏移值 px / 原图宽度 px。 视图在原图中心时，该值为 0； 视图在原图右部分时，该值为正数； 视图在原图左部分时，改值为负数。
+	offsetRatioXFlag bool
+	offsetRatioY     float64 // 展示视图在垂直方向的偏移比例。其值为距离原图中心的垂直方向偏移值 px / 原图高度 px。 视图在原图中心时，该值为 0； 视图在原图上部分时，该值为正数； 视图在原图下部分时，改值为负数。
+	offsetRatioYFlag bool
+}
+
+func NewDocumentCoverBuilder() *DocumentCoverBuilder {
+	builder := &DocumentCoverBuilder{}
+	return builder
+}
+
+// 图片 token
+//
+// 示例值：O9E7bhebQooOzMx7yc7cSabcdef
+func (builder *DocumentCoverBuilder) Token(token string) *DocumentCoverBuilder {
+	builder.token = token
+	builder.tokenFlag = true
+	return builder
+}
+
+// 展示视图在水平方向的偏移比例。其值为距离原图中心的水平方向偏移值 px / 原图宽度 px。 视图在原图中心时，该值为 0； 视图在原图右部分时，该值为正数； 视图在原图左部分时，改值为负数。
+//
+// 示例值：0
+func (builder *DocumentCoverBuilder) OffsetRatioX(offsetRatioX float64) *DocumentCoverBuilder {
+	builder.offsetRatioX = offsetRatioX
+	builder.offsetRatioXFlag = true
+	return builder
+}
+
+// 展示视图在垂直方向的偏移比例。其值为距离原图中心的垂直方向偏移值 px / 原图高度 px。 视图在原图中心时，该值为 0； 视图在原图上部分时，该值为正数； 视图在原图下部分时，改值为负数。
+//
+// 示例值：0
+func (builder *DocumentCoverBuilder) OffsetRatioY(offsetRatioY float64) *DocumentCoverBuilder {
+	builder.offsetRatioY = offsetRatioY
+	builder.offsetRatioYFlag = true
+	return builder
+}
+
+func (builder *DocumentCoverBuilder) Build() *DocumentCover {
+	req := &DocumentCover{}
+	if builder.tokenFlag {
+		req.Token = &builder.token
+
+	}
+	if builder.offsetRatioXFlag {
+		req.OffsetRatioX = &builder.offsetRatioX
+
+	}
+	if builder.offsetRatioYFlag {
+		req.OffsetRatioY = &builder.offsetRatioY
+
 	}
 	return req
 }
@@ -2516,6 +2610,54 @@ func (builder *LinkBuilder) Build() *Link {
 	req := &Link{}
 	if builder.urlFlag {
 		req.Url = &builder.url
+
+	}
+	return req
+}
+
+type LinkPreview struct {
+	Url     *string `json:"url,omitempty"`      // 链接
+	UrlType *string `json:"url_type,omitempty"` // 链接类型
+}
+
+type LinkPreviewBuilder struct {
+	url         string // 链接
+	urlFlag     bool
+	urlType     string // 链接类型
+	urlTypeFlag bool
+}
+
+func NewLinkPreviewBuilder() *LinkPreviewBuilder {
+	builder := &LinkPreviewBuilder{}
+	return builder
+}
+
+// 链接
+//
+// 示例值：https://applink.feishu.cn/client/message/link/open?token=Al7F******Q%3D
+func (builder *LinkPreviewBuilder) Url(url string) *LinkPreviewBuilder {
+	builder.url = url
+	builder.urlFlag = true
+	return builder
+}
+
+// 链接类型
+//
+// 示例值：MessageLink
+func (builder *LinkPreviewBuilder) UrlType(urlType string) *LinkPreviewBuilder {
+	builder.urlType = urlType
+	builder.urlTypeFlag = true
+	return builder
+}
+
+func (builder *LinkPreviewBuilder) Build() *LinkPreview {
+	req := &LinkPreview{}
+	if builder.urlFlag {
+		req.Url = &builder.url
+
+	}
+	if builder.urlTypeFlag {
+		req.UrlType = &builder.urlType
 
 	}
 	return req
@@ -4813,13 +4955,47 @@ func (builder *UpdateBlockRequestBuilder) Build() *UpdateBlockRequest {
 	return req
 }
 
+type UpdateCoverRequest struct {
+	Cover *DocumentCover `json:"cover,omitempty"` // 封面信息，该值为 null 时表示移除封面
+}
+
+type UpdateCoverRequestBuilder struct {
+	cover     *DocumentCover // 封面信息，该值为 null 时表示移除封面
+	coverFlag bool
+}
+
+func NewUpdateCoverRequestBuilder() *UpdateCoverRequestBuilder {
+	builder := &UpdateCoverRequestBuilder{}
+	return builder
+}
+
+// 封面信息，该值为 null 时表示移除封面
+//
+// 示例值：
+func (builder *UpdateCoverRequestBuilder) Cover(cover *DocumentCover) *UpdateCoverRequestBuilder {
+	builder.cover = cover
+	builder.coverFlag = true
+	return builder
+}
+
+func (builder *UpdateCoverRequestBuilder) Build() *UpdateCoverRequest {
+	req := &UpdateCoverRequest{}
+	if builder.coverFlag {
+		req.Cover = builder.cover
+	}
+	return req
+}
+
 type UpdateDocumentRequest struct {
 	UpdateDisplaySetting *DocumentDisplaySetting `json:"update_display_setting,omitempty"` // 更新文档的展示设置
+	UpdateCover          *UpdateCoverRequest     `json:"update_cover,omitempty"`           // 更新文档封面
 }
 
 type UpdateDocumentRequestBuilder struct {
 	updateDisplaySetting     *DocumentDisplaySetting // 更新文档的展示设置
 	updateDisplaySettingFlag bool
+	updateCover              *UpdateCoverRequest // 更新文档封面
+	updateCoverFlag          bool
 }
 
 func NewUpdateDocumentRequestBuilder() *UpdateDocumentRequestBuilder {
@@ -4836,10 +5012,22 @@ func (builder *UpdateDocumentRequestBuilder) UpdateDisplaySetting(updateDisplayS
 	return builder
 }
 
+// 更新文档封面
+//
+// 示例值：
+func (builder *UpdateDocumentRequestBuilder) UpdateCover(updateCover *UpdateCoverRequest) *UpdateDocumentRequestBuilder {
+	builder.updateCover = updateCover
+	builder.updateCoverFlag = true
+	return builder
+}
+
 func (builder *UpdateDocumentRequestBuilder) Build() *UpdateDocumentRequest {
 	req := &UpdateDocumentRequest{}
 	if builder.updateDisplaySettingFlag {
 		req.UpdateDisplaySetting = builder.updateDisplaySetting
+	}
+	if builder.updateCoverFlag {
+		req.UpdateCover = builder.updateCover
 	}
 	return req
 }

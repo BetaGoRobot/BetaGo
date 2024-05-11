@@ -1,4 +1,4 @@
-# phuslog - High performance structured logging
+# phuslog - Fastest structured logging
 
 [![godoc][godoc-img]][godoc]
 [![goreport][report-img]][report]
@@ -8,7 +8,7 @@
 ## Features
 
 * Dependency Free
-* Simple and Clean Interface
+* Simple and Clean API
 * Consistent Writer
     - `IOWriter`, *io.Writer wrapper*
     - `ConsoleWriter`, *colorful & formatting*
@@ -20,6 +20,7 @@
     - `AsyncWriter`, *asynchronously writing*
 * Stdlib Log Adapter
     - `Logger.Std`, *transform to std log instances*
+    - `Logger.Slog`, *transform to log/slog instances*
 * Third-party Logger Interceptor
     - `logr`, *logr interceptor*
     - `gin`, *gin logging middleware*
@@ -32,7 +33,8 @@
     - `NewXID()`, *create a tracing id*
     - `Fastrandn(n uint32)`, *fast pseudorandom uint32 in [0,n)*
     - `IsTerminal(fd uintptr)`, *isatty for golang*
-    - `Printf(fmt string, a ...interface{})`, *printf logging*
+    - `Printf(fmt string, a ...any)`, *printf logging*
+    - `SlogNewJSONHandler(io.Writer, *slog.HandlerOptions)`, *drop-in replacement of slog.JSONHandler*
 * High Performance
     - [Significantly faster][high-performance] than all other json loggers.
 
@@ -49,7 +51,7 @@ var DefaultLogger = Logger{
 	Writer:     &IOWriter{os.Stderr},
 }
 
-// A Logger represents an active logging object that generates lines of JSON output to an io.Writer.
+// Logger represents an active logging object that generates lines of JSON output to an io.Writer.
 type Logger struct {
 	// Level defines log levels.
 	Level Level
@@ -58,12 +60,15 @@ type Logger struct {
 	// If Caller is negative, adds the full /path/to/file:line of the "caller" key.
 	Caller int
 
-	// TimeField defines the time filed name in output.  It uses "time" in if empty.
+	// TimeField defines the time field name in output.  It uses "time" in if empty.
 	TimeField string
 
-	// TimeFormat specifies the time format in output. It uses RFC3339 with millisecond if empty.
-	// If set with `TimeFormatUnix/TimeFormatUnixMs/TimeFormatUnixWithMs`, timestamps are formated.
+	// TimeFormat specifies the time format in output. Uses RFC3339 with millisecond if empty.
+	// If set to `TimeFormatUnix/TimeFormatUnixMs`, timestamps will be formatted.
 	TimeFormat string
+
+	// TimeLocation specifices that the location of TimeFormat used. Uses time.Local if empty.
+	TimeLocation *time.Location
 
 	// Writer specifies the writer of output. It uses a wrapped os.Stderr Writer in if empty.
 	Writer Writer
@@ -157,7 +162,7 @@ type FileWriter struct {
 *Highlights*:
 - FileWriter implements log.Writer and io.Writer interfaces both, it is a recommended alternative to [lumberjack][lumberjack].
 - FileWriter creates a symlink to the current logging file, it requires administrator privileges on Windows.
-- FileWriter does not rotate if you define a broad TimeFormat value(daily or monthly) then reach its MaxSize.
+- FileWriter does not rotate if you define a broad TimeFormat value(daily or monthly) until reach its MaxSize.
 
 ## Getting Started
 
@@ -217,6 +222,25 @@ func main() {
 //    {"ts":1257894000000,"foo":"bar"}
 ```
 
+### Customize the log writer
+
+To allow the use of ordinary functions as log writers, use `WriterFunc`.
+
+```go
+logger := log.Logger{
+	Writer: log.WriterFunc(func(e *log.Entry) (int, error) {
+		if e.Level >= log.ErrorLevel {
+			return os.Stderr.Write(e.Value())
+		} else {
+			return os.Stdout.Write(e.Value())
+		}
+	}),
+}
+
+logger.Info().Msg("a stdout entry")
+logger.Error().Msg("a stderr entry")
+```
+
 ### Pretty Console Writer
 
 To log a human-friendly, colorized output, use `ConsoleWriter`. [![playground][play-pretty-img]][play-pretty]
@@ -268,7 +292,7 @@ func (l *Glog) Errorf(fmt string, a ...any) { l.Logger.Error().Msgf(fmt, a...) }
 
 var glog = &Glog{log.Logger{
 	Level:      log.InfoLevel,
-	Caller:     1,
+	Caller:     2,
 	TimeFormat: "0102 15:04:05.999999",
 	Writer: &log.ConsoleWriter{Formatter: func(w io.Writer, a *log.FormatterArgs) (int, error) {
 		return fmt.Fprintf(w, "%c%s %s %s] %s\n%s", a.Level[0]-32, a.Time, a.Goid, a.Caller, a.Message, a.Stack)
@@ -687,6 +711,35 @@ func main() {
 }
 ```
 
+### slog Adapter
+
+Using wrapped loggers for slog. [![playground][play-slog-img]][play-slog]
+
+```go
+package main
+
+import (
+	"log/slog"
+
+	"github.com/phuslu/log"
+)
+
+func main() {
+	var logger *slog.Logger = (&log.Logger{
+		Level:      log.InfoLevel,
+		TimeField:  "date",
+		TimeFormat: "2006-01-02",
+		Caller:     1,
+	}).Slog()
+
+	logger = logger.With("logger", "a_test_slog").With("everything", 42)
+
+	logger.Info("hello from slog Info")
+	logger.Warn("hello from slog Warn")
+	logger.Error("hello from slog Error")
+}
+```
+
 ### Third-party Logger Interceptor
 
 | Logger | Interceptor |
@@ -776,17 +829,20 @@ func main() {
 
 ### High Performance
 
-The most common benchmarks(disable/normal/interface/printf/caller) with zap/zerolog, which runs on [github actions][benchmark]:
+<details>
+  <summary>The most common benchmarks(disabled/simple/caller/printf/any) against slog/zap/zerolog</summary>
 
 ```go
-// go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem log_test.go
+// go test -v -cpu=4 -run=none -bench=. -benchtime=10s -benchmem bench_test.go
 package main
 
 import (
 	"io"
+	"log"
+	"log/slog"
 	"testing"
 
-	"github.com/phuslu/log"
+	phuslog "github.com/phuslu/log"
 	"github.com/rs/zerolog"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -795,83 +851,64 @@ import (
 const msg = "The quick brown fox jumps over the lazy dog"
 var obj = struct {Rate string; Low int; High float32}{"15", 16, 123.2}
 
-func BenchmarkDisableZap(b *testing.B) {
-	logger := zap.New(zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(io.Discard),
-		zapcore.InfoLevel,
-	))
+func BenchmarkSlogDisabled(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
 	for i := 0; i < b.N; i++ {
-		logger.Debug(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+		logger.Debug(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkDisableZeroLog(b *testing.B) {
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+func BenchmarkSlogSimple(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
 	for i := 0; i < b.N; i++ {
-		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkDisablePhusLog(b *testing.B) {
-	logger := log.Logger{Level: log.InfoLevel, Writer: log.IOWriter{io.Discard}}
+func BenchmarkSlogPrintf(b *testing.B) {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	for i := 0; i < b.N; i++ {
-		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+		log.Printf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
 	}
 }
 
-func BenchmarkNormalZap(b *testing.B) {
-	logger := zap.New(zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(io.Discard),
-		zapcore.InfoLevel,
-	))
+func BenchmarkSlogCaller(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, &slog.HandlerOptions{AddSource: true}))
 	for i := 0; i < b.N; i++ {
-		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkNormalZeroLog(b *testing.B) {
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+func BenchmarkSlogAny(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
 	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+		logger.Info(msg, "rate", "15", "low", 16, "object", &obj)
 	}
 }
 
-func BenchmarkNormalPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
-	}
-}
-
-func BenchmarkInterfaceZap(b *testing.B) {
+func BenchmarkZapDisabled(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
 		zapcore.InfoLevel,
 	)).Sugar()
 	for i := 0; i < b.N; i++ {
-		logger.Infow(msg, "object", &obj)
+		logger.Debugw(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkInterfaceZeroLog(b *testing.B) {
-	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+func BenchmarkZapSimple(b *testing.B) {
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(io.Discard),
+		zapcore.InfoLevel,
+	)).Sugar()
 	for i := 0; i < b.N; i++ {
-		logger.Info().Interface("object", &obj).Msg(msg)
+		logger.Infow(msg, "rate", "15", "low", 16, "high", 123.2)
 	}
 }
 
-func BenchmarkInterfacePhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Interface("object", &obj).Msg(msg)
-	}
-}
-
-func BenchmarkPrintfZap(b *testing.B) {
+func BenchmarkZapPrintf(b *testing.B) {
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
 		zapcore.AddSync(io.Discard),
@@ -882,72 +919,285 @@ func BenchmarkPrintfZap(b *testing.B) {
 	}
 }
 
-func BenchmarkPrintfZeroLog(b *testing.B) {
+func BenchmarkZapCaller(b *testing.B) {
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(io.Discard),
+		zapcore.InfoLevel),
+		zap.AddCaller(),
+	).Sugar()
+	for i := 0; i < b.N; i++ {
+		logger.Infow(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkZapAny(b *testing.B) {
+	logger := zap.New(zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(io.Discard),
+		zapcore.InfoLevel,
+	)).Sugar()
+	for i := 0; i < b.N; i++ {
+		logger.Infow(msg, "rate", "15", "low", 16, "object", &obj)
+	}
+}
+
+func BenchmarkZeroLogDisabled(b *testing.B) {
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkZeroLogSimple(b *testing.B) {
+	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkZeroLogPrintf(b *testing.B) {
 	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
 		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
 	}
 }
 
-func BenchmarkPrintfPhusLog(b *testing.B) {
-	logger := log.Logger{Writer: log.IOWriter{io.Discard}}
-	for i := 0; i < b.N; i++ {
-		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
-	}
-}
-
-func BenchmarkCallerZap(b *testing.B) {
-	logger := zap.New(zapcore.NewCore(
-		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		zapcore.AddSync(io.Discard),
-		zapcore.InfoLevel),
-		zap.AddCaller(),
-	)
-	for i := 0; i < b.N; i++ {
-		logger.Info(msg, zap.String("rate", "15"), zap.Int("low", 16), zap.Float32("high", 123.2))
-	}
-}
-
-func BenchmarkCallerZeroLog(b *testing.B) {
+func BenchmarkZeroLogCaller(b *testing.B) {
 	logger := zerolog.New(io.Discard).With().Caller().Timestamp().Logger()
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
 
-func BenchmarkCallerPhusLog(b *testing.B) {
-	logger := log.Logger{Caller: 1, Writer: log.IOWriter{io.Discard}}
+func BenchmarkZeroLogAny(b *testing.B) {
+	logger := zerolog.New(io.Discard).With().Timestamp().Logger()
+	for i := 0; i < b.N; i++ {
+		logger.Info().Any("rate", "15").Any("low", 16).Any("object", &obj).Msg(msg)
+	}
+}
+
+func BenchmarkPhusLogDisabled(b *testing.B) {
+	logger := phuslog.Logger{Level: phuslog.InfoLevel, Writer: phuslog.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Debug().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPhusLogSimple(b *testing.B) {
+	logger := phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}
 	for i := 0; i < b.N; i++ {
 		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
 	}
 }
+
+func BenchmarkPhusLogPrintf(b *testing.B) {
+	logger := phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Msgf("rate=%s low=%d high=%f msg=%s", "15", 16, 123.2, msg)
+	}
+}
+
+func BenchmarkPhusLogCaller(b *testing.B) {
+	logger := phuslog.Logger{Caller: 1, Writer: phuslog.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Str("rate", "15").Int("low", 16).Float32("high", 123.2).Msg(msg)
+	}
+}
+
+func BenchmarkPhusLogAny(b *testing.B) {
+	logger := phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}
+	for i := 0; i < b.N; i++ {
+		logger.Info().Any("rate", "15").Any("low", 16).Any("object", &obj).Msg(msg)
+	}
+}
 ```
+
+</details>
+
 A Performance result as below, for daily benchmark results see [github actions][benchmark]
 ```
-BenchmarkDisableZap-4         	86193418	       142.8 ns/op	     192 B/op	       1 allocs/op
-BenchmarkDisableZeroLog-4     	1000000000	        11.58 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisablePhusLog-4     	1000000000	        11.93 ns/op	       0 B/op	       0 allocs/op
+goos: linux
+goarch: amd64
+cpu: AMD EPYC 7763 64-Core Processor
 
-BenchmarkNormalZap-4          	 9152504	      1331 ns/op	     192 B/op	       1 allocs/op
-BenchmarkNormalZeroLog-4      	14775375	       812.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkNormalPhusLog-4      	27574824	       435.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogDisabled-4      	715096197	         8.452 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogSimple-4        	 4394904	      1367 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogPrintf-4        	 5546492	      1053 ns/op	      80 B/op	       1 allocs/op
+BenchmarkSlogCaller-4        	 2708773	      2203 ns/op	     688 B/op	       9 allocs/op
+BenchmarkSlogAny-4           	 3936673	      1516 ns/op	     112 B/op	       2 allocs/op
 
-BenchmarkInterfaceZap-4       	 6488127	      1850 ns/op	     208 B/op	       2 allocs/op
-BenchmarkInterfaceZeroLog-4   	10102683	      1199 ns/op	      48 B/op	       1 allocs/op
-BenchmarkInterfacePhusLog-4   	13968078	       858.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapDisabled-4       	662012907	         9.076 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZapSimple-4         	 6586341	       926.9 ns/op	     384 B/op	       1 allocs/op
+BenchmarkZapPrintf-4         	 6375831	       951.9 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZapCaller-4         	 3601339	      1673 ns/op	     632 B/op	       3 allocs/op
+BenchmarkZapAny-4            	 4649176	      1288 ns/op	     480 B/op	       2 allocs/op
 
-BenchmarkPrintfZap-4          	 7066578	      1687 ns/op	      80 B/op	       1 allocs/op
-BenchmarkPrintfZeroLog-4      	 9119858	      1317 ns/op	      80 B/op	       1 allocs/op
-BenchmarkPrintfPhusLog-4      	14854870	       808.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogDisabled-4   	606002878	         9.908 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogSimple-4     	18342879	       328.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkZeroLogPrintf-4     	 8904566	       669.6 ns/op	      80 B/op	       1 allocs/op
+BenchmarkZeroLogCaller-4     	 4687348	      1280 ns/op	     304 B/op	       4 allocs/op
+BenchmarkZeroLogAny-4        	 7031146	       851.2 ns/op	      64 B/op	       3 allocs/op
 
-BenchmarkCallerZap-4          	 2931970	      4038 ns/op	     424 B/op	       3 allocs/op
-BenchmarkCallerZeroLog-4      	 3029824	      3947 ns/op	     272 B/op	       4 allocs/op
-BenchmarkCallerPhusLog-4      	 8405709	      1406 ns/op	     216 B/op	       2 allocs/op
+BenchmarkPhusLogDisabled-4   	624706401	         9.599 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogSimple-4     	22249552	       243.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogPrintf-4     	11471342	       524.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogCaller-4     	12550828	       480.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkPhusLogAny-4        	11623692	       516.4 ns/op	       0 B/op	       0 allocs/op
+
+PASS
+ok  	bench	139.331s
 ```
-This library uses the following special techniques to achieve better performance,
-1. handwriting time formatting
-1. manual inlining
-1. unrolled functions
+
+<details>
+  <summary>As slog handlers, comparing with stdlib/zap/zerolog implementations</summary>
+
+```go
+// go test -v -cpu=1 -run=none -bench=. -benchtime=10s -benchmem bench_test.go
+package bench
+
+import (
+	"io"
+	"log/slog"
+	"testing"
+
+	"github.com/phsym/zeroslog"
+	phuslog "github.com/phuslu/log"
+	seankhliao "go.seankhliao.com/svcrunner/v3/jsonlog"
+	"go.uber.org/zap"
+	"go.uber.org/zap/exp/zapslog"
+	"go.uber.org/zap/zapcore"
+)
+
+const msg = "The quick brown fox jumps over the lazy dog"
+
+func BenchmarkSlogSimpleStd(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupsStd(b *testing.B) {
+	logger := slog.New(slog.NewJSONHandler(io.Discard, nil)).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogSimpleZap(b *testing.B) {
+	logcore := zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(io.Discard),
+		zapcore.InfoLevel,
+	)
+	logger := slog.New(zapslog.NewHandler(logcore, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupsZap(b *testing.B) {
+	logcore := zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(io.Discard),
+		zapcore.InfoLevel,
+	)
+	logger := slog.New(zapslog.NewHandler(logcore, nil)).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogSimpleZerolog(b *testing.B) {
+	logger := slog.New(zeroslog.NewJsonHandler(io.Discard, &zeroslog.HandlerOptions{Level: slog.LevelInfo}))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupsZerolog(b *testing.B) {
+	logger := slog.New(zeroslog.NewJsonHandler(io.Discard, &zeroslog.HandlerOptions{Level: slog.LevelInfo})).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogSimpleSeankhliao(b *testing.B) {
+	logger := slog.New(seankhliao.New(slog.LevelInfo, io.Discard))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupsSeankhliao(b *testing.B) {
+	logger := slog.New(seankhliao.New(slog.LevelInfo, io.Discard)).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogSimplePhuslog(b *testing.B) {
+	logger := slog.New((&phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}).Slog().Handler())
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupsPhuslog(b *testing.B) {
+	logger := slog.New((&phuslog.Logger{Writer: phuslog.IOWriter{io.Discard}}).Slog().Handler()).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogSimplePhuslogStd(b *testing.B) {
+	logger := slog.New(phuslog.SlogNewJSONHandler(io.Discard, nil))
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+
+func BenchmarkSlogGroupsPhuslogStd(b *testing.B) {
+	logger := slog.New(phuslog.SlogNewJSONHandler(io.Discard, nil)).With("a", 1).WithGroup("g").With("b", 2)
+	for i := 0; i < b.N; i++ {
+		logger.Info(msg, "rate", "15", "low", 16, "high", 123.2)
+	}
+}
+```
+
+</details>
+
+A Performance result as below, for daily benchmark results see [github actions][benchmark]
+```
+goos: linux
+goarch: amd64
+cpu: AMD EPYC 7763 64-Core Processor                
+
+BenchmarkSlogSimpleStd        	 4272934	      1423 ns/op	     120 B/op	       3 allocs/op
+BenchmarkSlogGroupsStd        	 4143343	      1450 ns/op	     120 B/op	       3 allocs/op
+
+BenchmarkSlogSimpleZap        	 4776193	      1257 ns/op	     192 B/op	       1 allocs/op
+BenchmarkSlogGroupsZap        	 4751304	      1272 ns/op	     192 B/op	       1 allocs/op
+
+BenchmarkSlogSimpleZerolog    	 7583500	       797.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsZerolog    	 5459755	      1111 ns/op	     288 B/op	       1 allocs/op
+
+BenchmarkSlogSimpleSeankhliao 	 7103692	       844.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsSeankhliao 	 6321853	       941.7 ns/op	      16 B/op	       2 allocs/op
+
+BenchmarkSlogSimplePhuslog    	 8381883	       719.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsPhuslog    	 8314545	       727.6 ns/op	       0 B/op	       0 allocs/op
+
+BenchmarkSlogSimplePhuslogStd 	 8361526	       723.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSlogGroupsPhuslogStd 	 8047856	       744.7 ns/op	       0 B/op	       0 allocs/op
+
+PASS
+ok  	bench	84.415s
+```
+
+In summary, phuslog offers a blend of low latency, minimal memory usage, and efficient logging across various scenarios, making it an excellent option for high-performance logging in Go applications.
 
 ## A Real World Example
 
@@ -1075,33 +1325,35 @@ This log is heavily inspired by [zerolog][zerolog], [glog][glog], [gjson][gjson]
 [report]: https://goreportcard.com/report/github.com/phuslu/log
 [build-img]: https://github.com/phuslu/log/workflows/build/badge.svg
 [build]: https://github.com/phuslu/log/actions
-[stability-img]: https://img.shields.io/badge/stability-maintenance-green.svg
-[high-performance]: https://github.com/phuslu/log#high-performance
+[stability-img]: https://img.shields.io/badge/stability-stable-green.svg
+[high-performance]: https://github.com/phuslu/log?tab=readme-ov-file#high-performance
 [play-simple-img]: https://img.shields.io/badge/playground-NGV25aBKmYH-29BEB0?style=flat&logo=go
 [play-simple]: https://go.dev/play/p/NGV25aBKmYH
-[play-customize-img]: https://img.shields.io/badge/playground-WudQ__2rGj7R-29BEB0?style=flat&logo=go
-[play-customize]: https://go.dev/play/p/WudQ_2rGj7R
+[play-customize-img]: https://img.shields.io/badge/playground-p9ZSSL4--IaK-29BEB0?style=flat&logo=go
+[play-customize]: https://go.dev/play/p/p9ZSSL4-IaK
 [play-multiio-img]: https://img.shields.io/badge/playground-MH--J3Je--KEq-29BEB0?style=flat&logo=go
 [play-multiio]: https://go.dev/play/p/MH-J3Je-KEq
 [play-combined-img]: https://img.shields.io/badge/playground-24d4eDIpDeR-29BEB0?style=flat&logo=go
 [play-combined]: https://go.dev/play/p/24d4eDIpDeR
-[play-file-img]: https://img.shields.io/badge/playground-__tqZqJla1IE-29BEB0?style=flat&logo=go
-[play-file]: https://go.dev/play/p/_tqZqJla1IE
+[play-file-img]: https://img.shields.io/badge/playground-tjMc97E2EpW-29BEB0?style=flat&logo=go
+[play-file]: https://go.dev/play/p/tjMc97E2EpW
 [play-pretty-img]: https://img.shields.io/badge/playground-SCcXG33esvI-29BEB0?style=flat&logo=go
 [play-pretty]: https://go.dev/play/p/SCcXG33esvI
 [pretty-img]: https://user-images.githubusercontent.com/195836/101993218-cda82380-3cf3-11eb-9aa2-b8b1c832a72e.png
-[play-glog-img]: https://img.shields.io/badge/playground-6pEThv3WO7W-29BEB0?style=flat&logo=go
-[play-glog]: https://go.dev/play/p/6pEThv3WO7W
-[play-logfmt-img]: https://img.shields.io/badge/playground-7aSa--rxHmqw-29BEB0?style=flat&logo=go
-[play-logfmt]: https://go.dev/play/p/7aSa-rxHmqw
+[play-glog-img]: https://img.shields.io/badge/playground-oxSyv3ra5W5-29BEB0?style=flat&logo=go
+[play-glog]: https://go.dev/play/p/oxSyv3ra5W5
+[play-logfmt-img]: https://img.shields.io/badge/playground-8ZsrWnsWBep-29BEB0?style=flat&logo=go
+[play-logfmt]: https://go.dev/play/p/8ZsrWnsWBep
 [play-context-img]: https://img.shields.io/badge/playground-oAVAo302faf-29BEB0?style=flat&logo=go
 [play-context]: https://go.dev/play/p/oAVAo302faf
 [play-context-add-img]: https://img.shields.io/badge/playground-LuCghJxMPHI-29BEB0?style=flat&logo=go
 [play-context-add]: https://go.dev/play/p/LuCghJxMPHI
 [play-marshal-img]: https://img.shields.io/badge/playground-SoQdwQOaQR2-29BEB0?style=flat&logo=go
 [play-marshal]: https://go.dev/play/p/SoQdwQOaQR2
-[play-stdlog]: https://go.dev/play/p/DnKyE92LEEm
-[play-stdlog-img]: https://img.shields.io/badge/playground-DnKyE92LEEm-29BEB0?style=flat&logo=go
+[play-stdlog]: https://go.dev/play/p/LU8vQruS7-S
+[play-stdlog-img]: https://img.shields.io/badge/playground-LU8vQruS7--S-29BEB0?style=flat&logo=go
+[play-slog]: https://go.dev/play/p/JW3Ts6FcB40
+[play-slog-img]: https://img.shields.io/badge/playground-JW3Ts6FcB40-29BEB0?style=flat&logo=go
 [benchmark]: https://github.com/phuslu/log/actions?query=workflow%3Abenchmark
 [zerolog]: https://github.com/rs/zerolog
 [glog]: https://github.com/golang/glog

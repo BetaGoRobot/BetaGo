@@ -11287,6 +11287,68 @@ func (builder *DiInfoBuilder) Build() *DiInfo {
 	return req
 }
 
+type DimensionAbility struct {
+	Id          *string `json:"id,omitempty"`          // 能力项ID
+	Name        *I18n   `json:"name,omitempty"`        // 能力项名称
+	Description *I18n   `json:"description,omitempty"` // 能力项描述
+}
+
+type DimensionAbilityBuilder struct {
+	id              string // 能力项ID
+	idFlag          bool
+	name            *I18n // 能力项名称
+	nameFlag        bool
+	description     *I18n // 能力项描述
+	descriptionFlag bool
+}
+
+func NewDimensionAbilityBuilder() *DimensionAbilityBuilder {
+	builder := &DimensionAbilityBuilder{}
+	return builder
+}
+
+// 能力项ID
+//
+// 示例值：6930815272790114324
+func (builder *DimensionAbilityBuilder) Id(id string) *DimensionAbilityBuilder {
+	builder.id = id
+	builder.idFlag = true
+	return builder
+}
+
+// 能力项名称
+//
+// 示例值：
+func (builder *DimensionAbilityBuilder) Name(name *I18n) *DimensionAbilityBuilder {
+	builder.name = name
+	builder.nameFlag = true
+	return builder
+}
+
+// 能力项描述
+//
+// 示例值：
+func (builder *DimensionAbilityBuilder) Description(description *I18n) *DimensionAbilityBuilder {
+	builder.description = description
+	builder.descriptionFlag = true
+	return builder
+}
+
+func (builder *DimensionAbilityBuilder) Build() *DimensionAbility {
+	req := &DimensionAbility{}
+	if builder.idFlag {
+		req.Id = &builder.id
+
+	}
+	if builder.nameFlag {
+		req.Name = builder.name
+	}
+	if builder.descriptionFlag {
+		req.Description = builder.description
+	}
+	return req
+}
+
 type Dummy struct {
 	Id *string `json:"id,omitempty"` // id
 }
@@ -16357,6 +16419,80 @@ func (builder *InterviewDimensionAssessmentBuilder) Build() *InterviewDimensionA
 	return req
 }
 
+type InterviewDimensionOption struct {
+	Id          *string `json:"id,omitempty"`          // 选项ID
+	Name        *I18n   `json:"name,omitempty"`        //
+	Description *I18n   `json:"description,omitempty"` //
+	ScoreVal    *int    `json:"score_val,omitempty"`   // 选项分数值
+}
+
+type InterviewDimensionOptionBuilder struct {
+	id              string // 选项ID
+	idFlag          bool
+	name            *I18n //
+	nameFlag        bool
+	description     *I18n //
+	descriptionFlag bool
+	scoreVal        int // 选项分数值
+	scoreValFlag    bool
+}
+
+func NewInterviewDimensionOptionBuilder() *InterviewDimensionOptionBuilder {
+	builder := &InterviewDimensionOptionBuilder{}
+	return builder
+}
+
+// 选项ID
+//
+// 示例值：6930815272790114324
+func (builder *InterviewDimensionOptionBuilder) Id(id string) *InterviewDimensionOptionBuilder {
+	builder.id = id
+	builder.idFlag = true
+	return builder
+}
+
+// 示例值：
+func (builder *InterviewDimensionOptionBuilder) Name(name *I18n) *InterviewDimensionOptionBuilder {
+	builder.name = name
+	builder.nameFlag = true
+	return builder
+}
+
+// 示例值：
+func (builder *InterviewDimensionOptionBuilder) Description(description *I18n) *InterviewDimensionOptionBuilder {
+	builder.description = description
+	builder.descriptionFlag = true
+	return builder
+}
+
+// 选项分数值
+//
+// 示例值：1
+func (builder *InterviewDimensionOptionBuilder) ScoreVal(scoreVal int) *InterviewDimensionOptionBuilder {
+	builder.scoreVal = scoreVal
+	builder.scoreValFlag = true
+	return builder
+}
+
+func (builder *InterviewDimensionOptionBuilder) Build() *InterviewDimensionOption {
+	req := &InterviewDimensionOption{}
+	if builder.idFlag {
+		req.Id = &builder.id
+
+	}
+	if builder.nameFlag {
+		req.Name = builder.name
+	}
+	if builder.descriptionFlag {
+		req.Description = builder.description
+	}
+	if builder.scoreValFlag {
+		req.ScoreVal = &builder.scoreVal
+
+	}
+	return req
+}
+
 type InterviewDimensionScore struct {
 	Id       *string `json:"id,omitempty"`        // 选项 ID
 	Name     *I18n   `json:"name,omitempty"`      // 选项名称
@@ -16840,6 +16976,443 @@ func (builder *InterviewExtendBuilder) Build() *InterviewExtend {
 	}
 	if builder.interviewRoundTypeFlag {
 		req.InterviewRoundType = builder.interviewRoundType
+	}
+	return req
+}
+
+type InterviewFeedbackForm struct {
+	Id                     *string                        `json:"id,omitempty"`                       // 面试评价表ID
+	Version                *int                           `json:"version,omitempty"`                  // 面试评价表版本号
+	Name                   *I18n                          `json:"name,omitempty"`                     // 面试评价表名称
+	Type                   *int                           `json:"type,omitempty"`                     // 面试评价表类型
+	ScoreCalculationConfig *ScoreCalculationConfig        `json:"score_calculation_config,omitempty"` // 面试评价表打分计算配置（适用于打分评价表）
+	Modules                []*InterviewFeedbackFormModule `json:"modules,omitempty"`                  // 面试评价表模块列表
+}
+
+type InterviewFeedbackFormBuilder struct {
+	id                         string // 面试评价表ID
+	idFlag                     bool
+	version                    int // 面试评价表版本号
+	versionFlag                bool
+	name                       *I18n // 面试评价表名称
+	nameFlag                   bool
+	type_                      int // 面试评价表类型
+	typeFlag                   bool
+	scoreCalculationConfig     *ScoreCalculationConfig // 面试评价表打分计算配置（适用于打分评价表）
+	scoreCalculationConfigFlag bool
+	modules                    []*InterviewFeedbackFormModule // 面试评价表模块列表
+	modulesFlag                bool
+}
+
+func NewInterviewFeedbackFormBuilder() *InterviewFeedbackFormBuilder {
+	builder := &InterviewFeedbackFormBuilder{}
+	return builder
+}
+
+// 面试评价表ID
+//
+// 示例值：6969137186734393644
+func (builder *InterviewFeedbackFormBuilder) Id(id string) *InterviewFeedbackFormBuilder {
+	builder.id = id
+	builder.idFlag = true
+	return builder
+}
+
+// 面试评价表版本号
+//
+// 示例值：1
+func (builder *InterviewFeedbackFormBuilder) Version(version int) *InterviewFeedbackFormBuilder {
+	builder.version = version
+	builder.versionFlag = true
+	return builder
+}
+
+// 面试评价表名称
+//
+// 示例值：
+func (builder *InterviewFeedbackFormBuilder) Name(name *I18n) *InterviewFeedbackFormBuilder {
+	builder.name = name
+	builder.nameFlag = true
+	return builder
+}
+
+// 面试评价表类型
+//
+// 示例值：1
+func (builder *InterviewFeedbackFormBuilder) Type(type_ int) *InterviewFeedbackFormBuilder {
+	builder.type_ = type_
+	builder.typeFlag = true
+	return builder
+}
+
+// 面试评价表打分计算配置（适用于打分评价表）
+//
+// 示例值：
+func (builder *InterviewFeedbackFormBuilder) ScoreCalculationConfig(scoreCalculationConfig *ScoreCalculationConfig) *InterviewFeedbackFormBuilder {
+	builder.scoreCalculationConfig = scoreCalculationConfig
+	builder.scoreCalculationConfigFlag = true
+	return builder
+}
+
+// 面试评价表模块列表
+//
+// 示例值：
+func (builder *InterviewFeedbackFormBuilder) Modules(modules []*InterviewFeedbackFormModule) *InterviewFeedbackFormBuilder {
+	builder.modules = modules
+	builder.modulesFlag = true
+	return builder
+}
+
+func (builder *InterviewFeedbackFormBuilder) Build() *InterviewFeedbackForm {
+	req := &InterviewFeedbackForm{}
+	if builder.idFlag {
+		req.Id = &builder.id
+
+	}
+	if builder.versionFlag {
+		req.Version = &builder.version
+
+	}
+	if builder.nameFlag {
+		req.Name = builder.name
+	}
+	if builder.typeFlag {
+		req.Type = &builder.type_
+
+	}
+	if builder.scoreCalculationConfigFlag {
+		req.ScoreCalculationConfig = builder.scoreCalculationConfig
+	}
+	if builder.modulesFlag {
+		req.Modules = builder.modules
+	}
+	return req
+}
+
+type InterviewFeedbackFormDimension struct {
+	Id                   *string                     `json:"id,omitempty"`                     // 模块维度ID
+	Name                 *I18n                       `json:"name,omitempty"`                   // 维度名称
+	Description          *I18n                       `json:"description,omitempty"`            // 维度描述
+	Type                 *int                        `json:"type,omitempty"`                   // 维度类型
+	Enabled              *bool                       `json:"enabled,omitempty"`                // 是否启用
+	Sequence             *int                        `json:"sequence,omitempty"`               // 维度顺序
+	IsRequired           *bool                       `json:"is_required,omitempty"`            // 是否必选
+	Weight               *float64                    `json:"weight,omitempty"`                 // 维度权重
+	ScoreDimensionConfig *ScoreDimensionConfig       `json:"score_dimension_config,omitempty"` // 评价维度的分数配置（适用于打分题）
+	OptionItems          []*InterviewDimensionOption `json:"option_items,omitempty"`           // 选项列表(适用于单选题和多选题)
+	DisplayNotEvident    *bool                       `json:"display_not_evident,omitempty"`    // 是否展示「无法判断」选项，仅针对「职级建议」的维度类型
+	AbilityList          []*DimensionAbility         `json:"ability_list,omitempty"`           // 能力项列表
+}
+
+type InterviewFeedbackFormDimensionBuilder struct {
+	id                       string // 模块维度ID
+	idFlag                   bool
+	name                     *I18n // 维度名称
+	nameFlag                 bool
+	description              *I18n // 维度描述
+	descriptionFlag          bool
+	type_                    int // 维度类型
+	typeFlag                 bool
+	enabled                  bool // 是否启用
+	enabledFlag              bool
+	sequence                 int // 维度顺序
+	sequenceFlag             bool
+	isRequired               bool // 是否必选
+	isRequiredFlag           bool
+	weight                   float64 // 维度权重
+	weightFlag               bool
+	scoreDimensionConfig     *ScoreDimensionConfig // 评价维度的分数配置（适用于打分题）
+	scoreDimensionConfigFlag bool
+	optionItems              []*InterviewDimensionOption // 选项列表(适用于单选题和多选题)
+	optionItemsFlag          bool
+	displayNotEvident        bool // 是否展示「无法判断」选项，仅针对「职级建议」的维度类型
+	displayNotEvidentFlag    bool
+	abilityList              []*DimensionAbility // 能力项列表
+	abilityListFlag          bool
+}
+
+func NewInterviewFeedbackFormDimensionBuilder() *InterviewFeedbackFormDimensionBuilder {
+	builder := &InterviewFeedbackFormDimensionBuilder{}
+	return builder
+}
+
+// 模块维度ID
+//
+// 示例值：6930815272790114324
+func (builder *InterviewFeedbackFormDimensionBuilder) Id(id string) *InterviewFeedbackFormDimensionBuilder {
+	builder.id = id
+	builder.idFlag = true
+	return builder
+}
+
+// 维度名称
+//
+// 示例值：
+func (builder *InterviewFeedbackFormDimensionBuilder) Name(name *I18n) *InterviewFeedbackFormDimensionBuilder {
+	builder.name = name
+	builder.nameFlag = true
+	return builder
+}
+
+// 维度描述
+//
+// 示例值：
+func (builder *InterviewFeedbackFormDimensionBuilder) Description(description *I18n) *InterviewFeedbackFormDimensionBuilder {
+	builder.description = description
+	builder.descriptionFlag = true
+	return builder
+}
+
+// 维度类型
+//
+// 示例值：1
+func (builder *InterviewFeedbackFormDimensionBuilder) Type(type_ int) *InterviewFeedbackFormDimensionBuilder {
+	builder.type_ = type_
+	builder.typeFlag = true
+	return builder
+}
+
+// 是否启用
+//
+// 示例值：true
+func (builder *InterviewFeedbackFormDimensionBuilder) Enabled(enabled bool) *InterviewFeedbackFormDimensionBuilder {
+	builder.enabled = enabled
+	builder.enabledFlag = true
+	return builder
+}
+
+// 维度顺序
+//
+// 示例值：1
+func (builder *InterviewFeedbackFormDimensionBuilder) Sequence(sequence int) *InterviewFeedbackFormDimensionBuilder {
+	builder.sequence = sequence
+	builder.sequenceFlag = true
+	return builder
+}
+
+// 是否必选
+//
+// 示例值：true
+func (builder *InterviewFeedbackFormDimensionBuilder) IsRequired(isRequired bool) *InterviewFeedbackFormDimensionBuilder {
+	builder.isRequired = isRequired
+	builder.isRequiredFlag = true
+	return builder
+}
+
+// 维度权重
+//
+// 示例值：1
+func (builder *InterviewFeedbackFormDimensionBuilder) Weight(weight float64) *InterviewFeedbackFormDimensionBuilder {
+	builder.weight = weight
+	builder.weightFlag = true
+	return builder
+}
+
+// 评价维度的分数配置（适用于打分题）
+//
+// 示例值：
+func (builder *InterviewFeedbackFormDimensionBuilder) ScoreDimensionConfig(scoreDimensionConfig *ScoreDimensionConfig) *InterviewFeedbackFormDimensionBuilder {
+	builder.scoreDimensionConfig = scoreDimensionConfig
+	builder.scoreDimensionConfigFlag = true
+	return builder
+}
+
+// 选项列表(适用于单选题和多选题)
+//
+// 示例值：
+func (builder *InterviewFeedbackFormDimensionBuilder) OptionItems(optionItems []*InterviewDimensionOption) *InterviewFeedbackFormDimensionBuilder {
+	builder.optionItems = optionItems
+	builder.optionItemsFlag = true
+	return builder
+}
+
+// 是否展示「无法判断」选项，仅针对「职级建议」的维度类型
+//
+// 示例值：true
+func (builder *InterviewFeedbackFormDimensionBuilder) DisplayNotEvident(displayNotEvident bool) *InterviewFeedbackFormDimensionBuilder {
+	builder.displayNotEvident = displayNotEvident
+	builder.displayNotEvidentFlag = true
+	return builder
+}
+
+// 能力项列表
+//
+// 示例值：
+func (builder *InterviewFeedbackFormDimensionBuilder) AbilityList(abilityList []*DimensionAbility) *InterviewFeedbackFormDimensionBuilder {
+	builder.abilityList = abilityList
+	builder.abilityListFlag = true
+	return builder
+}
+
+func (builder *InterviewFeedbackFormDimensionBuilder) Build() *InterviewFeedbackFormDimension {
+	req := &InterviewFeedbackFormDimension{}
+	if builder.idFlag {
+		req.Id = &builder.id
+
+	}
+	if builder.nameFlag {
+		req.Name = builder.name
+	}
+	if builder.descriptionFlag {
+		req.Description = builder.description
+	}
+	if builder.typeFlag {
+		req.Type = &builder.type_
+
+	}
+	if builder.enabledFlag {
+		req.Enabled = &builder.enabled
+
+	}
+	if builder.sequenceFlag {
+		req.Sequence = &builder.sequence
+
+	}
+	if builder.isRequiredFlag {
+		req.IsRequired = &builder.isRequired
+
+	}
+	if builder.weightFlag {
+		req.Weight = &builder.weight
+
+	}
+	if builder.scoreDimensionConfigFlag {
+		req.ScoreDimensionConfig = builder.scoreDimensionConfig
+	}
+	if builder.optionItemsFlag {
+		req.OptionItems = builder.optionItems
+	}
+	if builder.displayNotEvidentFlag {
+		req.DisplayNotEvident = &builder.displayNotEvident
+
+	}
+	if builder.abilityListFlag {
+		req.AbilityList = builder.abilityList
+	}
+	return req
+}
+
+type InterviewFeedbackFormModule struct {
+	Id          *string                           `json:"id,omitempty"`          // 面试评价表模块ID
+	Name        *I18n                             `json:"name,omitempty"`        // 模块名称
+	Description *I18n                             `json:"description,omitempty"` // 模块描述
+	Type        *int                              `json:"type,omitempty"`        // 模块类型
+	Sequence    *int                              `json:"sequence,omitempty"`    // 模块顺序
+	Weight      *float64                          `json:"weight,omitempty"`      // 模块权重
+	Dimensions  []*InterviewFeedbackFormDimension `json:"dimensions,omitempty"`  // 模块维度列表
+}
+
+type InterviewFeedbackFormModuleBuilder struct {
+	id              string // 面试评价表模块ID
+	idFlag          bool
+	name            *I18n // 模块名称
+	nameFlag        bool
+	description     *I18n // 模块描述
+	descriptionFlag bool
+	type_           int // 模块类型
+	typeFlag        bool
+	sequence        int // 模块顺序
+	sequenceFlag    bool
+	weight          float64 // 模块权重
+	weightFlag      bool
+	dimensions      []*InterviewFeedbackFormDimension // 模块维度列表
+	dimensionsFlag  bool
+}
+
+func NewInterviewFeedbackFormModuleBuilder() *InterviewFeedbackFormModuleBuilder {
+	builder := &InterviewFeedbackFormModuleBuilder{}
+	return builder
+}
+
+// 面试评价表模块ID
+//
+// 示例值：6930815272790114324
+func (builder *InterviewFeedbackFormModuleBuilder) Id(id string) *InterviewFeedbackFormModuleBuilder {
+	builder.id = id
+	builder.idFlag = true
+	return builder
+}
+
+// 模块名称
+//
+// 示例值：
+func (builder *InterviewFeedbackFormModuleBuilder) Name(name *I18n) *InterviewFeedbackFormModuleBuilder {
+	builder.name = name
+	builder.nameFlag = true
+	return builder
+}
+
+// 模块描述
+//
+// 示例值：
+func (builder *InterviewFeedbackFormModuleBuilder) Description(description *I18n) *InterviewFeedbackFormModuleBuilder {
+	builder.description = description
+	builder.descriptionFlag = true
+	return builder
+}
+
+// 模块类型
+//
+// 示例值：
+func (builder *InterviewFeedbackFormModuleBuilder) Type(type_ int) *InterviewFeedbackFormModuleBuilder {
+	builder.type_ = type_
+	builder.typeFlag = true
+	return builder
+}
+
+// 模块顺序
+//
+// 示例值：1
+func (builder *InterviewFeedbackFormModuleBuilder) Sequence(sequence int) *InterviewFeedbackFormModuleBuilder {
+	builder.sequence = sequence
+	builder.sequenceFlag = true
+	return builder
+}
+
+// 模块权重
+//
+// 示例值：1
+func (builder *InterviewFeedbackFormModuleBuilder) Weight(weight float64) *InterviewFeedbackFormModuleBuilder {
+	builder.weight = weight
+	builder.weightFlag = true
+	return builder
+}
+
+// 模块维度列表
+//
+// 示例值：
+func (builder *InterviewFeedbackFormModuleBuilder) Dimensions(dimensions []*InterviewFeedbackFormDimension) *InterviewFeedbackFormModuleBuilder {
+	builder.dimensions = dimensions
+	builder.dimensionsFlag = true
+	return builder
+}
+
+func (builder *InterviewFeedbackFormModuleBuilder) Build() *InterviewFeedbackFormModule {
+	req := &InterviewFeedbackFormModule{}
+	if builder.idFlag {
+		req.Id = &builder.id
+
+	}
+	if builder.nameFlag {
+		req.Name = builder.name
+	}
+	if builder.descriptionFlag {
+		req.Description = builder.description
+	}
+	if builder.typeFlag {
+		req.Type = &builder.type_
+
+	}
+	if builder.sequenceFlag {
+		req.Sequence = &builder.sequence
+
+	}
+	if builder.weightFlag {
+		req.Weight = &builder.weight
+
+	}
+	if builder.dimensionsFlag {
+		req.Dimensions = builder.dimensions
 	}
 	return req
 }
@@ -26843,6 +27416,116 @@ func (builder *SalaryBuilder) Build() *Salary {
 	}
 	if builder.operatorIdFlag {
 		req.OperatorId = &builder.operatorId
+
+	}
+	return req
+}
+
+type ScoreCalculationConfig struct {
+	Enabled         *bool `json:"enabled,omitempty"`          // 是否启用
+	CalculationMode *int  `json:"calculation_mode,omitempty"` //
+}
+
+type ScoreCalculationConfigBuilder struct {
+	enabled             bool // 是否启用
+	enabledFlag         bool
+	calculationMode     int //
+	calculationModeFlag bool
+}
+
+func NewScoreCalculationConfigBuilder() *ScoreCalculationConfigBuilder {
+	builder := &ScoreCalculationConfigBuilder{}
+	return builder
+}
+
+// 是否启用
+//
+// 示例值：true
+func (builder *ScoreCalculationConfigBuilder) Enabled(enabled bool) *ScoreCalculationConfigBuilder {
+	builder.enabled = enabled
+	builder.enabledFlag = true
+	return builder
+}
+
+// 示例值：1
+func (builder *ScoreCalculationConfigBuilder) CalculationMode(calculationMode int) *ScoreCalculationConfigBuilder {
+	builder.calculationMode = calculationMode
+	builder.calculationModeFlag = true
+	return builder
+}
+
+func (builder *ScoreCalculationConfigBuilder) Build() *ScoreCalculationConfig {
+	req := &ScoreCalculationConfig{}
+	if builder.enabledFlag {
+		req.Enabled = &builder.enabled
+
+	}
+	if builder.calculationModeFlag {
+		req.CalculationMode = &builder.calculationMode
+
+	}
+	return req
+}
+
+type ScoreDimensionConfig struct {
+	ScoreDimensionType *int `json:"score_dimension_type,omitempty"` // 分数维度类型
+	LowerLimitScore    *int `json:"lower_limit_score,omitempty"`    // 分数下限
+	UpperLimitScore    *int `json:"upper_limit_score,omitempty"`    // 分数上限
+}
+
+type ScoreDimensionConfigBuilder struct {
+	scoreDimensionType     int // 分数维度类型
+	scoreDimensionTypeFlag bool
+	lowerLimitScore        int // 分数下限
+	lowerLimitScoreFlag    bool
+	upperLimitScore        int // 分数上限
+	upperLimitScoreFlag    bool
+}
+
+func NewScoreDimensionConfigBuilder() *ScoreDimensionConfigBuilder {
+	builder := &ScoreDimensionConfigBuilder{}
+	return builder
+}
+
+// 分数维度类型
+//
+// 示例值：1
+func (builder *ScoreDimensionConfigBuilder) ScoreDimensionType(scoreDimensionType int) *ScoreDimensionConfigBuilder {
+	builder.scoreDimensionType = scoreDimensionType
+	builder.scoreDimensionTypeFlag = true
+	return builder
+}
+
+// 分数下限
+//
+// 示例值：1
+func (builder *ScoreDimensionConfigBuilder) LowerLimitScore(lowerLimitScore int) *ScoreDimensionConfigBuilder {
+	builder.lowerLimitScore = lowerLimitScore
+	builder.lowerLimitScoreFlag = true
+	return builder
+}
+
+// 分数上限
+//
+// 示例值：100
+func (builder *ScoreDimensionConfigBuilder) UpperLimitScore(upperLimitScore int) *ScoreDimensionConfigBuilder {
+	builder.upperLimitScore = upperLimitScore
+	builder.upperLimitScoreFlag = true
+	return builder
+}
+
+func (builder *ScoreDimensionConfigBuilder) Build() *ScoreDimensionConfig {
+	req := &ScoreDimensionConfig{}
+	if builder.scoreDimensionTypeFlag {
+		req.ScoreDimensionType = &builder.scoreDimensionType
+
+	}
+	if builder.lowerLimitScoreFlag {
+		req.LowerLimitScore = &builder.lowerLimitScore
+
+	}
+	if builder.upperLimitScoreFlag {
+		req.UpperLimitScore = &builder.upperLimitScore
 
 	}
 	return req

@@ -50,7 +50,7 @@ const (
 
 const (
 	OperatorTypeUser = "user" // 以user_id来识别用户
-	OperatorTypeBot  = "bot"  // 以bot_id来识别用户
+	OperatorTypeBot  = "bot"  // [已废弃] 以bot_id来识别用户
 )
 
 const (
@@ -2322,7 +2322,7 @@ func (builder *AuditInfoBuilder) OperatorType(operatorType int) *AuditInfoBuilde
 
 // 操作人id
 //
-// 示例值：11111111111111
+// 示例值：4a3b8541
 func (builder *AuditInfoBuilder) OperatorValue(operatorValue string) *AuditInfoBuilder {
 	builder.operatorValue = operatorValue
 	builder.operatorValueFlag = true
@@ -2367,7 +2367,7 @@ func (builder *AuditInfoBuilder) Ip(ip string) *AuditInfoBuilder {
 
 // 第三方isvID
 //
-// 示例值：xxx
+// 示例值：example_value
 func (builder *AuditInfoBuilder) OperatorApp(operatorApp string) *AuditInfoBuilder {
 	builder.operatorApp = operatorApp
 	builder.operatorAppFlag = true
@@ -2394,7 +2394,7 @@ func (builder *AuditInfoBuilder) Extend(extend *AuditEventExtend) *AuditInfoBuil
 
 // 第三方isv名称
 //
-// 示例值：xxx
+// 示例值：example_value
 func (builder *AuditInfoBuilder) OperatorAppName(operatorAppName string) *AuditInfoBuilder {
 	builder.operatorAppName = operatorAppName
 	builder.operatorAppNameFlag = true
@@ -6436,13 +6436,13 @@ func (builder *ListAuditInfoReqBuilder) Limit(limit int) *ListAuditInfoReqBuilde
 
 // 此次调用中使用的用户ID的类型
 //
-// 示例值：
+// 示例值：user_id
 func (builder *ListAuditInfoReqBuilder) UserIdType(userIdType string) *ListAuditInfoReqBuilder {
 	builder.apiReq.QueryParams.Set("user_id_type", fmt.Sprint(userIdType))
 	return builder
 }
 
-// 起始时间戳
+// 日志时间范围: 结束时间. 格式: 秒级时间戳. 默认值: 此刻
 //
 // 示例值：1668700799
 func (builder *ListAuditInfoReqBuilder) Latest(latest int) *ListAuditInfoReqBuilder {
@@ -6450,7 +6450,7 @@ func (builder *ListAuditInfoReqBuilder) Latest(latest int) *ListAuditInfoReqBuil
 	return builder
 }
 
-// 终止时间戳
+// 日志时间范围: 起始时间. 格式: 秒级时间戳. 默认值:  30日前此刻
 //
 // 示例值：1668528000
 func (builder *ListAuditInfoReqBuilder) Oldest(oldest int) *ListAuditInfoReqBuilder {
@@ -6466,7 +6466,7 @@ func (builder *ListAuditInfoReqBuilder) EventName(eventName string) *ListAuditIn
 	return builder
 }
 
-// 操作者类型
+// 过滤操作者: 操作者类型. 与 operator_value 配合使用
 //
 // 示例值：
 func (builder *ListAuditInfoReqBuilder) OperatorType(operatorType string) *ListAuditInfoReqBuilder {
@@ -6474,7 +6474,7 @@ func (builder *ListAuditInfoReqBuilder) OperatorType(operatorType string) *ListA
 	return builder
 }
 
-// 操作者值
+// 过滤操作者: 操作者ID. 与 operator_type 配合使用
 //
 // 示例值：55ed16fe
 func (builder *ListAuditInfoReqBuilder) OperatorValue(operatorValue string) *ListAuditInfoReqBuilder {
@@ -6482,7 +6482,7 @@ func (builder *ListAuditInfoReqBuilder) OperatorValue(operatorValue string) *Lis
 	return builder
 }
 
-// 模块
+// 过滤模块
 //
 // 示例值：1
 func (builder *ListAuditInfoReqBuilder) EventModule(eventModule int) *ListAuditInfoReqBuilder {
@@ -6506,11 +6506,27 @@ func (builder *ListAuditInfoReqBuilder) PageSize(pageSize int) *ListAuditInfoReq
 	return builder
 }
 
-// 用户类型
+// 过滤用户类型. 仅当 operator_type=user 时生效
 //
 // 示例值：
 func (builder *ListAuditInfoReqBuilder) UserType(userType int) *ListAuditInfoReqBuilder {
 	builder.apiReq.QueryParams.Set("user_type", fmt.Sprint(userType))
+	return builder
+}
+
+// 过滤操作对象: 操作对象类型. 与object_value配合使用
+//
+// 示例值：1
+func (builder *ListAuditInfoReqBuilder) ObjectType(objectType int) *ListAuditInfoReqBuilder {
+	builder.apiReq.QueryParams.Set("object_type", fmt.Sprint(objectType))
+	return builder
+}
+
+// 过滤操作对象: 操作对象ID. 与object_type配合使用
+//
+// 示例值：55ed16fe
+func (builder *ListAuditInfoReqBuilder) ObjectValue(objectValue string) *ListAuditInfoReqBuilder {
+	builder.apiReq.QueryParams.Set("object_value", fmt.Sprint(objectValue))
 	return builder
 }
 
