@@ -137,7 +137,6 @@ type ExportJob struct {
 	Type          *string `json:"type,omitempty"`           // 导出文档类型
 	FileName      *string `json:"file_name,omitempty"`      // 导出文件名
 	FileToken     *string `json:"file_token,omitempty"`     // 导出文件 Drive Token
-	FileSize      *int    `json:"file_size,omitempty"`      // 导出文件大小
 	JobErrorMsg   *string `json:"job_error_msg,omitempty"`  // 任务失败原因
 	JobStatus     *int    `json:"job_status,omitempty"`     // 任务状态
 }
@@ -153,8 +152,6 @@ type ExportJobBuilder struct {
 	fileNameFlag      bool
 	fileToken         string // 导出文件 Drive Token
 	fileTokenFlag     bool
-	fileSize          int // 导出文件大小
-	fileSizeFlag      bool
 	jobErrorMsg       string // 任务失败原因
 	jobErrorMsgFlag   bool
 	jobStatus         int // 任务状态
@@ -211,15 +208,6 @@ func (builder *ExportJobBuilder) FileToken(fileToken string) *ExportJobBuilder {
 	return builder
 }
 
-// 导出文件大小
-//
-// 示例值：34356
-func (builder *ExportJobBuilder) FileSize(fileSize int) *ExportJobBuilder {
-	builder.fileSize = fileSize
-	builder.fileSizeFlag = true
-	return builder
-}
-
 // 任务失败原因
 //
 // 示例值：success
@@ -258,10 +246,6 @@ func (builder *ExportJobBuilder) Build() *ExportJob {
 	}
 	if builder.fileTokenFlag {
 		req.FileToken = &builder.fileToken
-
-	}
-	if builder.fileSizeFlag {
-		req.FileSize = &builder.fileSize
 
 	}
 	if builder.jobErrorMsgFlag {

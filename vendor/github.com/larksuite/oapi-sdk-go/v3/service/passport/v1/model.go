@@ -133,6 +133,54 @@ func (builder *DepartmentIdBuilder) Build() *DepartmentId {
 	return req
 }
 
+type Device struct {
+	DeviceId       *string `json:"device_id,omitempty"`        // 当前设备ID
+	LegacyDeviceId *string `json:"legacy_device_id,omitempty"` // 历史使用的设备ID
+}
+
+type DeviceBuilder struct {
+	deviceId           string // 当前设备ID
+	deviceIdFlag       bool
+	legacyDeviceId     string // 历史使用的设备ID
+	legacyDeviceIdFlag bool
+}
+
+func NewDeviceBuilder() *DeviceBuilder {
+	builder := &DeviceBuilder{}
+	return builder
+}
+
+// 当前设备ID
+//
+// 示例值：1234
+func (builder *DeviceBuilder) DeviceId(deviceId string) *DeviceBuilder {
+	builder.deviceId = deviceId
+	builder.deviceIdFlag = true
+	return builder
+}
+
+// 历史使用的设备ID
+//
+// 示例值：4567
+func (builder *DeviceBuilder) LegacyDeviceId(legacyDeviceId string) *DeviceBuilder {
+	builder.legacyDeviceId = legacyDeviceId
+	builder.legacyDeviceIdFlag = true
+	return builder
+}
+
+func (builder *DeviceBuilder) Build() *Device {
+	req := &Device{}
+	if builder.deviceIdFlag {
+		req.DeviceId = &builder.deviceId
+
+	}
+	if builder.legacyDeviceIdFlag {
+		req.LegacyDeviceId = &builder.legacyDeviceId
+
+	}
+	return req
+}
+
 type IdpCredential struct {
 }
 

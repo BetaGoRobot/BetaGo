@@ -347,6 +347,7 @@ const (
 	ParentTypeUploadPrepareMediaBitableFile         = "bitable_file"          // bitable文件
 	ParentTypeUploadPrepareMediaMoments             = "moments"               // 同事圈
 	ParentTypeUploadPrepareMediaCcmImportOpen       = "ccm_import_open"       // 云文档导入文件
+	ParentTypeUploadPrepareMediaCalendar            = "calendar"              // 日历文件
 )
 
 const (
@@ -3200,8 +3201,8 @@ func (builder *MediaBuilder) Build() *Media {
 type MediaUploadInfo struct {
 	FileName   *string `json:"file_name,omitempty"`   // 文件名
 	ParentType *string `json:"parent_type,omitempty"` // 上传点类型
-	ParentNode *string `json:"parent_node,omitempty"` // 上传点的标识符
 	Size       *int    `json:"size,omitempty"`        // 文件大小
+	ParentNode *string `json:"parent_node,omitempty"` // 上传点的标识符
 	Extra      *string `json:"extra,omitempty"`       // 扩展信息(可选)
 }
 
@@ -3210,10 +3211,10 @@ type MediaUploadInfoBuilder struct {
 	fileNameFlag   bool
 	parentType     string // 上传点类型
 	parentTypeFlag bool
-	parentNode     string // 上传点的标识符
-	parentNodeFlag bool
 	size           int // 文件大小
 	sizeFlag       bool
+	parentNode     string // 上传点的标识符
+	parentNodeFlag bool
 	extra          string // 扩展信息(可选)
 	extraFlag      bool
 }
@@ -3241,21 +3242,21 @@ func (builder *MediaUploadInfoBuilder) ParentType(parentType string) *MediaUploa
 	return builder
 }
 
-// 上传点的标识符
-//
-// 示例值：doccnFivLCfJfblZjGZtxgabcef
-func (builder *MediaUploadInfoBuilder) ParentNode(parentNode string) *MediaUploadInfoBuilder {
-	builder.parentNode = parentNode
-	builder.parentNodeFlag = true
-	return builder
-}
-
 // 文件大小
 //
 // 示例值：1024
 func (builder *MediaUploadInfoBuilder) Size(size int) *MediaUploadInfoBuilder {
 	builder.size = size
 	builder.sizeFlag = true
+	return builder
+}
+
+// 上传点的标识符
+//
+// 示例值：doccnFivLCfJfblZjGZtxgabcef
+func (builder *MediaUploadInfoBuilder) ParentNode(parentNode string) *MediaUploadInfoBuilder {
+	builder.parentNode = parentNode
+	builder.parentNodeFlag = true
 	return builder
 }
 
@@ -3278,12 +3279,12 @@ func (builder *MediaUploadInfoBuilder) Build() *MediaUploadInfo {
 		req.ParentType = &builder.parentType
 
 	}
-	if builder.parentNodeFlag {
-		req.ParentNode = &builder.parentNode
-
-	}
 	if builder.sizeFlag {
 		req.Size = &builder.size
+
+	}
+	if builder.parentNodeFlag {
+		req.ParentNode = &builder.parentNode
 
 	}
 	if builder.extraFlag {

@@ -289,6 +289,86 @@ func (builder *AclScopeEventBuilder) Build() *AclScopeEvent {
 	return req
 }
 
+type Attachment struct {
+	FileToken *string `json:"file_token,omitempty"` // 附件token
+	FileSize  *string `json:"file_size,omitempty"`  // 附件大小
+	IsDeleted *bool   `json:"is_deleted,omitempty"` // 是否删除附件
+	Name      *string `json:"name,omitempty"`       // 附件名称
+}
+
+type AttachmentBuilder struct {
+	fileToken     string // 附件token
+	fileTokenFlag bool
+	fileSize      string // 附件大小
+	fileSizeFlag  bool
+	isDeleted     bool // 是否删除附件
+	isDeletedFlag bool
+	name          string // 附件名称
+	nameFlag      bool
+}
+
+func NewAttachmentBuilder() *AttachmentBuilder {
+	builder := &AttachmentBuilder{}
+	return builder
+}
+
+// 附件token
+//
+// 示例值：xAAAAA
+func (builder *AttachmentBuilder) FileToken(fileToken string) *AttachmentBuilder {
+	builder.fileToken = fileToken
+	builder.fileTokenFlag = true
+	return builder
+}
+
+// 附件大小
+//
+// 示例值：2345
+func (builder *AttachmentBuilder) FileSize(fileSize string) *AttachmentBuilder {
+	builder.fileSize = fileSize
+	builder.fileSizeFlag = true
+	return builder
+}
+
+// 是否删除附件
+//
+// 示例值：true
+func (builder *AttachmentBuilder) IsDeleted(isDeleted bool) *AttachmentBuilder {
+	builder.isDeleted = isDeleted
+	builder.isDeletedFlag = true
+	return builder
+}
+
+// 附件名称
+//
+// 示例值：附件.jpeg
+func (builder *AttachmentBuilder) Name(name string) *AttachmentBuilder {
+	builder.name = name
+	builder.nameFlag = true
+	return builder
+}
+
+func (builder *AttachmentBuilder) Build() *Attachment {
+	req := &Attachment{}
+	if builder.fileTokenFlag {
+		req.FileToken = &builder.fileToken
+
+	}
+	if builder.fileSizeFlag {
+		req.FileSize = &builder.fileSize
+
+	}
+	if builder.isDeletedFlag {
+		req.IsDeleted = &builder.isDeleted
+
+	}
+	if builder.nameFlag {
+		req.Name = &builder.name
+
+	}
+	return req
+}
+
 type AttendeeChatMember struct {
 	RsvpStatus  *string `json:"rsvp_status,omitempty"`  // 参与人RSVP状态
 	IsOptional  *bool   `json:"is_optional,omitempty"`  // 参与人是否为「可选参加」
@@ -869,6 +949,7 @@ type CalendarEvent struct {
 	AppLink             *string                  `json:"app_link,omitempty"`              // 日程的app_link,跳转到具体的某个日程
 	Attendees           []*CalendarEventAttendee `json:"attendees,omitempty"`             // 日程参与人信息
 	HasMoreAttendee     *bool                    `json:"has_more_attendee,omitempty"`     // 是否有更多的参与人
+	Attachments         []*Attachment            `json:"attachments,omitempty"`           // 日程附件
 }
 
 type CalendarEventBuilder struct {
@@ -920,6 +1001,8 @@ type CalendarEventBuilder struct {
 	attendeesFlag           bool
 	hasMoreAttendee         bool // 是否有更多的参与人
 	hasMoreAttendeeFlag     bool
+	attachments             []*Attachment // 日程附件
+	attachmentsFlag         bool
 }
 
 func NewCalendarEventBuilder() *CalendarEventBuilder {
@@ -1143,6 +1226,15 @@ func (builder *CalendarEventBuilder) HasMoreAttendee(hasMoreAttendee bool) *Cale
 	return builder
 }
 
+// 日程附件
+//
+// 示例值：
+func (builder *CalendarEventBuilder) Attachments(attachments []*Attachment) *CalendarEventBuilder {
+	builder.attachments = attachments
+	builder.attachmentsFlag = true
+	return builder
+}
+
 func (builder *CalendarEventBuilder) Build() *CalendarEvent {
 	req := &CalendarEvent{}
 	if builder.eventIdFlag {
@@ -1232,6 +1324,9 @@ func (builder *CalendarEventBuilder) Build() *CalendarEvent {
 	if builder.hasMoreAttendeeFlag {
 		req.HasMoreAttendee = &builder.hasMoreAttendee
 
+	}
+	if builder.attachmentsFlag {
+		req.Attachments = builder.attachments
 	}
 	return req
 }

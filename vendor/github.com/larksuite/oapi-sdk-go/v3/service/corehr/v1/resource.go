@@ -11,6 +11,7 @@ import (
 
 type V1 struct {
 	AssignedUser            *assignedUser            // assigned_user
+	CommonDataId            *commonDataId            // common_data.id
 	Company                 *company                 // 公司
 	CompensationStandard    *compensationStandard    // compensation_standard
 	Contract                *contract                // 合同
@@ -46,6 +47,7 @@ type V1 struct {
 func New(config *larkcore.Config) *V1 {
 	return &V1{
 		AssignedUser:            &assignedUser{config: config},
+		CommonDataId:            &commonDataId{config: config},
 		Company:                 &company{config: config},
 		CompensationStandard:    &compensationStandard{config: config},
 		Contract:                &contract{config: config},
@@ -80,6 +82,9 @@ func New(config *larkcore.Config) *V1 {
 }
 
 type assignedUser struct {
+	config *larkcore.Config
+}
+type commonDataId struct {
 	config *larkcore.Config
 }
 type company struct {
@@ -193,6 +198,32 @@ func (a *assignedUser) Search(ctx context.Context, req *SearchAssignedUserReq, o
 	// 反序列响应结果
 	resp := &SearchAssignedUserResp{ApiResp: apiResp}
 	err = apiResp.JSONUnmarshalBody(resp, a.config)
+	if err != nil {
+		return nil, err
+	}
+	return resp, err
+}
+
+// Convert
+//
+// -
+//
+// - 官网API文档链接:https://open.feishu.cn/api-explorer?from=op_doc_tab&apiName=convert&project=corehr&resource=common_data.id&version=v1
+//
+// - 使用Demo链接:https://github.com/larksuite/oapi-sdk-go/tree/v3_main/sample/apiall/corehrv1/convert_commonDataId.go
+func (c *commonDataId) Convert(ctx context.Context, req *ConvertCommonDataIdReq, options ...larkcore.RequestOptionFunc) (*ConvertCommonDataIdResp, error) {
+	// 发起请求
+	apiReq := req.apiReq
+	apiReq.ApiPath = "/open-apis/corehr/v1/common_data/id/convert"
+	apiReq.HttpMethod = http.MethodPost
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
+	apiResp, err := larkcore.Request(ctx, apiReq, c.config, options...)
+	if err != nil {
+		return nil, err
+	}
+	// 反序列响应结果
+	resp := &ConvertCommonDataIdResp{ApiResp: apiResp}
+	err = apiResp.JSONUnmarshalBody(resp, c.config)
 	if err != nil {
 		return nil, err
 	}

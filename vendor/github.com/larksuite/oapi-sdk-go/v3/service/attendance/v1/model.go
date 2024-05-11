@@ -273,17 +273,77 @@ func (builder *ApprovalInfoBuilder) Build() *ApprovalInfo {
 	return req
 }
 
+type ArchiveField struct {
+	Code        *string  `json:"code,omitempty"`         // 字段编号
+	Title       *string  `json:"title,omitempty"`        // 字段名称
+	UpperTitles []string `json:"upper_titles,omitempty"` // 一级表头名字
+}
+
+type ArchiveFieldBuilder struct {
+	code            string // 字段编号
+	codeFlag        bool
+	title           string // 字段名称
+	titleFlag       bool
+	upperTitles     []string // 一级表头名字
+	upperTitlesFlag bool
+}
+
+func NewArchiveFieldBuilder() *ArchiveFieldBuilder {
+	builder := &ArchiveFieldBuilder{}
+	return builder
+}
+
+// 字段编号
+//
+// 示例值：1
+func (builder *ArchiveFieldBuilder) Code(code string) *ArchiveFieldBuilder {
+	builder.code = code
+	builder.codeFlag = true
+	return builder
+}
+
+// 字段名称
+//
+// 示例值：工号
+func (builder *ArchiveFieldBuilder) Title(title string) *ArchiveFieldBuilder {
+	builder.title = title
+	builder.titleFlag = true
+	return builder
+}
+
+// 一级表头名字
+//
+// 示例值：
+func (builder *ArchiveFieldBuilder) UpperTitles(upperTitles []string) *ArchiveFieldBuilder {
+	builder.upperTitles = upperTitles
+	builder.upperTitlesFlag = true
+	return builder
+}
+
+func (builder *ArchiveFieldBuilder) Build() *ArchiveField {
+	req := &ArchiveField{}
+	if builder.codeFlag {
+		req.Code = &builder.code
+
+	}
+	if builder.titleFlag {
+		req.Title = &builder.title
+
+	}
+	if builder.upperTitlesFlag {
+		req.UpperTitles = builder.upperTitles
+	}
+	return req
+}
+
 type ArchiveFieldData struct {
 	Code  *string `json:"code,omitempty"`  // 字段编码(查询归档报表表头返回)
-	Type  *string `json:"type,omitempty"`  // 字段类型
 	Value *string `json:"value,omitempty"` // 字段结果值
 }
 
 type ArchiveFieldDataBuilder struct {
 	code      string // 字段编码(查询归档报表表头返回)
 	codeFlag  bool
-	type_     string // 字段类型
-	typeFlag  bool
 	value     string // 字段结果值
 	valueFlag bool
 }
@@ -302,15 +362,6 @@ func (builder *ArchiveFieldDataBuilder) Code(code string) *ArchiveFieldDataBuild
 	return builder
 }
 
-// 字段类型
-//
-// 示例值：int
-func (builder *ArchiveFieldDataBuilder) Type(type_ string) *ArchiveFieldDataBuilder {
-	builder.type_ = type_
-	builder.typeFlag = true
-	return builder
-}
-
 // 字段结果值
 //
 // 示例值：1
@@ -324,10 +375,6 @@ func (builder *ArchiveFieldDataBuilder) Build() *ArchiveFieldData {
 	req := &ArchiveFieldData{}
 	if builder.codeFlag {
 		req.Code = &builder.code
-
-	}
-	if builder.typeFlag {
-		req.Type = &builder.type_
 
 	}
 	if builder.valueFlag {
@@ -371,7 +418,7 @@ func (builder *ArchiveReportDataBuilder) MemberId(memberId string) *ArchiveRepor
 
 // 考勤开始时间
 //
-// 示例值：2021-01-09
+// 示例值：20210109
 func (builder *ArchiveReportDataBuilder) StartTime(startTime string) *ArchiveReportDataBuilder {
 	builder.startTime = startTime
 	builder.startTimeFlag = true
@@ -380,7 +427,7 @@ func (builder *ArchiveReportDataBuilder) StartTime(startTime string) *ArchiveRep
 
 // 考勤结束时间
 //
-// 示例值：2021-01-09
+// 示例值：20210109
 func (builder *ArchiveReportDataBuilder) EndTime(endTime string) *ArchiveReportDataBuilder {
 	builder.endTime = endTime
 	builder.endTimeFlag = true
@@ -417,20 +464,20 @@ func (builder *ArchiveReportDataBuilder) Build() *ArchiveReportData {
 }
 
 type ArchiveReportMeta struct {
-	ReportId        *string `json:"report_id,omitempty"`         // 引用报表 ID
-	ReportName      *string `json:"report_name,omitempty"`       // 引用报表name
-	ArchiveRuleId   *string `json:"archive_rule_id,omitempty"`   // 归档报表规则id
-	ArchiveRuleName *string `json:"archive_rule_name,omitempty"` // 归档报表name
+	ReportId        *string  `json:"report_id,omitempty"`         // 引用报表 ID
+	ReportName      *I18nMap `json:"report_name,omitempty"`       // 引用报表name
+	ArchiveRuleId   *string  `json:"archive_rule_id,omitempty"`   // 归档报表规则id
+	ArchiveRuleName *I18nMap `json:"archive_rule_name,omitempty"` // 归档报表name
 }
 
 type ArchiveReportMetaBuilder struct {
 	reportId            string // 引用报表 ID
 	reportIdFlag        bool
-	reportName          string // 引用报表name
+	reportName          *I18nMap // 引用报表name
 	reportNameFlag      bool
 	archiveRuleId       string // 归档报表规则id
 	archiveRuleIdFlag   bool
-	archiveRuleName     string // 归档报表name
+	archiveRuleName     *I18nMap // 归档报表name
 	archiveRuleNameFlag bool
 }
 
@@ -451,7 +498,7 @@ func (builder *ArchiveReportMetaBuilder) ReportId(reportId string) *ArchiveRepor
 // 引用报表name
 //
 // 示例值：月报汇总
-func (builder *ArchiveReportMetaBuilder) ReportName(reportName string) *ArchiveReportMetaBuilder {
+func (builder *ArchiveReportMetaBuilder) ReportName(reportName *I18nMap) *ArchiveReportMetaBuilder {
 	builder.reportName = reportName
 	builder.reportNameFlag = true
 	return builder
@@ -469,7 +516,7 @@ func (builder *ArchiveReportMetaBuilder) ArchiveRuleId(archiveRuleId string) *Ar
 // 归档报表name
 //
 // 示例值：归档全员
-func (builder *ArchiveReportMetaBuilder) ArchiveRuleName(archiveRuleName string) *ArchiveReportMetaBuilder {
+func (builder *ArchiveReportMetaBuilder) ArchiveRuleName(archiveRuleName *I18nMap) *ArchiveReportMetaBuilder {
 	builder.archiveRuleName = archiveRuleName
 	builder.archiveRuleNameFlag = true
 	return builder
@@ -482,16 +529,14 @@ func (builder *ArchiveReportMetaBuilder) Build() *ArchiveReportMeta {
 
 	}
 	if builder.reportNameFlag {
-		req.ReportName = &builder.reportName
-
+		req.ReportName = builder.reportName
 	}
 	if builder.archiveRuleIdFlag {
 		req.ArchiveRuleId = &builder.archiveRuleId
 
 	}
 	if builder.archiveRuleNameFlag {
-		req.ArchiveRuleName = &builder.archiveRuleName
-
+		req.ArchiveRuleName = builder.archiveRuleName
 	}
 	return req
 }
@@ -2476,6 +2521,70 @@ func (builder *GroupMetaBuilder) Build() *GroupMeta {
 	}
 	if builder.groupNameFlag {
 		req.GroupName = &builder.groupName
+
+	}
+	return req
+}
+
+type I18nMap struct {
+	Zh *string `json:"zh,omitempty"` // 中文名称
+	En *string `json:"en,omitempty"` // 英文名称
+	Ja *string `json:"ja,omitempty"` // 日文名称
+}
+
+type I18nMapBuilder struct {
+	zh     string // 中文名称
+	zhFlag bool
+	en     string // 英文名称
+	enFlag bool
+	ja     string // 日文名称
+	jaFlag bool
+}
+
+func NewI18nMapBuilder() *I18nMapBuilder {
+	builder := &I18nMapBuilder{}
+	return builder
+}
+
+// 中文名称
+//
+// 示例值：1
+func (builder *I18nMapBuilder) Zh(zh string) *I18nMapBuilder {
+	builder.zh = zh
+	builder.zhFlag = true
+	return builder
+}
+
+// 英文名称
+//
+// 示例值：alice
+func (builder *I18nMapBuilder) En(en string) *I18nMapBuilder {
+	builder.en = en
+	builder.enFlag = true
+	return builder
+}
+
+// 日文名称
+//
+// 示例值：1
+func (builder *I18nMapBuilder) Ja(ja string) *I18nMapBuilder {
+	builder.ja = ja
+	builder.jaFlag = true
+	return builder
+}
+
+func (builder *I18nMapBuilder) Build() *I18nMap {
+	req := &I18nMap{}
+	if builder.zhFlag {
+		req.Zh = &builder.zh
+
+	}
+	if builder.enFlag {
+		req.En = &builder.en
+
+	}
+	if builder.jaFlag {
+		req.Ja = &builder.ja
 
 	}
 	return req

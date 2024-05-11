@@ -38,6 +38,7 @@ type V2 struct {
 	Process                           *process                           // process
 	ProcessApprover                   *processApprover                   // process.approver
 	ProcessCc                         *processCc                         // process.cc
+	ProcessFormVariableData           *processFormVariableData           // process.form_variable_data
 	ProcessNode                       *processNode                       // process.node
 }
 
@@ -72,6 +73,7 @@ func New(config *larkcore.Config) *V2 {
 		Process:                           &process{config: config},
 		ProcessApprover:                   &processApprover{config: config},
 		ProcessCc:                         &processCc{config: config},
+		ProcessFormVariableData:           &processFormVariableData{config: config},
 		ProcessNode:                       &processNode{config: config},
 	}
 }
@@ -161,6 +163,9 @@ type processApprover struct {
 	config *larkcore.Config
 }
 type processCc struct {
+	config *larkcore.Config
+}
+type processFormVariableData struct {
 	config *larkcore.Config
 }
 type processNode struct {
@@ -793,6 +798,32 @@ func (d *department) Parents(ctx context.Context, req *ParentsDepartmentReq, opt
 	return resp, err
 }
 
+// QueryTimeline
+//
+// - 查询任意日期部门信息
+//
+// - 官网API文档链接:https://open.feishu.cn/api-explorer?from=op_doc_tab&apiName=query_timeline&project=corehr&resource=department&version=v2
+//
+// - 使用Demo链接:https://github.com/larksuite/oapi-sdk-go/tree/v3_main/sample/apiall/corehrv2/queryTimeline_department.go
+func (d *department) QueryTimeline(ctx context.Context, req *QueryTimelineDepartmentReq, options ...larkcore.RequestOptionFunc) (*QueryTimelineDepartmentResp, error) {
+	// 发起请求
+	apiReq := req.apiReq
+	apiReq.ApiPath = "/open-apis/corehr/v2/departments/query_timeline"
+	apiReq.HttpMethod = http.MethodPost
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
+	apiResp, err := larkcore.Request(ctx, apiReq, d.config, options...)
+	if err != nil {
+		return nil, err
+	}
+	// 反序列响应结果
+	resp := &QueryTimelineDepartmentResp{ApiResp: apiResp}
+	err = apiResp.JSONUnmarshalBody(resp, d.config)
+	if err != nil {
+		return nil, err
+	}
+	return resp, err
+}
+
 // Search
 //
 // - 根据部门 ID，上级部门查询部门列表
@@ -1207,6 +1238,58 @@ func (p *preHire) Create(ctx context.Context, req *CreatePreHireReq, options ...
 	return resp, err
 }
 
+// Delete
+//
+// - 删除待入职
+//
+// - 官网API文档链接:https://open.feishu.cn/api-explorer?from=op_doc_tab&apiName=delete&project=corehr&resource=pre_hire&version=v2
+//
+// - 使用Demo链接:https://github.com/larksuite/oapi-sdk-go/tree/v3_main/sample/apiall/corehrv2/delete_preHire.go
+func (p *preHire) Delete(ctx context.Context, req *DeletePreHireReq, options ...larkcore.RequestOptionFunc) (*DeletePreHireResp, error) {
+	// 发起请求
+	apiReq := req.apiReq
+	apiReq.ApiPath = "/open-apis/corehr/v2/pre_hires/:pre_hire_id"
+	apiReq.HttpMethod = http.MethodDelete
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
+	apiResp, err := larkcore.Request(ctx, apiReq, p.config, options...)
+	if err != nil {
+		return nil, err
+	}
+	// 反序列响应结果
+	resp := &DeletePreHireResp{ApiResp: apiResp}
+	err = apiResp.JSONUnmarshalBody(resp, p.config)
+	if err != nil {
+		return nil, err
+	}
+	return resp, err
+}
+
+// Patch
+//
+// - 更新待入职
+//
+// - 官网API文档链接:https://open.feishu.cn/api-explorer?from=op_doc_tab&apiName=patch&project=corehr&resource=pre_hire&version=v2
+//
+// - 使用Demo链接:https://github.com/larksuite/oapi-sdk-go/tree/v3_main/sample/apiall/corehrv2/patch_preHire.go
+func (p *preHire) Patch(ctx context.Context, req *PatchPreHireReq, options ...larkcore.RequestOptionFunc) (*PatchPreHireResp, error) {
+	// 发起请求
+	apiReq := req.apiReq
+	apiReq.ApiPath = "/open-apis/corehr/v2/pre_hires/:pre_hire_id"
+	apiReq.HttpMethod = http.MethodPatch
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
+	apiResp, err := larkcore.Request(ctx, apiReq, p.config, options...)
+	if err != nil {
+		return nil, err
+	}
+	// 反序列响应结果
+	resp := &PatchPreHireResp{ApiResp: apiResp}
+	err = apiResp.JSONUnmarshalBody(resp, p.config)
+	if err != nil {
+		return nil, err
+	}
+	return resp, err
+}
+
 // Search
 //
 // - 根据部门 ID，上级部门查询部门列表
@@ -1437,4 +1520,30 @@ func (p *process) ListByIterator(ctx context.Context, req *ListProcessReq, optio
 		listFunc: p.List,
 		options:  options,
 		limit:    req.Limit}, nil
+}
+
+// Get
+//
+// -
+//
+// - 官网API文档链接:https://open.feishu.cn/api-explorer?from=op_doc_tab&apiName=get&project=corehr&resource=process.form_variable_data&version=v2
+//
+// - 使用Demo链接:https://github.com/larksuite/oapi-sdk-go/tree/v3_main/sample/apiall/corehrv2/get_processFormVariableData.go
+func (p *processFormVariableData) Get(ctx context.Context, req *GetProcessFormVariableDataReq, options ...larkcore.RequestOptionFunc) (*GetProcessFormVariableDataResp, error) {
+	// 发起请求
+	apiReq := req.apiReq
+	apiReq.ApiPath = "/open-apis/corehr/v2/processes/:process_id/form_variable_data"
+	apiReq.HttpMethod = http.MethodGet
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
+	apiResp, err := larkcore.Request(ctx, apiReq, p.config, options...)
+	if err != nil {
+		return nil, err
+	}
+	// 反序列响应结果
+	resp := &GetProcessFormVariableDataResp{ApiResp: apiResp}
+	err = apiResp.JSONUnmarshalBody(resp, p.config)
+	if err != nil {
+		return nil, err
+	}
+	return resp, err
 }

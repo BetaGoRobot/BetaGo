@@ -268,13 +268,28 @@ func (s *Session) ChannelList(guildID string, page *PageSetting) (cs []*Channel,
 	return cs, meta, nil
 }
 
+// ChannelViewOption is the type for optional arguments for ChannelView request.
+type ChannelViewOption func(values url.Values)
+
+// ChannelViewWithNeedChildren adds optional `need_children` argument to ChannelView request.
+func ChannelViewWithNeedChildren(needChildren bool) ChannelViewOption {
+	return func(values url.Values) {
+		if needChildren {
+			values.Set("need_children", "1")
+		}
+	}
+}
+
 // ChannelView returns the detailed information for a channel.
 // FYI: https://developer.kookapp.cn/doc/http/channel#%E8%8E%B7%E5%8F%96%E9%A2%91%E9%81%93%E8%AF%A6%E6%83%85
-func (s *Session) ChannelView(channelID string) (c *Channel, err error) {
+func (s *Session) ChannelView(channelID string, options ...ChannelViewOption) (c *Channel, err error) {
 	var response []byte
 	u, _ := url.Parse(EndpointChannelView)
 	q := u.Query()
 	q.Set("target_id", channelID)
+	for _, item := range options {
+		item(q)
+	}
 	u.RawQuery = q.Encode()
 	response, err = s.Request("GET", u.String(), nil)
 	if err != nil {
@@ -295,6 +310,7 @@ type ChannelCreate struct {
 	Type         ChannelType `json:"type,omitempty"`
 	LimitAmount  int         `json:"limit_amount,omitempty"`
 	VoiceQuality string      `json:"voice_quality,omitempty"`
+	IsCategory   int         `json:"is_category"`
 }
 
 // ChannelCreate creates a channel.
@@ -302,6 +318,34 @@ type ChannelCreate struct {
 func (s *Session) ChannelCreate(cc *ChannelCreate) (c *Channel, err error) {
 	var response []byte
 	response, err = s.Request("POST", EndpointChannelCreate, cc)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(response, &c)
+	if err != nil {
+		return nil, err
+	}
+	return c, err
+}
+
+// ChannelUpdate is the arguments for updating a channel's settings.
+type ChannelUpdate struct {
+	ChannelID    string `json:"channel_id"`
+	Name         string `json:"name,omitempty"`
+	Level        int    `json:"level,omitempty"`
+	ParentID     string `json:"parent_id,omitempty"`
+	Topic        string `json:"topic,omitempty"`
+	SlowMode     int    `json:"slow_mode,omitempty"`
+	LimitAmount  int    `json:"limit_amount,omitempty"`
+	VoiceQuality string `json:"voice_quality,omitempty"`
+	Password     string `json:"password,omitempty"`
+}
+
+// ChannelUpdate updates a channel's settings.
+// FYI: https://developer.kookapp.cn/doc/http/channel#%E7%BC%96%E8%BE%91%E9%A2%91%E9%81%93
+func (s *Session) ChannelUpdate(cu *ChannelUpdate) (c *Channel, err error) {
+	var response []byte
+	response, err = s.Request("POST", EndpointChannelUpdate, cu)
 	if err != nil {
 		return nil, err
 	}
@@ -426,6 +470,15 @@ type ChannelRoleDelete ChannelRoleBase
 // FYI: https://developer.kookapp.cn/doc/http/channel#%E5%88%A0%E9%99%A4%E9%A2%91%E9%81%93%E8%A7%92%E8%89%B2%E6%9D%83%E9%99%90
 func (s *Session) ChannelRoleDelete(crd *ChannelRoleDelete) (err error) {
 	_, err = s.Request("POST", EndpointChannelRoleDelete, crd)
+	return err
+}
+
+// ChannelRoleSync syncs the roles' permissions.
+// FYI: https://developer.kookapp.cn/doc/http/channel#%E5%90%8C%E6%AD%A5%E9%A2%91%E9%81%93%E8%A7%92%E8%89%B2%E6%9D%83%E9%99%90
+func (s *Session) ChannelRoleSync(cid string) (err error) {
+	_, err = s.Request("POST", EndpointChannelRoleDelete, struct {
+		ChannelID string `json:"channel_id"`
+	}{cid})
 	return err
 }
 
@@ -621,6 +674,23 @@ func (s *Session) DirectMessageList(options ...DirectMessageListOption) (dmrs []
 		return nil, err
 	}
 	return dmrs, nil
+}
+
+// DirectMessageView returns the specified message.
+// FYI: https://developer.kookapp.cn/doc/http/direct-message#%E8%8E%B7%E5%8F%96%E7%A7%81%E4%BF%A1%E8%81%8A%E5%A4%A9%E6%B6%88%E6%81%AF%E8%AF%A6%E6%83%85
+func (s *Session) DirectMessageView(chatCode, msgID string) (dmr *DirectMessageResp, err error) {
+	var response []byte
+	u, _ := url.Parse(EndpointDirectMessageView)
+	q := u.Query()
+	q.Set("chat_code", chatCode)
+	q.Set("msg_id", msgID)
+	u.RawQuery = q.Encode()
+	response, err = s.Request("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(response, &dmr)
+	return
 }
 
 // DirectMessageCreate is the struct for settings of creating a message in direct chat.
@@ -969,6 +1039,71 @@ func (s *Session) GuildMuteCreate(gms *GuildMuteSetting) (err error) {
 func (s *Session) GuildMuteDelete(gms *GuildMuteSetting) (err error) {
 	_, err = s.Request("POST", EndpointGuildMuteDelete, gms)
 	return err
+}
+
+// GuildBoostHistoryOption is the optional arguments for GuildBoostHistory requests.
+type GuildBoostHistoryOption func(values url.Values)
+
+// GuildBoostHistoryWithStartTime adds optional `start_time` argument to GuildBoostHistory request.
+func GuildBoostHistoryWithStartTime(t int64) GuildBoostHistoryOption {
+	return func(values url.Values) {
+		values.Set("start_time", strconv.FormatInt(t, 10))
+	}
+}
+
+// GuildBoostHistoryWithEndTime adds optional `end_time` argument to GuildBoostHistory request.
+func GuildBoostHistoryWithEndTime(t int64) GuildBoostHistoryOption {
+	return func(values url.Values) {
+		values.Set("end_time", strconv.FormatInt(t, 10))
+	}
+}
+
+// GuildBoostHistoryItem is the historical supporter' info.
+type GuildBoostHistoryItem struct {
+	UserID    string `json:"user_id"`
+	GuildID   string `json:"guild_id"`
+	StartTime int64  `json:"start_time"`
+	EndTime   int64  `json:"end_time"`
+	User      *User  `json:"user"`
+}
+
+// GuildBoostHistory returns the boost history.
+// FYI: https://developer.kookapp.cn/doc/http/guild#%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8A%A9%E5%8A%9B%E5%8E%86%E5%8F%B2
+func (s *Session) GuildBoostHistory(guildID string, page *PageSetting, options ...GuildBoostHistoryOption) (hs []*GuildBoostHistoryItem, meta *PageInfo, err error) {
+	var resp []byte
+	u, _ := url.Parse(EndpointGuildBoostHistory)
+	q := u.Query()
+	q.Set("guild_id", guildID)
+	for _, item := range options {
+		item(q)
+	}
+	if page != nil {
+		if page.Page != nil {
+			q.Add("page", strconv.Itoa(*page.Page))
+		}
+		if page.PageSize != nil {
+			q.Add("page_size", strconv.Itoa(*page.PageSize))
+		}
+		if page.Sort != nil {
+			q.Add("sort", *page.Sort)
+		}
+	}
+	u.RawQuery = q.Encode()
+	resp, err = s.Request("GET", u.String(), nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	g := &GeneralListData{}
+	err = json.Unmarshal(resp, g)
+	if err != nil {
+		return nil, nil, err
+	}
+	err = json.Unmarshal(g.Items, &hs)
+	if err != nil {
+		return nil, nil, err
+	}
+	return hs, &g.Meta, nil
+
 }
 
 // GuildRoleList returns the roles in a guild.
@@ -1501,10 +1636,26 @@ type Game struct {
 	Icon        string   `json:"icon"`
 }
 
+// GameListOption is the type for optional arguments for GameList request.
+type GameListOption func(values url.Values)
+
+// GameListWithType filters the type of game in GameList request.
+func GameListWithType(t GameType) GameListOption {
+	return func(values url.Values) {
+		values.Set("type", strconv.Itoa(int(t)))
+	}
+}
+
 // GameList lists the games registered.
-func (s *Session) GameList(page *PageSetting) (gs []*Game, meta *PageInfo, err error) {
+func (s *Session) GameList(page *PageSetting, options ...GameListOption) (gs []*Game, meta *PageInfo, err error) {
 	var resp []byte
-	resp, meta, err = s.RequestWithPage("GET", EndpointGame, page)
+	ur, _ := url.Parse(EndpointGame)
+	q := ur.Query()
+	for _, item := range options {
+		item(q)
+	}
+	ur.RawQuery = q.Encode()
+	resp, meta, err = s.RequestWithPage("GET", ur.String(), page)
 	if err != nil {
 		return nil, nil, err
 	}

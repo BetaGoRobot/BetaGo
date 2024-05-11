@@ -898,7 +898,7 @@ func (r *reserveConfig) Patch(ctx context.Context, req *PatchReserveConfigReq, o
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/reserve_configs/:reserve_config_id"
 	apiReq.HttpMethod = http.MethodPatch
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -924,7 +924,7 @@ func (r *reserveConfig) ReserveScope(ctx context.Context, req *ReserveScopeReser
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/reserve_configs/reserve_scope"
 	apiReq.HttpMethod = http.MethodGet
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -950,7 +950,7 @@ func (r *reserveConfigAdmin) Get(ctx context.Context, req *GetReserveConfigAdmin
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/reserve_configs/:reserve_config_id/admin"
 	apiReq.HttpMethod = http.MethodGet
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -976,7 +976,7 @@ func (r *reserveConfigAdmin) Patch(ctx context.Context, req *PatchReserveConfigA
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/reserve_configs/:reserve_config_id/admin"
 	apiReq.HttpMethod = http.MethodPatch
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1002,7 +1002,7 @@ func (r *reserveConfigDisableInform) Get(ctx context.Context, req *GetReserveCon
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/reserve_configs/:reserve_config_id/disable_inform"
 	apiReq.HttpMethod = http.MethodGet
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1028,7 +1028,7 @@ func (r *reserveConfigDisableInform) Patch(ctx context.Context, req *PatchReserv
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/reserve_configs/:reserve_config_id/disable_inform"
 	apiReq.HttpMethod = http.MethodPatch
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1054,7 +1054,7 @@ func (r *reserveConfigForm) Get(ctx context.Context, req *GetReserveConfigFormRe
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/reserve_configs/:reserve_config_id/form"
 	apiReq.HttpMethod = http.MethodGet
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1080,7 +1080,7 @@ func (r *reserveConfigForm) Patch(ctx context.Context, req *PatchReserveConfigFo
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/reserve_configs/:reserve_config_id/form"
 	apiReq.HttpMethod = http.MethodPatch
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1140,7 +1140,7 @@ func (r *room) Create(ctx context.Context, req *CreateRoomReq, options ...larkco
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/rooms"
 	apiReq.HttpMethod = http.MethodPost
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1166,7 +1166,7 @@ func (r *room) Delete(ctx context.Context, req *DeleteRoomReq, options ...larkco
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/rooms/:room_id"
 	apiReq.HttpMethod = http.MethodDelete
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1192,7 +1192,7 @@ func (r *room) Get(ctx context.Context, req *GetRoomReq, options ...larkcore.Req
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/rooms/:room_id"
 	apiReq.HttpMethod = http.MethodGet
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1218,7 +1218,7 @@ func (r *room) List(ctx context.Context, req *ListRoomReq, options ...larkcore.R
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/rooms"
 	apiReq.HttpMethod = http.MethodGet
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1252,7 +1252,7 @@ func (r *room) Mget(ctx context.Context, req *MgetRoomReq, options ...larkcore.R
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/rooms/mget"
 	apiReq.HttpMethod = http.MethodPost
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1278,7 +1278,7 @@ func (r *room) Patch(ctx context.Context, req *PatchRoomReq, options ...larkcore
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/rooms/:room_id"
 	apiReq.HttpMethod = http.MethodPatch
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1434,7 +1434,7 @@ func (r *roomLevel) Create(ctx context.Context, req *CreateRoomLevelReq, options
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/room_levels"
 	apiReq.HttpMethod = http.MethodPost
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1460,7 +1460,7 @@ func (r *roomLevel) Del(ctx context.Context, req *DelRoomLevelReq, options ...la
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/room_levels/del"
 	apiReq.HttpMethod = http.MethodPost
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1486,7 +1486,7 @@ func (r *roomLevel) Get(ctx context.Context, req *GetRoomLevelReq, options ...la
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/room_levels/:room_level_id"
 	apiReq.HttpMethod = http.MethodGet
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1512,7 +1512,7 @@ func (r *roomLevel) List(ctx context.Context, req *ListRoomLevelReq, options ...
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/room_levels"
 	apiReq.HttpMethod = http.MethodGet
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1546,7 +1546,7 @@ func (r *roomLevel) Mget(ctx context.Context, req *MgetRoomLevelReq, options ...
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/room_levels/mget"
 	apiReq.HttpMethod = http.MethodPost
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1572,7 +1572,7 @@ func (r *roomLevel) Patch(ctx context.Context, req *PatchRoomLevelReq, options .
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/room_levels/:room_level_id"
 	apiReq.HttpMethod = http.MethodPatch
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1598,7 +1598,7 @@ func (r *roomLevel) Search(ctx context.Context, req *SearchRoomLevelReq, options
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/room_levels/search"
 	apiReq.HttpMethod = http.MethodGet
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, r.config, options...)
 	if err != nil {
 		return nil, err
@@ -1624,7 +1624,7 @@ func (s *scopeConfig) Create(ctx context.Context, req *CreateScopeConfigReq, opt
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/scope_config"
 	apiReq.HttpMethod = http.MethodPost
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, s.config, options...)
 	if err != nil {
 		return nil, err
@@ -1650,7 +1650,7 @@ func (s *scopeConfig) Get(ctx context.Context, req *GetScopeConfigReq, options .
 	apiReq := req.apiReq
 	apiReq.ApiPath = "/open-apis/vc/v1/scope_config"
 	apiReq.HttpMethod = http.MethodGet
-	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant, larkcore.AccessTokenTypeUser}
+	apiReq.SupportedAccessTokenTypes = []larkcore.AccessTokenType{larkcore.AccessTokenTypeTenant}
 	apiResp, err := larkcore.Request(ctx, apiReq, s.config, options...)
 	if err != nil {
 		return nil, err

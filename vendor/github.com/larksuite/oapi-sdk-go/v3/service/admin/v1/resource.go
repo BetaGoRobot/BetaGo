@@ -110,7 +110,7 @@ func (a *adminUserStat) List(ctx context.Context, req *ListAdminUserStatReq, opt
 
 // List
 //
-// -
+// - 用户行为日志搜索
 //
 // - 官网API文档链接:https://open.feishu.cn/document/ukTMukTMukTM/uQjM5YjL0ITO24CNykjN/audit_log/audit_data_get
 //

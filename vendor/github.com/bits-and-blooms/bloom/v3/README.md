@@ -4,6 +4,8 @@ Bloom filters
 [![Go Report Card](https://goreportcard.com/badge/github.com/bits-and-blooms/bloom)](https://goreportcard.com/report/github.com/bits-and-blooms/bloom)
 [![Go Reference](https://pkg.go.dev/badge/github.com/bits-and-blooms/bloom.svg)](https://pkg.go.dev/github.com/bits-and-blooms/bloom/v3)
 
+This library is used by popular systems such as [Milvus](https://github.com/milvus-io/milvus) and [beego](https://github.com/beego/Beego).
+
 A Bloom filter is a concise/compressed representation of a set, where the main
 requirement is to make membership queries; _i.e._, whether an item is a
 member of a set. A Bloom filter will always correctly report the presence
@@ -49,6 +51,7 @@ For numerical data, we recommend that you look into the encoding/binary library.
 
 Godoc documentation:  https://pkg.go.dev/github.com/bits-and-blooms/bloom/v3 
 
+
 ## Installation
 
 ```bash
@@ -85,6 +88,41 @@ You would expect `ActualfpRate` to be close to the desired false-positive rate `
 The `EstimateFalsePositiveRate` function creates a temporary Bloom filter. It is
 also relatively expensive and only meant for validation.
 
+## Serialization
+
+You can read and write the Bloom filters as follows:
+
+
+```Go
+	f := New(1000, 4)
+	var buf bytes.Buffer
+	bytesWritten, err := f.WriteTo(&buf)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	var g BloomFilter
+	bytesRead, err := g.ReadFrom(&buf)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if bytesRead != bytesWritten {
+		t.Errorf("read unexpected number of bytes %d != %d", bytesRead, bytesWritten)
+	}
+```
+
+*Performance tip*: 
+When reading and writing to a file or a network connection, you may get better performance by 
+wrapping your streams with `bufio` instances.
+
+E.g., 
+```Go
+	f, err := os.Create("myfile")
+	w := bufio.NewWriter(f)
+```
+```Go
+	f, err := os.Open("myfile")
+	r := bufio.NewReader(f)
+```
 
 ## Contributing
 

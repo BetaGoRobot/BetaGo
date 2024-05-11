@@ -38,6 +38,33 @@ const (
 )
 
 const (
+	IdTransformTypeCoreHR2Feishu = 1 // 飞书人事 -> 飞书通讯录
+	IdTransformTypeFeishu2CoreHR = 2 // 飞书通讯录 -> 飞书人事
+	IdTransformTypeAdmin2Feishu  = 3 // people admin -> 飞书人事
+	IdTransformTypeAdmin2CoreHR  = 4 // people admin -> 飞书通讯录
+
+)
+
+const (
+	IdTypeEmploymentID   = "user_id"          // 员工ID，当选择 user_id 且 id_transform_type 为 1、2、4 时，feishu_user_id_type 必填
+	IdTypeDepartmentID   = "department_id"    // 部门ID，当选择 department_id 且 id_transform_type 为 1、2、4 时，feishu_department_id_type 必填
+	IdTypeJobLevelID     = "job_level_id"     // 职级ID
+	IdTypeJobFamilyID    = "job_family_id"    // 序列ID
+	IdTypeEmployeeTypeID = "employee_type_id" // 人员类型ID
+)
+
+const (
+	FeishuUserIdTypeUserId  = "user_id"  // 以 user_id 来识别用户
+	FeishuUserIdTypeUnionId = "union_id" // 以 union_id 来识别用户
+	FeishuUserIdTypeOpenId  = "open_id"  // 以 open_id 来识别用户
+)
+
+const (
+	FeishuDepartmentIdTypeOpenDepartmentId = "open_department_id" // 以 open_department_id 来标识部门
+	FeishuDepartmentIdTypeDepartmentId     = "department_id"      // 以 department_id 来标识部门
+)
+
+const (
 	UserIdTypeMatchCompensationStandardUserId         = "user_id"          // 以user_id来识别用户
 	UserIdTypeMatchCompensationStandardUnionId        = "union_id"         // 以union_id来识别用户
 	UserIdTypeMatchCompensationStandardOpenId         = "open_id"          // 以open_id来识别用户
@@ -9713,6 +9740,7 @@ type LeaveRequest struct {
 	LeaveCorrectProcessId []string              `json:"leave_correct_process_id,omitempty"` // 请假更正流程ID
 	LeaveCancelProcessId  []string              `json:"leave_cancel_process_id,omitempty"`  // 请假取消流程ID
 	LeaveReturnProcessId  []string              `json:"leave_return_process_id,omitempty"`  // 请假返岗流程ID
+	WdPaidType            *int                  `json:"wd_paid_type,omitempty"`             // workDay算薪类型
 }
 
 type LeaveRequestBuilder struct {
@@ -9770,6 +9798,8 @@ type LeaveRequestBuilder struct {
 	leaveCancelProcessIdFlag  bool
 	leaveReturnProcessId      []string // 请假返岗流程ID
 	leaveReturnProcessIdFlag  bool
+	wdPaidType                int // workDay算薪类型
+	wdPaidTypeFlag            bool
 }
 
 func NewLeaveRequestBuilder() *LeaveRequestBuilder {
@@ -10020,6 +10050,15 @@ func (builder *LeaveRequestBuilder) LeaveReturnProcessId(leaveReturnProcessId []
 	return builder
 }
 
+// workDay算薪类型
+//
+// 示例值：1
+func (builder *LeaveRequestBuilder) WdPaidType(wdPaidType int) *LeaveRequestBuilder {
+	builder.wdPaidType = wdPaidType
+	builder.wdPaidTypeFlag = true
+	return builder
+}
+
 func (builder *LeaveRequestBuilder) Build() *LeaveRequest {
 	req := &LeaveRequest{}
 	if builder.leaveRequestIdFlag {
@@ -10122,6 +10161,10 @@ func (builder *LeaveRequestBuilder) Build() *LeaveRequest {
 	}
 	if builder.leaveReturnProcessIdFlag {
 		req.LeaveReturnProcessId = builder.leaveReturnProcessId
+	}
+	if builder.wdPaidTypeFlag {
+		req.WdPaidType = &builder.wdPaidType
+
 	}
 	return req
 }
@@ -17047,6 +17090,142 @@ func (resp *SearchAssignedUserResp) Success() bool {
 	return resp.Code == 0
 }
 
+type ConvertCommonDataIdReqBodyBuilder struct {
+	ids     []string // ID 列表（最多传入 100 个 ID，ID 长度限制 50 个字符）
+	idsFlag bool
+}
+
+func NewConvertCommonDataIdReqBodyBuilder() *ConvertCommonDataIdReqBodyBuilder {
+	builder := &ConvertCommonDataIdReqBodyBuilder{}
+	return builder
+}
+
+// ID 列表（最多传入 100 个 ID，ID 长度限制 50 个字符）
+//
+// 示例值：
+func (builder *ConvertCommonDataIdReqBodyBuilder) Ids(ids []string) *ConvertCommonDataIdReqBodyBuilder {
+	builder.ids = ids
+	builder.idsFlag = true
+	return builder
+}
+
+func (builder *ConvertCommonDataIdReqBodyBuilder) Build() *ConvertCommonDataIdReqBody {
+	req := &ConvertCommonDataIdReqBody{}
+	if builder.idsFlag {
+		req.Ids = builder.ids
+	}
+	return req
+}
+
+type ConvertCommonDataIdPathReqBodyBuilder struct {
+	ids     []string
+	idsFlag bool
+}
+
+func NewConvertCommonDataIdPathReqBodyBuilder() *ConvertCommonDataIdPathReqBodyBuilder {
+	builder := &ConvertCommonDataIdPathReqBodyBuilder{}
+	return builder
+}
+
+// ID 列表（最多传入 100 个 ID，ID 长度限制 50 个字符）
+//
+// 示例值：
+func (builder *ConvertCommonDataIdPathReqBodyBuilder) Ids(ids []string) *ConvertCommonDataIdPathReqBodyBuilder {
+	builder.ids = ids
+	builder.idsFlag = true
+	return builder
+}
+
+func (builder *ConvertCommonDataIdPathReqBodyBuilder) Build() (*ConvertCommonDataIdReqBody, error) {
+	req := &ConvertCommonDataIdReqBody{}
+	if builder.idsFlag {
+		req.Ids = builder.ids
+	}
+	return req, nil
+}
+
+type ConvertCommonDataIdReqBuilder struct {
+	apiReq *larkcore.ApiReq
+	body   *ConvertCommonDataIdReqBody
+}
+
+func NewConvertCommonDataIdReqBuilder() *ConvertCommonDataIdReqBuilder {
+	builder := &ConvertCommonDataIdReqBuilder{}
+	builder.apiReq = &larkcore.ApiReq{
+		PathParams:  larkcore.PathParams{},
+		QueryParams: larkcore.QueryParams{},
+	}
+	return builder
+}
+
+// ID 转换类型
+//
+// 示例值：1
+func (builder *ConvertCommonDataIdReqBuilder) IdTransformType(idTransformType int) *ConvertCommonDataIdReqBuilder {
+	builder.apiReq.QueryParams.Set("id_transform_type", fmt.Sprint(idTransformType))
+	return builder
+}
+
+// 要转换的ID类型
+//
+// 示例值：employment_id
+func (builder *ConvertCommonDataIdReqBuilder) IdType(idType string) *ConvertCommonDataIdReqBuilder {
+	builder.apiReq.QueryParams.Set("id_type", fmt.Sprint(idType))
+	return builder
+}
+
+// 用户 ID 类型
+//
+// 示例值：open_id
+func (builder *ConvertCommonDataIdReqBuilder) FeishuUserIdType(feishuUserIdType string) *ConvertCommonDataIdReqBuilder {
+	builder.apiReq.QueryParams.Set("feishu_user_id_type", fmt.Sprint(feishuUserIdType))
+	return builder
+}
+
+// 此次调用中使用的部门 ID 类型
+//
+// 示例值：open_department_id
+func (builder *ConvertCommonDataIdReqBuilder) FeishuDepartmentIdType(feishuDepartmentIdType string) *ConvertCommonDataIdReqBuilder {
+	builder.apiReq.QueryParams.Set("feishu_department_id_type", fmt.Sprint(feishuDepartmentIdType))
+	return builder
+}
+
+func (builder *ConvertCommonDataIdReqBuilder) Body(body *ConvertCommonDataIdReqBody) *ConvertCommonDataIdReqBuilder {
+	builder.body = body
+	return builder
+}
+
+func (builder *ConvertCommonDataIdReqBuilder) Build() *ConvertCommonDataIdReq {
+	req := &ConvertCommonDataIdReq{}
+	req.apiReq = &larkcore.ApiReq{}
+	req.apiReq.QueryParams = builder.apiReq.QueryParams
+	req.apiReq.Body = builder.body
+	return req
+}
+
+type ConvertCommonDataIdReqBody struct {
+	Ids []string `json:"ids,omitempty"` // ID 列表（最多传入 100 个 ID，ID 长度限制 50 个字符）
+}
+
+type ConvertCommonDataIdReq struct {
+	apiReq *larkcore.ApiReq
+	Body   *ConvertCommonDataIdReqBody `body:""`
+}
+
+type ConvertCommonDataIdRespData struct {
+	Items []*IdInfo `json:"items,omitempty"` // ID 信息列表
+}
+
+type ConvertCommonDataIdResp struct {
+	*larkcore.ApiResp `json:"-"`
+	larkcore.CodeError
+	Data *ConvertCommonDataIdRespData `json:"data"` // 业务数据
+}
+
+func (resp *ConvertCommonDataIdResp) Success() bool {
+	return resp.Code == 0
+}
+
 type CreateCompanyReqBuilder struct {
 	apiReq  *larkcore.ApiReq
 	company *Company
@@ -20709,11 +20888,51 @@ func (builder *LeaveRequestHistoryLeaveReqBuilder) TimeZone(timeZone string) *Le
 	return builder
 }
 
-// 请假记录数据源，1表示中国大陆休假，2表示海外休假，不传表示不过滤
+// 请假记录数据源，1表示中国大陆休假，2表示海外休假，不传或0表示不过滤
 //
 // 示例值：1
 func (builder *LeaveRequestHistoryLeaveReqBuilder) DataSource(dataSource int) *LeaveRequestHistoryLeaveReqBuilder {
 	builder.apiReq.QueryParams.Set("data_source", fmt.Sprint(dataSource))
+	return builder
+}
+
+// 请假记录DB更新时间晚于等于的时间
+//
+// 示例值：2022-10-24 10:00:00
+func (builder *LeaveRequestHistoryLeaveReqBuilder) DbUpdateTimeMin(dbUpdateTimeMin string) *LeaveRequestHistoryLeaveReqBuilder {
+	builder.apiReq.QueryParams.Set("db_update_time_min", fmt.Sprint(dbUpdateTimeMin))
+	return builder
+}
+
+// 请假记录DB更新时间早于等于的时间
+//
+// 示例值：2022-10-24 10:00:00
+func (builder *LeaveRequestHistoryLeaveReqBuilder) DbUpdateTimeMax(dbUpdateTimeMax string) *LeaveRequestHistoryLeaveReqBuilder {
+	builder.apiReq.QueryParams.Set("db_update_time_max", fmt.Sprint(dbUpdateTimeMax))
+	return builder
+}
+
+// WorkDay专用 是否返回0值的请假记录，若为true，将返回0值的请假记录
+//
+// 示例值：false
+func (builder *LeaveRequestHistoryLeaveReqBuilder) WdNeedAmountZeroRecords(wdNeedAmountZeroRecords bool) *LeaveRequestHistoryLeaveReqBuilder {
+	builder.apiReq.QueryParams.Set("wd_need_amount_zero_records", fmt.Sprint(wdNeedAmountZeroRecords))
+	return builder
+}
+
+// WorkDay专用 是否拒绝和取消的请假记录，若为true，将返回拒绝和取消的请假记录
+//
+// 示例值：false
+func (builder *LeaveRequestHistoryLeaveReqBuilder) WdNeedDeniedAndCanceledRecord(wdNeedDeniedAndCanceledRecord bool) *LeaveRequestHistoryLeaveReqBuilder {
+	builder.apiReq.QueryParams.Set("wd_need_denied_and_canceled_record", fmt.Sprint(wdNeedDeniedAndCanceledRecord))
+	return builder
+}
+
+// WorkDay专用 扣薪类型, 1不参与算薪 2影响算薪 3不影响算薪
+//
+// 示例值：1
+func (builder *LeaveRequestHistoryLeaveReqBuilder) WdPaidType(wdPaidType int) *LeaveRequestHistoryLeaveReqBuilder {
+	builder.apiReq.QueryParams.Set("wd_paid_type", fmt.Sprint(wdPaidType))
 	return builder
 }
 
