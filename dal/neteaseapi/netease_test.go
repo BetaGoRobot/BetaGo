@@ -62,3 +62,16 @@ func TestNetEaseContext_LoginNetEase(t *testing.T) {
 func TestNetEaseContext_GetMusicURL(t *testing.T) {
 	NetEaseGCtx.GetMusicURL(context.Background(), "423228325")
 }
+
+func TestNetEaseContext_LoginNetEaseQR(t *testing.T) {
+	ctx := context.Background()
+	c := &NetEaseContext{
+		retryCnt: 0,
+		qrStruct: struct {
+			isOutDated bool
+			uniKey     string
+			qrBase64   string
+		}{},
+	}
+	c.LoginNetEaseQR(ctx)
+}

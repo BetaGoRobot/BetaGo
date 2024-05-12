@@ -115,7 +115,7 @@ func (neteaseCtx *NetEaseContext) getUniKey(ctx context.Context) (err error) {
 	resp, err := requests.Req().Post(NetEaseAPIBaseURL + "/login/qr/key")
 	if err != nil || resp.StatusCode() != 200 {
 		if err == nil {
-			err = fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
+			err = fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode())
 		}
 		return
 	}
@@ -143,7 +143,7 @@ func (neteaseCtx *NetEaseContext) getQRBase64(ctx context.Context) (err error) {
 		Post(NetEaseAPIBaseURL + "/login/qr/create")
 	if err != nil || resp.StatusCode() != 200 {
 		if err == nil {
-			err = fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode)
+			err = fmt.Errorf("LoginNetEaseQR error, StatusCode %d", resp.StatusCode())
 		}
 		return
 	}
@@ -215,39 +215,28 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 	neteaseCtx.getUniKey(ctx)
 
 	neteaseCtx.getQRBase64(ctx)
-	linkURL, err := utility.UploadFileToCos(SaveQRImg(ctx, neteaseCtx.qrStruct.qrBase64))
+	linkURL, err := utility.MinioUploadFileFromReadCloser(ctx,
+		qrImgReadCloser(ctx, neteaseCtx.qrStruct.qrBase64), "cloudmusic",
+		"QRCode/"+strconv.Itoa(int(time.Now().Unix()))+".png",
+		"img/png",
+	)
 	if err != nil {
 		return err
 	}
-	gotify.SendMessage(ctx, "网易云登录", fmt.Sprintf("![QRCode](%s)", linkURL), 7)
+
+	gotify.SendMessage(ctx, "网易云登录", fmt.Sprintf("![QRCode](%s)", linkURL.String()), 7)
 	go neteaseCtx.checkQRStatus(ctx)
 	return
 }
 
-// SaveQRImg 保存二维码图片
-//
-//	@param imgBase64
-//	@return filename
-func SaveQRImg(ctx context.Context, imgBase64 string) (filename string) {
+func qrImgReadCloser(ctx context.Context, imgBase64 string) (r io.ReadCloser) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
-	i := strings.Index(imgBase64, ",")
+	i := strings.Index(imgBase64, ",") // string is img/png;base64,xxx
 	d := base64.NewDecoder(base64.StdEncoding, strings.NewReader(imgBase64[i+1:]))
-	filename = filepath.Join(netEaseQRTmpFile, fmt.Sprintf("qr_%d.jpg", time.Now().Unix()))
-	os.MkdirAll(netEaseQRTmpFile, 0o777)
-	f, err := os.Create(filename)
-	if err != nil {
-		log.ZapLogger.Info("error in create qr img", zaplog.Error(err))
-		return ""
-	}
-	defer f.Close()
-	_, err = io.Copy(f, d)
-	if err != nil {
-		log.ZapLogger.Info("error in copy qr img", zaplog.Error(err))
-		return ""
-	}
-	return
+
+	return io.NopCloser(d)
 }
 
 // LoginNetEase 获取登陆Cookie

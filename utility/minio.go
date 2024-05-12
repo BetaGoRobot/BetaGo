@@ -152,6 +152,35 @@ func MinioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.
 	return PresignObj(ctx, bucketName, ObjName)
 }
 
+func MinioUploadFileFromReadCloser(ctx context.Context, file io.ReadCloser, bucketName, objName, contentType string) (u *url.URL, err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
+	defer span.End()
+	log.ZapLogger.Info("MinioUploadFileFromURL...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+
+	shareURL, err := MinioTryGetFile(ctx, bucketName, objName)
+	if err != nil {
+		if e, ok := err.(minio.ErrorResponse); ok {
+			err = nil
+			log.ZapLogger.Warn(e.Error())
+		} else {
+			log.ZapLogger.Error(err.Error())
+			return
+		}
+	}
+	if shareURL != nil {
+		u = shareURL
+		return
+	}
+
+	err = MinioUploadReader(ctx, bucketName, file, objName, contentType)
+	if err != nil {
+		log.ZapLogger.Error(err.Error())
+		return
+	}
+
+	return PresignObj(ctx, bucketName, objName)
+}
+
 func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName, contentType string) (u *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
