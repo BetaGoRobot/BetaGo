@@ -189,6 +189,7 @@ func (m *MinioManager) addTraceCached(hit bool) {
 //	@author heyuhengmatt
 //	@update 2024-05-13 01:55:04
 func (m *MinioManager) Upload() (u *url.URL, err error) {
+	u = new(url.URL)
 	defer m.span.End()
 	defer m.addTracePresigned(u)
 
@@ -198,7 +199,7 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	if m.expiration != nil {
 		opts.Expires = *m.expiration
 	}
-	u, err = m.tryGetFile()
+	err = m.tryGetFile(u)
 	if err != nil {
 		m.addTraceCached(false)
 		log.ZapLogger.Warn("tryGetFile failed", zaplog.Error(err))
@@ -213,14 +214,15 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	return
 }
 
-func (m *MinioManager) tryGetFile() (u *url.URL, err error) {
+// 此函数会修改入参，不返回err外的值
+func (m *MinioManager) tryGetFile(u *url.URL) (err error) {
 	shareURL, err := minioTryGetFile(m, m.bucketName, m.objName)
 	if err != nil {
 		log.ZapLogger.Warn(err.Error())
 		return
 	}
 	if shareURL != nil {
-		u = shareURL
+		*u = *shareURL // copy值
 		return
 	}
 	return
