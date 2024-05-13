@@ -222,7 +222,7 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 		}
 		return m.presignURL()
 	}
-	m.addTraceCached(false)
+	m.addTraceCached(true)
 	return
 }
 
