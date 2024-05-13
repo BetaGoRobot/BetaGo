@@ -20,7 +20,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type minioManager struct {
+// MinioManager minio上传管理上下文
+type MinioManager struct {
 	context.Context
 	span        trace.Span
 	bucketName  string
@@ -31,26 +32,48 @@ type minioManager struct {
 	contentType ct.ContentType
 }
 
-func Client() *minioManager {
-	return &minioManager{
+// Client 返回一个新的minioManager Client
+func Client() *MinioManager {
+	return &MinioManager{
 		Context: context.Background(),
 	}
 }
 
-func (m *minioManager) SetContext(ctx context.Context) *minioManager {
+// SetContext  设置上下文
+//
+//	@receiver m *MinioManager
+//	@param ctx context.Context
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:13
+func (m *MinioManager) SetContext(ctx context.Context) *MinioManager {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, "UploadToMinio")
 	m.Context = ctx
 	m.span = span
 	return m
 }
 
-func (m *minioManager) SetBucketName(bucketName string) *minioManager {
+// SetBucketName  设置bucketName
+//
+//	@receiver m *MinioManager
+//	@param bucketName string
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:18
+func (m *MinioManager) SetBucketName(bucketName string) *MinioManager {
 	m.span.SetAttributes(attribute.Key("bucketName").String(bucketName))
 	m.bucketName = bucketName
 	return m
 }
 
-func (m *minioManager) SetFileFromURL(url string) *minioManager {
+// SetFileFromURL  从url设置文件
+//
+//	@receiver m *MinioManager
+//	@param url string
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:24
+func (m *MinioManager) SetFileFromURL(url string) *MinioManager {
 	m.span.SetAttributes(attribute.Key("url").String(url))
 
 	resp, err := requests.Req().SetContext(m.Context).SetDoNotParseResponse(true).Get(url)
@@ -64,17 +87,38 @@ func (m *minioManager) SetFileFromURL(url string) *minioManager {
 	return m
 }
 
-func (m *minioManager) SetFileFromReader(r io.ReadCloser) *minioManager {
+// SetFileFromReader  从reader设置文件
+//
+//	@receiver m *MinioManager
+//	@param r io.ReadCloser
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:30
+func (m *MinioManager) SetFileFromReader(r io.ReadCloser) *MinioManager {
 	m.file = r
 	return m
 }
 
-func (m *minioManager) SetFileFromString(s string) *minioManager {
+// SetFileFromString  从字符串设置文件
+//
+//	@receiver m *MinioManager
+//	@param s string
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:35
+func (m *MinioManager) SetFileFromString(s string) *MinioManager {
 	m.file = io.NopCloser(strings.NewReader(s))
 	return m
 }
 
-func (m *minioManager) SetFileFromPath(path string) *minioManager {
+// SetFileFromPath  从路径设置文件
+//
+//	@receiver m *MinioManager
+//	@param path string
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:39
+func (m *MinioManager) SetFileFromPath(path string) *MinioManager {
 	m.span.SetAttributes(attribute.Key("path").String(path))
 
 	reader, err := os.Open(path)
@@ -86,27 +130,55 @@ func (m *minioManager) SetFileFromPath(path string) *minioManager {
 	return m
 }
 
-func (m *minioManager) SetObjName(objName string) *minioManager {
+// SetObjName 设置objName
+//
+//	@receiver m *MinioManager
+//	@param objName string
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:44
+func (m *MinioManager) SetObjName(objName string) *MinioManager {
 	m.span.SetAttributes(attribute.Key("objName").String(objName))
 
 	m.objName = objName
 	return m
 }
 
-func (m *minioManager) SetContentType(contentType ct.ContentType) *minioManager {
+// SetContentType  设置contentType
+//
+//	@receiver m *MinioManager
+//	@param contentType ct.ContentType
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:54
+func (m *MinioManager) SetContentType(contentType ct.ContentType) *MinioManager {
 	m.span.SetAttributes(attribute.Key("contentType").String(contentType.String()))
 
 	m.contentType = contentType
 	return m
 }
 
-func (m *minioManager) SetExpiration(expiration time.Time) *minioManager {
+// SetExpiration  设置过期时间
+//
+//	@receiver m *MinioManager
+//	@param expiration time.Time
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:59
+func (m *MinioManager) SetExpiration(expiration time.Time) *MinioManager {
 	m.span.SetAttributes(attribute.Key("expiration").String(expiration.Format(time.RFC3339)))
 	m.expiration = &expiration
 	return m
 }
 
-func (m *minioManager) Upload() (u *url.URL, err error) {
+// Upload  上传文件
+//
+//	@receiver m *MinioManager
+//	@return u *url.URL
+//	@return err error
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:55:04
+func (m *MinioManager) Upload() (u *url.URL, err error) {
 	defer m.span.End()
 	opts := minio.PutObjectOptions{
 		ContentType: m.contentType.String(),
@@ -129,7 +201,7 @@ func (m *minioManager) Upload() (u *url.URL, err error) {
 	return
 }
 
-func (m *minioManager) tryGetFile() (u *url.URL, err error) {
+func (m *MinioManager) tryGetFile() (u *url.URL, err error) {
 	shareURL, err := minioTryGetFile(m, m.bucketName, m.objName)
 	if err != nil {
 		if e, ok := err.(minio.ErrorResponse); ok {
@@ -147,7 +219,7 @@ func (m *minioManager) tryGetFile() (u *url.URL, err error) {
 	return
 }
 
-func (m *minioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
+func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
 	err = minioUploadReader(m, m.bucketName, m.file, m.objName, opts)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
@@ -156,6 +228,6 @@ func (m *minioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
 	return
 }
 
-func (m *minioManager) presignURL() (u *url.URL, err error) {
+func (m *MinioManager) presignURL() (u *url.URL, err error) {
 	return presignObj(m, m.bucketName, m.objName)
 }
