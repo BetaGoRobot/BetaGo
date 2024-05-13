@@ -1,4 +1,4 @@
-package utility
+package shorter
 
 import (
 	"crypto/rand"

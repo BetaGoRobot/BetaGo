@@ -1,4 +1,4 @@
-package utility
+package larkutils
 
 import (
 	"context"
@@ -8,7 +8,10 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/BetaGoRobot/BetaGo/consts/ct"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/kevinmatthe/zaplog"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
@@ -19,7 +22,7 @@ import (
 var larkClient *lark.Client = lark.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Getenv("LARK_SECRET"))
 
 func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS bool) (key string, ossURL string, err error) { // also minio
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
 	defer span.End()
 
@@ -29,7 +32,13 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 		return
 	}
 	if uploadOSS {
-		u, err := MinioUploadFileFromURL(ctx, "cloudmusic", imageURL, "picture/"+musicID+filepath.Ext(imageURL), "image/jpeg")
+		u, err := miniohelper.Client().
+			SetContext(ctx).
+			SetBucketName("cloudmusic").
+			SetFileFromURL(imageURL).
+			SetObjName("picture/" + musicID + filepath.Ext(imageURL)).
+			SetContentType(ct.ContentTypeImgJPEG).
+			UploadFile()
 		if err != nil {
 			log.ZapLogger.Warn("upload pic to minio error", zaplog.String("imageURL", imageURL), zaplog.String("imageKey", *resp.Data.ImageKey))
 			err = nil
@@ -43,7 +52,7 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 }
 
 func Upload2Lark(ctx context.Context, imageURL string) (error, *larkim.CreateImageResp) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
 	defer span.End()
 

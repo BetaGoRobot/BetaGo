@@ -12,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/dal/larkcards"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 
@@ -129,7 +130,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]
 	picURL := songDetail.Al.PicURL
-	imageKey, ossURL, err := utility.UploadPicAllinOne(ctx, picURL, musicID, true)
+	imageKey, ossURL, err := larkutils.UploadPicAllinOne(ctx, picURL, musicID, true)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 		return ""

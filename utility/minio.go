@@ -1,263 +1,270 @@
 package utility
 
-import (
-	"context"
-	"io"
-	"net/http"
-	"net/url"
-	"os"
-	"path/filepath"
-	"strings"
+// import (
+// 	"context"
+// 	"io"
+// 	"net/http"
+// 	"net/url"
+// 	"os"
+// 	"path/filepath"
+// 	"strings"
 
-	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/consts/env"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
-	"github.com/BetaGoRobot/BetaGo/utility/otel"
-	"github.com/BetaGoRobot/BetaGo/utility/requests"
-	"github.com/kevinmatthe/zaplog"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
-	"go.opentelemetry.io/otel/attribute"
-)
+// 	"github.com/BetaGoRobot/BetaGo/consts"
 
-var (
-	endPoint        string
-	useSSL          bool
-	accessKeyID     = os.Getenv("MINIO_ACCESS_KEY_ID")
-	secretAccessKey = os.Getenv("MINIO_SECRET_ACCESS_KEY")
-	minioClient     *minio.Client
-)
+// 	"github.com/BetaGoRobot/BetaGo/consts/env"
+// 	"github.com/BetaGoRobot/BetaGo/utility/log"
+// 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+// 	"github.com/BetaGoRobot/BetaGo/utility/requests"
+// 	"github.com/kevinmatthe/zaplog"
+// 	"github.com/minio/minio-go/v7"
+// 	"github.com/minio/minio-go/v7/pkg/credentials"
+// 	"go.opentelemetry.io/otel/attribute"
+// )
 
-func init() {
-	var err error
-	// if betagovar.IsTest {
-	// 	endPoint = "192.168.31.74:29000"
-	// 	useSSL = false
-	// } else {
-	endPoint = "minioapi.kmhomelab.cn"
-	useSSL = true
-	if consts.IsCluster {
-		endPoint = "192.168.31.74:29000"
-		useSSL = false
-	}
-	// }
-	minioClient, err = minio.New(endPoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: useSSL,
-	})
-	if err != nil {
-		log.ZapLogger.Panic(err.Error())
-	}
-}
+// var (
+// 	endPoint        string
+// 	useSSL          bool
+// 	accessKeyID     = os.Getenv("MINIO_ACCESS_KEY_ID")
+// 	secretAccessKey = os.Getenv("MINIO_SECRET_ACCESS_KEY")
+// 	minioClient     *minio.Client
+// )
 
-func MinioUploadReader(ctx context.Context, bucketName string, file io.ReadCloser, objName, contentType string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
-	defer span.End()
-	log.ZapLogger.Info("MinioUploadReader...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+// func init() {
+// 	var err error
+// 	// if betagovar.IsTest {
+// 	// 	endPoint = "192.168.31.74:29000"
+// 	// 	useSSL = false
+// 	// } else {
+// 	endPoint = "minioapi.kmhomelab.cn"
+// 	useSSL = true
+// 	if consts.IsCluster {
+// 		endPoint = "192.168.31.74:29000"
+// 		useSSL = false
+// 	}
+// 	// }
+// 	minioClient, err = minio.New(endPoint, &minio.Options{
+// 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+// 		Secure: useSSL,
+// 	})
+// 	if err != nil {
+// 		log.ZapLogger.Panic(err.Error())
+// 	}
+// }
 
-	// Upload the test file
-	// Change the value of filePath if the file is in another location
+// func MinioUploadReader(ctx context.Context, bucketName string, file io.ReadCloser, objName string, opts minio.PutObjectOptions) (err error) {
+// 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
+// 	defer span.End()
+// 	log.ZapLogger.Info("MinioUploadReader...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
-	// Upload the test file with FPutObject
-	info, err := minioClient.PutObject(ctx, bucketName, objName, file, -1, minio.PutObjectOptions{ContentType: contentType})
-	if err != nil {
-		log.ZapLogger.Error(err.Error())
-		return
-	}
-	defer span.SetAttributes(attribute.Key("path").String(objName), attribute.Key("size").Int64(info.Size))
-	log.SugerLogger.Infof("Successfully uploaded %s of size %d\n", objName, info.Size)
-	return
-}
+// 	// Upload the test file
+// 	// Change the value of filePath if the file is in another location
 
-func MinioUploadFile(ctx context.Context, bucketName, filePath, objName, contentType string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
-	defer span.End()
-	log.ZapLogger.Info("MinioUploadFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+// 	// Upload the test file with FPutObject
+// 	info, err := minioClient.PutObject(ctx,
+// 		bucketName,
+// 		objName,
+// 		file,
+// 		-1,
+// 		opts,
+// 	)
+// 	if err != nil {
+// 		log.ZapLogger.Error(err.Error())
+// 		return
+// 	}
+// 	defer span.SetAttributes(attribute.Key("path").String(objName), attribute.Key("size").Int64(info.Size))
+// 	log.SugerLogger.Infof("Successfully uploaded %s of size %d\n", objName, info.Size)
+// 	return
+// }
 
-	// Upload the test file
-	// Change the value of filePath if the file is in another location
+// func MinioUploadFile(ctx context.Context, bucketName, filePath, objName, contentType string) (err error) {
+// 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
+// 	defer span.End()
+// 	log.ZapLogger.Info("MinioUploadFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
-	// Upload the test file with FPutObject
-	info, err := minioClient.FPutObject(ctx, bucketName, objName, filePath, minio.PutObjectOptions{ContentType: contentType})
-	if err != nil {
-		log.ZapLogger.Error(err.Error())
-		return
-	}
-	defer span.SetAttributes(attribute.Key("path").String(objName), attribute.Key("size").Int64(info.Size))
-	log.SugerLogger.Infof("Successfully uploaded %s of size %d\n", objName, info.Size)
-	return
-}
+// 	// Upload the test file
+// 	// Change the value of filePath if the file is in another location
 
-func downloadFile(ctx context.Context, path string, url string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
-	defer span.End()
-	log.ZapLogger.Info("downloadFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+// 	// Upload the test file with FPutObject
+// 	info, err := minioClient.FPutObject(ctx, bucketName, objName, filePath, minio.PutObjectOptions{ContentType: contentType})
+// 	if err != nil {
+// 		log.ZapLogger.Error(err.Error())
+// 		return
+// 	}
+// 	defer span.SetAttributes(attribute.Key("path").String(objName), attribute.Key("size").Int64(info.Size))
+// 	log.SugerLogger.Infof("Successfully uploaded %s of size %d\n", objName, info.Size)
+// 	return
+// }
 
-	_, err = os.Stat(filepath.Dir(path))
-	if err != nil {
-		if os.IsNotExist(err) {
-			err = os.Mkdir(filepath.Dir(path), 0o755)
-			if err != nil {
-				return
-			}
-		} else {
-			return
-		}
-	}
+// func downloadFile(ctx context.Context, path string, url string) (err error) {
+// 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
+// 	defer span.End()
+// 	log.ZapLogger.Info("downloadFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
-	// Create the file
-	out, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
+// 	_, err = os.Stat(filepath.Dir(path))
+// 	if err != nil {
+// 		if os.IsNotExist(err) {
+// 			err = os.Mkdir(filepath.Dir(path), 0o755)
+// 			if err != nil {
+// 				return
+// 			}
+// 		} else {
+// 			return
+// 		}
+// 	}
 
-	// Get the data
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+// 	// Create the file
+// 	out, err := os.Create(path)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer out.Close()
 
-	// Writer the body to file
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
+// 	// Get the data
+// 	resp, err := http.Get(url)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer resp.Body.Close()
 
-	return nil
-}
+// 	// Writer the body to file
+// 	_, err = io.Copy(out, resp.Body)
+// 	if err != nil {
+// 		return err
+// 	}
 
-func removeTmpFile(ctx context.Context, path string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
-	defer span.End()
-	log.ZapLogger.Info("removeFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+// 	return nil
+// }
 
-	err = os.Remove(path)
-	if err != nil {
-		log.ZapLogger.Error(err.Error())
-	}
-	return
-}
+// func removeTmpFile(ctx context.Context, path string) (err error) {
+// 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
+// 	defer span.End()
+// 	log.ZapLogger.Info("removeFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
-func MinioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
-	defer span.End()
-	log.ZapLogger.Info("MinioTryGetFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+// 	err = os.Remove(path)
+// 	if err != nil {
+// 		log.ZapLogger.Error(err.Error())
+// 	}
+// 	return
+// }
 
-	_, err = minioClient.StatObject(ctx, bucketName, ObjName, minio.StatObjectOptions{})
-	if err != nil {
-		return
-	}
-	return PresignObj(ctx, bucketName, ObjName)
-}
+// func MinioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.URL, err error) {
+// 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
+// 	defer span.End()
+// 	log.ZapLogger.Info("MinioTryGetFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
-func MinioUploadFileFromReadCloser(ctx context.Context, file io.ReadCloser, bucketName, objName, contentType string) (u *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
-	defer span.End()
-	log.ZapLogger.Info("MinioUploadFileFromURL...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+// 	_, err = minioClient.StatObject(ctx, bucketName, ObjName, minio.StatObjectOptions{})
+// 	if err != nil {
+// 		return
+// 	}
+// 	return PresignObj(ctx, bucketName, ObjName)
+// }
 
-	shareURL, err := MinioTryGetFile(ctx, bucketName, objName)
-	if err != nil {
-		if e, ok := err.(minio.ErrorResponse); ok {
-			err = nil
-			log.ZapLogger.Warn(e.Error())
-		} else {
-			log.ZapLogger.Error(err.Error())
-			return
-		}
-	}
-	if shareURL != nil {
-		u = shareURL
-		return
-	}
+// func MinioUploadFileFromReadCloser(ctx context.Context, file io.ReadCloser, bucketName, objName string, opts minio.PutObjectOptions) (u *url.URL, err error) {
+// 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
+// 	defer span.End()
+// 	log.ZapLogger.Info("MinioUploadFileFromURL...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
-	err = MinioUploadReader(ctx, bucketName, file, objName, contentType)
-	if err != nil {
-		log.ZapLogger.Error(err.Error())
-		return
-	}
+// 	shareURL, err := MinioTryGetFile(ctx, bucketName, objName)
+// 	if err != nil {
+// 		if e, ok := err.(minio.ErrorResponse); ok {
+// 			err = nil
+// 			log.ZapLogger.Warn(e.Error())
+// 		} else {
+// 			log.ZapLogger.Error(err.Error())
+// 			return
+// 		}
+// 	}
+// 	if shareURL != nil {
+// 		u = shareURL
+// 		return
+// 	}
 
-	return PresignObj(ctx, bucketName, objName)
-}
+// 	err = MinioUploadReader(ctx, bucketName, file, objName, opts)
+// 	if err != nil {
+// 		log.ZapLogger.Error(err.Error())
+// 		return
+// 	}
 
-func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName, contentType string) (u *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
-	defer span.End()
-	log.ZapLogger.Info("MinioUploadFileFromURL...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+// 	return PresignObj(ctx, bucketName, objName)
+// }
 
-	shareURL, err := MinioTryGetFile(ctx, bucketName, objName)
-	if err != nil {
-		if e, ok := err.(minio.ErrorResponse); ok {
-			err = nil
-			log.ZapLogger.Warn(e.Error())
-		} else {
-			log.ZapLogger.Error(err.Error())
-			return
-		}
-	}
-	if shareURL != nil {
-		u = shareURL
-		return
-	}
+// func MinioUploadFileFromURL(ctx context.Context, bucketName, fileURL, objName, contentType string) (u *url.URL, err error) {
+// 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
+// 	defer span.End()
+// 	log.ZapLogger.Info("MinioUploadFileFromURL...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
-	resp, err := requests.Req().SetContext(ctx).SetDoNotParseResponse(true).Get(fileURL)
-	if err != nil {
-		log.ZapLogger.Error("Get file failed", zaplog.Error(err))
-		return
-	}
-	body := resp.RawResponse.Body
-	defer body.Close()
-	err = MinioUploadReader(ctx, bucketName, body, objName, contentType)
-	if err != nil {
-		log.ZapLogger.Error(err.Error())
-		return
-	}
+// 	shareURL, err := MinioTryGetFile(ctx, bucketName, objName)
+// 	if err != nil {
+// 		if e, ok := err.(minio.ErrorResponse); ok {
+// 			err = nil
+// 			log.ZapLogger.Warn(e.Error())
+// 		} else {
+// 			log.ZapLogger.Error(err.Error())
+// 			return
+// 		}
+// 	}
+// 	if shareURL != nil {
+// 		u = shareURL
+// 		return
+// 	}
 
-	return PresignObj(ctx, bucketName, objName)
-}
+// 	resp, err := requests.Req().SetContext(ctx).SetDoNotParseResponse(true).Get(fileURL)
+// 	if err != nil {
+// 		log.ZapLogger.Error("Get file failed", zaplog.Error(err))
+// 		return
+// 	}
+// 	body := resp.RawResponse.Body
+// 	defer body.Close()
+// 	err = MinioUploadReader(ctx, bucketName, body, objName, minio.PutObjectOptions{ContentType: contentType})
+// 	if err != nil {
+// 		log.ZapLogger.Error(err.Error())
+// 		return
+// 	}
 
-func MinioUploadTextFile(ctx context.Context, bucketName, text, objName, contentType string) (u *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
-	defer span.End()
-	log.ZapLogger.Info("MinioUploadTextFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+// 	return PresignObj(ctx, bucketName, objName)
+// }
 
-	shareURL, err := MinioTryGetFile(ctx, bucketName, objName)
-	if err != nil {
-		if e, ok := err.(minio.ErrorResponse); ok {
-			err = nil
-			log.ZapLogger.Warn(e.Error())
-		} else {
-			log.ZapLogger.Error(err.Error())
-			return
-		}
-	}
-	if shareURL != nil {
-		u = shareURL
-		return
-	}
+// func MinioUploadTextFile(ctx context.Context, bucketName, text, objName, contentType string) (u *url.URL, err error) {
+// 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
+// 	defer span.End()
+// 	log.ZapLogger.Info("MinioUploadTextFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
-	_, err = minioClient.PutObject(ctx, bucketName, objName, io.NopCloser(strings.NewReader(text)), int64(len(text)), minio.PutObjectOptions{ContentType: contentType})
-	if err != nil {
-		log.ZapLogger.Error("PutObject failed", zaplog.Error(err))
-		return
-	}
-	log.ZapLogger.Info("Successfully uploaded text file", zaplog.String("objName", objName))
-	return PresignObj(ctx, bucketName, objName)
-}
+// 	shareURL, err := MinioTryGetFile(ctx, bucketName, objName)
+// 	if err != nil {
+// 		if e, ok := err.(minio.ErrorResponse); ok {
+// 			err = nil
+// 			log.ZapLogger.Warn(e.Error())
+// 		} else {
+// 			log.ZapLogger.Error(err.Error())
+// 			return
+// 		}
+// 	}
+// 	if shareURL != nil {
+// 		u = shareURL
+// 		return
+// 	}
 
-func PresignObj(ctx context.Context, bucketName, objName string) (u *url.URL, err error) {
-	u, err = minioClient.PresignedGetObject(ctx, bucketName, objName, env.OSS_EXPIRATION_TIME, nil)
-	if err != nil {
-		log.ZapLogger.Error(err.Error())
-		return
-	}
+// 	_, err = minioClient.PutObject(ctx, bucketName, objName, io.NopCloser(strings.NewReader(text)), int64(len(text)), minio.PutObjectOptions{ContentType: contentType})
+// 	if err != nil {
+// 		log.ZapLogger.Error("PutObject failed", zaplog.Error(err))
+// 		return
+// 	}
+// 	log.ZapLogger.Info("Successfully uploaded text file", zaplog.String("objName", objName))
+// 	return PresignObj(ctx, bucketName, objName)
+// }
 
-	newURL := GenAKA(u)
-	if newURL != nil {
-		u = newURL
-	}
+// func PresignObj(ctx context.Context, bucketName, objName string) (u *url.URL, err error) {
+// 	u, err = minioClient.PresignedGetObject(ctx, bucketName, objName, env.OSS_EXPIRATION_TIME, nil)
+// 	if err != nil {
+// 		log.ZapLogger.Error(err.Error())
+// 		return
+// 	}
 
-	log.ZapLogger.Info("Presined file with url", zaplog.String("presigned_url", u.String()))
-	return
-}
+// 	newURL := GenAKA(u)
+// 	if newURL != nil {
+// 		u = newURL
+// 	}
+
+// 	log.ZapLogger.Info("Presined file with url", zaplog.String("presigned_url", u.String()))
+// 	return
+// }

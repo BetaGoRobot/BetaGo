@@ -14,10 +14,13 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
 	"github.com/bytedance/sonic"
@@ -215,11 +218,14 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 	neteaseCtx.getUniKey(ctx)
 
 	neteaseCtx.getQRBase64(ctx)
-	linkURL, err := utility.MinioUploadFileFromReadCloser(ctx,
-		qrImgReadCloser(ctx, neteaseCtx.qrStruct.qrBase64), "cloudmusic",
-		"QRCode/"+strconv.Itoa(int(time.Now().Unix()))+".png",
-		"img/png",
-	)
+	linkURL, err := miniohelper.Client().
+		SetContext(ctx).
+		SetBucketName("cloudmusic").
+		SetFileFromReader(qrImgReadCloser(ctx, neteaseCtx.qrStruct.qrBase64)).
+		SetObjName("QRCode/" + strconv.Itoa(int(time.Now().Unix())) + ".png").
+		SetContentType(ct.ContentTypeImgPNG).
+		SetExpiration(time.Now().Add(time.Hour)).
+		UploadFile()
 	if err != nil {
 		return err
 	}
@@ -441,14 +447,13 @@ func uploadMusic(ctx context.Context, url string, ID string) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("songID").String(ID))
 	defer span.End()
-
-	_, err := utility.MinioUploadFileFromURL(
-		ctx,
-		"cloudmusic",
-		url,
-		"music/"+ID+filepath.Ext(url),
-		"audio/mpeg;charset=UTF-8",
-	)
+	_, err := miniohelper.Client().
+		SetContext(ctx).
+		SetBucketName("cloudmusic").
+		SetFileFromURL(url).
+		SetObjName("music/" + ID + filepath.Ext(url)).
+		SetContentType(ct.ContentTypeAudio).
+		UploadFile()
 	if err != nil {
 		log.ZapLogger.Warn("[PreUploadMusic] Get minio url failed...", zaplog.Error(err))
 	}
@@ -485,13 +490,13 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, musicIDNa
 	for index := range music.Data {
 		ID := strconv.Itoa(music.Data[index].ID)
 		URL := music.Data[index].URL
-		musicURL, err := utility.MinioUploadFileFromURL(
-			ctx,
-			"cloudmusic",
-			music.Data[index].URL,
-			"music/"+ID+filepath.Ext(music.Data[index].URL),
-			"audio/mpeg;charset=UTF-8",
-		)
+		musicURL, err := miniohelper.Client().
+			SetContext(ctx).
+			SetBucketName("cloudmusic").
+			SetFileFromURL(URL).
+			SetObjName("music/" + ID + filepath.Ext(music.Data[index].URL)).
+			SetContentType(ct.ContentTypeAudio).
+			UploadFile()
 		if err != nil {
 			log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 		} else {
@@ -525,7 +530,13 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ctx context.Context, ID string) (u
 		return "", err
 	}
 	URL := music.Data[0].URL
-	u, err := utility.MinioUploadFileFromURL(ctx, "cloudmusic", URL, "music/"+ID+filepath.Ext(URL), "audio/mpeg;charset=UTF-8")
+	u, err := miniohelper.Client().
+		SetContext(ctx).
+		SetBucketName("cloudmusic").
+		SetFileFromURL(URL).
+		SetObjName("music/" + ID + filepath.Ext(URL)).
+		SetContentType(ct.ContentTypeAudio).
+		UploadFile()
 	if err != nil {
 		log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 	} else {
@@ -561,13 +572,13 @@ func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, musicID string)
 	}
 	for _, song := range musicDetail.Songs {
 		picURL := song.Al.PicURL
-		_, err = utility.MinioUploadFileFromURL(
-			ctx,
-			"cloudmusic",
-			picURL,
-			"picture/"+musicID+filepath.Ext(picURL),
-			"image/jpg",
-		)
+		_, err = miniohelper.Client().
+			SetContext(ctx).
+			SetBucketName("cloudmusic").
+			SetFileFromURL(picURL).
+			SetObjName("picture/" + musicID + filepath.Ext(picURL)).
+			SetContentType(ct.ContentTypeImgJPEG).
+			UploadFile()
 		if err != nil {
 			log.ZapLogger.Error(err.Error())
 		}
@@ -608,7 +619,13 @@ func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) 
 	if err != nil {
 		log.ZapLogger.Error("marshal lyrics error", zaplog.Error(err))
 	}
-	l, err := utility.MinioUploadTextFile(ctx, "cloudmusic", lyricJson, "lyrics/"+songID+".json", "text/plain")
+	l, err := miniohelper.Client().
+		SetContext(ctx).
+		SetBucketName("cloudmusic").
+		SetFileFromString(lyricJson).
+		SetObjName("lyrics/" + songID + ".json").
+		SetContentType(ct.ContentTypePlainText).
+		UploadFile()
 	if err != nil {
 		log.ZapLogger.Error("upload lyrics failed", zaplog.Error(err))
 		return
@@ -684,7 +701,7 @@ func asyncUploadPics(ctx context.Context, musicInfos searchMusic) map[string]str
 
 func uploadPicWorker(ctx context.Context, wg *sync.WaitGroup, url string, musicID int, c chan [2]string) bool {
 	defer wg.Done()
-	imgKey, _, err := utility.UploadPicAllinOne(ctx, url, strconv.Itoa(musicID), true)
+	imgKey, _, err := larkutils.UploadPicAllinOne(ctx, url, strconv.Itoa(musicID), true)
 	if err != nil {
 		log.ZapLogger.Error("upload pic to lark error", zaplog.Error(err))
 		return true
