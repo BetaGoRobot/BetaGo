@@ -605,25 +605,16 @@ func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) 
 		log.ZapLogger.Info(err.Error())
 	}
 	searchLyrics := &SearchLyrics{}
-	err = jsoniter.Unmarshal(resp.Body(), searchLyrics)
+	body := string(resp.Body())
+	err = sonic.UnmarshalString(body, searchLyrics)
 	if err != nil {
 		log.ZapLogger.Info(err.Error())
-	}
-	// lyricJson, err := utility.ExtractLyrics(searchLyrics.Lrc.Lyric)
-	// if err != nil {
-	// 	log.ZapLogger.Warn("extract lyrics error", zaplog.Error(err))
-	// }
-	// lyricJson, err := sonic.MarshalString(map[string]interface{}{"lrc": map[string]interface{}{
-	// 	"lyric": searchLyrics.Lrc.Lyric,
-	// }})
-	lyricJson := string(resp.Body())
-	if err != nil {
-		log.ZapLogger.Error("marshal lyrics error", zaplog.Error(err))
+		return
 	}
 	l, err := miniohelper.Client().
 		SetContext(ctx).
 		SetBucketName("cloudmusic").
-		SetFileFromString(lyricJson).
+		SetFileFromString(body).
 		SetObjName("lyrics/" + songID + ".json").
 		SetContentType(ct.ContentTypePlainText).
 		Upload()
