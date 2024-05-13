@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
-	"github.com/BetaGoRobot/BetaGo/utility"
 
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -128,10 +127,7 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 }
 
 func (m *MinioManager) tryGetFile() (u *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
-	defer span.End()
-
-	shareURL, err := MinioTryGetFile(ctx, m.bucketName, m.objName)
+	shareURL, err := minioTryGetFile(m, m.bucketName, m.objName)
 	if err != nil {
 		if e, ok := err.(minio.ErrorResponse); ok {
 			err = nil
@@ -143,18 +139,13 @@ func (m *MinioManager) tryGetFile() (u *url.URL, err error) {
 	}
 	if shareURL != nil {
 		u = shareURL
-		span.SetAttributes(attribute.Bool("hit_cache", true))
 		return
 	}
-	span.SetAttributes(attribute.Bool("hit_cache", false))
 	return
 }
 
 func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
-	defer span.End()
-
-	MinioUploadReader(ctx, m.bucketName, m.file, m.objName, opts)
+	minioUploadReader(m, m.bucketName, m.file, m.objName, opts)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 		return
@@ -163,5 +154,5 @@ func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
 }
 
 func (m *MinioManager) presignURL() (u *url.URL, err error) {
-	return PresignObj(m, m.bucketName, m.objName)
+	return presignObj(m, m.bucketName, m.objName)
 }

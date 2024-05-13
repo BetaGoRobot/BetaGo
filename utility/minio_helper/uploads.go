@@ -15,41 +15,17 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func MinioUploadFileFromReadCloser(ctx context.Context, file io.ReadCloser, bucketName, objName string, opts minio.PutObjectOptions) (u *url.URL, err error) {
+func presignObj(ctx context.Context, bucketName, objName string) (u *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-	log.ZapLogger.Info("MinioUploadFileFromURL...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
-	shareURL, err := MinioTryGetFile(ctx, bucketName, objName)
-	if err != nil {
-		if e, ok := err.(minio.ErrorResponse); ok {
-			err = nil
-			log.ZapLogger.Warn(e.Error())
-		} else {
-			log.ZapLogger.Error(err.Error())
-			return
-		}
-	}
-	if shareURL != nil {
-		u = shareURL
-		return
-	}
-
-	err = MinioUploadReader(ctx, bucketName, file, objName, opts)
-	if err != nil {
-		log.ZapLogger.Error(err.Error())
-		return
-	}
-
-	return PresignObj(ctx, bucketName, objName)
-}
-
-func PresignObj(ctx context.Context, bucketName, objName string) (u *url.URL, err error) {
 	u, err = minioClient.PresignedGetObject(ctx, bucketName, objName, env.OSS_EXPIRATION_TIME, nil)
 	if err != nil {
+		span.SetAttributes(attribute.Key("hit_cache").Bool(false))
 		log.ZapLogger.Error(err.Error())
 		return
 	}
+	span.SetAttributes(attribute.Key("hit_cache").Bool(true))
 
 	newURL := shorter.GenAKA(u)
 	if newURL != nil {
@@ -60,7 +36,7 @@ func PresignObj(ctx context.Context, bucketName, objName string) (u *url.URL, er
 	return
 }
 
-func MinioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.URL, err error) {
+func minioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("MinioTryGetFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
@@ -69,18 +45,14 @@ func MinioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.
 	if err != nil {
 		return
 	}
-	return PresignObj(ctx, bucketName, ObjName)
+	return presignObj(ctx, bucketName, ObjName)
 }
 
-func MinioUploadReader(ctx context.Context, bucketName string, file io.ReadCloser, objName string, opts minio.PutObjectOptions) (err error) {
+func minioUploadReader(ctx context.Context, bucketName string, file io.ReadCloser, objName string, opts minio.PutObjectOptions) (err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("MinioUploadReader...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
 
-	// Upload the test file
-	// Change the value of filePath if the file is in another location
-
-	// Upload the test file with FPutObject
 	info, err := minioClient.PutObject(ctx,
 		bucketName,
 		objName,
