@@ -37,8 +37,9 @@ func init() {
 		NetEaseAPIBaseURL = "http://192.168.31.74:3335"
 	} else if consts.IsCluster {
 		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
+		time.Sleep(time.Second * 10) // 等待本地网络启动
 	}
-	time.Sleep(time.Second * 10) // 等待本地网络启动
+
 	startUpCtx := context.Background()
 	NetEaseGCtx.TryGetLastCookie(startUpCtx)
 	err := NetEaseGCtx.LoginNetEase(startUpCtx)
