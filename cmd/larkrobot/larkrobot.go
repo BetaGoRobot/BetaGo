@@ -60,8 +60,10 @@ func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg 
 				Build(),
 		).MessageId(*event.Event.Message.MessageId).
 		Build()
-
+	_, subSpan := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	resp, err := larkClient.Im.V1.Message.Reply(ctx, req)
+	subSpan.End()
+
 	if err != nil {
 		fmt.Println(resp)
 		return err

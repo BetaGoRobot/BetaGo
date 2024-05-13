@@ -14,6 +14,13 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+// LarkImg is
+type LarkImg struct {
+	gorm.Model
+	SongID string `json:"song_id" gorm:"primaryKey;autoIncrement:false"`
+	ImgKey string `json:"img_key" gorm:"primaryKey;autoIncrement:false"`
+}
+
 // ChatContextRecord is
 type ChatContextRecord struct {
 	UserID    string `json:"user_id"`
@@ -82,7 +89,16 @@ func init() {
 
 	// migrate
 	db := GetDbConnection()
-	err := db.AutoMigrate(&Administrator{}, &CommandInfo{}, &ChannelLogExt{}, &AlertList{}, &ChatContextRecord{}, &ChatRecordLog{}, &DynamicConfig{})
+	err := db.AutoMigrate(
+		&Administrator{},
+		&CommandInfo{},
+		&ChannelLogExt{},
+		&AlertList{},
+		&ChatContextRecord{},
+		&ChatRecordLog{},
+		&DynamicConfig{},
+		&LarkImg{},
+	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))
 	}

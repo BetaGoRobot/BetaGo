@@ -10,6 +10,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -26,7 +27,7 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
 	defer span.End()
 
-	err, resp := Upload2Lark(ctx, imageURL)
+	err, imgKey := Upload2Lark(ctx, musicID, imageURL)
 	if err != nil {
 		log.ZapLogger.Error("upload pic to lark error", zaplog.Error(err))
 		return
@@ -40,7 +41,7 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 			SetContentType(ct.ContentTypeImgJPEG).
 			Upload()
 		if err != nil {
-			log.ZapLogger.Warn("upload pic to minio error", zaplog.String("imageURL", imageURL), zaplog.String("imageKey", *resp.Data.ImageKey))
+			log.ZapLogger.Warn("upload pic to minio error", zaplog.String("imageURL", imageURL), zaplog.String("imageKey", imgKey))
 			err = nil
 		}
 		if u != nil {
@@ -48,30 +49,49 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 		}
 	}
 
-	return *resp.Data.ImageKey, ossURL, err
+	return imgKey, ossURL, err
 }
 
-func Upload2Lark(ctx context.Context, imageURL string) (error, *larkim.CreateImageResp) {
+func Upload2Lark(ctx context.Context, musicID, imageURL string) (err error, imgKey string) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
 	defer span.End()
 
-	picResp, err := http.Get(imageURL)
-
-	req := larkim.NewCreateImageReqBuilder().
-		Body(
-			larkim.NewCreateImageReqBodyBuilder().
-				ImageType(larkim.ImageTypeMessage).
-				Image(picResp.Body).
-				Build(),
-		).
-		Build()
-	resp, err := larkClient.Im.Image.Create(ctx, req)
+	larkImgs := make([]*database.LarkImg, 0)
+	err = database.GetDbConnection().
+		Table("betago.lark_imgs").
+		Find(&database.LarkImg{SongID: musicID}).
+		First(&larkImgs).Error
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
-		return nil, nil
+		log.ZapLogger.Error("get lark img from db error", zaplog.Error(err))
+
+		picResp, err := http.Get(imageURL)
+
+		req := larkim.NewCreateImageReqBuilder().
+			Body(
+				larkim.NewCreateImageReqBodyBuilder().
+					ImageType(larkim.ImageTypeMessage).
+					Image(picResp.Body).
+					Build(),
+			).
+			Build()
+		resp, err := larkClient.Im.Image.Create(ctx, req)
+		if err != nil {
+			log.ZapLogger.Error(err.Error())
+			return nil, ""
+		}
+		err = database.GetDbConnection().
+			Table("betago.lark_imgs").
+			Find(database.LarkImg{SongID: musicID}).
+			FirstOrCreate(&database.LarkImg{SongID: musicID, ImgKey: *resp.Data.ImageKey}).Error
+		if err != nil {
+			log.ZapLogger.Warn("create lark img in db error", zaplog.Error(err))
+			return nil, *resp.Data.ImageKey
+		}
+
+		return err, *resp.Data.ImageKey
 	}
-	return err, resp
+	return nil, larkImgs[0].ImgKey
 }
 
 func UploadPicBatch(ctx context.Context, sourceURLIDs map[string]int) chan [2]string {

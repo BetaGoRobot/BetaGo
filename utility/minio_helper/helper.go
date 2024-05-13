@@ -21,16 +21,19 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+type minioUploadStage func(m *MinioManager)
+
 // MinioManager minio上传管理上下文
 type MinioManager struct {
 	context.Context
-	span        trace.Span
-	bucketName  string
-	objName     string
-	err         error
-	file        io.ReadCloser
-	expiration  *time.Time
-	contentType ct.ContentType
+	span           trace.Span
+	bucketName     string
+	objName        string
+	err            error
+	file           io.ReadCloser
+	expiration     *time.Time
+	contentType    ct.ContentType
+	inputTransFunc minioUploadStage
 }
 
 // Client 返回一个新的minioManager Client
@@ -75,18 +78,17 @@ func (m *MinioManager) SetBucketName(bucketName string) *MinioManager {
 //	@author heyuhengmatt
 //	@update 2024-05-13 01:54:24
 func (m *MinioManager) SetFileFromURL(url string) *MinioManager {
-	_, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
-	defer span.End()
-	m.span.SetAttributes(attribute.Key("url").String(url))
-
-	resp, err := requests.Req().SetContext(m.Context).SetDoNotParseResponse(true).Get(url)
-	if err != nil {
-		log.ZapLogger.Error("Get file failed", zaplog.Error(err))
-		m.err = err
-		m.span.SetStatus(2, err.Error())
-		return m
+	m.inputTransFunc = func(m *MinioManager) {
+		m.span.SetAttributes(attribute.Key("url").String(url))
+		resp, err := requests.Req().SetContext(m.Context).SetDoNotParseResponse(true).Get(url)
+		if err != nil {
+			log.ZapLogger.Error("Get file failed", zaplog.Error(err))
+			m.err = err
+			m.span.SetStatus(2, err.Error())
+			return
+		}
+		m.file = resp.RawResponse.Body
 	}
-	m.file = resp.RawResponse.Body
 	return m
 }
 
@@ -122,14 +124,16 @@ func (m *MinioManager) SetFileFromString(s string) *MinioManager {
 //	@author heyuhengmatt
 //	@update 2024-05-13 01:54:39
 func (m *MinioManager) SetFileFromPath(path string) *MinioManager {
-	m.span.SetAttributes(attribute.Key("path").String(path))
-
-	reader, err := os.Open(path)
-	if err != nil {
-		panic(err)
+	m.inputTransFunc = func(m *MinioManager) {
+		m.span.SetAttributes(attribute.Key("path").String(path))
+		reader, err := os.Open(path)
+		if err != nil {
+			panic(err)
+		}
+		r := io.NopCloser(reader)
+		m.file = r
 	}
-	r := io.NopCloser(reader)
-	m.file = r
+
 	return m
 }
 
@@ -195,7 +199,9 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	u = new(url.URL)
 	defer m.span.End()
 	defer m.addTracePresigned(u)
-
+	if m.file != nil {
+		defer m.file.Close()
+	}
 	opts := minio.PutObjectOptions{
 		ContentType: m.contentType.String(),
 	}
@@ -205,6 +211,7 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	err = m.tryGetFile(u)
 	if err != nil {
 		m.addTraceCached(false)
+		m.inputTransFunc(m)
 		log.ZapLogger.Warn("tryGetFile failed", zaplog.Error(err))
 		err = m.uploadFile(opts)
 		if err != nil {
@@ -219,7 +226,10 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 
 // 此函数会修改入参，不返回err外的值
 func (m *MinioManager) tryGetFile(u *url.URL) (err error) {
-	shareURL, err := minioTryGetFile(m, m.bucketName, m.objName)
+	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
+	defer span.End()
+
+	shareURL, err := minioTryGetFile(ctx, m.bucketName, m.objName)
 	if err != nil {
 		log.ZapLogger.Warn(err.Error())
 		return
@@ -232,7 +242,10 @@ func (m *MinioManager) tryGetFile(u *url.URL) (err error) {
 }
 
 func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
-	err = minioUploadReader(m, m.bucketName, m.file, m.objName, opts)
+	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
+	defer span.End()
+
+	err = minioUploadReader(ctx, m.bucketName, m.file, m.objName, opts)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 		return
@@ -241,5 +254,22 @@ func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
 }
 
 func (m *MinioManager) presignURL() (u *url.URL, err error) {
-	return presignObj(m, m.bucketName, m.objName)
+	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
+	defer span.End()
+
+	return presignObj(ctx, m.bucketName, m.objName)
+}
+
+// Run 启动上传
+//
+//	@receiver m *MinioManager
+//	@param ctx context.Context
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:13
+func (m *MinioManager) Run(ctx context.Context) *MinioManager {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, "UploadToMinio")
+	m.Context = ctx
+	m.span = span
+	return m
 }
