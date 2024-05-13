@@ -33,7 +33,7 @@ func StartUpMessage(session *kook.Session) (err error) {
 	RestartAuthorID, _ := redis.GetRedisClient().GetDel(context.Background(), "RestartAuthorID").Result()
 	utility.SendMessageTempAndDelete(RestartTargetID, RestartMsgID, RestartAuthorID, "重启成功。")
 	// StartUp for debug:
-	currentIP, err := utility.GetPubIP()
+	currentIPv4, currentIPv6, err := utility.GetPubIP()
 	if err != nil {
 		return
 	}
@@ -44,7 +44,8 @@ func StartUpMessage(session *kook.Session) (err error) {
 			[]string{
 				"Name: \t**", consts.RobotName, "**\n",
 				"Time: \t**", time.Now().Add(time.Hour * 8).Local().Format("2006-01-02 15:04:05"), "**\n",
-				"IP: \t**", currentIP, "**\n",
+				"IPv4: \t**", currentIPv4, "**\n",
+				"IPv6: \t**", currentIPv6, "**\n",
 				"Message: \t**" + env.GitCommitMessage + "**\n",
 				"Commit-Page: \t[CommitPage](", fmt.Sprintf("https://github.com/BetaGoRobot/BetaGo/commit/%s", env.GithubSha), ")\n",
 				"LeaveYourCommentHere: \t[CommentPage](", consts.CommentsURL, ")\n",
@@ -127,7 +128,7 @@ func StartUpMessage(session *kook.Session) (err error) {
 //	@param session
 //	@return err
 func OfflineMessage(session *kook.Session) (err error) {
-	currentIP, err := utility.GetPubIP()
+	currentIPv4, currentIPv6, err := utility.GetPubIP()
 	if err != nil {
 		return
 	}
@@ -135,7 +136,8 @@ func OfflineMessage(session *kook.Session) (err error) {
 	content := strings.Join([]string{
 		"Name: \t**", consts.RobotName, "**\n",
 		"Time: \t**", time.Now().Add(time.Hour * 8).Format("2006-01-02 15:04:05"), "**\n",
-		"IP: \t**", currentIP, "**\n",
+		"IPv4: \t**", currentIPv4, "**\n",
+		"IPv6: \t**", currentIPv6, "**\n",
 		"Message: \t**", consts.CommitMessage, "**\n",
 		"Commit-Page: \t[CommitPage](", consts.HTMLURL, ")\n",
 		"LeaveYourCommentHere: \t[CommentPage](", consts.CommentsURL, ")\n",
