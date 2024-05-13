@@ -18,7 +18,7 @@ var (
 
 // Database
 const (
-	DBHostCompose = "host=pg.kmhomelab.cn"
+	DBHostCompose = "host=betago-pg"
 	// DBHostCluster k8s的PGHost
 	DBHostCluster = "host=kubernetes.default"
 	// DBHostTest 本地测试的PGHost
@@ -106,6 +106,7 @@ var (
 	BetaGoTest    = os.Getenv("IS_TEST") == "true"
 	IsTest        = os.Getenv("IS_TEST") == "true"
 	IsCluster     = os.Getenv("IS_CLUSTER") == "true"
+	IsCompose     = os.Getenv("IS_COMPOSE") == "true"
 	CommandPrefix = "(met)" + RobotID + "(met)"
 )
 

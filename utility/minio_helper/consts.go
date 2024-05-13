@@ -28,6 +28,8 @@ func init() {
 	if consts.IsCluster {
 		endPoint = "192.168.31.74:29000"
 		useSSL = false
+	} else if consts.IsCompose {
+		endPoint = "192.168.31.74:29000"
 	}
 	// }
 	minioClient, err = minio.New(endPoint, &minio.Options{

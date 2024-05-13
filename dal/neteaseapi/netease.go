@@ -38,6 +38,8 @@ func init() {
 	} else if consts.IsCluster {
 		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
 		time.Sleep(time.Second * 10) // 等待本地网络启动
+	} else if consts.IsCompose {
+		NetEaseAPIBaseURL = "http://netease_api:3335"
 	}
 
 	startUpCtx := context.Background()

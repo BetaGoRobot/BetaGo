@@ -131,7 +131,7 @@ func GetDbConnection() *gorm.DB {
 	} else if consts.IsCluster {
 		dsn = consts.DBHostCluster + fmt.Sprintf(dsn, "5432")
 	} else {
-		dsn = consts.DBHostCompose + fmt.Sprintf(dsn, "3033")
+		dsn = consts.DBHostCompose + fmt.Sprintf(dsn, "5432")
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{

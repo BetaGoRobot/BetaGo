@@ -21,6 +21,8 @@ func init() {
 		qqmusicBaseURL = "http://192.168.31.74:3300"
 	} else if consts.IsCluster {
 		qqmusicBaseURL = "http://kubernetes.default:3300"
+	} else if consts.IsCompose {
+		qqmusicBaseURL = "http://192.168.31.74:3300"
 	}
 }
 
