@@ -204,13 +204,8 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 func (m *MinioManager) tryGetFile() (u *url.URL, err error) {
 	shareURL, err := minioTryGetFile(m, m.bucketName, m.objName)
 	if err != nil {
-		if e, ok := err.(minio.ErrorResponse); ok {
-			err = nil
-			log.ZapLogger.Warn(e.Error())
-		} else {
-			log.ZapLogger.Error(err.Error())
-			return
-		}
+		log.ZapLogger.Warn(err.Error())
+		return
 	}
 	if shareURL != nil {
 		u = shareURL
