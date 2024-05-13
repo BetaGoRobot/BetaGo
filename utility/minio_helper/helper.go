@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
+	"github.com/BetaGoRobot/BetaGo/utility"
 
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -74,6 +75,8 @@ func (m *MinioManager) SetBucketName(bucketName string) *MinioManager {
 //	@author heyuhengmatt
 //	@update 2024-05-13 01:54:24
 func (m *MinioManager) SetFileFromURL(url string) *MinioManager {
+	_, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
+	defer span.End()
 	m.span.SetAttributes(attribute.Key("url").String(url))
 
 	resp, err := requests.Req().SetContext(m.Context).SetDoNotParseResponse(true).Get(url)
