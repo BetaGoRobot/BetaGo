@@ -211,7 +211,9 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	err = m.tryGetFile(u)
 	if err != nil {
 		m.addTraceCached(false)
-		m.inputTransFunc(m)
+		if m.inputTransFunc != nil {
+			m.inputTransFunc(m)
+		}
 		log.ZapLogger.Warn("tryGetFile failed", zaplog.Error(err))
 		err = m.uploadFile(opts)
 		if err != nil {
