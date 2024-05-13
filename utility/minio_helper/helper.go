@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
+	"github.com/BetaGoRobot/BetaGo/utility"
 
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -106,7 +107,7 @@ func (m *MinioManager) SetExpiration(expiration time.Time) *MinioManager {
 	return m
 }
 
-func (m *MinioManager) UploadFile() (u *url.URL, err error) {
+func (m *MinioManager) Upload() (u *url.URL, err error) {
 	defer m.span.End()
 	opts := minio.PutObjectOptions{
 		ContentType: m.contentType.String(),
@@ -114,10 +115,53 @@ func (m *MinioManager) UploadFile() (u *url.URL, err error) {
 	if m.expiration != nil {
 		opts.Expires = *m.expiration
 	}
-	return MinioUploadFileFromReadCloser(m,
-		m.file,
-		m.bucketName,
-		m.objName,
-		opts,
-	)
+	u, err = m.tryGetFile()
+	if err != nil {
+		log.ZapLogger.Warn("tryGetFile failed", zaplog.Error(err))
+	}
+	err = m.uploadFile(opts)
+	if err != nil {
+		log.ZapLogger.Error("uploadFile failed", zaplog.Error(err))
+		return
+	}
+	return m.presignURL()
+}
+
+func (m *MinioManager) tryGetFile() (u *url.URL, err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
+	defer span.End()
+
+	shareURL, err := MinioTryGetFile(ctx, m.bucketName, m.objName)
+	if err != nil {
+		if e, ok := err.(minio.ErrorResponse); ok {
+			err = nil
+			log.ZapLogger.Warn(e.Error())
+		} else {
+			log.ZapLogger.Error(err.Error())
+			return
+		}
+	}
+	if shareURL != nil {
+		u = shareURL
+		span.SetAttributes(attribute.Bool("hit_cache", true))
+		return
+	}
+	span.SetAttributes(attribute.Bool("hit_cache", false))
+	return
+}
+
+func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
+	defer span.End()
+
+	MinioUploadReader(ctx, m.bucketName, m.file, m.objName, opts)
+	if err != nil {
+		log.ZapLogger.Error(err.Error())
+		return
+	}
+	return
+}
+
+func (m *MinioManager) presignURL() (u *url.URL, err error) {
+	return PresignObj(m, m.bucketName, m.objName)
 }

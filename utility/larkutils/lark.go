@@ -38,7 +38,7 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 			SetFileFromURL(imageURL).
 			SetObjName("picture/" + musicID + filepath.Ext(imageURL)).
 			SetContentType(ct.ContentTypeImgJPEG).
-			UploadFile()
+			Upload()
 		if err != nil {
 			log.ZapLogger.Warn("upload pic to minio error", zaplog.String("imageURL", imageURL), zaplog.String("imageKey", *resp.Data.ImageKey))
 			err = nil

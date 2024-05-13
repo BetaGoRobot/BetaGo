@@ -225,7 +225,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 		SetObjName("QRCode/" + strconv.Itoa(int(time.Now().Unix())) + ".png").
 		SetContentType(ct.ContentTypeImgPNG).
 		SetExpiration(time.Now().Add(time.Hour)).
-		UploadFile()
+		Upload()
 	if err != nil {
 		return err
 	}
@@ -453,7 +453,7 @@ func uploadMusic(ctx context.Context, url string, ID string) {
 		SetFileFromURL(url).
 		SetObjName("music/" + ID + filepath.Ext(url)).
 		SetContentType(ct.ContentTypeAudio).
-		UploadFile()
+		Upload()
 	if err != nil {
 		log.ZapLogger.Warn("[PreUploadMusic] Get minio url failed...", zaplog.Error(err))
 	}
@@ -496,7 +496,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, musicIDNa
 			SetFileFromURL(URL).
 			SetObjName("music/" + ID + filepath.Ext(music.Data[index].URL)).
 			SetContentType(ct.ContentTypeAudio).
-			UploadFile()
+			Upload()
 		if err != nil {
 			log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 		} else {
@@ -536,7 +536,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ctx context.Context, ID string) (u
 		SetFileFromURL(URL).
 		SetObjName("music/" + ID + filepath.Ext(URL)).
 		SetContentType(ct.ContentTypeAudio).
-		UploadFile()
+		Upload()
 	if err != nil {
 		log.ZapLogger.Error("Get minio url failed, will use raw url", zaplog.Error(err))
 	} else {
@@ -578,7 +578,7 @@ func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, musicID string)
 			SetFileFromURL(picURL).
 			SetObjName("picture/" + musicID + filepath.Ext(picURL)).
 			SetContentType(ct.ContentTypeImgJPEG).
-			UploadFile()
+			Upload()
 		if err != nil {
 			log.ZapLogger.Error(err.Error())
 		}
@@ -625,7 +625,7 @@ func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) 
 		SetFileFromString(lyricJson).
 		SetObjName("lyrics/" + songID + ".json").
 		SetContentType(ct.ContentTypePlainText).
-		UploadFile()
+		Upload()
 	if err != nil {
 		log.ZapLogger.Error("upload lyrics failed", zaplog.Error(err))
 		return
