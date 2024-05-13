@@ -116,14 +116,17 @@ func (m *minioManager) Upload() (u *url.URL, err error) {
 	}
 	u, err = m.tryGetFile()
 	if err != nil {
+		m.span.SetAttributes(attribute.Bool("hit_cache", false))
 		log.ZapLogger.Warn("tryGetFile failed", zaplog.Error(err))
+		err = m.uploadFile(opts)
+		if err != nil {
+			log.ZapLogger.Error("uploadFile failed", zaplog.Error(err))
+			return
+		}
+		return m.presignURL()
 	}
-	err = m.uploadFile(opts)
-	if err != nil {
-		log.ZapLogger.Error("uploadFile failed", zaplog.Error(err))
-		return
-	}
-	return m.presignURL()
+	m.span.SetAttributes(attribute.Bool("hit_cache", true))
+	return
 }
 
 func (m *minioManager) tryGetFile() (u *url.URL, err error) {
