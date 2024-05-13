@@ -21,11 +21,9 @@ func presignObj(ctx context.Context, bucketName, objName string) (u *url.URL, er
 
 	u, err = minioClient.PresignedGetObject(ctx, bucketName, objName, env.OSS_EXPIRATION_TIME, nil)
 	if err != nil {
-		span.SetAttributes(attribute.Key("hit_cache").Bool(false))
 		log.ZapLogger.Error(err.Error())
 		return
 	}
-	span.SetAttributes(attribute.Key("hit_cache").Bool(true))
 
 	newURL := shorter.GenAKA(u)
 	if newURL != nil {

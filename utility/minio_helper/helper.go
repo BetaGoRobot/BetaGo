@@ -171,6 +171,16 @@ func (m *MinioManager) SetExpiration(expiration time.Time) *MinioManager {
 	return m
 }
 
+func (m *MinioManager) addTracePresigned(u *url.URL) {
+	if u != nil {
+		m.span.SetAttributes(attribute.String("presigned_url", u.String()))
+	}
+}
+
+func (m *MinioManager) addTraceCached(hit bool) {
+	m.span.SetAttributes(attribute.Bool("hit_cache", hit))
+}
+
 // Upload  上传文件
 //
 //	@receiver m *MinioManager
@@ -180,6 +190,8 @@ func (m *MinioManager) SetExpiration(expiration time.Time) *MinioManager {
 //	@update 2024-05-13 01:55:04
 func (m *MinioManager) Upload() (u *url.URL, err error) {
 	defer m.span.End()
+	defer m.addTracePresigned(u)
+
 	opts := minio.PutObjectOptions{
 		ContentType: m.contentType.String(),
 	}
@@ -188,7 +200,7 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	}
 	u, err = m.tryGetFile()
 	if err != nil {
-		m.span.SetAttributes(attribute.Bool("hit_cache", false))
+		m.addTraceCached(false)
 		log.ZapLogger.Warn("tryGetFile failed", zaplog.Error(err))
 		err = m.uploadFile(opts)
 		if err != nil {
@@ -197,7 +209,7 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 		}
 		return m.presignURL()
 	}
-	m.span.SetAttributes(attribute.Bool("hit_cache", true))
+	m.addTraceCached(false)
 	return
 }
 
