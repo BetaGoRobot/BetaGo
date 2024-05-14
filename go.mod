@@ -15,13 +15,13 @@ replace (
 require (
 	github.com/bytedance/sonic v1.11.6
 	github.com/carlmjohnson/requests v0.23.5
+	github.com/disintegration/imaging v1.6.2
 	github.com/dlclark/regexp2 v1.11.0
 	github.com/enescakir/emoji v1.0.0
 	github.com/fasthttp/router v1.5.0
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gotify/go-api-client/v2 v2.0.4
-	github.com/h2non/bimg v1.1.9
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
 	github.com/kevinmatthe/zaplog v0.1.6
