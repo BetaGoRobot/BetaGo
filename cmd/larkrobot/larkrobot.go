@@ -17,7 +17,6 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 
 	"github.com/bytedance/sonic"
-	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkcard "github.com/larksuite/oapi-sdk-go/v3/card"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	"github.com/larksuite/oapi-sdk-go/v3/core/httpserverext"
@@ -27,8 +26,6 @@ import (
 	larkws "github.com/larksuite/oapi-sdk-go/v3/ws"
 	"go.opentelemetry.io/otel/attribute"
 )
-
-var larkClient *lark.Client = lark.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Getenv("LARK_SECRET"))
 
 func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
@@ -41,7 +38,11 @@ func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg 
 	}
 	listMsg := larkcards.NewSearchListCard()
 	for _, item := range res {
-		listMsg.AddColumn(ctx, item.ImageKey, item.Name, item.ArtistName, item.ID)
+		var invalid bool
+		if item.SongURL == "" { // 无效歌曲
+			invalid = true
+		}
+		listMsg.AddColumn(ctx, item.ImageKey, item.Name, item.ArtistName, item.ID, invalid)
 	}
 	listMsg.AddJaegerTracer(ctx, span)
 	cardStr, err := sonic.MarshalString(listMsg)
@@ -61,7 +62,7 @@ func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg 
 		).MessageId(*event.Event.Message.MessageId).
 		Build()
 	_, subSpan := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	resp, err := larkClient.Im.V1.Message.Reply(ctx, req)
+	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
 	subSpan.End()
 
 	if err != nil {
@@ -77,8 +78,10 @@ func longConn() { // 注册事件回调
 		OnP2MessageReceiveV1(
 			func(ctx context.Context, event *larkim.P2MessageReceiveV1) error {
 				ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+				defer larkutils.RecoverMsg(ctx, *event.Event.Message.MessageId)
 				span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 				defer span.End()
+
 				stamp, err := strconv.ParseInt(*event.Event.Message.CreateTime, 10, 64)
 				if err != nil {
 					panic(err)
@@ -189,7 +192,7 @@ func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) 
 	req := larkim.NewReplyMessageReqBuilder().Body(
 		larkim.NewReplyMessageReqBodyBuilder().Content(cardStr).MsgType(larkim.MsgTypeInteractive).ReplyInThread(false).Uuid(msgID + musicID).Build(),
 	).MessageId(msgID).Build()
-	resp, err := larkClient.Im.V1.Message.Reply(ctx, req)
+	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
 		return
 	}
@@ -214,7 +217,7 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 	req := larkim.NewReplyMessageReqBuilder().Body(
 		larkim.NewReplyMessageReqBodyBuilder().Content(cardStr).MsgType(larkim.MsgTypeInteractive).ReplyInThread(false).Uuid(msgID).Build(),
 	).MessageId(msgID).Build()
-	resp, err := larkClient.Im.V1.Message.Reply(ctx, req)
+	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
 		return
 	}
@@ -225,6 +228,7 @@ func webHook() {
 	// 创建 card 处理器
 	cardHandler := larkcard.NewCardActionHandler(os.Getenv("LARK_VERIFICATION"), os.Getenv("LARK_ENCRYPTION"), func(ctx context.Context, cardAction *larkcard.CardAction) (interface{}, error) {
 		ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+		defer larkutils.RecoverMsg(ctx, cardAction.OpenMessageID)
 		span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(cardAction)))
 		defer span.End()
 

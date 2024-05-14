@@ -15,8 +15,6 @@ import (
 func ResizeIMGFromReader(ctx context.Context, r io.ReadCloser) (output io.ReadCloser) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
-
-	defer r.Close()
 	src, _, err := image.Decode(r)
 	if err != nil {
 		log.ZapLogger.Error("read image error", zaplog.Error(err))

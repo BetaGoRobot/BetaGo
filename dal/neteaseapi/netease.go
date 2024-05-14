@@ -440,6 +440,10 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByIDs(ctx context.Context, musicIDs
 	for index := range music.Data {
 		ID := strconv.Itoa(music.Data[index].ID)
 		URL := music.Data[index].URL
+		if URL == "" {
+			log.ZapLogger.Warn("[PreUploadMusic] Get minio url failed...", zaplog.Error(err))
+			continue
+		}
 		musicIDURL[ID] = URL
 		go uploadMusic(ctx, URL, ID)
 	}

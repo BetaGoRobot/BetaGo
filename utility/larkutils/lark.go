@@ -21,7 +21,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var larkClient *lark.Client = lark.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Getenv("LARK_SECRET"))
+var LarkClient *lark.Client = lark.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Getenv("LARK_SECRET"))
 
 func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS bool) (key string, ossURL string, err error) { // also minio
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
@@ -81,7 +81,7 @@ func Upload2Lark(ctx context.Context, musicID, imageURL string) (err error, imgK
 					Build(),
 			).
 			Build()
-		resp, err := larkClient.Im.Image.Create(ctx, req)
+		resp, err := LarkClient.Im.Image.Create(ctx, req)
 		if err != nil {
 			log.ZapLogger.Error(err.Error())
 			return nil, ""

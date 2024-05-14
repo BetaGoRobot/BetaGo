@@ -85,6 +85,7 @@ type SearchListElement struct {
 	ScaleType          string            `json:"scale_type,omitempty"`
 	Alt                *Alt              `json:"alt,omitempty"`
 	Preview            bool              `json:"preview,omitempty"`
+	Disabled           bool              `json:"disabled,omitempty"`
 }
 
 type Alt struct {
@@ -106,11 +107,16 @@ func NewSearchListCard() *SearchListCard {
 	}
 }
 
-func (c *SearchListCard) AddColumn(ctx context.Context, imgKey, title, artist, musicID string) {
+func (c *SearchListCard) AddColumn(ctx context.Context, imgKey, title, artist, musicID string, invalid bool) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
-
+	buttonContent := "选择歌曲"
+	buttonDisabled := false
+	if invalid {
+		buttonContent = "歌曲失效"
+		buttonDisabled = true
+	}
 	columnTextButton := &SearchListColumn{
 		Tag:           "column",
 		Width:         "weighted",
@@ -126,7 +132,7 @@ func (c *SearchListCard) AddColumn(ctx context.Context, imgKey, title, artist, m
 				Tag: "button",
 				Text: &Text{
 					Tag:     "plain_text",
-					Content: "选择歌曲",
+					Content: buttonContent,
 				},
 				Type:               "default",
 				ComplexInteraction: true,
@@ -135,6 +141,7 @@ func (c *SearchListCard) AddColumn(ctx context.Context, imgKey, title, artist, m
 				Value: map[string]string{
 					"show_music": musicID,
 				},
+				Disabled: buttonDisabled,
 			},
 		},
 		Weight: 1,

@@ -199,6 +199,11 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	u = new(url.URL)
 	defer m.span.End()
 	defer m.addTracePresigned(u)
+	defer func() {
+		if err := recover(); err != nil {
+			log.ZapLogger.Error("panic", zaplog.Any("panic", err))
+		}
+	}()
 	if m.file != nil {
 		defer m.file.Close()
 	}
