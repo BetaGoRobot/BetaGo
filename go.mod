@@ -21,6 +21,7 @@ require (
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gotify/go-api-client/v2 v2.0.4
+	github.com/h2non/bimg v1.1.9
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
 	github.com/kevinmatthe/zaplog v0.1.6

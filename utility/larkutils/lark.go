@@ -2,7 +2,7 @@ package larkutils
 
 import (
 	"context"
-	"net/http"
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,6 +14,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/BetaGo/utility/requests"
 	"github.com/kevinmatthe/zaplog"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -65,13 +66,18 @@ func Upload2Lark(ctx context.Context, musicID, imageURL string) (err error, imgK
 	if err != nil {
 		log.ZapLogger.Error("get lark img from db error", zaplog.Error(err))
 
-		picResp, err := http.Get(imageURL)
+		picResp, err := requests.Req().SetDoNotParseResponse(true).Get(imageURL)
+		if err != nil {
+			log.ZapLogger.Error("get pic from url error", zaplog.Error(err))
+			return err, imgKey
+		}
 
+		bodyReader := utility.ResizeIMGFromReader(ctx, picResp.RawBody())
 		req := larkim.NewCreateImageReqBuilder().
 			Body(
 				larkim.NewCreateImageReqBodyBuilder().
 					ImageType(larkim.ImageTypeMessage).
-					Image(picResp.Body).
+					Image(bodyReader).
 					Build(),
 			).
 			Build()
@@ -79,6 +85,9 @@ func Upload2Lark(ctx context.Context, musicID, imageURL string) (err error, imgK
 		if err != nil {
 			log.ZapLogger.Error(err.Error())
 			return nil, ""
+		}
+		if resp.Err != nil {
+			return errors.New("error with code" + strconv.Itoa(resp.Code)), ""
 		}
 		imgKey := *resp.Data.ImageKey
 		err = database.GetDbConnection().
