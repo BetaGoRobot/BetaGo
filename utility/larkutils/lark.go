@@ -83,7 +83,7 @@ func Upload2Lark(ctx context.Context, musicID, imageURL string) (err error, imgK
 		imgKey := *resp.Data.ImageKey
 		err = database.GetDbConnection().
 			Table("betago.lark_imgs").
-			Find(database.LarkImg{SongID: musicID}).
+			Find(&database.LarkImg{SongID: musicID}).
 			FirstOrCreate(&database.LarkImg{SongID: musicID, ImgKey: imgKey}).Error
 		if err != nil {
 			log.ZapLogger.Warn("create lark img in db error", zaplog.Error(err))
