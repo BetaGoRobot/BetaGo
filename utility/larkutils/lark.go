@@ -3,12 +3,12 @@ package larkutils
 import (
 	"context"
 	"errors"
-	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
+	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
@@ -21,7 +21,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var LarkClient *lark.Client = lark.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Getenv("LARK_SECRET"))
+var LarkClient *lark.Client = lark.NewClient(env.LarkAppID, env.LarkAppSecret)
 
 func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS bool) (key string, ossURL string, err error) { // also minio
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())

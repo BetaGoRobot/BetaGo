@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/larkcards"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -51,12 +52,13 @@ func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg 
 	}
 
 	fmt.Println(cardStr)
+	// larkutils.SendEphemeral(ctx, *event.Event.Message.ChatId, *event.Event.Sender.SenderId.OpenId, cardStr)
 	req := larkim.NewReplyMessageReqBuilder().
 		Body(
 			larkim.NewReplyMessageReqBodyBuilder().
 				Content(cardStr).
 				MsgType(larkim.MsgTypeInteractive).
-				ReplyInThread(false).
+				ReplyInThread(true).
 				Uuid(*event.Event.Message.MessageId).
 				Build(),
 		).MessageId(*event.Event.Message.MessageId).
@@ -107,7 +109,7 @@ func longConn() { // 注册事件回调
 			},
 		)
 	// 创建Client
-	cli := larkws.NewClient(os.Getenv("LARK_CLIENT_ID"), os.Getenv("LARK_SECRET"),
+	cli := larkws.NewClient(env.LarkAppID, env.LarkAppSecret,
 		larkws.WithEventHandler(eventHandler),
 		larkws.WithLogLevel(larkcore.LogLevelInfo),
 	)
@@ -190,7 +192,7 @@ func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) 
 	cardStr := GetCardMusicByPage(ctx, musicID, page)
 	fmt.Println(cardStr)
 	req := larkim.NewReplyMessageReqBuilder().Body(
-		larkim.NewReplyMessageReqBodyBuilder().Content(cardStr).MsgType(larkim.MsgTypeInteractive).ReplyInThread(false).Uuid(msgID + musicID).Build(),
+		larkim.NewReplyMessageReqBodyBuilder().Content(cardStr).MsgType(larkim.MsgTypeInteractive).ReplyInThread(true).Uuid(msgID + musicID).Build(),
 	).MessageId(msgID).Build()
 	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
@@ -215,7 +217,7 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 	cardStr := larkcards.GenFullLyricsCard(ctx, songDetail.Name, songDetail.Ar[0].Name, left, right)
 
 	req := larkim.NewReplyMessageReqBuilder().Body(
-		larkim.NewReplyMessageReqBodyBuilder().Content(cardStr).MsgType(larkim.MsgTypeInteractive).ReplyInThread(false).Uuid(msgID).Build(),
+		larkim.NewReplyMessageReqBodyBuilder().Content(cardStr).MsgType(larkim.MsgTypeInteractive).ReplyInThread(true).Uuid(msgID).Build(),
 	).MessageId(msgID).Build()
 	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
