@@ -3,7 +3,6 @@ package miniohelper
 import (
 	"os"
 
-	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -25,12 +24,6 @@ func init() {
 	// } else {
 	endPoint = "minioapi.kmhomelab.cn"
 	useSSL = true
-	if consts.IsCluster {
-		endPoint = "192.168.31.74:29000"
-		useSSL = false
-	} else if consts.IsCompose {
-		endPoint = "192.168.31.74:29000"
-	}
 	// }
 	minioClient, err = minio.New(endPoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
