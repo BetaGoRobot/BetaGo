@@ -18,7 +18,7 @@ var (
 
 // Database
 const (
-	DBHostCompose = "host=betago-pg"
+	DBHostCompose = "host=betago_pg"
 	// DBHostCluster k8s的PGHost
 	DBHostCluster = "host=kubernetes.default"
 	// DBHostTest 本地测试的PGHost
