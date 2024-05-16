@@ -34,13 +34,28 @@ type MinioManager struct {
 	expiration     *time.Time
 	contentType    ct.ContentType
 	inputTransFunc minioUploadStage
+	needAKA        bool
 }
 
 // Client 返回一个新的minioManager Client
 func Client() *MinioManager {
 	return &MinioManager{
 		Context: context.Background(),
+		needAKA: true,
 	}
+}
+
+// SetNeedAKA 设置上下文
+//
+//	@receiver m *MinioManager
+//	@param ctx context.Context
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:13
+func (m *MinioManager) SetNeedAKA(needAKA bool) *MinioManager {
+	m.span.SetAttributes(attribute.Bool("needAKA", needAKA))
+	m.needAKA = needAKA
+	return m
 }
 
 // SetContext  设置上下文
@@ -236,7 +251,7 @@ func (m *MinioManager) tryGetFile(u *url.URL) (err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
 	defer span.End()
 
-	shareURL, err := minioTryGetFile(ctx, m.bucketName, m.objName)
+	shareURL, err := minioTryGetFile(ctx, m.bucketName, m.objName, m.needAKA)
 	if err != nil {
 		log.ZapLogger.Warn(err.Error())
 		return
@@ -264,7 +279,7 @@ func (m *MinioManager) presignURL() (u *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
 	defer span.End()
 
-	return presignObj(ctx, m.bucketName, m.objName)
+	return presignObj(ctx, m.bucketName, m.objName, m.needAKA)
 }
 
 // Run 启动上传

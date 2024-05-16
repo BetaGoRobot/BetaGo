@@ -39,7 +39,7 @@ func init() {
 		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
 		time.Sleep(time.Second * 10) // 等待本地网络启动
 	} else if consts.IsCompose {
-		NetEaseAPIBaseURL = "http://netease_api:3335"
+		NetEaseAPIBaseURL = "http://192.168.31.74:3335"
 	}
 
 	startUpCtx := context.Background()
@@ -223,6 +223,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 	neteaseCtx.getQRBase64(ctx)
 	linkURL, err := miniohelper.Client().
 		SetContext(ctx).
+		SetNeedAKA(false).
 		SetBucketName("cloudmusic").
 		SetFileFromReader(qrImgReadCloser(ctx, neteaseCtx.qrStruct.qrBase64)).
 		SetObjName("QRCode/" + strconv.Itoa(int(time.Now().Unix())) + ".png").
@@ -230,6 +231,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 		SetExpiration(time.Now().Add(time.Hour)).
 		Upload()
 	if err != nil {
+		log.ZapLogger.Error("upload QRCode failed", zaplog.Error(err))
 		return err
 	}
 

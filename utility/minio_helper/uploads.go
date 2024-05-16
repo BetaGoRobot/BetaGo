@@ -15,7 +15,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func presignObj(ctx context.Context, bucketName, objName string) (u *url.URL, err error) {
+func presignObj(ctx context.Context, bucketName, objName string, needAKA bool) (u *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
@@ -24,17 +24,18 @@ func presignObj(ctx context.Context, bucketName, objName string) (u *url.URL, er
 		log.ZapLogger.Error(err.Error())
 		return
 	}
-
-	newURL := shorter.GenAKA(u)
-	if newURL != nil {
-		u = newURL
+	if needAKA {
+		newURL := shorter.GenAKA(u)
+		if newURL != nil {
+			u = newURL
+		}
 	}
 
 	log.ZapLogger.Info("Presined file with url", zaplog.String("presigned_url", u.String()))
 	return
 }
 
-func minioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.URL, err error) {
+func minioTryGetFile(ctx context.Context, bucketName, ObjName string, needAKA bool) (url *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("MinioTryGetFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
@@ -43,7 +44,7 @@ func minioTryGetFile(ctx context.Context, bucketName, ObjName string) (url *url.
 	if err != nil {
 		return
 	}
-	return presignObj(ctx, bucketName, ObjName)
+	return presignObj(ctx, bucketName, ObjName, needAKA)
 }
 
 func minioUploadReader(ctx context.Context, bucketName string, file io.ReadCloser, objName string, opts minio.PutObjectOptions) (err error) {
