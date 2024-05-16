@@ -257,21 +257,21 @@ func (neteaseCtx *NetEaseContext) LoginNetEase(ctx context.Context) (err error) 
 	defer span.End()
 
 	log.ZapLogger.Info("LoginNetEase...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
-	if len(neteaseCtx.cookies) > 0 {
+
+	// !Step1:检查登陆状态
+	if neteaseCtx.CheckIfLogin(ctx) {
+		log.ZapLogger.Info("Already login")
+		if neteaseCtx.loginType != "qr" {
+			// 已登陆，刷新登陆
+			err = neteaseCtx.RefreshLogin(ctx)
+		}
 		return
 	}
+
 	if phoneNum, password := env.NETEASE_EMAIL, env.NETEASE_PASSWORD; phoneNum == "" && password == "" {
 		log.ZapLogger.Info("Empty NetEase account and password")
 		return
 	}
-	// !Step1:检查登陆状态
-	if neteaseCtx.CheckIfLogin(ctx) {
-		log.ZapLogger.Info("Already login")
-		// 已登陆，刷新登陆
-		err = neteaseCtx.RefreshLogin(ctx)
-		return
-	}
-
 	// !Step2:未登陆，启动登陆
 	resp, err := consts.HttpClient.R().
 		SetCookies(neteaseCtx.cookies).
