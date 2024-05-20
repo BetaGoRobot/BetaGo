@@ -101,12 +101,3 @@ jobs:
           gotify_app_token: '${{ secrets.GOTIFY_APP_TOKEN }}'
           notification_title: '${{ env.ROBOT_NAME }} Build Complete'
           notification_message: 'Your build was completed.'
-      - name: Docker Scout
-        id: docker-scout
-        uses: docker/scout-action@v1
-        with:
-          command: cves,recommendations,compare
-          to-latest: true
-          ignore-base: true
-          ignore-unchanged: true
-          only-fixed: true

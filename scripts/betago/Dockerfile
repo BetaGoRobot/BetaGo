@@ -10,8 +10,8 @@ RUN cd cmd/betago && CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s" -o beta
     upx -9 -o betaGo betaGo-source
 
 
-FROM ghcr.io/betagorobot/betago-chrome:master as runner
-# FROM scratch as runner
+# FROM ghcr.io/betagorobot/betago-chrome:master as runner
+FROM alpine as runner
 
 ARG ROBOT_NAME \
     ROBOT_ID \
