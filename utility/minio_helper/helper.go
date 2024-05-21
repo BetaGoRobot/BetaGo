@@ -196,6 +196,8 @@ func (m *MinioManager) SetExpiration(expiration time.Time) *MinioManager {
 func (m *MinioManager) addTracePresigned(u *url.URL) {
 	if u != nil {
 		m.span.SetAttributes(attribute.String("presigned_url", u.String()))
+	} else {
+		log.ZapLogger.Error("presigned url is nil")
 	}
 }
 
