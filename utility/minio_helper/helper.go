@@ -253,7 +253,7 @@ func (m *MinioManager) tryGetFile(u *url.URL) (err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
 	defer span.End()
 
-	shareURL, err := minioTryGetFile(ctx, m.bucketName, m.objName, m.needAKA)
+	shareURL, err := MinioTryGetFile(ctx, m.bucketName, m.objName, m.needAKA)
 	if err != nil {
 		log.ZapLogger.Warn(err.Error())
 		return

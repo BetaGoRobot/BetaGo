@@ -35,7 +35,7 @@ func presignObj(ctx context.Context, bucketName, objName string, needAKA bool) (
 	return
 }
 
-func minioTryGetFile(ctx context.Context, bucketName, ObjName string, needAKA bool) (url *url.URL, err error) {
+func MinioTryGetFile(ctx context.Context, bucketName, ObjName string, needAKA bool) (url *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("MinioTryGetFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
