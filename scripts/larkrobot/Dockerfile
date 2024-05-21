@@ -8,7 +8,7 @@ RUN apk add vips-dev g++
 
 RUN unzip betago.zip
 
-RUN cd cmd/larkrobot && CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s" -o betaGo-source ./*.go && \
+RUN cd cmd/larkrobot && go build -mod vendor -ldflags="-w -s" -o betaGo-source ./*.go && \
     upx -9 -o betaGo betaGo-source
 
 
