@@ -180,8 +180,8 @@ github.com/gotify/go-api-client/v2/client/user
 github.com/gotify/go-api-client/v2/client/version
 github.com/gotify/go-api-client/v2/gotify
 github.com/gotify/go-api-client/v2/models
-# github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1
-## explicit; go 1.19
+# github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0
+## explicit; go 1.20
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/httprule
 github.com/grpc-ecosystem/grpc-gateway/v2/runtime
 github.com/grpc-ecosystem/grpc-gateway/v2/utilities
@@ -230,11 +230,18 @@ github.com/json-iterator/go
 github.com/kevinmatthe/zaplog
 # github.com/klauspost/compress v1.17.8
 ## explicit; go 1.20
+github.com/klauspost/compress
 github.com/klauspost/compress/flate
+github.com/klauspost/compress/fse
 github.com/klauspost/compress/gzip
+github.com/klauspost/compress/huff0
+github.com/klauspost/compress/internal/cpuinfo
 github.com/klauspost/compress/internal/race
+github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/s2
 github.com/klauspost/compress/zlib
+github.com/klauspost/compress/zstd
+github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/klauspost/cpuid/v2 v2.2.7
 ## explicit; go 1.15
 github.com/klauspost/cpuid/v2
@@ -399,7 +406,7 @@ github.com/opentracing/opentracing-go/log
 # github.com/patrickmn/go-cache v2.1.0+incompatible
 ## explicit
 github.com/patrickmn/go-cache
-# github.com/phuslu/log v1.0.99
+# github.com/phuslu/log v1.0.100
 ## explicit; go 1.18
 github.com/phuslu/log
 # github.com/prometheus/client_golang v1.19.1
@@ -414,7 +421,7 @@ github.com/prometheus/client_model/go
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
 github.com/prometheus/common/model
-# github.com/prometheus/procfs v0.14.0
+# github.com/prometheus/procfs v0.15.0
 ## explicit; go 1.21
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
@@ -466,7 +473,7 @@ github.com/twitchyliquid64/golang-asm/unsafeheader
 # github.com/valyala/bytebufferpool v1.0.0
 ## explicit
 github.com/valyala/bytebufferpool
-# github.com/valyala/fasthttp v1.52.0
+# github.com/valyala/fasthttp v1.53.0
 ## explicit; go 1.20
 github.com/valyala/fasthttp
 github.com/valyala/fasthttp/fasthttputil
@@ -605,13 +612,13 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# google.golang.org/genproto/googleapis/api v0.0.0-20240509183442-62759503f434
-## explicit; go 1.19
+# google.golang.org/genproto/googleapis/api v0.0.0-20240520151616-dc85e6b867a5
+## explicit; go 1.20
 google.golang.org/genproto/googleapis/api/httpbody
-# google.golang.org/genproto/googleapis/rpc v0.0.0-20240509183442-62759503f434
-## explicit; go 1.19
+# google.golang.org/genproto/googleapis/rpc v0.0.0-20240520151616-dc85e6b867a5
+## explicit; go 1.20
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.63.2
+# google.golang.org/grpc v1.64.0
 ## explicit; go 1.19
 google.golang.org/grpc
 google.golang.org/grpc/attributes
