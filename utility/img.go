@@ -1,31 +1,28 @@
 package utility
 
 import (
-	"bytes"
 	"context"
-	"image"
+	"fmt"
 	"io"
+	"os"
 
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
-	"github.com/disintegration/imaging"
+	"github.com/h2non/bimg"
 	"github.com/kevinmatthe/zaplog"
 )
 
-func ResizeIMGFromReader(ctx context.Context, r io.ReadCloser) (output io.ReadCloser) {
+func ResizeIMGFromReader(ctx context.Context, r io.ReadCloser) (output []byte) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, GetCurrentFunc())
 	defer span.End()
-	src, _, err := image.Decode(r)
+	imgBody, err := io.ReadAll(r)
 	if err != nil {
 		log.ZapLogger.Error("read image error", zaplog.Error(err))
 		return
 	}
-	src = imaging.Resize(src, 512, 512, imaging.Lanczos)
-	buff := bytes.Buffer{}
-	err = imaging.Encode(&buff, src, imaging.JPEG, imaging.JPEGQuality(95))
+	newImage, err := bimg.NewImage(imgBody).Resize(512, 512)
 	if err != nil {
-		log.ZapLogger.Error("encode image error", zaplog.Error(err))
-		return
+		fmt.Fprintln(os.Stderr, err)
 	}
-	return io.NopCloser(&buff)
+	return newImage
 }

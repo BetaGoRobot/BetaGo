@@ -4,6 +4,8 @@ COPY betago.zip /data/
 
 WORKDIR /data/
 
+RUN apk add vips-dev g++
+
 RUN unzip betago.zip
 
 RUN cd cmd/betago && CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s" -o betaGo-source ./*.go &&\
@@ -11,7 +13,7 @@ RUN cd cmd/betago && CGO_ENABLED=0 go build -mod vendor -ldflags="-w -s" -o beta
 
 
 # FROM ghcr.io/betagorobot/betago-chrome:master as runner
-FROM alpine as runner
+FROM kevinmatt/libvips as runner
 
 ARG ROBOT_NAME \
     ROBOT_ID \
