@@ -43,10 +43,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Login Private
-        uses: nick-fields/retry@v2
-        with:
-          command: ssh-add - <<< "${{ secrets.NETEASE_DEPLOY_PRIVATE_KEY }}"
       - name: Build image
         uses: nick-fields/retry@v2
         with:
