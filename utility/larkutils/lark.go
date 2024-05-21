@@ -28,6 +28,7 @@ var LarkClient *lark.Client = lark.NewClient(env.LarkAppID, env.LarkAppSecret)
 func getAndResizePicFromURL(ctx context.Context, imageURL string) (res []byte, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
+	defer span.End()
 
 	picResp, err := requests.Req().SetDoNotParseResponse(true).Get(imageURL)
 	if err != nil {
