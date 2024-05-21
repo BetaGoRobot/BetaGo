@@ -20,7 +20,7 @@ func ResizeIMGFromReader(ctx context.Context, r io.ReadCloser) (output io.ReadCl
 		log.ZapLogger.Error("read image error", zaplog.Error(err))
 		return
 	}
-	imaging.Resize(src, 512, 512, imaging.Lanczos)
+	src = imaging.Resize(src, 512, 512, imaging.Lanczos)
 	buff := bytes.Buffer{}
 	err = imaging.Encode(&buff, src, imaging.JPEG, imaging.JPEGQuality(95))
 	if err != nil {
