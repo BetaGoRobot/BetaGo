@@ -90,18 +90,16 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 			if u != nil {
 				ossURL = u.String()
 			}
-		} else {
-			u, err := miniohelper.MinioTryGetFile(ctx, "cloudmusic", "picture/"+musicID+filepath.Ext(imageURL), true)
-			if err != nil {
-				log.ZapLogger.Warn("get pic from minio error", zaplog.Error(err))
-				err = nil
-			}
-			if u != nil {
-				ossURL = u.String()
-			}
 		}
 	}
-
+	u, err := miniohelper.MinioTryGetFile(ctx, "cloudmusic", "picture/"+musicID+filepath.Ext(imageURL), true)
+	if err != nil {
+		log.ZapLogger.Warn("get pic from minio error", zaplog.Error(err))
+		err = nil
+	}
+	if u != nil {
+		ossURL = u.String()
+	}
 	return imgKey, ossURL, err
 }
 
