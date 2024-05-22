@@ -8,7 +8,7 @@ RUN apk add vips-dev g++
 
 RUN unzip betago.zip
 
-RUN cd cmd/betago && go build -mod vendor -ldflags="-w -s" -o betaGo-source ./*.go &&\
+RUN cd cmd/betago && go build -ldflags="-w -s" -o betaGo-source ./*.go &&\
     upx -9 -o betaGo betaGo-source
 
 
