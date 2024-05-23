@@ -2,6 +2,7 @@ package miniohelper
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/url"
 	"os"
@@ -251,12 +252,10 @@ func (m *MinioManager) tryGetFile() (shareURL *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
 	defer span.End()
 
-	shareURL, err = MinioTryGetFile(ctx, m.bucketName, m.objName, m.needAKA)
-	if err != nil {
-		log.ZapLogger.Warn(err.Error())
-		return
+	if MinioCheckFileExists(ctx, m.bucketName, m.objName) {
+		return m.presignURL()
 	}
-	return
+	return nil, errors.New("file not exists")
 }
 
 func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
@@ -274,6 +273,7 @@ func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
 func (m *MinioManager) presignURL() (u *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
 	defer span.End()
+	defer m.addTracePresigned(u)
 
 	return presignObj(ctx, m.bucketName, m.objName, m.needAKA)
 }
