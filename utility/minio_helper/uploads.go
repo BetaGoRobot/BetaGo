@@ -24,13 +24,14 @@ func presignObj(ctx context.Context, bucketName, objName string, needAKA bool) (
 		log.ZapLogger.Error(err.Error())
 		return
 	}
+	span.SetAttributes(attribute.String("presigned_url", u.String()))
 	if needAKA {
 		newURL := shorter.GenAKA(u)
 		if newURL != nil {
 			u = newURL
 		}
 	}
-
+	span.SetAttributes(attribute.String("presigned_url_shortened", u.String()))
 	log.ZapLogger.Info("Presined file with url", zaplog.String("presigned_url", u.String()))
 	return
 }

@@ -219,12 +219,6 @@ func (m *MinioManager) addTraceCached(hit bool) {
 func (m *MinioManager) Upload() (u *url.URL, err error) {
 	u = new(url.URL)
 	defer m.span.End()
-	defer m.addTracePresigned(u)
-	defer func() {
-		if err := recover(); err != nil {
-			log.ZapLogger.Error("panic", zaplog.Any("panic", err))
-		}
-	}()
 	if m.file != nil {
 		defer m.file.Close()
 	}
@@ -234,7 +228,7 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	if m.expiration != nil {
 		opts.Expires = *m.expiration
 	}
-	err = m.tryGetFile(u)
+	u, err = m.tryGetFile()
 	if err != nil {
 		m.addTraceCached(false)
 		if m.inputTransFunc != nil {
@@ -253,17 +247,13 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 }
 
 // 此函数会修改入参，不返回err外的值
-func (m *MinioManager) tryGetFile(u *url.URL) (err error) {
+func (m *MinioManager) tryGetFile() (shareURL *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
 	defer span.End()
 
-	shareURL, err := MinioTryGetFile(ctx, m.bucketName, m.objName, m.needAKA)
+	shareURL, err = MinioTryGetFile(ctx, m.bucketName, m.objName, m.needAKA)
 	if err != nil {
 		log.ZapLogger.Warn(err.Error())
-		return
-	}
-	if shareURL != nil {
-		*u = *shareURL // copy值
 		return
 	}
 	return
