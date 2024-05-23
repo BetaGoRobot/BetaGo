@@ -20,20 +20,36 @@ func presignObj(ctx context.Context, bucketName, objName string, needAKA bool) (
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
+	u, err = presignObjInner(ctx, bucketName, objName)
+	span.SetAttributes(attribute.String("presigned_url", u.String()))
+	if needAKA {
+		u = shortenURL(ctx, u)
+	}
+	span.SetAttributes(attribute.String("presigned_url_shortened", u.String()))
+	log.ZapLogger.Info("Presined file with url", zaplog.String("presigned_url", u.String()))
+	return
+}
+
+func presignObjInner(ctx context.Context, bucketName, objName string) (u *url.URL, err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
 	u, err = minioClient.PresignedGetObject(ctx, bucketName, objName, env.OSS_EXPIRATION_TIME, nil)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 		return
 	}
-	if needAKA {
-		newURL := shorter.GenAKA(u)
-		if newURL != nil {
-			u = newURL
-		}
-	}
-	span.SetAttributes(attribute.String("presigned_url_shortened", u.String()))
-	log.ZapLogger.Info("Presined file with url", zaplog.String("presigned_url", u.String()))
 	return
+}
+
+func shortenURL(ctx context.Context, u *url.URL) *url.URL {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	if shortenedURL := shorter.GenAKA(u); shortenedURL != nil {
+		return shortenedURL
+	}
+	return u
 }
 
 func MinioTryGetFile(ctx context.Context, bucketName, ObjName string, needAKA bool) (url *url.URL, err error) {

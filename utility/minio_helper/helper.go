@@ -273,9 +273,17 @@ func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
 func (m *MinioManager) presignURL() (u *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
 	defer span.End()
-	defer m.addTracePresigned(u)
 
-	return presignObj(ctx, m.bucketName, m.objName, m.needAKA)
+	u, err = presignObjInner(ctx, m.bucketName, m.objName)
+	if err != nil {
+		return
+	}
+	m.span.SetAttributes(attribute.String("presigned_url", u.String()))
+	if m.needAKA {
+		u = shortenURL(ctx, u)
+		m.span.SetAttributes(attribute.String("presigned_url_shortened", u.String()))
+	}
+	return
 }
 
 // Run 启动上传
