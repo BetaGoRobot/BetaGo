@@ -18,7 +18,7 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/dlclark/regexp2 v1.11.0
 	github.com/enescakir/emoji v1.0.0
-	github.com/fasthttp/router v1.5.0
+	github.com/fasthttp/router v1.5.1
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gotify/go-api-client/v2 v2.0.4
@@ -38,7 +38,7 @@ require (
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/spyzhov/ajson v0.9.1
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.47
-	github.com/valyala/fasthttp v1.53.0
+	github.com/valyala/fasthttp v1.54.0
 	github.com/wcharczuk/go-chart/v2 v2.1.1
 	go.opentelemetry.io/otel v1.27.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.27.0
