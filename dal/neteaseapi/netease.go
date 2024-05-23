@@ -684,7 +684,7 @@ func asyncUploadPics(ctx context.Context, musicInfos searchMusic) map[string]str
 		wg = &sync.WaitGroup{}
 		m  = make(map[string]string, 1)
 	)
-	go func() {
+	go func(ctx context.Context) {
 		defer close(c)
 		defer wg.Wait()
 
@@ -692,7 +692,7 @@ func asyncUploadPics(ctx context.Context, musicInfos searchMusic) map[string]str
 			wg.Add(1)
 			go uploadPicWorker(ctx, wg, m.Al.PicURL, m.ID, c)
 		}
-	}()
+	}(ctx)
 	for res := range c {
 		m[res[1]] = res[0]
 	}
