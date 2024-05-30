@@ -38,7 +38,7 @@ require (
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/spyzhov/ajson v0.9.1
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.47
-	github.com/valyala/fasthttp v1.53.0
+	github.com/valyala/fasthttp v1.54.0
 	github.com/wcharczuk/go-chart/v2 v2.1.1
 	go.opentelemetry.io/otel v1.27.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.27.0
