@@ -13,7 +13,7 @@ replace (
 )
 
 require (
-	github.com/bytedance/sonic v1.11.7
+	github.com/bytedance/sonic v1.11.8
 	github.com/carlmjohnson/requests v0.23.5
 	github.com/disintegration/imaging v1.6.2
 	github.com/dlclark/regexp2 v1.11.0
