@@ -33,7 +33,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.70
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/phuslu/log v1.0.100
+	github.com/phuslu/log v1.0.101
 	github.com/prometheus/client_golang v1.19.1
 	github.com/redis/go-redis/v9 v9.5.1
 	github.com/spyzhov/ajson v0.9.1
