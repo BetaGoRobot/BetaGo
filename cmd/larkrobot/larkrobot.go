@@ -33,7 +33,11 @@ func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg 
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
 
-	res, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(ctx, strings.Split(msg, " ")[1:]...)
+	keywords := strings.Split(msg, " ")[1:]
+	if keyword := strings.ToLower(strings.Join(keywords, " ")); keyword == "try panic" {
+		panic("try panic!")
+	}
+	res, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(ctx, keywords...)
 	if err != nil {
 		return err
 	}
