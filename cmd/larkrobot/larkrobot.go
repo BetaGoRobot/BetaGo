@@ -29,6 +29,7 @@ import (
 )
 
 func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg string) (err error) {
+	defer larkutils.RecoverMsg(ctx, *event.Event.Message.MessageId)
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
