@@ -30,7 +30,7 @@ require (
 	github.com/lonelyevil/kook v0.0.33
 	github.com/lonelyevil/kook/log_adapter/plog v0.0.34
 	github.com/mdaverde/jsonpath v0.2.1
-	github.com/minio/minio-go/v7 v7.0.70
+	github.com/minio/minio-go/v7 v7.0.71
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phuslu/log v1.0.102
