@@ -107,8 +107,6 @@ func Upload2Lark(ctx context.Context, musicID string, bodyReader io.ReadCloser) 
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
-	log.ZapLogger.Error("get lark img from db error", zaplog.Error(err))
-
 	req := larkim.NewCreateImageReqBuilder().
 		Body(
 			larkim.NewCreateImageReqBodyBuilder().
