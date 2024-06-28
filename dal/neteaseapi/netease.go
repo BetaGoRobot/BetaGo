@@ -39,7 +39,7 @@ func init() {
 		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
 		time.Sleep(time.Second * 10) // 等待本地网络启动
 	} else if consts.IsCompose {
-		NetEaseAPIBaseURL = "http://192.168.31.74:3335"
+		NetEaseAPIBaseURL = "http://netease-api:3335"
 	}
 
 	startUpCtx := context.Background()
@@ -67,7 +67,7 @@ func init() {
 					log.ZapLogger.Info("error in refresh login")
 				}
 			}
-			time.Sleep(time.Second * 60)
+			time.Sleep(time.Second * 300)
 		}
 	}()
 }
@@ -167,7 +167,7 @@ func (neteaseCtx *NetEaseContext) checkQRStatus(ctx context.Context) (err error)
 		once := &sync.Once{}
 		for {
 
-			time.Sleep(time.Second * 1)
+			time.Sleep(time.Second * 2)
 			resp, err := consts.HttpClient.R().
 				SetFormData(map[string]string{"key": neteaseCtx.qrStruct.uniKey}).
 				SetQueryParam("timestamp", fmt.Sprint(time.Now().Unix())).
@@ -236,7 +236,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 	}
 
 	gotify.SendMessage(ctx, "网易云登录", fmt.Sprintf("![QRCode](%s)", linkURL.String()), 7)
-	go neteaseCtx.checkQRStatus(ctx)
+	neteaseCtx.checkQRStatus(ctx)
 	return
 }
 
