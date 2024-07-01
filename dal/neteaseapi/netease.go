@@ -646,7 +646,9 @@ func mergeLyrics(lyrics, translatedLyrics string) string {
 			panic(err)
 		}
 		if match != nil {
-			lyricsMap[match.GroupByName("time").String()] = match.GroupByName("line").String()
+			if lyric := match.GroupByName("line").String(); lyric != "" {
+				lyricsMap[match.GroupByName("time").String()] = lyric
+			}
 		}
 	}
 	for _, line := range strings.Split(translatedLyrics, "\n") {
@@ -655,11 +657,16 @@ func mergeLyrics(lyrics, translatedLyrics string) string {
 			panic(err)
 		}
 		if match != nil {
-			lyricsMap[match.GroupByName("time").String()] += "\n" + match.GroupByName("line").String()
+			if lyric := match.GroupByName("line").String(); lyric != "" {
+				lyricsMap[match.GroupByName("time").String()] += "\n" + lyric
+			}
 		}
 	}
 	resStr := ""
 	for _, line := range lyricsMap {
+		if line == "" {
+			continue
+		}
 		if resStr != "" {
 			resStr += "\n" + line
 		} else {
