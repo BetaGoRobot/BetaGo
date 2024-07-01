@@ -75,3 +75,7 @@ func TestNetEaseContext_LoginNetEaseQR(t *testing.T) {
 	}
 	c.LoginNetEaseQR(ctx)
 }
+
+func TestNetEaseContext_GetLyrics(t *testing.T) {
+	NetEaseGCtx.GetLyrics(context.Background(), "423228325")
+}

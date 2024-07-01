@@ -24,6 +24,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
 	"github.com/bytedance/sonic"
+	"github.com/dlclark/regexp2"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/kevinmatthe/zaplog"
 	"go.opentelemetry.io/otel/attribute"
@@ -34,7 +35,7 @@ const netEaseQRTmpFile = "/data/tmp"
 func init() {
 	// 测试环境，使用本地网易云代理
 	if consts.IsTest {
-		NetEaseAPIBaseURL = "http://192.168.31.74:3335"
+		NetEaseAPIBaseURL = "http://192.168.31.74:3336"
 	} else if consts.IsCluster {
 		NetEaseAPIBaseURL = "http://kubernetes.default:3335"
 		time.Sleep(time.Second * 10) // 等待本地网络启动
@@ -630,8 +631,42 @@ func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) 
 		log.ZapLogger.Error("upload lyrics failed", zaplog.Error(err))
 		return
 	}
+	lyricsMerged := mergeLyrics(searchLyrics.Lrc.Lyric, searchLyrics.Tlyric.Lyric)
+	return lyricsMerged, l.String()
+}
 
-	return searchLyrics.Lrc.Lyric, l.String()
+func mergeLyrics(lyrics, translatedLyrics string) string {
+	re := regexp2.MustCompile(`\[(?P<time>.*)\](?P<line>.*)`, regexp2.RE2)
+
+	lyricsMap := map[string]string{}
+	lines := strings.Split(lyrics, "\n")
+	for _, line := range lines {
+		match, err := re.FindStringMatch(line)
+		if err != nil {
+			panic(err)
+		}
+		if match != nil {
+			lyricsMap[match.GroupByName("time").String()] = match.GroupByName("line").String()
+		}
+	}
+	for _, line := range strings.Split(translatedLyrics, "\n") {
+		match, err := re.FindStringMatch(line)
+		if err != nil {
+			panic(err)
+		}
+		if match != nil {
+			lyricsMap[match.GroupByName("time").String()] += "\n" + match.GroupByName("line").String()
+		}
+	}
+	resStr := ""
+	for _, line := range lyricsMap {
+		if resStr != "" {
+			resStr += "\n" + line
+		} else {
+			resStr = line
+		}
+	}
+	return resStr
 }
 
 // SearchMusicByKeyWord 通过关键字搜索歌曲
