@@ -1,6 +1,7 @@
 package neteaseapi
 
 import (
+	"cmp"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -663,15 +665,24 @@ func mergeLyrics(lyrics, translatedLyrics string) string {
 		}
 	}
 	resStr := ""
-	for _, line := range lyricsMap {
+	type lineStruct struct {
+		time string
+		line string
+	}
+	lyricsLines := make([]*lineStruct, 0)
+	for time, line := range lyricsMap {
 		if line == "" {
 			continue
 		}
-		if resStr != "" {
-			resStr += "\n" + line
-		} else {
-			resStr = line
-		}
+		lyricsLines = append(lyricsLines, &lineStruct{
+			time, line,
+		})
+	}
+	slices.SortFunc(lyricsLines, func(i, j *lineStruct) int {
+		return cmp.Compare(i.time, j.time)
+	})
+	for _, line := range lyricsLines {
+		resStr += line.line + "\n"
 	}
 	return resStr
 }
