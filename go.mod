@@ -17,7 +17,7 @@ require (
 	github.com/carlmjohnson/requests v0.23.5
 	github.com/dlclark/regexp2 v1.11.0
 	github.com/enescakir/emoji v1.0.0
-	github.com/fasthttp/router v1.5.1
+	github.com/fasthttp/router v1.5.2
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gotify/go-api-client/v2 v2.0.4
@@ -102,7 +102,7 @@ require (
 	github.com/prometheus/common v0.53.0 // indirect
 	github.com/prometheus/procfs v0.15.0 // indirect
 	github.com/rs/xid v1.5.0 // indirect
-	github.com/savsgio/gotils v0.0.0-20240303185622-093b76447511 // indirect
+	github.com/savsgio/gotils v0.0.0-20240704082632-aef3928b8a38 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	go.mongodb.org/mongo-driver v1.15.0 // indirect
