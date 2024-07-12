@@ -47,8 +47,8 @@ func RepeatMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
 		repeatConfigCache.Set(*event.Event.Message.ChatId, true, cache.DefaultExpiration)
 	}
 
-	// 开始摇骰子, 默认概率1%
-	realRate := 1
+	// 开始摇骰子, 默认概率10%
+	realRate := utility.MustAtoI(utility.GetEnvWithDefault("REPEAT_DEFAULT_RATE", "10"))
 	if rate, exists := repeatWordRateCache.Get(msg); exists {
 		if r := rate.(int); r > 0 {
 			repeatWordRateCache.Set(msg, rate.(int)-1, cache.DefaultExpiration)
