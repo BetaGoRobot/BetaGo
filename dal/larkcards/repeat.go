@@ -50,8 +50,8 @@ func RepeatMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
 	// 开始摇骰子, 默认概率10%
 	realRate := utility.MustAtoI(utility.GetEnvWithDefault("REPEAT_DEFAULT_RATE", "10"))
 	if rate, exists := repeatWordRateCache.Get(msg); exists {
-		if r := rate.(int); r > 0 {
-			repeatWordRateCache.Set(msg, rate.(int)-1, cache.DefaultExpiration)
+		if r := rate.(int); r != -1 {
+			repeatWordRateCache.Set(msg, rate.(int), cache.DefaultExpiration)
 			realRate = r
 		}
 	} else {
@@ -59,12 +59,10 @@ func RepeatMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
 			Word: msg,
 		}
 		database.GetDbConnection().Find(&wordRate)
-		if wordRate.Rate == 0 {
-			repeatWordRateCache.Set(msg, 1, cache.DefaultExpiration)
-			return
+		if wordRate.Rate != 0 && wordRate.Rate != -1 {
+			realRate = wordRate.Rate
 		}
-		repeatWordRateCache.Set(msg, wordRate.Rate, cache.DefaultExpiration)
-		realRate = wordRate.Rate
+		repeatWordRateCache.Set(msg, realRate, cache.DefaultExpiration)
 	}
 	if utility.Probability(float64(realRate) / 100) {
 		// sendMsg
