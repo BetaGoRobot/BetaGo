@@ -97,6 +97,7 @@ func longConn() { // 注册事件回调
 					return nil
 				}
 				if !larkcards.IsMentioned(event.Event.Message.Mentions) || *event.Event.Sender.SenderId.OpenId == larkcards.BotOpenID {
+					larkcards.RepeatMessage(ctx, event)
 					return nil
 				}
 				msgMap := make(map[string]interface{})

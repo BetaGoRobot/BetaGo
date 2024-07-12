@@ -51,6 +51,15 @@ type DynamicConfig struct {
 	Value string `json:"value" gorm:"primaryKey"`
 }
 
+type RepeatWhitelist struct {
+	GuildID string `json:"guild_id" gorm:"primaryKey"`
+}
+
+type RepeatWordsRate struct {
+	Word string `json:"word" gorm:"primaryKey"`
+	Rate int    `json:"rate"`
+}
+
 // ChannelLogExt  is the struct of channel log
 type ChannelLogExt struct {
 	UserID      string `json:"user_id" gorm:"primaryKey"`
@@ -98,6 +107,8 @@ func init() {
 		&ChatRecordLog{},
 		&DynamicConfig{},
 		&LarkImg{},
+		&RepeatWhitelist{},
+		&RepeatWordsRate{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))
