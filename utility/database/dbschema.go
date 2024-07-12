@@ -107,8 +107,8 @@ func init() {
 		&ChatRecordLog{},
 		&DynamicConfig{},
 		&LarkImg{},
-		&RepeatWhitelist{},
-		&RepeatWordsRate{},
+		// &RepeatWhitelist{},
+		// &RepeatWordsRate{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))
