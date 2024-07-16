@@ -2,7 +2,6 @@ package larkdal
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -20,34 +19,38 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
+func isOutDated(createTime string) bool {
+	stamp, err := strconv.ParseInt(createTime, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	return time.Now().Sub(time.UnixMilli(stamp)) > time.Second*10
+}
+
+// MessageV2Handler Repeat
+//
+//	@param ctx
+//	@param event
+//	@return error
 func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer larkutils.RecoverMsg(ctx, *event.Event.Message.MessageId)
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
 
-	stamp, err := strconv.ParseInt(*event.Event.Message.CreateTime, 10, 64)
-	if err != nil {
-		panic(err)
-	}
-	if time.Now().Sub(time.Unix(stamp/1000, 0)) > time.Second*10 {
+	if isOutDated(*event.Event.Message.CreateTime) {
 		return nil
 	}
+
 	if !IsMentioned(event.Event.Message.Mentions) || *event.Event.Sender.SenderId.OpenId == BotOpenID {
-		larkhandler.MainLarkHandler.RunParallelStages(ctx, event)
+		go larkhandler.MainLarkHandler.RunStages(ctx, event)
+		go larkhandler.MainLarkHandler.RunParallelStages(ctx, event)
 		return nil
 	}
-	msgMap := make(map[string]interface{})
-	msg := *event.Event.Message.Content
-	err = sonic.UnmarshalString(msg, &msgMap)
-	if err != nil {
-		return err
-	}
-	if text, ok := msgMap["text"]; ok {
-		msg = text.(string)
-	}
+
+	msg := larkutils.PreGetTextMsg(ctx, event)
 	go getMusicAndSend(ctx, event, msg)
-	fmt.Println(larkcore.Prettify(event))
+	log.ZapLogger.Info(larkcore.Prettify(event))
 	return nil
 }
 

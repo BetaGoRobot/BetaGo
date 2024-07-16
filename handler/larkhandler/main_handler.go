@@ -6,5 +6,6 @@ var MainLarkHandler = &LarkMsgProcessor{}
 func init() {
 	MainLarkHandler = MainLarkHandler.
 		AddParallelStages(&RepeatMsgOperator{}).
-		AddParallelStages(&ReactMsgOperator{})
+		AddParallelStages(&ReactMsgOperator{}).
+		AddParallelStages(&WordReplyMsgOperator{})
 }

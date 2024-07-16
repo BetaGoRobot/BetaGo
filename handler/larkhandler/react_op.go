@@ -2,7 +2,9 @@ package larkhandler
 
 import (
 	"context"
+	"errors"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -27,6 +29,10 @@ type ReactMsgOperator struct {
 //	@param event
 //	@return err
 func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+	// 先判断群聊的功能启用情况
+	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomReact) {
+		return errors.New("Not enabled")
+	}
 	return
 }
 

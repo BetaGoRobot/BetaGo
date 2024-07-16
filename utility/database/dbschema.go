@@ -62,6 +62,22 @@ type ReactionWhitelist struct {
 	GuildID string `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
 }
 
+type FunctionEnabling struct {
+	GuildID  string                  `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
+	Function consts.LarkFunctionEnum `json:"function" gorm:"primaryKey;autoIncrement:false"`
+}
+
+type QuoteReplyMsg struct {
+	SubStr string `json:"sub_str" gorm:"primaryKey;autoIncrement:false"`
+	Reply  string `json:"reply"`
+}
+
+type QuoteReplyMsgCustom struct {
+	GuildID string `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
+	SubStr  string `json:"sub_str" gorm:"primaryKey;autoIncrement:false"`
+	Reply   string `json:"reply"`
+}
+
 type RepeatWordsRate struct {
 	Word string `json:"word" gorm:"primaryKey;autoIncrement:false"`
 	Rate int    `json:"rate"`
@@ -115,8 +131,11 @@ func init() {
 		&DynamicConfig{},
 		&LarkImg{},
 		&ReactionWhitelist{},
-		// &RepeatWhitelist{},
-		// &RepeatWordsRate{},
+		&RepeatWhitelist{},
+		&RepeatWordsRate{},
+		&QuoteReplyMsg{},
+		&QuoteReplyMsgCustom{},
+		&FunctionEnabling{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))

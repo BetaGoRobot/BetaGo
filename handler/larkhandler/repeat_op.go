@@ -2,7 +2,9 @@ package larkhandler
 
 import (
 	"context"
+	"errors"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -18,6 +20,10 @@ var _ LarkMsgOperator = &RepeatMsgOperator{}
 type RepeatMsgOperator struct{}
 
 func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+	// 先判断群聊的功能启用情况
+	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
+		return errors.New("Not enabled")
+	}
 	return
 }
 
@@ -26,23 +32,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 	defer span.End()
 
 	// Repeat
-	msg := PreGetTextMsg(ctx, event)
-	// 先判断群聊的功能启用情况
-	if enabled, exists := repeatConfigCache.Get(*event.Event.Message.ChatId); exists {
-		// 缓存中已存在，直接取值
-		if !enabled.(bool) {
-			return
-		}
-	} else {
-		// 缓存中不存在，从数据库中取值
-		var count int64
-		database.GetDbConnection().Find(&database.RepeatWhitelist{GuildID: *event.Event.Message.ChatId}).Count(&count)
-		if count == 0 {
-			repeatConfigCache.Set(*event.Event.Message.ChatId, false, cache.DefaultExpiration)
-			return
-		}
-		repeatConfigCache.Set(*event.Event.Message.ChatId, true, cache.DefaultExpiration)
-	}
+	msg := larkutils.PreGetTextMsg(ctx, event)
 
 	// 开始摇骰子, 默认概率10%
 	realRate := utility.MustAtoI(utility.GetEnvWithDefault("REPEAT_DEFAULT_RATE", "10"))
@@ -69,7 +59,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 				ReceiveId(*event.Event.Message.ChatId).
 				Content(textMsg).
 				MsgType(larkim.MsgTypeText).
-				Uuid(*event.Event.Message.MessageId).
+				Uuid(*event.Event.Message.MessageId + "repeat").
 				Build(),
 		).Build()
 		resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
