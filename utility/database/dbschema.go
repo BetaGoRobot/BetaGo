@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
@@ -13,6 +14,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 )
+
+var dbOnce = &sync.Once{}
 
 // LarkImg is
 type LarkImg struct {
@@ -123,8 +126,8 @@ func init() {
 	if err != nil {
 		log.ZapLogger.Panic(" get sql db error")
 	}
-	sqlDb.SetMaxIdleConns(2)
-	sqlDb.SetMaxOpenConns(5)
+	sqlDb.SetMaxIdleConns(10)
+	sqlDb.SetMaxOpenConns(100)
 	sqlDb.SetConnMaxLifetime(time.Minute * 10)
 
 	// // 启动时，清空所有的超时Channel log
@@ -138,27 +141,28 @@ func init() {
 //
 //	@return *gorm.DB
 func GetDbConnection() *gorm.DB {
-	if consts.GlobalDBConn != nil {
-		return consts.GlobalDBConn
-	}
-	var dsn string = " user=postgres password=heyuheng1.22.3 dbname=betago port=%s sslmode=disable TimeZone=Asia/Shanghai application_name=" + consts.RobotName
-	if consts.IsTest {
-		dsn = consts.DBHostTest + fmt.Sprintf(dsn, "15432")
-	} else if consts.IsCluster {
-		dsn = consts.DBHostCluster + fmt.Sprintf(dsn, "5432")
-	} else {
-		dsn = consts.DBHostCompose + fmt.Sprintf(dsn, "5432")
-	}
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		NamingStrategy: schema.NamingStrategy{
-			TablePrefix:   "betago.",
-			SingularTable: false,
+	dbOnce.Do(
+		func() {
+			var dsn string = " user=postgres password=heyuheng1.22.3 dbname=betago port=%s sslmode=disable TimeZone=Asia/Shanghai application_name=" + consts.RobotName
+			if consts.IsTest {
+				dsn = consts.DBHostTest + fmt.Sprintf(dsn, "15432")
+			} else if consts.IsCluster {
+				dsn = consts.DBHostCluster + fmt.Sprintf(dsn, "5432")
+			} else {
+				dsn = consts.DBHostCompose + fmt.Sprintf(dsn, "5432")
+			}
+			var err error
+			consts.GlobalDBConn, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+				NamingStrategy: schema.NamingStrategy{
+					TablePrefix:   "betago.",
+					SingularTable: false,
+				},
+			})
+			if err != nil {
+				log.ZapLogger.Error("get db connection error, will try local version", zaplog.Error(err))
+				return
+			}
 		},
-	})
-	if err != nil {
-		log.ZapLogger.Error("get db connection error, will try local version", zaplog.Error(err))
-		return nil
-	}
-	consts.GlobalDBConn = db
+	)
 	return consts.GlobalDBConn
 }
