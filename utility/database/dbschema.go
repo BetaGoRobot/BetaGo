@@ -52,15 +52,15 @@ type DynamicConfig struct {
 }
 
 type RepeatWhitelist struct {
-	GuildID string `json:"guild_id" gorm:"primaryKey"`
+	GuildID string `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
 }
 
 type ReactionWhitelist struct {
-	GuildID string `json:"guild_id" gorm:"primaryKey"`
+	GuildID string `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
 }
 
 type RepeatWordsRate struct {
-	Word string `json:"word" gorm:"primaryKey"`
+	Word string `json:"word" gorm:"primaryKey;autoIncrement:false"`
 	Rate int    `json:"rate"`
 }
 
@@ -143,7 +143,7 @@ func GetDbConnection() *gorm.DB {
 	}
 	var dsn string = " user=postgres password=heyuheng1.22.3 dbname=betago port=%s sslmode=disable TimeZone=Asia/Shanghai application_name=" + consts.RobotName
 	if consts.IsTest {
-		dsn = consts.DBHostTest + fmt.Sprintf(dsn, "3033")
+		dsn = consts.DBHostTest + fmt.Sprintf(dsn, "15432")
 	} else if consts.IsCluster {
 		dsn = consts.DBHostCluster + fmt.Sprintf(dsn, "5432")
 	} else {

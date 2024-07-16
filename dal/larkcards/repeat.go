@@ -15,6 +15,7 @@ import (
 
 var (
 	repeatConfigCache   = cache.New(time.Second*30, time.Second*30)
+	reactionConfigCache = cache.New(time.Second*30, time.Second*30)
 	repeatWordRateCache = cache.New(time.Second*30, time.Second*30)
 )
 
@@ -75,7 +76,7 @@ func RepeatMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
 
 func ReactionMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
 	// 先判断群聊的功能启用情况
-	if enabled, exists := repeatConfigCache.Get(*event.Event.Message.ChatId); exists {
+	if enabled, exists := reactionConfigCache.Get(*event.Event.Message.ChatId); exists {
 		// 缓存中已存在，直接取值
 		if !enabled.(bool) {
 			return
@@ -85,10 +86,10 @@ func ReactionMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
 		var count int64
 		database.GetDbConnection().Find(&database.ReactionWhitelist{GuildID: *event.Event.Message.ChatId}).Count(&count)
 		if count == 0 {
-			repeatConfigCache.Set(*event.Event.Message.ChatId, false, cache.DefaultExpiration)
+			reactionConfigCache.Set(*event.Event.Message.ChatId, false, cache.DefaultExpiration)
 			return
 		}
-		repeatConfigCache.Set(*event.Event.Message.ChatId, true, cache.DefaultExpiration)
+		reactionConfigCache.Set(*event.Event.Message.ChatId, true, cache.DefaultExpiration)
 	}
 
 	// 开始摇骰子, 默认概率10%
