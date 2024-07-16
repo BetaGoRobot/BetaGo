@@ -8,7 +8,6 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
-	"github.com/bytedance/sonic"
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/patrickmn/go-cache"
@@ -20,16 +19,7 @@ var (
 )
 
 func RepeatMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
-	msgMap := make(map[string]interface{})
-	msg := *event.Event.Message.Content
-	err := sonic.UnmarshalString(msg, &msgMap)
-	if err != nil {
-		log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
-		return
-	}
-	if text, ok := msgMap["text"]; ok {
-		msg = text.(string)
-	}
+	msg := PreGetTextMsg(ctx, event)
 	// 先判断群聊的功能启用情况
 	if enabled, exists := repeatConfigCache.Get(*event.Event.Message.ChatId); exists {
 		// 缓存中已存在，直接取值
