@@ -72,3 +72,45 @@ func RepeatMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
 		log.ZapLogger.Info("repeatMessage", zaplog.Any("resp", resp))
 	}
 }
+
+func ReactionMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
+	// 先判断群聊的功能启用情况
+	if enabled, exists := repeatConfigCache.Get(*event.Event.Message.ChatId); exists {
+		// 缓存中已存在，直接取值
+		if !enabled.(bool) {
+			return
+		}
+	} else {
+		// 缓存中不存在，从数据库中取值
+		var count int64
+		database.GetDbConnection().Find(&database.ReactionWhitelist{GuildID: *event.Event.Message.ChatId}).Count(&count)
+		if count == 0 {
+			repeatConfigCache.Set(*event.Event.Message.ChatId, false, cache.DefaultExpiration)
+			return
+		}
+		repeatConfigCache.Set(*event.Event.Message.ChatId, true, cache.DefaultExpiration)
+	}
+
+	// 开始摇骰子, 默认概率10%
+	realRate := utility.MustAtoI(utility.GetEnvWithDefault("REACTION_DEFAULT_RATE", "10"))
+	if utility.Probability(float64(realRate) / 100) {
+		// sendMsg
+		req := larkim.NewCreateMessageReactionReqBuilder().
+			MessageId(*event.Event.Message.MessageId).
+			Body(
+				larkim.NewCreateMessageReactionReqBodyBuilder().
+					ReactionType(
+						larkim.NewEmojiBuilder().
+							EmojiType("THUMBSUP").
+							Build(),
+					).
+					Build(),
+			).
+			Build()
+		resp, err := larkutils.LarkClient.Im.V1.MessageReaction.Create(ctx, req)
+		if err != nil {
+			log.ZapLogger.Error("reactMessage", zaplog.Error(err))
+		}
+		log.ZapLogger.Info("reactMessage", zaplog.Any("resp", resp))
+	}
+}

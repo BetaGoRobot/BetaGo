@@ -55,6 +55,10 @@ type RepeatWhitelist struct {
 	GuildID string `json:"guild_id" gorm:"primaryKey"`
 }
 
+type ReactionWhitelist struct {
+	GuildID string `json:"guild_id" gorm:"primaryKey"`
+}
+
 type RepeatWordsRate struct {
 	Word string `json:"word" gorm:"primaryKey"`
 	Rate int    `json:"rate"`
@@ -107,6 +111,7 @@ func init() {
 		&ChatRecordLog{},
 		&DynamicConfig{},
 		&LarkImg{},
+		&ReactionWhitelist{},
 		// &RepeatWhitelist{},
 		// &RepeatWordsRate{},
 	)
