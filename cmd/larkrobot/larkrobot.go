@@ -93,7 +93,7 @@ func longConn() { // 注册事件回调
 				if err != nil {
 					panic(err)
 				}
-				if time.Now().Sub(time.Unix(stamp, 0)) > time.Second*10 {
+				if time.Now().Sub(time.Unix(stamp/1000, 0)) > time.Second*10 {
 					return nil
 				}
 				if !larkcards.IsMentioned(event.Event.Message.Mentions) || *event.Event.Sender.SenderId.OpenId == larkcards.BotOpenID {
