@@ -24,7 +24,7 @@ func RepeatMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
 	msg := *event.Event.Message.Content
 	err := sonic.UnmarshalString(msg, &msgMap)
 	if err != nil {
-		zaplog.Logger.Error("repeatMessage", zaplog.Error(err))
+		log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
 		return
 	}
 	if text, ok := msgMap["text"]; ok {
@@ -77,8 +77,8 @@ func RepeatMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) {
 		).Build()
 		resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
 		if err != nil {
-			log.SugerLogger.Error("repeatMessage", zaplog.Error(err))
+			log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
 		}
-		log.SugerLogger.Info("repeatMessage", zaplog.Any("resp", resp))
+		log.ZapLogger.Info("repeatMessage", zaplog.Any("resp", resp))
 	}
 }
