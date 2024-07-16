@@ -70,7 +70,7 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 			larkim.NewReplyMessageReqBodyBuilder().
 				Content(larkim.NewTextMsgBuilder().Text(replyStr).Build()).
 				MsgType(larkim.MsgTypeText).
-				ReplyInThread(true).
+				ReplyInThread(false).
 				Uuid(*event.Event.Message.MessageId + "reply").
 				Build(),
 		).MessageId(*event.Event.Message.MessageId).
