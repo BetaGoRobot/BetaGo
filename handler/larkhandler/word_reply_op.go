@@ -80,10 +80,10 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 
 	subSpan.End()
 	if err != nil {
-		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err))
+		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		return err
 	}
-	log.ZapLogger.Info("ReplyMessage", zaplog.Any("resp", resp))
+	log.ZapLogger.Info("ReplyMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	return
 }
 

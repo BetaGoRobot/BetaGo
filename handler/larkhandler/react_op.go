@@ -82,10 +82,10 @@ func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 			Build()
 		resp, err := larkutils.LarkClient.Im.V1.MessageReaction.Create(ctx, req)
 		if err != nil {
-			log.ZapLogger.Error("reactMessage", zaplog.Error(err))
+			log.ZapLogger.Error("reactMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 			return err
 		}
-		log.ZapLogger.Info("reactMessage", zaplog.Any("resp", resp))
+		log.ZapLogger.Info("reactMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	}
 	return
 }

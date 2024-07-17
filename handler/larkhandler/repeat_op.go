@@ -64,9 +64,9 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 		).Build()
 		resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
 		if err != nil {
-			log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
+			log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		}
-		log.ZapLogger.Info("repeatMessage", zaplog.Any("resp", resp))
+		log.ZapLogger.Info("repeatMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	}
 	return
 }
