@@ -19,6 +19,7 @@ import (
 func longConn() { // 注册事件回调
 	eventHandler := dispatcher.
 		NewEventDispatcher("", "").
+		OnP2MessageReactionCreatedV1(applicationhandler.MessageReactionHandler).
 		OnP2MessageReceiveV1(applicationhandler.MessageV2Handler).
 		OnP2ApplicationAppVersionAuditV6(applicationhandler.AuditV6Handler)
 	// 创建Client

@@ -96,17 +96,29 @@ func (p *LarkMsgProcessor) RunStages() (err error) {
 	for _, s := range p.stages {
 		err = s.PreRun(p.Context, p.event)
 		if err != nil {
-			err = errors.Wrap(err, "error in pre run")
+			if errors.Is(err, ErrStageSkip) {
+				log.ZapLogger.Warn("pre run stage skipped: ", zaplog.Error(err))
+			} else {
+				log.ZapLogger.Error("pre run stage skipped: ", zaplog.Error(err))
+			}
 			return
 		}
 		err = s.Run(p.Context, p.event)
 		if err != nil {
-			err = errors.Wrap(err, "error in run")
+			if errors.Is(err, ErrStageSkip) {
+				log.ZapLogger.Warn("run stage skipped: ", zaplog.Error(err))
+			} else {
+				log.ZapLogger.Error("run stage skipped: ", zaplog.Error(err))
+			}
 			return
 		}
 		err = s.PostRun(p.Context, p.event)
 		if err != nil {
-			err = errors.Wrap(err, "error in post run")
+			if errors.Is(err, ErrStageSkip) {
+				log.ZapLogger.Warn("post run stage skipped: ", zaplog.Error(err))
+			} else {
+				log.ZapLogger.Error("post run stage skipped: ", zaplog.Error(err))
+			}
 			return
 		}
 	}
@@ -135,17 +147,29 @@ func (p *LarkMsgProcessor) RunParallelStages() error {
 			}()
 			err = op.PreRun(p.Context, p.event)
 			if err != nil {
-				err = errors.Wrap(err, "error in pre run")
+				if errors.Is(err, ErrStageSkip) {
+					log.ZapLogger.Warn("pre run stage skipped: ", zaplog.Error(err))
+				} else {
+					log.ZapLogger.Error("pre run stage skipped: ", zaplog.Error(err))
+				}
 				return
 			}
 			err = op.Run(p.Context, p.event)
 			if err != nil {
-				err = errors.Wrap(err, "error in run")
+				if errors.Is(err, ErrStageSkip) {
+					log.ZapLogger.Warn("run stage skipped: ", zaplog.Error(err))
+				} else {
+					log.ZapLogger.Error("run stage skipped: ", zaplog.Error(err))
+				}
 				return
 			}
 			err = op.PostRun(p.Context, p.event)
 			if err != nil {
-				err = errors.Wrap(err, "error in post run")
+				if errors.Is(err, ErrStageSkip) {
+					log.ZapLogger.Warn("post run stage skipped: ", zaplog.Error(err))
+				} else {
+					log.ZapLogger.Error("post run stage skipped: ", zaplog.Error(err))
+				}
 				return
 			}
 		}(operator)
@@ -156,7 +180,7 @@ func (p *LarkMsgProcessor) RunParallelStages() error {
 	for err := range errorChan {
 		if err != nil {
 			mergedErr = errors.Wrap(mergedErr, err.Error())
-			log.ZapLogger.Error("error in parallel stages", zaplog.Error(err))
+			log.ZapLogger.Warn("error in parallel stages", zaplog.Error(err))
 		}
 	}
 	return mergedErr

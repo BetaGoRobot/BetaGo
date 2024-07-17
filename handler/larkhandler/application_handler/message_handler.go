@@ -52,6 +52,19 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 	return nil
 }
 
+// MessageReactionHandler Repeat
+//
+//	@param ctx
+//	@param event
+//	@return error
+func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReactionCreatedV1) error {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer larkutils.RecoverMsg(ctx, *event.Event.ReactionType.EmojiType)
+	defer span.End()
+
+	return nil
+}
+
 func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg string) (err error) {
 	defer larkutils.RecoverMsg(ctx, *event.Event.Message.MessageId)
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())

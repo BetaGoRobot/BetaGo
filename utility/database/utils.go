@@ -11,14 +11,14 @@ import (
 	"github.com/patrickmn/go-cache"
 )
 
-var GlobalDBCache *gocache.Cache[*sync.Map]
+var dbDataCache *gocache.Cache[*sync.Map]
 
 var newMap *sync.Map
 
 func init() {
 	gocacheClient := cache.New(time.Second*30, time.Second*30)
 	gocacheStore := gocache_store.NewGoCache(gocacheClient)
-	GlobalDBCache = gocache.New[*sync.Map](gocacheStore)
+	dbDataCache = gocache.New[*sync.Map](gocacheStore)
 }
 
 // GlobalCache  全局缓存
@@ -32,7 +32,9 @@ func getCacheType(t reflect.Type) (name string) {
 	}
 
 	if t.Kind() == reflect.Ptr {
-		name = t.Elem().Name()
+		panic("Must not be pointer")
+	} else {
+		name = t.Name()
 	}
 	actual, _ := typeKindMap.LoadOrStore(t, name)
 	return actual.(string)
@@ -67,13 +69,13 @@ type cacheGetFunc[T any] func(T) string
 //	@update 2024-07-17 06:36:14
 func FindByCacheFunc[T any](model T, keyFunc func(T) string) (res []T, hitCache bool) {
 	res = make([]T, 0)
-	cacheKey := getCacheType(reflect.TypeOf(model))
+	modelKey := keyFunc(model)
+	cacheKey := getCacheType(reflect.TypeOf(model)) + "_" + modelKey
 
-	if cache, err := GlobalDBCache.Get(context.Background(), cacheKey); err == nil {
+	if cache, err := dbDataCache.Get(context.Background(), cacheKey); err == nil {
 		// 取Cache
 		hitCache = true
-		requiredKey := keyFunc(model)
-		if requiredKey == "" { // 返回全部
+		if modelKey == "" { // 返回全部
 			cache.Range(
 				func(key, value any) bool {
 					res = append(res, value.(T))
@@ -82,17 +84,24 @@ func FindByCacheFunc[T any](model T, keyFunc func(T) string) (res []T, hitCache 
 			)
 			return
 		}
-		if tRes, ok := cache.Load(requiredKey); ok {
+		if tRes, ok := cache.Load(modelKey); ok {
 			res = []T{tRes.(T)}
 		}
 		return
 	}
-	res = append(res, *new(T))
-	GetDbConnection().Find(&res)
+	// 取筛选条件对应的Key
+	GetDbConnection().Find(&res, model)
 	cacheValue := &sync.Map{}
-	for _, res := range res {
-		cacheValue.Store(keyFunc(res), res)
+	for _, r := range res {
+		cacheValue.Store(keyFunc(r), r)
 	}
-	GlobalDBCache.Set(context.Background(), cacheKey, cacheValue)
+	dbDataCache.Set(context.Background(), cacheKey, cacheValue)
+	return
+}
+
+func FindFuncNoCache[T any](model T) (res []T) {
+	res = make([]T, 0)
+	// 取筛选条件对应的Key
+	GetDbConnection().Find(&res, model)
 	return
 }

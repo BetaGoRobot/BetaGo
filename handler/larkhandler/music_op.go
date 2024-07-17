@@ -2,7 +2,6 @@ package larkhandler
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
@@ -14,6 +13,7 @@ import (
 	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -39,7 +39,10 @@ func (r *MusicMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRe
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	if !larkutils.IsMentioned(event.Event.Message.Mentions) {
-		return errors.New("not mentioned")
+		return errors.Wrap(ErrStageSkip, "RepeatMsgOperator: Not Mentioned")
+	}
+	if event.Event.Message.ParentId != nil {
+		return errors.Wrap(ErrStageSkip, "RepeatMsgOperator: Has ParentId")
 	}
 	return
 }

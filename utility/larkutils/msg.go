@@ -64,3 +64,11 @@ func IsMentioned(mentions []*larkim.MentionEvent) bool {
 	}
 	return false
 }
+
+func GetMsgByID(ctx context.Context, msgID string) string {
+	resp, err := LarkClient.Im.V1.Message.Get(ctx, larkim.NewGetMessageReqBuilder().MessageId(msgID).Build())
+	if err != nil {
+		log.ZapLogger.Error("GetMsgByID", zaplog.Error(err))
+	}
+	return *resp.Data.Items[0].Body.Content
+}
