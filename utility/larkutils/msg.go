@@ -3,10 +3,12 @@ package larkutils
 import (
 	"context"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
+	"github.com/dlclark/regexp2"
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
@@ -30,4 +32,35 @@ func PreGetTextMsg(ctx context.Context, event *larkim.P2MessageReceiveV1) string
 		msg = text.(string)
 	}
 	return msg
+}
+
+var atMsgRepattern = regexp2.MustCompile(`@.*\ (?P<content>.*)`, regexp2.RE2)
+
+// TrimAtMsg trim掉at的消息
+//
+//	@param ctx context.Context
+//	@param msg string
+//	@return string
+//	@author heyuhengmatt
+//	@update 2024-07-17 01:39:05
+func TrimAtMsg(ctx context.Context, msg string) string {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+	match, err := atMsgRepattern.FindStringMatch(msg)
+	if err != nil {
+		return msg
+	}
+	if match != nil && match.Length > 0 {
+		return match.GroupByName("content").String()
+	}
+	return msg
+}
+
+func IsMentioned(mentions []*larkim.MentionEvent) bool {
+	for _, mention := range mentions {
+		if *mention.Id.OpenId == consts.BotOpenID {
+			return true
+		}
+	}
+	return false
 }

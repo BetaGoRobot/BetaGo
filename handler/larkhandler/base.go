@@ -7,21 +7,27 @@ import (
 	"context"
 	"sync"
 
+	"github.com/BetaGoRobot/BetaGo/handler"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
 )
 
+var _ handler.BotMsgProcessor = &LarkMsgProcessor{}
+
 type (
 	// LarkMsgProcessor struct  消息处理器
 	//	@update 2024-07-16 09:52:28
 	LarkMsgProcessor struct {
 		context.Context
+		event           *larkim.P2MessageReceiveV1
 		stages          []LarkMsgOperator
 		parrallelStages []LarkMsgOperator
 	}
 
+	LarkMsgOperatorBase struct{}
 	// LarkMsgOperator interface  算子接口
 	//	@update 2024-07-16 09:52:20
 	LarkMsgOperator interface {
@@ -30,6 +36,34 @@ type (
 		PostRun(context.Context, *larkim.P2MessageReceiveV1) error
 	}
 )
+
+func (op *LarkMsgOperatorBase) PreRun(context.Context, *larkim.P2MessageReceiveV1) error {
+	return nil
+}
+
+func (op *LarkMsgOperatorBase) Run(context.Context, *larkim.P2MessageReceiveV1) error {
+	return nil
+}
+
+func (op *LarkMsgOperatorBase) PostRun(context.Context, *larkim.P2MessageReceiveV1) error {
+	return nil
+}
+
+func (p *LarkMsgProcessor) WithCtx(ctx context.Context) *LarkMsgProcessor {
+	p.Context = ctx
+	return p
+}
+
+func (p *LarkMsgProcessor) WithEvent(event *larkim.P2MessageReceiveV1) *LarkMsgProcessor {
+	p.event = event
+	return p
+}
+
+func (p *LarkMsgProcessor) Clean() *LarkMsgProcessor {
+	p.event = nil
+	p.Context = nil
+	return p
+}
 
 // AddStages  添加处理阶段
 //
@@ -56,12 +90,27 @@ func (p *LarkMsgProcessor) AddParallelStages(stage LarkMsgOperator) *LarkMsgProc
 //	@receiver p
 //	@param ctx
 //	@param event
-func (p *LarkMsgProcessor) RunStages(ctx context.Context, event *larkim.P2MessageReceiveV1) {
+func (p *LarkMsgProcessor) RunStages() (err error) {
+	defer larkutils.RecoverMsg(p.Context, *p.event.Event.Message.MessageId)
+
 	for _, s := range p.stages {
-		s.PreRun(ctx, event)
-		s.Run(ctx, event)
-		s.PostRun(ctx, event)
+		err = s.PreRun(p.Context, p.event)
+		if err != nil {
+			err = errors.Wrap(err, "error in pre run")
+			return
+		}
+		err = s.Run(p.Context, p.event)
+		if err != nil {
+			err = errors.Wrap(err, "error in run")
+			return
+		}
+		err = s.PostRun(p.Context, p.event)
+		if err != nil {
+			err = errors.Wrap(err, "error in post run")
+			return
+		}
 	}
+	return
 }
 
 // RunParallelStages  运行并行处理阶段
@@ -70,7 +119,9 @@ func (p *LarkMsgProcessor) RunStages(ctx context.Context, event *larkim.P2Messag
 //	@param ctx
 //	@param event
 //	@return error
-func (p *LarkMsgProcessor) RunParallelStages(ctx context.Context, event *larkim.P2MessageReceiveV1) error {
+func (p *LarkMsgProcessor) RunParallelStages() error {
+	defer larkutils.RecoverMsg(p.Context, *p.event.Event.Message.MessageId)
+
 	wg := sync.WaitGroup{}
 	errorChan := make(chan error, len(p.parrallelStages))
 
@@ -82,17 +133,17 @@ func (p *LarkMsgProcessor) RunParallelStages(ctx context.Context, event *larkim.
 				errorChan <- err
 				wg.Done()
 			}()
-			err = op.PreRun(ctx, event)
+			err = op.PreRun(p.Context, p.event)
 			if err != nil {
 				err = errors.Wrap(err, "error in pre run")
 				return
 			}
-			err = op.Run(ctx, event)
+			err = op.Run(p.Context, p.event)
 			if err != nil {
 				err = errors.Wrap(err, "error in run")
 				return
 			}
-			err = op.PostRun(ctx, event)
+			err = op.PostRun(p.Context, p.event)
 			if err != nil {
 				err = errors.Wrap(err, "error in post run")
 				return

@@ -637,13 +637,13 @@ func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) 
 	return lyricsMerged, l.String()
 }
 
-func mergeLyrics(lyrics, translatedLyrics string) string {
-	re := regexp2.MustCompile(`\[(?P<time>.*)\](?P<line>.*)`, regexp2.RE2)
+var lyricsRepattern = regexp2.MustCompile(`\[(?P<time>.*)\](?P<line>.*)`, regexp2.RE2)
 
+func mergeLyrics(lyrics, translatedLyrics string) string {
 	lyricsMap := map[string]string{}
 	lines := strings.Split(lyrics, "\n")
 	for _, line := range lines {
-		match, err := re.FindStringMatch(line)
+		match, err := lyricsRepattern.FindStringMatch(line)
 		if err != nil {
 			panic(err)
 		}
@@ -654,7 +654,7 @@ func mergeLyrics(lyrics, translatedLyrics string) string {
 		}
 	}
 	for _, line := range strings.Split(translatedLyrics, "\n") {
-		match, err := re.FindStringMatch(line)
+		match, err := lyricsRepattern.FindStringMatch(line)
 		if err != nil {
 			panic(err)
 		}

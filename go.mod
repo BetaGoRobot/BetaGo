@@ -1,8 +1,8 @@
 module github.com/BetaGoRobot/BetaGo
 
-go 1.21
+go 1.22
 
-toolchain go1.21.1
+toolchain go1.22.4
 
 replace (
 	github.com/BetaGoRobot/BetaGo/betagovar => ./consts
@@ -16,6 +16,8 @@ require (
 	github.com/bytedance/sonic v1.11.8
 	github.com/carlmjohnson/requests v0.23.5
 	github.com/dlclark/regexp2 v1.11.0
+	github.com/eko/gocache/lib/v4 v4.1.6
+	github.com/eko/gocache/store/go_cache/v4 v4.2.2
 	github.com/enescakir/emoji v1.0.0
 	github.com/fasthttp/router v1.5.2
 	github.com/go-resty/resty/v2 v2.13.1
@@ -45,7 +47,6 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.28.0
 	go.opentelemetry.io/otel/sdk v1.28.0
 	go.opentelemetry.io/otel/trace v1.28.0
-	gopkg.in/gographics/imagick.v2 v2.7.0
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.10
 )
@@ -80,6 +81,7 @@ require (
 	github.com/go-openapi/validate v0.24.0 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
@@ -116,6 +118,7 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.24.0 // indirect
+	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
 	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect

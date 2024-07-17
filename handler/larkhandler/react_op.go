@@ -13,13 +13,14 @@ import (
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/patrickmn/go-cache"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 var _ LarkMsgOperator = &ReactMsgOperator{}
 
 // ReactMsgOperator  Repeat
 type ReactMsgOperator struct {
-	LarkMsgProcessor
+	LarkMsgOperatorBase
 }
 
 // PreRun Repeat
@@ -29,6 +30,9 @@ type ReactMsgOperator struct {
 //	@param event
 //	@return err
 func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
 	// 先判断群聊的功能启用情况
 	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomReact) {
 		return errors.New("Not enabled")
@@ -48,6 +52,18 @@ func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 
 	// React
 	// 先判断群聊的功能启用情况
+	chatEnabled := false
+	resData, hitCache := database.FindByCache(&database.ReactionWhitelist{})
+	span.SetAttributes(attribute.Bool("hitCache", hitCache))
+	for _, data := range resData {
+		if data.GuildID == *event.Event.Message.ChatId {
+			chatEnabled = true
+			break
+		}
+	}
+
+	if chatEnabled {
+	}
 	if enabled, exists := reactionConfigCache.Get(*event.Event.Message.ChatId); exists {
 		// 缓存中已存在，直接取值
 		if !enabled.(bool) {
@@ -87,15 +103,5 @@ func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 		}
 		log.ZapLogger.Info("reactMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	}
-	return
-}
-
-// PostRun  Repeat
-//
-//	@receiver r
-//	@param ctx
-//	@param event
-//	@return err
-func (r *ReactMsgOperator) PostRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	return
 }

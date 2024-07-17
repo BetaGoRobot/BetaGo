@@ -7,3 +7,7 @@ const (
 	LarkFunctionRandomReact  LarkFunctionEnum = "random_react"
 	LarkFunctionRandomRepeat LarkFunctionEnum = "random_repeat"
 )
+
+const (
+	BotOpenID = "ou_8817f540f718affd21718f415b81597f"
+)

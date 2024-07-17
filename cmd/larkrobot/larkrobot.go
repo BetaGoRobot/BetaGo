@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/BetaGoRobot/BetaGo/consts/env"
-	"github.com/BetaGoRobot/BetaGo/dal/larkdal"
+	applicationhandler "github.com/BetaGoRobot/BetaGo/handler/larkhandler/application_handler"
 
 	larkcard "github.com/larksuite/oapi-sdk-go/v3/card"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -17,9 +17,10 @@ import (
 )
 
 func longConn() { // 注册事件回调
-	eventHandler := dispatcher.NewEventDispatcher("", "").
-		OnP2MessageReceiveV1(larkdal.MessageV2Handler).
-		OnP2ApplicationAppVersionAuditV6(larkdal.AuditV6Handler)
+	eventHandler := dispatcher.
+		NewEventDispatcher("", "").
+		OnP2MessageReceiveV1(applicationhandler.MessageV2Handler).
+		OnP2ApplicationAppVersionAuditV6(applicationhandler.AuditV6Handler)
 	// 创建Client
 	cli := larkws.NewClient(env.LarkAppID, env.LarkAppSecret,
 		larkws.WithEventHandler(eventHandler),
@@ -34,7 +35,12 @@ func longConn() { // 注册事件回调
 
 func webHook() {
 	// 创建 card 处理器
-	cardHandler := larkcard.NewCardActionHandler(os.Getenv("LARK_VERIFICATION"), os.Getenv("LARK_ENCRYPTION"), larkdal.WebHookHandler)
+	cardHandler := larkcard.
+		NewCardActionHandler(
+			os.Getenv("LARK_VERIFICATION"),
+			os.Getenv("LARK_ENCRYPTION"),
+			applicationhandler.WebHookHandler,
+		)
 
 	// 注册处理器
 	http.HandleFunc("/webhook/card", httpserverext.NewCardActionHandlerFunc(cardHandler, larkevent.WithLogLevel(larkcore.LogLevelDebug)))

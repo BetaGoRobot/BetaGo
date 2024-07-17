@@ -17,9 +17,26 @@ import (
 
 var _ LarkMsgOperator = &RepeatMsgOperator{}
 
-type RepeatMsgOperator struct{}
+// RepeatMsgOperator  RepeatMsg Op
+//
+//	@author heyuhengmatt
+//	@update 2024-07-17 01:35:51
+type RepeatMsgOperator struct {
+	LarkMsgOperatorBase
+}
 
+// PreRun Repeat
+//
+//	@receiver r *RepeatMsgOperator
+//	@param ctx context.Context
+//	@param event *larkim.P2MessageReceiveV1
+//	@return err error
+//	@author heyuhengmatt
+//	@update 2024-07-17 01:35:35
 func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
 	// 先判断群聊的功能启用情况
 	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
 		return errors.New("Not enabled")
@@ -27,6 +44,14 @@ func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageR
 	return
 }
 
+// Run Repeat
+//
+//	@receiver r *RepeatMsgOperator
+//	@param ctx context.Context
+//	@param event *larkim.P2MessageReceiveV1
+//	@return err error
+//	@author heyuhengmatt
+//	@update 2024-07-17 01:35:41
 func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
@@ -68,9 +93,5 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 		}
 		log.ZapLogger.Info("repeatMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	}
-	return
-}
-
-func (r *RepeatMsgOperator) PostRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	return
 }

@@ -18,15 +18,26 @@ import (
 
 var _ LarkMsgOperator = &WordReplyMsgOperator{}
 
-type WordReplyMsgOperator struct{}
-
-// PreRun  Repeat
+// WordReplyMsgOperator  Repeat
 //
-//	@receiver r
-//	@param ctx
-//	@param event
-//	@return err
+//	@author heyuhengmatt
+//	@update 2024-07-17 01:35:11
+type WordReplyMsgOperator struct {
+	LarkMsgOperatorBase
+}
+
+// PreRun Repeat
+//
+//	@receiver r *WordReplyMsgOperator
+//	@param ctx context.Context
+//	@param event *larkim.P2MessageReceiveV1
+//	@return err error
+//	@author heyuhengmatt
+//	@update 2024-07-17 01:35:17
 func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
 	// 先判断群聊的功能启用情况
 	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionWordReply) {
 		return errors.New("Not enabled")
@@ -86,15 +97,5 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 		}
 		log.ZapLogger.Info("ReplyMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	}
-	return
-}
-
-// PostRun  Repeat
-//
-//	@receiver r
-//	@param ctx
-//	@param event
-//	@return err
-func (r *WordReplyMsgOperator) PostRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	return
 }

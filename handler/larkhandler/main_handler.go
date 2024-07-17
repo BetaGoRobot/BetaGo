@@ -1,11 +1,12 @@
 package larkhandler
 
-// MainLarkHandler  is the main handler for lark messages
-var MainLarkHandler = &LarkMsgProcessor{}
+// MessageHandler  is the main handler for lark messages
+var MessageHandler = &LarkMsgProcessor{}
 
 func init() {
-	MainLarkHandler = MainLarkHandler.
+	MessageHandler = MessageHandler.
 		AddParallelStages(&RepeatMsgOperator{}).
 		AddParallelStages(&ReactMsgOperator{}).
-		AddParallelStages(&WordReplyMsgOperator{})
+		AddParallelStages(&WordReplyMsgOperator{}).
+		AddParallelStages(&MusicMsgOperator{})
 }
