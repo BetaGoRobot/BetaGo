@@ -65,25 +65,27 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 			}
 		}
 	}
-	req := larkim.NewReplyMessageReqBuilder().
-		Body(
-			larkim.NewReplyMessageReqBodyBuilder().
-				Content(larkim.NewTextMsgBuilder().Text(replyStr).Build()).
-				MsgType(larkim.MsgTypeText).
-				ReplyInThread(false).
-				Uuid(*event.Event.Message.MessageId + "reply").
-				Build(),
-		).MessageId(*event.Event.Message.MessageId).
-		Build()
-	_, subSpan := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
+	if replyStr != "" {
+		req := larkim.NewReplyMessageReqBuilder().
+			Body(
+				larkim.NewReplyMessageReqBodyBuilder().
+					Content(larkim.NewTextMsgBuilder().Text(replyStr).Build()).
+					MsgType(larkim.MsgTypeText).
+					ReplyInThread(false).
+					Uuid(*event.Event.Message.MessageId + "reply").
+					Build(),
+			).MessageId(*event.Event.Message.MessageId).
+			Build()
+		_, subSpan := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+		resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
 
-	subSpan.End()
-	if err != nil {
-		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
-		return err
+		subSpan.End()
+		if err != nil {
+			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+			return err
+		}
+		log.ZapLogger.Info("ReplyMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	}
-	log.ZapLogger.Info("ReplyMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	return
 }
 
