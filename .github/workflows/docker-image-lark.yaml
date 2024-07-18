@@ -33,6 +33,7 @@ jobs:
     steps:
       - name: Log into registry
         uses: nick-fields/retry@v2
+        if: github.event_name != 'pull_request'
         with:
           timeout_minutes: 10
           max_attempts: 3
@@ -41,7 +42,6 @@ jobs:
             echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login ccr.ccs.tencentyun.com -u 100016072032 --password-stdin
             echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u kevinmatt --password-stdin
       - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
         with:
           registry: ${{ env.REGISTRY }}
@@ -69,6 +69,7 @@ jobs:
              --file scripts/larkrobot/Dockerfile \
              --tag $IMAGE_NAME
       - name: Push image
+        if: github.event_name != 'pull_request'
         uses: nick-fields/retry@v2
         with:
           timeout_minutes: 10
