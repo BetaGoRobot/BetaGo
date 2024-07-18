@@ -8,16 +8,18 @@ import (
 // LarkRootCommand lark root command node
 var LarkRootCommand *commandBase.Command[*larkim.P2MessageReceiveV1]
 
+var newCmd = commandBase.NewCommand[*larkim.P2MessageReceiveV1]
+
 func init() {
 	LarkRootCommand = commandBase.
 		NewRootCommand(larkCommandNilFunc).
 		AddSubCommand(
-			commandBase.NewCommand("debug", larkCommandNilFunc).
+			newCmd("debug", larkCommandNilFunc).
 				AddSubCommand(
-					commandBase.NewCommand("get_id", getIDHandler),
+					newCmd("get_id", getIDHandler),
 				).
 				AddSubCommand(
-					commandBase.NewCommand("get_group_id", getGroupIDHandler),
+					newCmd("get_group_id", getGroupIDHandler),
 				),
 		)
 }
