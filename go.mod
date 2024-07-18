@@ -15,7 +15,7 @@ replace (
 require (
 	github.com/bytedance/sonic v1.11.9
 	github.com/carlmjohnson/requests v0.23.5
-	github.com/dlclark/regexp2 v1.11.0
+	github.com/dlclark/regexp2 v1.11.2
 	github.com/eko/gocache/lib/v4 v4.1.6
 	github.com/eko/gocache/store/go_cache/v4 v4.2.2
 	github.com/enescakir/emoji v1.0.0
