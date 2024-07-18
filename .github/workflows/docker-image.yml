@@ -7,6 +7,12 @@ on:
       - "neteaseapi/netease-api-service/*"
       - "qqmusicapi/qqmusic-api-service/*"
       - "README.md"
+  pull_request:
+    branches: [master]
+    paths-ignore:
+      - "neteaseapi/netease-api-service/*"
+      - "qqmusicapi/qqmusic-api-service/*"
+      - "README.md"
   workflow_dispatch:
     inputs:
       name:
