@@ -78,14 +78,14 @@ func FindByCacheFunc[T any](model T, keyFunc func(T) string) (res []T, hitCache 
 		if modelKey == "" { // 返回全部
 			cache.Range(
 				func(key, value any) bool {
-					res = append(res, value.(T))
+					res = append(res, value.([]T)...)
 					return true
 				},
 			)
 			return
 		}
 		if tRes, ok := cache.Load(modelKey); ok {
-			res = []T{tRes.(T)}
+			res = tRes.([]T)
 		}
 		return
 	}
@@ -93,9 +93,11 @@ func FindByCacheFunc[T any](model T, keyFunc func(T) string) (res []T, hitCache 
 	GetDbConnection().Find(&res, model)
 	cacheValue := &sync.Map{}
 	for _, r := range res {
-		_, loaded := cacheValue.LoadOrStore(keyFunc(r), r)
-		if loaded {
-			panic("Duplicate key")
+		key := keyFunc(r)
+		if v, ok := cacheValue.Load(key); ok {
+			cacheValue.Store(key, append(v.([]T), r))
+		} else {
+			cacheValue.Store(key, []T{r})
 		}
 	}
 	dbDataCache.Set(context.Background(), cacheKey, cacheValue)

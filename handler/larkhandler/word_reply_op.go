@@ -57,10 +57,10 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 
 	msg := larkutils.PreGetTextMsg(ctx, event)
 	var replyStr string
-	// 检查定制化逻辑
+	// 检查定制化逻辑, Key为GuildID, 拿到GUI了dID下的所有SubStr配置
 	customConfig, hitCache := database.FindByCacheFunc(database.QuoteReplyMsgCustom{GuildID: *event.Event.Message.ChatId},
 		func(d database.QuoteReplyMsgCustom) string {
-			return d.GuildID + d.SubStr
+			return d.GuildID
 		},
 	)
 	span.SetAttributes(attribute.Bool("QuoteReplyMsgCustom hitCache", hitCache))
