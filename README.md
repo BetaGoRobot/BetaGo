@@ -6,7 +6,7 @@
 [![Docker](https://github.com/BetaGoRobot/BetaGo/actions/workflows/docker-image.yml/badge.svg)](https://github.com/BetaGoRobot/BetaGo/actions/workflows/docker-image.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/51a1e51f15aa447f91ef48f33ac0fd4b)](https://www.codacy.com/gh/BetaGoRobot/BetaGo/dashboard?utm_source=github.com&utm_medium=referral&utm_content=BetaGoRobot/BetaGo&utm_campaign=Badge_Grade)
 
-![Visualization of the codebase](./diagram.svg)
+![Visualization of the codebase](https://github.com/BetaGoRobot/BetaGo/blob/diagram/diagram.svg?raw=true)
 
 > 正在尝试实现的开黑啦机器人
 
