@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/dlclark/regexp2"
-	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
 // var _ IMCommand = &IMCommandHandler[any]{}
@@ -103,20 +102,20 @@ type IMCommandOperatorBase[T any] struct {
 	Func        func(ctx context.Context, data T, args ...string) error
 }
 
-func init() {
-	larkCommand := &IMCommandOperatorBase[*larkim.P2MessageReceiveV1]{
-		Name: "debug",
-		SubCommands: []*IMCommandOperatorBase[*larkim.P2MessageReceiveV1]{
-			{
-				Name:        "get_id",
-				SubCommands: []*IMCommandOperatorBase[*larkim.P2MessageReceiveV1]{},
-				Func:        GetIDHandler,
-			},
-		},
-	}
-	handler := &IMCommandHandler[*larkim.P2MessageReceiveV1]{
-		Commands: []*IMCommandOperatorBase[*larkim.P2MessageReceiveV1]{larkCommand},
-	}
-	handler.Run(context.Background(), &larkim.P2MessageReceiveV1{}, "/debug get_id")
-	_ = larkCommand
-}
+// func init() {
+// 	larkCommand := &IMCommandOperatorBase[*larkim.P2MessageReceiveV1]{
+// 		Name: "debug",
+// 		SubCommands: []*IMCommandOperatorBase[*larkim.P2MessageReceiveV1]{
+// 			{
+// 				Name:        "get_id",
+// 				SubCommands: []*IMCommandOperatorBase[*larkim.P2MessageReceiveV1]{},
+// 				Func:        GetIDHandler,
+// 			},
+// 		},
+// 	}
+// 	handler := &IMCommandHandler[*larkim.P2MessageReceiveV1]{
+// 		Commands: []*IMCommandOperatorBase[*larkim.P2MessageReceiveV1]{larkCommand},
+// 	}
+// 	handler.Run(context.Background(), &larkim.P2MessageReceiveV1{}, "/debug get_id")
+// 	_ = larkCommand
+// }
