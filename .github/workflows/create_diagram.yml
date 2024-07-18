@@ -13,4 +13,5 @@ jobs:
       - name: Update diagram
         uses: githubocto/repo-visualizer@main
         with:
+          branch: diagram
           excluded_paths: ".gitignore,.github,vendor,neteaseapi/sample"
