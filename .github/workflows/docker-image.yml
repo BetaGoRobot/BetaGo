@@ -107,6 +107,7 @@ jobs:
             # docker push $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
       - name: Gotify Notification
         uses: eikendev/gotify-action@master
+        if: github.event_name != 'pull_request'
         with:
           gotify_api_base: '${{ secrets.GOTIFY_URL }}'
           gotify_app_token: '${{ secrets.GOTIFY_APP_TOKEN }}'
