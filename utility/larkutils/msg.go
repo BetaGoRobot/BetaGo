@@ -2,6 +2,7 @@ package larkutils
 
 import (
 	"context"
+	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -34,7 +35,10 @@ func PreGetTextMsg(ctx context.Context, event *larkim.P2MessageReceiveV1) string
 	return msg
 }
 
-var atMsgRepattern = regexp2.MustCompile(`@[^ ]+\s+(?P<content>.+)`, regexp2.RE2)
+var (
+	atMsgRepattern      = regexp2.MustCompile(`@[^ ]+\s+(?P<content>.+)`, regexp2.RE2)
+	commandMsgRepattern = regexp2.MustCompile(`@[^ ]+\s+\/(?P<content>.+)`, regexp2.RE2)
+)
 
 // TrimAtMsg trim掉at的消息
 //
@@ -71,4 +75,42 @@ func GetMsgByID(ctx context.Context, msgID string) string {
 		log.ZapLogger.Error("GetMsgByID", zaplog.Error(err))
 	}
 	return *resp.Data.Items[0].Body.Content
+}
+
+func GetCommandWithMatched(ctx context.Context, content string) (commands []string, isCommand bool) {
+	if IsCommand(ctx, content) {
+		isCommand = true
+		match, err := commandMsgRepattern.FindStringMatch(content)
+		if err != nil {
+			log.ZapLogger.Error("GetCommand", zaplog.Error(err))
+			return
+		}
+		if match.GroupByName("content") != nil {
+			commands = strings.Fields(strings.TrimLeft(match.GroupByName("content").String(), "/"))
+		}
+	}
+
+	return
+}
+
+func GetCommand(ctx context.Context, content string) (commands []string) {
+	match, err := commandMsgRepattern.FindStringMatch(content)
+	if err != nil {
+		log.ZapLogger.Error("GetCommand", zaplog.Error(err))
+		return
+	}
+	if match.GroupByName("content") != nil {
+		commands = strings.Fields(strings.TrimLeft(match.GroupByName("content").String(), "/"))
+	}
+
+	return
+}
+
+func IsCommand(ctx context.Context, content string) bool {
+	matched, err := commandMsgRepattern.MatchString(content)
+	if err != nil {
+		log.ZapLogger.Error("GetCommand", zaplog.Error(err))
+		return matched
+	}
+	return matched
 }

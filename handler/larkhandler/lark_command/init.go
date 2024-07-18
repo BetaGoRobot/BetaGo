@@ -15,6 +15,9 @@ func init() {
 			commandBase.NewCommand("debug", larkCommandNilFunc).
 				AddSubCommand(
 					commandBase.NewCommand("get_id", getIDHandler),
+				).
+				AddSubCommand(
+					commandBase.NewCommand("get_group_id", getGroupIDHandler),
 				),
 		)
 }

@@ -42,6 +42,10 @@ func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2Messa
 	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionWordReply) {
 		return errors.Wrap(ErrStageSkip, "WordReplyMsgOperator: Not enabled")
 	}
+
+	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
+		return errors.Wrap(ErrStageSkip, "WordReplyMsgOperator: Is Command")
+	}
 	return
 }
 

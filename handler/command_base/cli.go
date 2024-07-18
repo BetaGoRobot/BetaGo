@@ -43,6 +43,25 @@ func (c *Command[T]) Execute(ctx context.Context, data T, args []string) error {
 	return nil
 }
 
+// Validate 从当前节点开始，执行Command
+//
+//	@param c *Command[T]
+//	@return Execute
+//	@author heyuhengmatt
+//	@update 2024-07-18 05:30:21
+func (c *Command[T]) Validate(ctx context.Context, data T, args []string) bool {
+	if c.Func != nil { // 当前Command有执行方法，直接执行
+		return true
+	}
+	if len(args) == 0 { // 无执行方法且无后续参数
+		return false
+	}
+	if subcommand, ok := c.SubCommands[args[0]]; ok {
+		return subcommand.Validate(ctx, data, args[1:])
+	}
+	return true
+}
+
 // AddSubCommand 添加一个SubCommand
 //
 //	@param c *Command[T]

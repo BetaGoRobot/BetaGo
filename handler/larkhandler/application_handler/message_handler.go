@@ -45,7 +45,7 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 	if *event.Event.Sender.SenderId.OpenId == consts.BotOpenID {
 		return nil
 	}
-	go larkhandler.MessageHandler.Clean().WithCtx(ctx).WithEvent(event).RunStages()
+	larkhandler.MessageHandler.Clean().WithCtx(ctx).WithEvent(event).RunStages()
 	go larkhandler.MessageHandler.Clean().WithCtx(ctx).WithEvent(event).RunParallelStages()
 
 	log.ZapLogger.Info(larkcore.Prettify(event))

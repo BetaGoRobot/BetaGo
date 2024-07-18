@@ -42,6 +42,9 @@ func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageR
 	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
 		return errors.Wrap(ErrStageSkip, "RepeatMsgOperator: Not enabled")
 	}
+	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
+		return errors.Wrap(ErrStageSkip, "RepeatMsgOperator: Is Command")
+	}
 	return
 }
 

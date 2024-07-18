@@ -22,6 +22,7 @@ type (
 	//	@update 2024-07-16 09:52:28
 	LarkMsgProcessor struct {
 		context.Context
+		needBreak       bool
 		event           *larkim.P2MessageReceiveV1
 		stages          []LarkMsgOperator
 		parrallelStages []LarkMsgOperator

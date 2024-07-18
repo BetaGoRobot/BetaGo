@@ -2,7 +2,6 @@ package larkhandler
 
 import (
 	"context"
-	"strings"
 
 	_ "github.com/BetaGoRobot/BetaGo/handler/command_base"
 	larkcommand "github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command"
@@ -39,6 +38,9 @@ func (r *CommandOperator) PreRun(ctx context.Context, event *larkim.P2MessageRec
 	if !larkutils.IsMentioned(event.Event.Message.Mentions) {
 		return errors.Wrap(ErrStageSkip, "CommandOperator: Not Mentioned")
 	}
+	if !larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
+		return errors.Wrap(ErrStageSkip, "CommandOperator: Not Command")
+	}
 	return
 }
 
@@ -52,9 +54,8 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
-	content := larkutils.PreGetTextMsg(ctx, event)
-	content = larkutils.TrimAtMsg(ctx, content)
-	err = larkcommand.LarkRootCommand.Execute(ctx, event, strings.Fields(content))
+	commands := larkutils.GetCommand(ctx, larkutils.PreGetTextMsg(ctx, event))
+	err = larkcommand.LarkRootCommand.Execute(ctx, event, commands)
 	if err != nil {
 		log.ZapLogger.Error("CommandOperator", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		return

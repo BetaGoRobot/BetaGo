@@ -44,6 +44,9 @@ func (r *MusicMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRe
 	if event.Event.Message.ParentId != nil {
 		return errors.Wrap(ErrStageSkip, "MusicMsgOperator: Has ParentId")
 	}
+	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
+		return errors.Wrap(ErrStageSkip, "MusicMsgOperator: Is Command")
+	}
 	return
 }
 
