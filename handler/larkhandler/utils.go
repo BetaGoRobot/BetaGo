@@ -14,7 +14,7 @@ func checkFunctionEnabling(chatID string, function consts.LarkFunctionEnum) bool
 	queryDatas, _ := database.FindByCacheFunc(
 		database.FunctionEnabling{GuildID: chatID},
 		func(d database.FunctionEnabling) string {
-			return d.GuildID
+			return d.GuildID + string(d.Function)
 		},
 	)
 	for _, data := range queryDatas {
