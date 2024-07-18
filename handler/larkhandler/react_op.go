@@ -34,7 +34,7 @@ func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRe
 
 	// 先判断群聊的功能启用情况
 	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomReact) {
-		return errors.Wrap(ErrStageSkip, "RepeatMsgOperator: Not enabled")
+		return errors.Wrap(ErrStageSkip, "ReactMsgOperator: Not enabled")
 	}
 	return
 }

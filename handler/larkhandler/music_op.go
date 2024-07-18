@@ -39,10 +39,10 @@ func (r *MusicMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRe
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	if !larkutils.IsMentioned(event.Event.Message.Mentions) {
-		return errors.Wrap(ErrStageSkip, "RepeatMsgOperator: Not Mentioned")
+		return errors.Wrap(ErrStageSkip, "MusicMsgOperator: Not Mentioned")
 	}
 	if event.Event.Message.ParentId != nil {
-		return errors.Wrap(ErrStageSkip, "RepeatMsgOperator: Has ParentId")
+		return errors.Wrap(ErrStageSkip, "MusicMsgOperator: Has ParentId")
 	}
 	return
 }
