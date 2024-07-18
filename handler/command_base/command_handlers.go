@@ -1,4 +1,4 @@
-package commandcli
+package commandBase
 
 import (
 	"context"

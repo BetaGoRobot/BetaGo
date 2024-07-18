@@ -8,5 +8,6 @@ func init() {
 		AddParallelStages(&RepeatMsgOperator{}).
 		AddParallelStages(&ReactMsgOperator{}).
 		AddParallelStages(&WordReplyMsgOperator{}).
-		AddParallelStages(&MusicMsgOperator{})
+		AddParallelStages(&MusicMsgOperator{}).
+		AddParallelStages(&CommandOperator{})
 }

@@ -2,11 +2,15 @@ package larkhandler
 
 import (
 	"context"
+	"strings"
 
-	commandcli "github.com/BetaGoRobot/BetaGo/handler/larkhandler/command_cli"
+	_ "github.com/BetaGoRobot/BetaGo/handler/command_base"
+	larkcommand "github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
@@ -35,12 +39,6 @@ func (r *CommandOperator) PreRun(ctx context.Context, event *larkim.P2MessageRec
 	if !larkutils.IsMentioned(event.Event.Message.Mentions) {
 		return errors.Wrap(ErrStageSkip, "CommandOperator: Not Mentioned")
 	}
-	if event.Event.Message.ParentId == nil {
-		return errors.Wrap(ErrStageSkip, "CommandOperator: No ParentId")
-	}
-
-	// Get Command
-
 	return
 }
 
@@ -54,8 +52,12 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
-	_ = commandcli.Re
-	// parentChat := larkutils.GetMsgByID(ctx, *event.Event.Message.ParentId)
-
+	content := larkutils.PreGetTextMsg(ctx, event)
+	content = larkutils.TrimAtMsg(ctx, content)
+	err = larkcommand.LarkRootCommand.Execute(ctx, event, strings.Fields(content))
+	if err != nil {
+		log.ZapLogger.Error("CommandOperator", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+		return
+	}
 	return nil
 }
