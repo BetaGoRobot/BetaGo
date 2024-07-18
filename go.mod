@@ -13,7 +13,7 @@ replace (
 )
 
 require (
-	github.com/bytedance/sonic v1.11.8
+	github.com/bytedance/sonic v1.11.9
 	github.com/carlmjohnson/requests v0.23.5
 	github.com/dlclark/regexp2 v1.11.0
 	github.com/eko/gocache/lib/v4 v4.1.6
