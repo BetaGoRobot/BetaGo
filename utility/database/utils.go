@@ -93,7 +93,10 @@ func FindByCacheFunc[T any](model T, keyFunc func(T) string) (res []T, hitCache 
 	GetDbConnection().Find(&res, model)
 	cacheValue := &sync.Map{}
 	for _, r := range res {
-		cacheValue.Store(keyFunc(r), r)
+		_, loaded := cacheValue.LoadOrStore(keyFunc(r), r)
+		if loaded {
+			panic("Duplicate key")
+		}
 	}
 	dbDataCache.Set(context.Background(), cacheKey, cacheValue)
 	return

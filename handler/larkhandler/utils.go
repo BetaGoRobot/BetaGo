@@ -12,7 +12,7 @@ func getRandomEmoji() string {
 
 func checkFunctionEnabling(chatID string, function consts.LarkFunctionEnum) bool {
 	queryDatas, _ := database.FindByCacheFunc(
-		database.FunctionEnabling{GuildID: chatID},
+		database.FunctionEnabling{GuildID: chatID, Function: function},
 		func(d database.FunctionEnabling) string {
 			return d.GuildID + string(d.Function)
 		},
