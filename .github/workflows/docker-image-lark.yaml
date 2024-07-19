@@ -26,29 +26,30 @@ env:
   NETEASE_PHONE: "${{ secrets.NETEASE_PHONE }}"
   NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
   TENCENT_HEADER: ccr.ccs.tencentyun.com
-  REGISTRY: ghcr.io
 jobs:
   Build_Push:
     runs-on: ubuntu-latest
     steps:
-      - name: Log into registry
-        uses: nick-fields/retry@v2
-        if: github.event_name != 'pull_request'
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          retry_wait_seconds: 15
-          command: | 
-            echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login ccr.ccs.tencentyun.com -u 100016072032 --password-stdin
-            echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker login -u kevinmatt --password-stdin
-      - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Log into registry ghcr.io
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log into registry dockerhub
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: dockerhub
+          username: kevinmatt
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+      - name: Log into registry tencentcloud
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ccr.ccs.tencentyun.com
+          username: "100016072032"
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
       - name: Build image
         uses: nick-fields/retry@v2
         with:
