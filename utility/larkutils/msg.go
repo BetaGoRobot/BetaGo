@@ -100,7 +100,7 @@ func GetCommand(ctx context.Context, content string) (commands []string) {
 		return
 	}
 	if match.GroupByName("content") != nil {
-		commands = strings.Fields(strings.TrimLeft(match.GroupByName("content").String(), "/"))
+		commands = strings.Fields(strings.ToLower(strings.TrimLeft(match.GroupByName("content").String(), "/")))
 	}
 
 	return
