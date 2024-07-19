@@ -160,6 +160,7 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 			Body(
 				larkim.NewReplyMessageReqBodyBuilder().
 					MsgType(larkim.MsgTypeInteractive).
+					ReplyInThread(true).
 					Uuid(msgID).
 					Content(cardMsg).
 					Build(),
@@ -176,7 +177,7 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 //	@param ctx
 //	@param text
 //	@param msgID
-func ReplyMsg(ctx context.Context, text string, msgID string) {
+func ReplyMsg(ctx context.Context, text string, msgID string, visible bool) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 

@@ -31,7 +31,7 @@ func getIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...
 	defer span.End()
 
 	if data.Event.Message.ParentId == nil {
-		return nil
+		return errors.New("No parent Msg Quoted")
 	}
 	req := larkim.NewReplyMessageReqBuilder().Body(
 		larkim.NewReplyMessageReqBodyBuilder().Content(larkim.NewTextMsgBuilder().Text(getIDText + *data.Event.Message.ParentId).Build()).MsgType(larkim.MsgTypeText).ReplyInThread(true).Uuid(*data.Event.Message.MessageId + "reply").Build(),
