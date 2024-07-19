@@ -41,7 +41,7 @@ jobs:
       - name: Log into registry dockerhub
         uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
         with:
-          registry: dockerhub
+          registry: hub.docker.com
           username: kevinmatt
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
       - name: Log into registry tencentcloud
