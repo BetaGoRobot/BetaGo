@@ -2,6 +2,7 @@ package larkhandler
 
 import (
 	"context"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -81,10 +82,28 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 			break
 		}
 	}
-
+	realRate = 100
 	if utility.Probability(float64(realRate) / 100) {
 		// sendMsg
-		textMsg := larkim.NewTextMsgBuilder().Text(msg).Build()
+		textMsgBuilder := larkim.NewTextMsgBuilder()
+
+		// rebuild at msg
+		subMsgList := strings.Split(msg, " ")
+		mentionsMap := make(map[string]*larkim.MentionEvent)
+		for _, mention := range event.Event.Message.Mentions {
+			mentionsMap[*mention.Key] = mention
+		}
+		for index, subMsg := range subMsgList {
+			if mentionEvent, ok := mentionsMap[subMsg]; ok {
+				textMsgBuilder.AtUser(*mentionEvent.Id.UserId, *mentionEvent.Name)
+			} else {
+				textMsgBuilder.Text(subMsg)
+			}
+			if index != len(subMsgList)-1 {
+				textMsgBuilder.Text(" ")
+			}
+		}
+		textMsg := textMsgBuilder.Build()
 		req := larkim.NewCreateMessageReqBuilder().ReceiveIdType(larkim.ReceiveIdTypeChatId).Body(
 			larkim.NewCreateMessageReqBodyBuilder().
 				ReceiveId(*event.Event.Message.ChatId).
