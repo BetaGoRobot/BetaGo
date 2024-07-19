@@ -82,7 +82,6 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 			break
 		}
 	}
-	realRate = 100
 	if utility.Probability(float64(realRate) / 100) {
 		// sendMsg
 		textMsgBuilder := larkim.NewTextMsgBuilder()
