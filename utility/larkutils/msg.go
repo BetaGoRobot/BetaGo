@@ -37,7 +37,7 @@ func PreGetTextMsg(ctx context.Context, event *larkim.P2MessageReceiveV1) string
 
 var (
 	atMsgRepattern      = regexp2.MustCompile(`@[^ ]+\s+(?P<content>.+)`, regexp2.RE2)
-	commandMsgRepattern = regexp2.MustCompile(`@[^ ]+\s+\/(?P<content>.+)`, regexp2.RE2)
+	commandMsgRepattern = regexp2.MustCompile(`((@[^ ]+\s+)|^)\/(?P<content>.+)`, regexp2.RE2)
 )
 
 // TrimAtMsg trim掉at的消息

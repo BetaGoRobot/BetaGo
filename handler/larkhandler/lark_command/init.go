@@ -20,6 +20,9 @@ func init() {
 				).
 				AddSubCommand(
 					newCmd("get_group_id", getGroupIDHandler),
+				).
+				AddSubCommand(
+					newCmd("try_panic", tryPanicHandler),
 				),
 		)
 }

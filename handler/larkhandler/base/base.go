@@ -1,77 +1,79 @@
-// Package larkhandler  存放lark消息的处理handler
-//
-//	@update 2024-07-16 09:52:36
-package larkhandler
+package base
 
 import (
 	"context"
 	"sync"
 
-	"github.com/BetaGoRobot/BetaGo/handler"
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
-	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
 )
 
-var _ handler.BotMsgProcessor = &LarkMsgProcessor{}
+type Operator[T any] interface {
+	PreRun(context.Context, *T) error
+	Run(context.Context, *T) error
+	PostRun(context.Context, *T) error
+}
+type OperatorBase[T any] struct{}
 
 type (
-	// LarkMsgProcessor struct  消息处理器
-	//	@update 2024-07-16 09:52:28
-	LarkMsgProcessor struct {
+	ProcessorDeferFunc[T any] func(context.Context, any, *T)
+	Processor[T any]          struct {
 		context.Context
 		needBreak       bool
-		event           *larkim.P2MessageReceiveV1
-		stages          []LarkMsgOperator
-		parrallelStages []LarkMsgOperator
-	}
-
-	LarkMsgOperatorBase struct{}
-	// LarkMsgOperator interface  算子接口
-	//	@update 2024-07-16 09:52:20
-	LarkMsgOperator interface {
-		PreRun(context.Context, *larkim.P2MessageReceiveV1) error
-		Run(context.Context, *larkim.P2MessageReceiveV1) error
-		PostRun(context.Context, *larkim.P2MessageReceiveV1) error
+		data            *T
+		stages          []Operator[T]
+		parrallelStages []Operator[T]
+		deferFunc       ProcessorDeferFunc[T]
 	}
 )
 
-func (op *LarkMsgOperatorBase) PreRun(context.Context, *larkim.P2MessageReceiveV1) error {
+func (op *OperatorBase[T]) PreRun(context.Context, *T) error {
 	return nil
 }
 
-func (op *LarkMsgOperatorBase) Run(context.Context, *larkim.P2MessageReceiveV1) error {
+func (op *OperatorBase[T]) Run(context.Context, *T) error {
 	return nil
 }
 
-func (op *LarkMsgOperatorBase) PostRun(context.Context, *larkim.P2MessageReceiveV1) error {
+func (op *OperatorBase[T]) PostRun(context.Context, *T) error {
 	return nil
 }
 
-func (p *LarkMsgProcessor) WithCtx(ctx context.Context) *LarkMsgProcessor {
+func (p *Processor[T]) WithCtx(ctx context.Context) *Processor[T] {
 	p.Context = ctx
 	return p
 }
 
-func (p *LarkMsgProcessor) WithEvent(event *larkim.P2MessageReceiveV1) *LarkMsgProcessor {
-	p.event = event
+func (p *Processor[T]) WithDefer(fn ProcessorDeferFunc[T]) *Processor[T] {
+	p.deferFunc = fn
 	return p
 }
 
-func (p *LarkMsgProcessor) Clean() *LarkMsgProcessor {
-	p.event = nil
+func (p *Processor[T]) WithEvent(event *T) *Processor[T] {
+	p.data = event
+	return p
+}
+
+func (p *Processor[T]) Clean() *Processor[T] {
+	p.data = nil
 	p.Context = nil
 	return p
+}
+
+func (p *Processor[T]) Defer() {
+	if err := recover(); err != nil {
+		p.deferFunc(p.Context, err, p.data)
+	}
 }
 
 // AddStages  添加处理阶段
 //
 //	@receiver p
 //	@param stage
-//	@return *LarkMsgProcessor
-func (p *LarkMsgProcessor) AddStages(stage LarkMsgOperator) *LarkMsgProcessor {
+//	@return *Processor[T]
+func (p *Processor[T]) AddStages(stage Operator[T]) *Processor[T] {
 	p.stages = append(p.stages, stage)
 	return p
 }
@@ -80,8 +82,8 @@ func (p *LarkMsgProcessor) AddStages(stage LarkMsgOperator) *LarkMsgProcessor {
 //
 //	@receiver p
 //	@param stage
-//	@return *LarkMsgProcessor
-func (p *LarkMsgProcessor) AddParallelStages(stage LarkMsgOperator) *LarkMsgProcessor {
+//	@return *Processor[T]
+func (p *Processor[T]) AddParallelStages(stage Operator[T]) *Processor[T] {
 	p.parrallelStages = append(p.parrallelStages, stage)
 	return p
 }
@@ -91,31 +93,29 @@ func (p *LarkMsgProcessor) AddParallelStages(stage LarkMsgOperator) *LarkMsgProc
 //	@receiver p
 //	@param ctx
 //	@param event
-func (p *LarkMsgProcessor) RunStages() (err error) {
-	defer larkutils.RecoverMsg(p.Context, *p.event.Event.Message.MessageId)
-
+func (p *Processor[T]) RunStages() (err error) {
 	for _, s := range p.stages {
-		err = s.PreRun(p.Context, p.event)
+		err = s.PreRun(p.Context, p.data)
 		if err != nil {
-			if errors.Is(err, ErrStageSkip) {
+			if errors.Is(err, consts.ErrStageSkip) {
 				log.ZapLogger.Warn("pre run stage skipped: ", zaplog.Error(err))
 			} else {
 				log.ZapLogger.Error("pre run stage skipped: ", zaplog.Error(err))
 			}
 			return
 		}
-		err = s.Run(p.Context, p.event)
+		err = s.Run(p.Context, p.data)
 		if err != nil {
-			if errors.Is(err, ErrStageSkip) {
+			if errors.Is(err, consts.ErrStageSkip) {
 				log.ZapLogger.Warn("run stage skipped: ", zaplog.Error(err))
 			} else {
 				log.ZapLogger.Error("run stage skipped: ", zaplog.Error(err))
 			}
 			return
 		}
-		err = s.PostRun(p.Context, p.event)
+		err = s.PostRun(p.Context, p.data)
 		if err != nil {
-			if errors.Is(err, ErrStageSkip) {
+			if errors.Is(err, consts.ErrStageSkip) {
 				log.ZapLogger.Warn("post run stage skipped: ", zaplog.Error(err))
 			} else {
 				log.ZapLogger.Error("post run stage skipped: ", zaplog.Error(err))
@@ -132,41 +132,41 @@ func (p *LarkMsgProcessor) RunStages() (err error) {
 //	@param ctx
 //	@param event
 //	@return error
-func (p *LarkMsgProcessor) RunParallelStages() error {
-	defer larkutils.RecoverMsg(p.Context, *p.event.Event.Message.MessageId)
-
+func (p *Processor[T]) RunParallelStages() error {
 	wg := sync.WaitGroup{}
 	errorChan := make(chan error, len(p.parrallelStages))
 
 	for _, operator := range p.parrallelStages {
 		wg.Add(1)
-		go func(op LarkMsgOperator) {
+		go func(op Operator[T]) {
+			defer p.Defer()
 			var err error
 			defer func() {
 				errorChan <- err
 				wg.Done()
 			}()
-			err = op.PreRun(p.Context, p.event)
+			err = op.PreRun(p.Context, p.data)
 			if err != nil {
-				if errors.Is(err, ErrStageSkip) {
+				if errors.Is(err, consts.ErrStageSkip) {
 					log.ZapLogger.Warn("pre run stage skipped: ", zaplog.Error(err))
 				} else {
 					log.ZapLogger.Error("pre run stage skipped: ", zaplog.Error(err))
 				}
 				return
 			}
-			err = op.Run(p.Context, p.event)
+
+			err = op.Run(p.Context, p.data)
 			if err != nil {
-				if errors.Is(err, ErrStageSkip) {
+				if errors.Is(err, consts.ErrStageSkip) {
 					log.ZapLogger.Warn("run stage skipped: ", zaplog.Error(err))
 				} else {
 					log.ZapLogger.Error("run stage skipped: ", zaplog.Error(err))
 				}
 				return
 			}
-			err = op.PostRun(p.Context, p.event)
+			err = op.PostRun(p.Context, p.data)
 			if err != nil {
-				if errors.Is(err, ErrStageSkip) {
+				if errors.Is(err, consts.ErrStageSkip) {
 					log.ZapLogger.Warn("post run stage skipped: ", zaplog.Error(err))
 				} else {
 					log.ZapLogger.Error("post run stage skipped: ", zaplog.Error(err))

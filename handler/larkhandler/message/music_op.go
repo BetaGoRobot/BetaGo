@@ -1,14 +1,11 @@
-package applicationhandler
+package message
 
 import (
 	"context"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
-	"github.com/BetaGoRobot/BetaGo/handler/larkhandler"
+	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/base"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
@@ -17,64 +14,59 @@ import (
 	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func isOutDated(createTime string) bool {
-	stamp, err := strconv.ParseInt(createTime, 10, 64)
-	if err != nil {
-		panic(err)
-	}
-	return time.Now().Sub(time.UnixMilli(stamp)) > time.Second*10
+var _ base.Operator[larkim.P2MessageReceiveV1] = &MusicMsgOperator{}
+
+// MusicMsgOperator Repeat
+//
+//	@author heyuhengmatt
+//	@update 2024-07-17 01:36:07
+type MusicMsgOperator struct {
+	base.OperatorBase[larkim.P2MessageReceiveV1]
 }
 
-// MessageV2Handler Repeat
+// PreRun Music
 //
+//	@receiver r *MusicMsgOperator
+//	@param ctx context.Context
+//	@param event *larkim.P2MessageReceiveV1
+//	@return err error
+//	@author heyuhengmatt
+//	@update 2024-07-17 01:34:09
+func (r *MusicMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+	if !larkutils.IsMentioned(event.Event.Message.Mentions) {
+		return errors.Wrap(consts.ErrStageSkip, "MusicMsgOperator: Not Mentioned")
+	}
+	if event.Event.Message.ParentId != nil {
+		return errors.Wrap(consts.ErrStageSkip, "MusicMsgOperator: Has ParentId")
+	}
+	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
+		return errors.Wrap(consts.ErrStageSkip, "MusicMsgOperator: Is Command")
+	}
+	return
+}
+
+// Run  Repeat
+//
+//	@receiver r
 //	@param ctx
 //	@param event
-//	@return error
-func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) error {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	defer larkutils.RecoverMsg(ctx, *event.Event.Message.MessageId)
-	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
-	defer span.End()
-
-	if isOutDated(*event.Event.Message.CreateTime) {
-		return nil
-	}
-	if *event.Event.Sender.SenderId.OpenId == consts.BotOpenID {
-		return nil
-	}
-	larkhandler.MessageHandler.Clean().WithCtx(ctx).WithEvent(event).RunStages()
-	go larkhandler.MessageHandler.Clean().WithCtx(ctx).WithEvent(event).RunParallelStages()
-
-	log.ZapLogger.Info(larkcore.Prettify(event))
-	return nil
-}
-
-// MessageReactionHandler Repeat
-//
-//	@param ctx
-//	@param event
-//	@return error
-func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReactionCreatedV1) error {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	defer larkutils.RecoverMsg(ctx, *event.Event.ReactionType.EmojiType)
-	defer span.End()
-
-	return nil
-}
-
-func getMusicAndSend(ctx context.Context, event *larkim.P2MessageReceiveV1, msg string) (err error) {
-	defer larkutils.RecoverMsg(ctx, *event.Event.Message.MessageId)
+//	@return err
+func (r *MusicMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
+	defer span.RecordError(err)
 
-	keywords := strings.Split(msg, " ")[1:]
-	if keyword := strings.ToLower(strings.Join(keywords, " ")); keyword == "try panic" {
-		panic("try panic!")
-	}
+	msg := larkutils.PreGetTextMsg(ctx, event)
+	msg = larkutils.TrimAtMsg(ctx, msg)
+	keywords := []string{msg}
+
 	res, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(ctx, keywords...)
 	if err != nil {
 		return err

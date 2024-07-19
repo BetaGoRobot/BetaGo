@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/BetaGoRobot/BetaGo/consts/env"
-	applicationhandler "github.com/BetaGoRobot/BetaGo/handler/larkhandler/application_handler"
+	"github.com/BetaGoRobot/BetaGo/handler/larkhandler"
 
 	larkcard "github.com/larksuite/oapi-sdk-go/v3/card"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -19,9 +19,9 @@ import (
 func longConn() { // 注册事件回调
 	eventHandler := dispatcher.
 		NewEventDispatcher("", "").
-		OnP2MessageReactionCreatedV1(applicationhandler.MessageReactionHandler).
-		OnP2MessageReceiveV1(applicationhandler.MessageV2Handler).
-		OnP2ApplicationAppVersionAuditV6(applicationhandler.AuditV6Handler)
+		OnP2MessageReactionCreatedV1(larkhandler.MessageReactionHandler).
+		OnP2MessageReceiveV1(larkhandler.MessageV2Handler).
+		OnP2ApplicationAppVersionAuditV6(larkhandler.AuditV6Handler)
 	// 创建Client
 	cli := larkws.NewClient(env.LarkAppID, env.LarkAppSecret,
 		larkws.WithEventHandler(eventHandler),
@@ -40,7 +40,7 @@ func webHook() {
 		NewCardActionHandler(
 			os.Getenv("LARK_VERIFICATION"),
 			os.Getenv("LARK_ENCRYPTION"),
-			applicationhandler.WebHookHandler,
+			larkhandler.WebHookHandler,
 		)
 
 	// 注册处理器

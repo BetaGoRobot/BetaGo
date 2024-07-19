@@ -1,4 +1,4 @@
-package larkhandler
+package message
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/base"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -17,14 +18,14 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ LarkMsgOperator = &RepeatMsgOperator{}
+var _ base.Operator[larkim.P2MessageReceiveV1] = &RepeatMsgOperator{}
 
 // RepeatMsgOperator  RepeatMsg Op
 //
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:35:51
 type RepeatMsgOperator struct {
-	LarkMsgOperatorBase
+	base.OperatorBase[larkim.P2MessageReceiveV1]
 }
 
 // PreRun Repeat
@@ -38,13 +39,12 @@ type RepeatMsgOperator struct {
 func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-
 	// 先判断群聊的功能启用情况
-	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
-		return errors.Wrap(ErrStageSkip, "RepeatMsgOperator: Not enabled")
+	if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
+		return errors.Wrap(consts.ErrStageSkip, "RepeatMsgOperator: Not enabled")
 	}
 	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
-		return errors.Wrap(ErrStageSkip, "RepeatMsgOperator: Is Command")
+		return errors.Wrap(consts.ErrStageSkip, "RepeatMsgOperator: Is Command")
 	}
 	return
 }

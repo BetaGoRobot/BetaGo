@@ -4,6 +4,7 @@ import (
 	"context"
 	"runtime/debug"
 
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
@@ -113,44 +114,85 @@ var panicCardPattern = `{
 
 func RecoverMsg(ctx context.Context, msgID string) {
 	if err := recover(); err != nil {
-		_, span := otel.LarkRobotOtelTracer.Start(ctx, "RecoverMsg")
-		defer span.End()
+		SendRecoveredMsg(ctx, err, msgID)
+	}
+}
 
-		traceID := span.SpanContext().TraceID().String()
-		title := "Panic Detected!"
-		subTitle := "Please check the log for more information."
-		buttonText := "Jaeger Tracer -" + traceID
-		stack := string(debug.Stack())
+func RecoverMsgEvent(ctx context.Context, event *larkim.P2MessageReceiveV1) {
+	if err := recover(); err != nil {
+		SendRecoveredMsg(ctx, err, *event.Event.Message.MessageId)
+	}
+}
 
-		log.ZapLogger.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("msg_id", msgID))
+// SendRecoveredMsg  SendRecoveredMsg
+//
+//	@param ctx
+//	@param msgID
+//	@param err
+func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, "RecoverMsg")
+	defer span.End()
 
-		newCard := newPattern()
-		newCard.I18NElements.ZhCn[0].Content = "```go\n" + stack + "\n```"
-		newCard.I18NElements.ZhCn[1].Actions[0].Text.Content = buttonText
-		newCard.I18NElements.ZhCn[1].Actions[0].MultiURL.URL = "https://jaeger.kmhomelab.cn/trace/" + traceID
-		newCard.I18NHeader.ZhCn.Title.Content = title
-		newCard.I18NHeader.ZhCn.Subtitle.Content = subTitle
+	traceID := span.SpanContext().TraceID().String()
+	title := "Panic Detected!"
+	subTitle := "Please check the log for more information."
+	buttonText := "Jaeger Tracer -" + traceID
+	stack := string(debug.Stack())
 
-		cardMsg, err := sonic.MarshalString(newCard)
-		if err != nil {
-			log.ZapLogger.Error("marshal error", zaplog.Any("error", err))
-			return
-		}
+	log.ZapLogger.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("msg_id", msgID))
 
-		_, err = LarkClient.Im.Message.Reply(ctx,
-			larkim.NewReplyMessageReqBuilder().
-				MessageId(msgID).
-				Body(
-					larkim.NewReplyMessageReqBodyBuilder().
-						MsgType(larkim.MsgTypeInteractive).
-						Uuid(msgID).
-						Content(cardMsg).
-						Build(),
-				).
-				Build(),
-		)
-		if err != nil {
-			log.ZapLogger.Error("send error", zaplog.Any("error", err))
-		}
+	newCard := newPattern()
+	newCard.I18NElements.ZhCn[0].Content = "```go\n" + stack + "\n```"
+	newCard.I18NElements.ZhCn[1].Actions[0].Text.Content = buttonText
+	newCard.I18NElements.ZhCn[1].Actions[0].MultiURL.URL = "https://jaeger.kmhomelab.cn/trace/" + traceID
+	newCard.I18NHeader.ZhCn.Title.Content = title
+	newCard.I18NHeader.ZhCn.Subtitle.Content = subTitle
+
+	cardMsg, err := sonic.MarshalString(newCard)
+	if err != nil {
+		log.ZapLogger.Error("marshal error", zaplog.Any("error", err))
+		return
+	}
+
+	_, err = LarkClient.Im.Message.Reply(ctx,
+		larkim.NewReplyMessageReqBuilder().
+			MessageId(msgID).
+			Body(
+				larkim.NewReplyMessageReqBodyBuilder().
+					MsgType(larkim.MsgTypeInteractive).
+					Uuid(msgID).
+					Content(cardMsg).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		log.ZapLogger.Error("send error", zaplog.Any("error", err))
+	}
+}
+
+// ReplyMsg ReplyMsg
+//
+//	@param ctx
+//	@param text
+//	@param msgID
+func ReplyMsg(ctx context.Context, text string, msgID string) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	_, err := LarkClient.Im.Message.Reply(ctx,
+		larkim.NewReplyMessageReqBuilder().
+			MessageId(msgID).
+			Body(
+				larkim.NewReplyMessageReqBodyBuilder().
+					MsgType(larkim.MsgTypeText).
+					Uuid(msgID).
+					Content(larkim.NewTextMsgBuilder().Text(text).Build()).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		log.ZapLogger.Error("send error", zaplog.Any("error", err))
 	}
 }

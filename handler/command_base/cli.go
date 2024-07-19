@@ -5,7 +5,9 @@ package commandBase
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/pkg/errors"
 )
 
 // CommandFunc Repeat
@@ -35,12 +37,12 @@ func (c *Command[T]) Execute(ctx context.Context, data T, args []string) error {
 		return c.Func(ctx, data, args...)
 	}
 	if len(args) == 0 { // 无执行方法且无后续参数
-		return fmt.Errorf("no command or arguments provided")
+		return nil
 	}
 	if subcommand, ok := c.SubCommands[args[0]]; ok {
 		return subcommand.Execute(ctx, data, args[1:])
 	}
-	return nil
+	return errors.Wrapf(consts.ErrCommandNotFound, "Command <b>%s</b> Not Found", args[0])
 }
 
 // Validate 从当前节点开始，执行Command

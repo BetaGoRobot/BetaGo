@@ -1,9 +1,10 @@
-package larkhandler
+package message
 
 import (
 	"context"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/base"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -15,11 +16,11 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ LarkMsgOperator = &ReactMsgOperator{}
+var _ base.Operator[larkim.P2MessageReceiveV1] = &ReactMsgOperator{}
 
 // ReactMsgOperator  Repeat
 type ReactMsgOperator struct {
-	LarkMsgOperatorBase
+	base.OperatorBase[larkim.P2MessageReceiveV1]
 }
 
 // PreRun Repeat
@@ -33,8 +34,9 @@ func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRe
 	defer span.End()
 
 	// 先判断群聊的功能启用情况
-	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomReact) {
-		return errors.Wrap(ErrStageSkip, "ReactMsgOperator: Not enabled")
+	if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomReact) {
+		span.RecordError(err)
+		return errors.Wrap(consts.ErrStageSkip, "ReactMsgOperator: Not enabled")
 	}
 	return
 }
@@ -48,6 +50,7 @@ func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRe
 func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
+	defer span.RecordError(err)
 
 	// React
 	// 先判断群聊的功能启用情况
@@ -77,7 +80,7 @@ func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 					larkim.NewCreateMessageReactionReqBodyBuilder().
 						ReactionType(
 							larkim.NewEmojiBuilder().
-								EmojiType(getRandomEmoji()).
+								EmojiType(larkutils.GetRandomEmoji()).
 								Build(),
 						).
 						Build(),

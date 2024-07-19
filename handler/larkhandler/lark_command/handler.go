@@ -30,6 +30,9 @@ func getIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 
+	if data.Event.Message.ParentId == nil {
+		return nil
+	}
 	req := larkim.NewReplyMessageReqBuilder().Body(
 		larkim.NewReplyMessageReqBodyBuilder().Content(larkim.NewTextMsgBuilder().Text(getIDText + *data.Event.Message.ParentId).Build()).MsgType(larkim.MsgTypeText).ReplyInThread(true).Uuid(*data.Event.Message.MessageId + "reply").Build(),
 	).MessageId(*data.Event.Message.MessageId).Build()
@@ -71,5 +74,19 @@ func getGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 		}
 	}
 
+	return nil
+}
+
+// getIDHandler get ID Handler
+//
+//	@param ctx
+//	@param data
+//	@param args
+//	@return error
+func tryPanicHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
+	defer span.End()
+	panic("try panic!")
 	return nil
 }

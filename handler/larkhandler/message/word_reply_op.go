@@ -1,10 +1,11 @@
-package larkhandler
+package message
 
 import (
 	"context"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/base"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -16,14 +17,14 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ LarkMsgOperator = &WordReplyMsgOperator{}
+var _ base.Operator[larkim.P2MessageReceiveV1] = &WordReplyMsgOperator{}
 
 // WordReplyMsgOperator  Repeat
 //
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:35:11
 type WordReplyMsgOperator struct {
-	LarkMsgOperatorBase
+	base.OperatorBase[larkim.P2MessageReceiveV1]
 }
 
 // PreRun Repeat
@@ -37,14 +38,15 @@ type WordReplyMsgOperator struct {
 func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
+	defer span.RecordError(err)
 
 	// 先判断群聊的功能启用情况
-	if !checkFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionWordReply) {
-		return errors.Wrap(ErrStageSkip, "WordReplyMsgOperator: Not enabled")
+	if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionWordReply) {
+		return errors.Wrap(consts.ErrStageSkip, "WordReplyMsgOperator: Not enabled")
 	}
 
 	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
-		return errors.Wrap(ErrStageSkip, "WordReplyMsgOperator: Is Command")
+		return errors.Wrap(consts.ErrStageSkip, "WordReplyMsgOperator: Is Command")
 	}
 	return
 }
@@ -58,6 +60,7 @@ func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2Messa
 func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
+	defer span.RecordError(err)
 
 	msg := larkutils.PreGetTextMsg(ctx, event)
 	var replyStr string

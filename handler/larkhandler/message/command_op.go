@@ -1,9 +1,10 @@
-package larkhandler
+package message
 
 import (
 	"context"
 
-	_ "github.com/BetaGoRobot/BetaGo/handler/command_base"
+	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/base"
 	larkcommand "github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -16,11 +17,12 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ LarkMsgOperator = &CommandOperator{}
+var _ base.Operator[larkim.P2MessageReceiveV1] = &CommandOperator{}
 
 // CommandOperator Repeat
 type CommandOperator struct {
-	LarkMsgOperatorBase
+	base.OperatorBase[larkim.P2MessageReceiveV1]
+
 	command string
 }
 
@@ -35,11 +37,10 @@ type CommandOperator struct {
 func (r *CommandOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-	if !larkutils.IsMentioned(event.Event.Message.Mentions) {
-		return errors.Wrap(ErrStageSkip, "CommandOperator: Not Mentioned")
-	}
+	defer span.RecordError(err)
+
 	if !larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
-		return errors.Wrap(ErrStageSkip, "CommandOperator: Not Command")
+		return errors.Wrap(consts.ErrStageSkip, "CommandOperator: Not Command")
 	}
 	return
 }
@@ -54,9 +55,14 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
+	defer span.RecordError(err)
+
 	commands := larkutils.GetCommand(ctx, larkutils.PreGetTextMsg(ctx, event))
 	err = larkcommand.LarkRootCommand.Execute(ctx, event, commands)
 	if err != nil {
+		if errors.Is(err, consts.ErrCommandNotFound) {
+			larkutils.ReplyMsg(ctx, err.Error(), *event.Event.Message.MessageId)
+		}
 		log.ZapLogger.Error("CommandOperator", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		return
 	}
