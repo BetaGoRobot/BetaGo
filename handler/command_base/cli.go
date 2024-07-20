@@ -57,7 +57,7 @@ func (c *Command[T]) Execute(ctx context.Context, data T, args []string) error {
 		"%w: Command <b>%s</b> not found, available sub-commands: [%s]",
 		consts.ErrCommandNotFound,
 		args[0],
-		strings.Join(c.GetSubCommands(), ", "),
+		fmt.Sprintf(" [%s]", strings.Join(c.GetSubCommands(), "| ")),
 	)
 }
 
