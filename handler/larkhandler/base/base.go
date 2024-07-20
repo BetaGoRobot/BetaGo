@@ -15,6 +15,7 @@ type Operator[T any] interface {
 	Run(context.Context, *T) error
 	PostRun(context.Context, *T) error
 }
+
 type OperatorBase[T any] struct{}
 
 type (
