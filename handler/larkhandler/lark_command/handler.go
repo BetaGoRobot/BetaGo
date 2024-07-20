@@ -120,7 +120,7 @@ func wordAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 	}
 
 	ChatID := *data.Event.Message.ChatId
-	return database.GetDbConnection().Clauses(clause.OnConflict{
+	return database.GetDbConnection().Debug().Clauses(clause.OnConflict{
 		UpdateAll: true,
 	}).Create(&database.RepeatWordsRateCustom{
 		GuildID: ChatID,
