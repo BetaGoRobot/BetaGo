@@ -54,10 +54,10 @@ func (c *Command[T]) Execute(ctx context.Context, data T, args []string) error {
 	}
 
 	return fmt.Errorf(
-		"%w: Command <b>%s</b> not found, available sub-commands: [%s]",
+		"%w: Command <b>%s</b> not found, available sub-commands: %s",
 		consts.ErrCommandNotFound,
 		args[0],
-		fmt.Sprintf(" [%s]", strings.Join(c.GetSubCommands(), "| ")),
+		fmt.Sprintf(" [%s]", strings.Join(c.GetSubCommands(), ", ")),
 	)
 }
 
@@ -82,10 +82,10 @@ func (c *Command[T]) FormatUsage() string {
 	if c.Usage == "" {
 		baseUsage := fmt.Sprintf("Usage: %s", "/"+strings.Join(c.curComChain, " "))
 		if len(c.SupportArgs) != 0 {
-			baseUsage += fmt.Sprintf(" <%s>", strings.Join(c.GetSupportArgs(), "|"))
+			baseUsage += fmt.Sprintf(" <%s>", strings.Join(c.GetSupportArgs(), ", "))
 		}
 		if len(c.SubCommands) != 0 {
-			baseUsage += fmt.Sprintf(" [%s]", strings.Join(c.GetSubCommands(), "|"))
+			baseUsage += fmt.Sprintf(" [%s]", strings.Join(c.GetSubCommands(), ", "))
 		}
 
 		return baseUsage
