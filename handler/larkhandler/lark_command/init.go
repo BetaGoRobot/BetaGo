@@ -16,13 +16,20 @@ func init() {
 		AddSubCommand(
 			newCmd("debug", larkCommandNilFunc).
 				AddSubCommand(
-					newCmd("get_id", getIDHandler),
+					newCmd("msgid", getIDHandler),
 				).
 				AddSubCommand(
-					newCmd("get_group_id", getGroupIDHandler),
+					newCmd("chatid", getGroupIDHandler),
 				).
 				AddSubCommand(
-					newCmd("try_panic", tryPanicHandler),
+					newCmd("panic", tryPanicHandler),
+				),
+		).
+		AddSubCommand(
+			newCmd("word", larkCommandNilFunc).
+				AddSubCommand(
+					newCmd("add", wordAddHandler).AddArgs("word", "rate"),
 				),
 		)
+	LarkRootCommand.BuildChain()
 }

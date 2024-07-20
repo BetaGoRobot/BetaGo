@@ -66,22 +66,35 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 
 	// 开始摇骰子, 默认概率10%
 	realRate := utility.MustAtoI(utility.GetEnvWithDefault("REPEAT_DEFAULT_RATE", "10"))
-
+	// 群聊定制化
 	config, hitCache := database.FindByCacheFunc(
-		database.RepeatWordsRate{
-			Word: msg,
+		database.RepeatWordsRateCustom{
+			GuildID: *event.Event.Message.ChatId,
+			Word:    msg,
 		},
-		func(d database.RepeatWordsRate) string {
-			return d.Word
+		func(d database.RepeatWordsRateCustom) string {
+			return d.GuildID + d.Word
 		},
 	)
-	span.SetAttributes(attribute.Bool("RepeatWordsRate hitCache", hitCache))
-	for _, data := range config {
-		if data.Word == msg {
-			realRate = data.Rate
-			break
+	span.SetAttributes(attribute.Bool("RepeatWordsRateCustom hitCache", hitCache))
+
+	if len(config) != 0 {
+		realRate = config[0].Rate
+	} else {
+		config, hitCache := database.FindByCacheFunc(
+			database.RepeatWordsRate{
+				Word: msg,
+			},
+			func(d database.RepeatWordsRate) string {
+				return d.Word
+			},
+		)
+		span.SetAttributes(attribute.Bool("RepeatWordsRate hitCache", hitCache))
+		if len(config) != 0 {
+			realRate = config[0].Rate
 		}
 	}
+
 	if utility.Probability(float64(realRate) / 100) {
 		// sendMsg
 		textMsgBuilder := larkim.NewTextMsgBuilder()

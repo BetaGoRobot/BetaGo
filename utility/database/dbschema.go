@@ -47,6 +47,11 @@ type CommandInfo struct {
 	CreatedAt       time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt       time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
+type Genaral struct {
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
 
 // DynamicConfig is the struct of dynamic command info
 type DynamicConfig struct {
@@ -79,8 +84,16 @@ type QuoteReplyMsgCustom struct {
 }
 
 type RepeatWordsRate struct {
+	Genaral
 	Word string `json:"word" gorm:"primaryKey;autoIncrement:false"`
 	Rate int    `json:"rate"`
+}
+
+type RepeatWordsRateCustom struct {
+	Genaral
+	GuildID string `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
+	Word    string `json:"word" gorm:"primaryKey;autoIncrement:false"`
+	Rate    int    `json:"rate"`
 }
 
 // ChannelLogExt  is the struct of channel log
@@ -136,6 +149,7 @@ func init() {
 		&QuoteReplyMsg{},
 		&QuoteReplyMsgCustom{},
 		&FunctionEnabling{},
+		&RepeatWordsRateCustom{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))

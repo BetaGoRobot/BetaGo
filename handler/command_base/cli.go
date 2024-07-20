@@ -1,10 +1,11 @@
-// Package commandcli  抽象的Command执行体结构，利用泛型提供多数据类型支持的Command解析、执行流程，约定Root节点为初始节点，不会参与执行匹配
+// Package commandBase  抽象的Command执行体结构，利用泛型提供多数据类型支持的Command解析、执行流程，约定Root节点为初始节点，不会参与执行匹配
 //
 //	@update 2024-07-18 05:25:13
 package commandBase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -25,6 +26,9 @@ type Command[T any] struct {
 	Name        string
 	SubCommands map[string]*Command[T]
 	Func        CommandFunc[T]
+	Usage       string
+	SupportArgs map[string]struct{}
+	curComChain []string
 }
 
 // Execute 从当前节点开始，执行Command
@@ -40,15 +44,98 @@ func (c *Command[T]) Execute(ctx context.Context, data T, args []string) error {
 	if len(args) == 0 { // 无执行方法且无后续参数
 		return fmt.Errorf("%w: Command <b>%s</b> require sub-command", consts.ErrCommandIncomplete, c.Name)
 	}
+
 	if subcommand, ok := c.SubCommands[args[0]]; ok {
+		if usage, ok := subcommand.CheckUsage(args[1:]...); ok {
+			return errors.New(usage)
+		}
+
 		return subcommand.Execute(ctx, data, args[1:])
 	}
+
+	return fmt.Errorf(
+		"%w: Command <b>%s</b> not found, available sub-commands: [%s]",
+		consts.ErrCommandNotFound,
+		args[0],
+		strings.Join(c.GetSubCommands(), ", "),
+	)
+}
+
+// BuildChain 从当前节点开始，执行Command
+//
+//	@param c *Command[T]
+//	@return Execute
+//	@author heyuhengmatt
+//	@update 2024-07-18 05:30:21
+func (c *Command[T]) BuildChain() {
+	for _, subcommand := range c.SubCommands {
+		subcommand.curComChain = append(c.curComChain, subcommand.Name)
+		subcommand.BuildChain()
+	}
+}
+
+// FormatUsage 获取当前节点的所有SubCommands
+//
+//	@param c
+//	@return GetSubCommands
+func (c *Command[T]) FormatUsage() string {
+	if c.Usage == "" {
+		baseUsage := fmt.Sprintf("Usage: %s", "/"+strings.Join(c.curComChain, " "))
+		if len(c.SupportArgs) != 0 {
+			baseUsage += fmt.Sprintf(" <%s>", strings.Join(c.GetSupportArgs(), "|"))
+		}
+		if len(c.SubCommands) != 0 {
+			baseUsage += fmt.Sprintf(" [%s]", strings.Join(c.GetSubCommands(), "|"))
+		}
+
+		return baseUsage
+	}
+	return c.Usage
+}
+
+// CheckUsage 获取当前节点的所有SubCommands
+//
+//	@param c
+//	@return GetSubCommands
+func (c *Command[T]) CheckUsage(args ...string) (usage string, isHelp bool) {
+	if len(args) == 1 {
+		if args[0] == "--help" {
+			return c.FormatUsage(), true
+		}
+	}
+	for index, arg := range args {
+		if _, ok := c.SupportArgs[arg]; ok {
+			continue
+		}
+		if subcommand, ok := c.SubCommands[arg]; ok {
+			return subcommand.CheckUsage(args[index+1:]...)
+		}
+	}
+	return "", false
+}
+
+// GetSubCommands 获取当前节点的所有SubCommands
+//
+//	@param c
+//	@return GetSubCommands
+func (c *Command[T]) GetSubCommands() []string {
 	availableComs := make([]string, 0, len(c.SubCommands))
 	for k := range c.SubCommands {
 		availableComs = append(availableComs, k)
 	}
+	return availableComs
+}
 
-	return fmt.Errorf("%w: Command <b>%s</b> not found, available sub-commands: [%s]", consts.ErrCommandNotFound, args[0], strings.Join(availableComs, ", "))
+// GetSupportArgs 获取当前节点的所有SubCommands
+//
+//	@param c
+//	@return GetSubCommands
+func (c *Command[T]) GetSupportArgs() []string {
+	supportArgs := make([]string, 0, len(c.SupportArgs))
+	for k := range c.SupportArgs {
+		supportArgs = append(supportArgs, k)
+	}
+	return supportArgs
 }
 
 // Validate 从当前节点开始，执行Command
@@ -81,6 +168,26 @@ func (c *Command[T]) AddSubCommand(subCommand *Command[T]) *Command[T] {
 	return c
 }
 
+// AddUsage 添加一个SubCommand
+//
+//	@param c *Command[T]
+//	@return AddUsage
+func (c *Command[T]) AddUsage(usage string) *Command[T] {
+	c.Usage = usage
+	return c
+}
+
+// AddArgs 添加一个SubCommand
+//
+//	@param c *Command[T]
+//	@return AddUsage
+func (c *Command[T]) AddArgs(args ...string) *Command[T] {
+	for _, arg := range args {
+		c.SupportArgs[arg] = struct{}{}
+	}
+	return c
+}
+
 // NewCommand 创建一个新的Command结构
 //
 //	@param name string
@@ -93,6 +200,7 @@ func NewCommand[T any](name string, fn CommandFunc[T]) *Command[T] {
 		Name:        name,
 		SubCommands: make(map[string]*Command[T]),
 		Func:        fn,
+		SupportArgs: make(map[string]struct{}),
 	}
 }
 
