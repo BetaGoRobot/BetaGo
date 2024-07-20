@@ -42,7 +42,7 @@ func (c *Command[T]) Execute(ctx context.Context, data T, args []string) error {
 		return c.Func(ctx, data, args...)
 	}
 	if len(args) == 0 { // 无执行方法且无后续参数
-		return fmt.Errorf("%w: Command <b>%s</b> require sub-command", consts.ErrCommandIncomplete, c.Name)
+		return fmt.Errorf("%w: %s", consts.ErrCommandIncomplete, c.FormatUsage())
 	}
 
 	if subcommand, ok := c.SubCommands[args[0]]; ok {
