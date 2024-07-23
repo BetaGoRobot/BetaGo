@@ -7,6 +7,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/copywriting"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
@@ -179,7 +180,7 @@ func imageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 					return err
 				} else {
 					if result.RowsAffected == 0 {
-						return errors.New("the sticker already exists")
+						return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAlreadyAdd))
 					}
 				}
 			} else if *parentMsgItem.MsgType == larkim.MsgTypeImage {
@@ -193,21 +194,20 @@ func imageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 					return err
 				} else {
 					if result.RowsAffected == 0 {
-						return errors.New("the image already exists")
+						return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAlreadyAdd))
 					}
 				}
 
 			} else {
-				return errors.New("the message you quote contains no sticker or image")
+				return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgNotStickerOrIMG))
 			}
 		} else {
-			return errors.New("no img key or url, or you should quote a image message")
+			return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgQuoteNoParent))
 		}
-
 	} else {
-		return errors.New("no img key or url, or you should quote a image message")
+		return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgNotAnyValidArgs))
 	}
-
-	larkutils.ReplyMsg(ctx, "Image Added with Key "+imgKey, *data.Event.Message.MessageId, false)
+	successCopywriting := copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAddSuccess)
+	larkutils.ReplyMsg(ctx, successCopywriting, *data.Event.Message.MessageId, false)
 	return nil
 }

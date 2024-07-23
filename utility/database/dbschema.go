@@ -10,6 +10,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
+	"github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -87,6 +88,18 @@ type ReactImageMeterial struct {
 	FileID  string `json:"file_id" gorm:"primaryKey;autoIncrement:false"`
 	Type    string `json:"type"`
 }
+
+type CopyWritingGeneral struct {
+	Endpoint string         `json:"endpoint" gorm:"primaryKey;autoIncrement:false"`
+	Content  pq.StringArray `gorm:"type:text[]" json:"content"`
+}
+
+type CopyWritingCustom struct {
+	Endpoint string         `json:"endpoint" gorm:"primaryKey;autoIncrement:false"`
+	GuildID  string         `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
+	Content  pq.StringArray `gorm:"type:text[]" json:"content"`
+}
+
 type RepeatWordsRate struct {
 	Genaral
 	Word string `json:"word" gorm:"primaryKey;autoIncrement:false"`
@@ -155,6 +168,8 @@ func init() {
 		&FunctionEnabling{},
 		&RepeatWordsRateCustom{},
 		&ReactImageMeterial{},
+		&CopyWritingCustom{},
+		&CopyWritingGeneral{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))

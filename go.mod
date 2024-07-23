@@ -28,6 +28,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/kevinmatthe/zaplog v0.1.6
 	github.com/larksuite/oapi-sdk-go/v3 v3.2.9
+	github.com/lib/pq v1.10.9
 	github.com/lonelyevil/kook v0.0.33
 	github.com/lonelyevil/kook/log_adapter/plog v0.0.34
 	github.com/mdaverde/jsonpath v0.2.1
