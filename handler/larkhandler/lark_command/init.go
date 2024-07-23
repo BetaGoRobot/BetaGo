@@ -30,6 +30,12 @@ func init() {
 				AddSubCommand(
 					newCmd("add", wordAddHandler).AddArgs("word", "rate"),
 				),
+		).
+		AddSubCommand(
+			newCmd("image", larkCommandNilFunc).
+				AddSubCommand(
+					newCmd("add", imageAddHandler).AddArgs("url").AddArgs("img_key"),
+				),
 		)
 	LarkRootCommand.BuildChain()
 }

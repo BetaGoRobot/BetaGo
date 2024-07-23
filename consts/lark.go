@@ -11,3 +11,8 @@ const (
 const (
 	BotOpenID = "ou_8817f540f718affd21718f415b81597f"
 )
+
+const (
+	LarkResourceTypeImage   string = "image"
+	LarkResourceTypeSticker string = "sticker"
+)

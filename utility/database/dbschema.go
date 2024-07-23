@@ -82,7 +82,11 @@ type QuoteReplyMsgCustom struct {
 	SubStr  string `json:"sub_str" gorm:"primaryKey;autoIncrement:false"`
 	Reply   string `json:"reply"`
 }
-
+type ReactImageMeterial struct {
+	GuildID string `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
+	FileID  string `json:"file_id" gorm:"primaryKey;autoIncrement:false"`
+	Type    string `json:"type"`
+}
 type RepeatWordsRate struct {
 	Genaral
 	Word string `json:"word" gorm:"primaryKey;autoIncrement:false"`
@@ -150,6 +154,7 @@ func init() {
 		&QuoteReplyMsgCustom{},
 		&FunctionEnabling{},
 		&RepeatWordsRateCustom{},
+		&ReactImageMeterial{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))

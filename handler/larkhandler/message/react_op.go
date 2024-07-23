@@ -10,6 +10,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/bytedance/sonic"
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
@@ -92,6 +93,43 @@ func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 				return err
 			}
 			log.ZapLogger.Info("reactMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+		} else {
+			realRate = 100
+			if utility.Probability(float64(realRate) / 100) {
+				res, hitCache := database.FindByCacheFunc(database.ReactImageMeterial{
+					GuildID: *event.Event.Message.ChatId,
+				}, func(d database.ReactImageMeterial) string {
+					return d.GuildID
+				})
+				span.SetAttributes(attribute.Bool("ReactionImageMaterial hitCache", hitCache))
+				if len(res) == 0 {
+					return
+				}
+				target := utility.SampleSlice(res)
+				if target.Type == consts.LarkResourceTypeImage {
+					content, _ := sonic.MarshalString(map[string]string{
+						"image_key": target.FileID,
+					})
+					err = larkutils.SendMsgRawContentType(
+						ctx,
+						*event.Event.Message.MessageId,
+						larkim.MsgTypeImage,
+						content,
+						false,
+					)
+				} else {
+					content, _ := sonic.MarshalString(map[string]string{
+						"file_key": target.FileID,
+					})
+					err = larkutils.SendMsgRawContentType(
+						ctx,
+						*event.Event.Message.MessageId,
+						larkim.MsgTypeSticker,
+						content,
+						false,
+					)
+				}
+			}
 		}
 	}
 

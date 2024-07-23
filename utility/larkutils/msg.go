@@ -2,6 +2,8 @@ package larkutils
 
 import (
 	"context"
+	"errors"
+	"io"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
@@ -77,6 +79,14 @@ func GetMsgByID(ctx context.Context, msgID string) string {
 	return *resp.Data.Items[0].Body.Content
 }
 
+func GetMsgFullByID(ctx context.Context, msgID string) *larkim.GetMessageResp {
+	resp, err := LarkClient.Im.V1.Message.Get(ctx, larkim.NewGetMessageReqBuilder().MessageId(msgID).Build())
+	if err != nil {
+		log.ZapLogger.Error("GetMsgByID", zaplog.Error(err))
+	}
+	return resp
+}
+
 func GetCommandWithMatched(ctx context.Context, content string) (commands []string, isCommand bool) {
 	if IsCommand(ctx, content) {
 		isCommand = true
@@ -113,4 +123,39 @@ func IsCommand(ctx context.Context, content string) bool {
 		return matched
 	}
 	return matched
+}
+
+func SendMsgRawContentType(ctx context.Context, msgID, msgType, content string, replyInThread bool) error {
+	stickerReq := larkim.NewReplyMessageReqBuilder().Body(
+		larkim.NewReplyMessageReqBodyBuilder().
+			MsgType(msgType).
+			Content(content).
+			ReplyInThread(replyInThread).
+			Uuid(msgID + "_reply").Build(),
+	).MessageId(msgID).Build()
+
+	resp, err := LarkClient.Im.V1.Message.Reply(ctx, stickerReq)
+	if err != nil {
+		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err))
+		return err
+	}
+	if resp.Code != 0 {
+		log.ZapLogger.Error("ReplyMessage", zaplog.String("Error", resp.Error()))
+		return errors.New(resp.Error())
+	}
+	return nil
+}
+
+func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io.Reader, err error) {
+	req := larkim.NewGetMessageResourceReqBuilder().MessageId(msgID).FileKey(fileKey).Type(fileType).Build()
+	resp, err := LarkClient.Im.MessageResource.Get(ctx, req)
+	if err != nil {
+		log.ZapLogger.Error("GetMsgImages", zaplog.Error(err))
+		return nil, err
+	}
+	if resp.Code != 0 {
+		log.ZapLogger.Error("GetMsgImages", zaplog.String("Error", resp.Error()))
+		return nil, errors.New(resp.Error())
+	}
+	return resp.File, nil
 }

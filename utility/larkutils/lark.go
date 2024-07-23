@@ -136,6 +136,63 @@ func Upload2Lark(ctx context.Context, musicID string, bodyReader io.ReadCloser) 
 	return
 }
 
+func UploadPicture2LarkReader(ctx context.Context, picture io.Reader) (imgKey string) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	req := larkim.NewCreateImageReqBuilder().
+		Body(
+			larkim.NewCreateImageReqBodyBuilder().
+				ImageType(larkim.ImageTypeMessage).
+				Image(picture).
+				Build(),
+		).
+		Build()
+
+	resp, err := LarkClient.Im.Image.Create(ctx, req)
+	if err != nil {
+		log.ZapLogger.Error(err.Error())
+		return
+	}
+	if resp.Err != nil {
+		log.ZapLogger.Error("error with code" + strconv.Itoa(resp.Code))
+		return
+	}
+	imgKey = *resp.Data.ImageKey
+	return imgKey
+}
+
+func UploadPicture2Lark(ctx context.Context, URL string) (imgKey string) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	picData, err := getAndResizePicFromURL(ctx, URL)
+	if err != nil {
+		log.ZapLogger.Error("resize pic from url error", zaplog.Error(err))
+	}
+
+	req := larkim.NewCreateImageReqBuilder().
+		Body(
+			larkim.NewCreateImageReqBodyBuilder().
+				ImageType(larkim.ImageTypeMessage).
+				Image(bytes.NewReader(picData)).
+				Build(),
+		).
+		Build()
+
+	resp, err := LarkClient.Im.Image.Create(ctx, req)
+	if err != nil {
+		log.ZapLogger.Error(err.Error())
+		return
+	}
+	if resp.Err != nil {
+		log.ZapLogger.Error("error with code" + strconv.Itoa(resp.Code))
+		return
+	}
+	imgKey = *resp.Data.ImageKey
+	return imgKey
+}
+
 func UploadPicBatch(ctx context.Context, sourceURLIDs map[string]int) chan [2]string {
 	var (
 		c  = make(chan [2]string)
