@@ -94,7 +94,6 @@ func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 			}
 			log.ZapLogger.Info("reactMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		} else {
-			realRate = 100
 			if utility.Probability(float64(realRate) / 100) {
 				res, hitCache := database.FindByCacheFunc(database.ReactImageMeterial{
 					GuildID: *event.Event.Message.ChatId,
