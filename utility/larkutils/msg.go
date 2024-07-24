@@ -117,6 +117,7 @@ func GetCommand(ctx context.Context, content string) (commands []string) {
 }
 
 func IsCommand(ctx context.Context, content string) bool {
+	content = strings.Trim(content, " ")
 	matched, err := commandMsgRepattern.MatchString(content)
 	if err != nil {
 		log.ZapLogger.Error("GetCommand", zaplog.Error(err))
