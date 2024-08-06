@@ -93,22 +93,24 @@ func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 				content, _ := sonic.MarshalString(map[string]string{
 					"image_key": target.FileID,
 				})
-				err = larkutils.SendMsgRawContentType(
+				err = larkutils.ReplyMsgRawContentType(
 					ctx,
 					*event.Event.Message.MessageId,
 					larkim.MsgTypeImage,
 					content,
+					"_imageReact",
 					false,
 				)
 			} else {
 				content, _ := sonic.MarshalString(map[string]string{
 					"file_key": target.FileID,
 				})
-				err = larkutils.SendMsgRawContentType(
+				err = larkutils.ReplyMsgRawContentType(
 					ctx,
 					*event.Event.Message.MessageId,
 					larkim.MsgTypeSticker,
 					content,
+					"_imageReact",
 					false,
 				)
 			}

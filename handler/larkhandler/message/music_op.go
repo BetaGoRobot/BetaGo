@@ -86,24 +86,13 @@ func (r *MusicMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 	}
 
 	log.ZapLogger.Info("send music list", zaplog.Any("cardStr", cardStr))
-	req := larkim.NewReplyMessageReqBuilder().
-		Body(
-			larkim.NewReplyMessageReqBodyBuilder().
-				Content(cardStr).
-				MsgType(larkim.MsgTypeInteractive).
-				ReplyInThread(true).
-				Uuid(*event.Event.Message.MessageId).
-				Build(),
-		).MessageId(*event.Event.Message.MessageId).
-		Build()
 	_, subSpan := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
+	err = larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, larkim.MsgTypeInteractive, cardStr, "_RunMusicOp", true)
 	subSpan.End()
 
 	if err != nil {
 		log.ZapLogger.Error("send music list error", zaplog.Error(err))
 		return err
 	}
-	log.ZapLogger.Info("send music list", zaplog.Any("msg", resp.CodeError.Msg))
 	return
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"runtime/debug"
 
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
@@ -163,32 +162,6 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 					ReplyInThread(true).
 					Uuid(msgID).
 					Content(cardMsg).
-					Build(),
-			).
-			Build(),
-	)
-	if err != nil {
-		log.ZapLogger.Error("send error", zaplog.Any("error", err))
-	}
-}
-
-// ReplyMsg ReplyMsg
-//
-//	@param ctx
-//	@param text
-//	@param msgID
-func ReplyMsg(ctx context.Context, text string, msgID string, visible bool) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	defer span.End()
-
-	_, err := LarkClient.Im.Message.Reply(ctx,
-		larkim.NewReplyMessageReqBuilder().
-			MessageId(msgID).
-			Body(
-				larkim.NewReplyMessageReqBodyBuilder().
-					MsgType(larkim.MsgTypeText).
-					Uuid(msgID).
-					Content(larkim.NewTextMsgBuilder().Text(text).Build()).
 					Build(),
 			).
 			Build(),

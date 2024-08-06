@@ -8,6 +8,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
@@ -169,16 +170,28 @@ func IsCommand(ctx context.Context, content string) bool {
 	return matched
 }
 
-func SendMsgRawContentType(ctx context.Context, msgID, msgType, content string, replyInThread bool) error {
-	stickerReq := larkim.NewReplyMessageReqBuilder().Body(
+func AddTraceLog2DB(ctx context.Context, msgID string) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+	log.ZapLogger.Info("AddTraceLog2DB", zaplog.String("msgID", msgID), zaplog.String("traceID", span.SpanContext().TraceID().String()))
+	if result := database.GetDbConnection().Create(&database.MsgTraceLog{
+		MsgID:   msgID,
+		TraceID: span.SpanContext().TraceID().String(),
+	}); result.Error != nil {
+		log.ZapLogger.Error("AddTraceLog2DB", zaplog.Error(result.Error))
+	}
+}
+
+func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix string, replyInThread bool) (err error) {
+	req := larkim.NewReplyMessageReqBuilder().Body(
 		larkim.NewReplyMessageReqBodyBuilder().
 			MsgType(msgType).
 			Content(content).
 			ReplyInThread(replyInThread).
-			Uuid(msgID + "_reply").Build(),
+			Uuid(msgID + suffix).Build(),
 	).MessageId(msgID).Build()
 
-	resp, err := LarkClient.Im.V1.Message.Reply(ctx, stickerReq)
+	resp, err := LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
 		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err))
 		return err
@@ -187,7 +200,8 @@ func SendMsgRawContentType(ctx context.Context, msgID, msgType, content string, 
 		log.ZapLogger.Error("ReplyMessage", zaplog.String("Error", resp.Error()))
 		return errors.New(resp.Error())
 	}
-	return nil
+	AddTraceLog2DB(ctx, *resp.Data.MessageId)
+	return
 }
 
 func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io.Reader, err error) {
@@ -202,4 +216,65 @@ func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io
 		return nil, errors.New(resp.Error())
 	}
 	return resp.File, nil
+}
+
+// ReplyMsgText ReplyMsgText 注意：不要传入已经Build过的文本
+//
+//	@param ctx
+//	@param text
+//	@param msgID
+func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread bool) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, larkim.NewTextMsgBuilder().Text(text).Build(), suffix, replyInThread)
+}
+
+// ReplyMsgTextRaw ReplyMsgTextRaw 注意：必须传入已经Build的文本
+//
+//	@param ctx
+//	@param text
+//	@param msgID
+func ReplyMsgTextRaw(ctx context.Context, text, msgID, suffix string, replyInThread bool) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, text, suffix, replyInThread)
+}
+
+// CreateMsgText 不需要自行BuildText
+func CreateMsgText(ctx context.Context, content, msgID, chatID string) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+	// TODO: Add id saving
+	return CreateMsgTextRaw(ctx, larkim.NewTextMsgBuilder().Text(content).Build(), msgID, chatID)
+}
+
+// CreateMsgTextRaw 需要自行BuildText
+func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+	// TODO: Add id saving
+	resp, err := LarkClient.Im.Message.Create(ctx,
+		larkim.NewCreateMessageReqBuilder().
+			Body(
+				larkim.NewCreateMessageReqBodyBuilder().
+					ReceiveId(chatID).
+					Content(content).
+					Uuid(msgID+"_create").
+					MsgType(larkim.MsgTypeText).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		log.ZapLogger.Error("CreateMessage", zaplog.Error(err))
+		return err
+	}
+	if resp.Code != 0 {
+		log.ZapLogger.Error("CreateMessage", zaplog.String("Error", resp.Error()))
+		return errors.New(resp.Error())
+	}
+	AddTraceLog2DB(ctx, *resp.Data.MessageId)
+	return
 }

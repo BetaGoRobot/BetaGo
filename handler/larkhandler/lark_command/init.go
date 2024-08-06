@@ -23,6 +23,9 @@ func init() {
 				).
 				AddSubCommand(
 					newCmd("panic", tryPanicHandler),
+				).
+				AddSubCommand(
+					newCmd("trace", traceHandler),
 				),
 		).
 		AddSubCommand(

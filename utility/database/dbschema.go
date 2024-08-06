@@ -115,6 +115,12 @@ type RepeatWordsRateCustom struct {
 	Rate    int    `json:"rate"`
 }
 
+type MsgTraceLog struct {
+	MsgID     string `json:"msg_id" gorm:"primaryKey;autoIncrement:false"`
+	TraceID   string `json:"trace_id"`
+	CreatedAt time.Time
+}
+
 // ChannelLogExt  is the struct of channel log
 type ChannelLogExt struct {
 	UserID      string `json:"user_id" gorm:"primaryKey"`
@@ -172,6 +178,7 @@ func init() {
 		&ReactImageMeterial{},
 		&CopyWritingCustom{},
 		&CopyWritingGeneral{},
+		&MsgTraceLog{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))

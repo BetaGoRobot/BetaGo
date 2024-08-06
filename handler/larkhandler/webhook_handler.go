@@ -105,15 +105,10 @@ func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) 
 
 	cardStr := GetCardMusicByPage(ctx, musicID, page)
 	fmt.Println(cardStr)
-	req := larkim.NewReplyMessageReqBuilder().Body(
-		larkim.NewReplyMessageReqBodyBuilder().Content(cardStr).MsgType(larkim.MsgTypeInteractive).ReplyInThread(true).Uuid(msgID + musicID).Build(),
-	).MessageId(msgID).Build()
-	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
+	err := larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music", true)
 	if err != nil {
 		return
 	}
-
-	fmt.Println(resp)
 }
 
 func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
@@ -130,12 +125,8 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 	right := strings.Join(sp[len(sp)/2+1:], "\n\n")
 	cardStr := larkutils.GenFullLyricsCard(ctx, songDetail.Name, songDetail.Ar[0].Name, left, right)
 
-	req := larkim.NewReplyMessageReqBuilder().Body(
-		larkim.NewReplyMessageReqBodyBuilder().Content(cardStr).MsgType(larkim.MsgTypeInteractive).ReplyInThread(true).Uuid(msgID).Build(),
-	).MessageId(msgID).Build()
-	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
+	err := larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music", true)
 	if err != nil {
 		return
 	}
-	fmt.Println(resp.CodeError.Msg)
 }

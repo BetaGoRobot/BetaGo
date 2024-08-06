@@ -116,19 +116,15 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 			}
 		}
 		textMsg := textMsgBuilder.Build()
-		req := larkim.NewCreateMessageReqBuilder().ReceiveIdType(larkim.ReceiveIdTypeChatId).Body(
-			larkim.NewCreateMessageReqBodyBuilder().
-				ReceiveId(*event.Event.Message.ChatId).
-				Content(textMsg).
-				MsgType(larkim.MsgTypeText).
-				Uuid(*event.Event.Message.MessageId + "repeat").
-				Build(),
-		).Build()
-		resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
+		err := larkutils.CreateMsgTextRaw(
+			ctx,
+			textMsg,
+			*event.Event.Message.MessageId,
+			*event.Event.Message.ChatId,
+		)
 		if err != nil {
 			log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		}
-		log.ZapLogger.Info("repeatMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	}
 	return
 }

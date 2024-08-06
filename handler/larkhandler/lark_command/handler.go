@@ -40,17 +40,11 @@ func getIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...
 	if data.Event.Message.ParentId == nil {
 		return errors.New("No parent Msg Quoted")
 	}
-	req := larkim.NewReplyMessageReqBuilder().Body(
-		larkim.NewReplyMessageReqBodyBuilder().Content(larkim.NewTextMsgBuilder().Text(getIDText + *data.Event.Message.ParentId).Build()).MsgType(larkim.MsgTypeText).ReplyInThread(true).Uuid(*data.Event.Message.MessageId + "reply").Build(),
-	).MessageId(*data.Event.Message.MessageId).Build()
-	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
+
+	err := larkutils.ReplyMsgText(ctx, getIDText+*data.Event.Message.ParentId, *data.Event.Message.MessageId, "_getID", false)
 	if err != nil {
 		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		return err
-	}
-	if resp.Code != 0 {
-		log.ZapLogger.Error("ReplyMessage", zaplog.String("Error", resp.Error()), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
-		return errors.New(resp.Error())
 	}
 	return nil
 }
@@ -67,17 +61,10 @@ func getGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 	defer span.End()
 	chatID := data.Event.Message.ChatId
 	if chatID != nil {
-		req := larkim.NewReplyMessageReqBuilder().Body(
-			larkim.NewReplyMessageReqBodyBuilder().Content(larkim.NewTextMsgBuilder().Text(getGroupIDText + *chatID).Build()).MsgType(larkim.MsgTypeText).ReplyInThread(true).Uuid(*data.Event.Message.MessageId + "reply").Build(),
-		).MessageId(*data.Event.Message.MessageId).Build()
-		resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
+		err := larkutils.ReplyMsgText(ctx, getGroupIDText+*chatID, *data.Event.Message.MessageId, "_getGroupID", false)
 		if err != nil {
 			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 			return err
-		}
-		if resp.Code != 0 {
-			log.ZapLogger.Error("ReplyMessage", zaplog.String("Error", resp.Error()), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
-			return errors.New(resp.Error())
 		}
 	}
 
@@ -95,6 +82,69 @@ func tryPanicHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 	panic("try panic!")
+}
+
+func getTraceURLMD(traceID string) string {
+	return strings.Join([]string{"[Trace-", traceID[:8], "]", "(https://jaeger.kmhomelab.cn/trace/", traceID, ")"}, "")
+}
+
+func getTraceFromMsgID(ctx context.Context, msgID string) ([]string, error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	traceLogs, hitCache := database.FindByCacheFunc(database.MsgTraceLog{MsgID: msgID}, func(d database.MsgTraceLog) string {
+		return d.MsgID
+	})
+	span.SetAttributes(attribute.Bool("MsgTraceLog hitCache", hitCache))
+	if len(traceLogs) == 0 {
+		return nil, errors.New("No trace log found for the message qouted")
+	}
+	traceIDs := make([]string, 0)
+	for _, traceLog := range traceLogs {
+		traceIDs = append(traceIDs, getTraceURLMD(traceLog.TraceID))
+	}
+	return traceIDs, nil
+}
+
+func traceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
+	defer span.End()
+
+	if data.Event.Message.ThreadId != nil { // 话题模式，找到所有的traceID
+		resp, err := larkutils.LarkClient.Im.Message.List(ctx, larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
+		if err != nil {
+			return err
+		}
+		traceIDs := make([]string, 0)
+		for _, msg := range resp.Data.Items {
+			if *msg.Sender.Id == larkutils.BotAppID {
+				traceIDsTmp, err := getTraceFromMsgID(ctx, *msg.MessageId)
+				if err != nil {
+					return err
+				}
+				traceIDs = append(traceIDs, traceIDsTmp...)
+			}
+		}
+		traceIDStr := "TraceIDs:\\n" + strings.Join(traceIDs, "\\n")
+		err = larkutils.ReplyMsgText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", false)
+		if err != nil {
+			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+			return err
+		}
+	} else if data.Event.Message.ParentId != nil {
+		traceIDs, err := getTraceFromMsgID(ctx, *data.Event.Message.MessageId)
+		if err != nil {
+			return err
+		}
+		traceIDStr := "TraceIDs:\\n" + strings.Join(traceIDs, "\\n")
+		err = larkutils.ReplyMsgText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", false)
+		if err != nil {
+			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+			return err
+		}
+	}
+	return nil
 }
 
 // getIDHandler get ID Handler
@@ -208,7 +258,7 @@ func imageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 		return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgNotAnyValidArgs))
 	}
 	successCopywriting := copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAddSuccess)
-	larkutils.ReplyMsg(ctx, successCopywriting, *data.Event.Message.MessageId, false)
+	larkutils.ReplyMsgText(ctx, successCopywriting, *data.Event.Message.MessageId, "_imgAdd", false)
 	return nil
 }
 
@@ -241,7 +291,7 @@ func replyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 			}); result.Error != nil {
 			return result.Error
 		}
-		larkutils.ReplyMsg(ctx, "回复语句添加成功", *data.Event.Message.MessageId, false)
+		larkutils.ReplyMsgText(ctx, "回复语句添加成功", *data.Event.Message.MessageId, "_replyAdd", false)
 		return nil
 	}
 	return consts.ErrArgsIncompelete
