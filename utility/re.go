@@ -20,7 +20,7 @@ func init() {
 	repatternCache = gocache.New[*regexp2.Regexp](gocacheStore)
 }
 
-func RegexpMatch(pattern string, str string) bool {
+func RegexpMatch(str, pattern string) bool {
 	if v, err := repatternCache.Get(context.Background(), pattern); err == nil {
 		res, _ := v.MatchString(str)
 		return res
