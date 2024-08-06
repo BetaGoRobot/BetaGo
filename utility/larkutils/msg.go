@@ -47,7 +47,7 @@ func PreGetTextMsg(ctx context.Context, event *larkim.P2MessageReceiveV1) string
 
 var (
 	atMsgRepattern       = regexp2.MustCompile(`@[^ ]+\s+(?P<content>.+)`, regexp2.RE2)
-	commandMsgRepattern  = regexp2.MustCompile(`\/(?P<commands>[^--]+) (--)*`, regexp2.RE2)                                                                   // 只校验是不是合法命令
+	commandMsgRepattern  = regexp2.MustCompile(`\/(?P<commands>[^--]+)( --)*`, regexp2.RE2)                                                                   // 只校验是不是合法命令
 	commandFullRepattern = regexp2.MustCompile(`((@[^ ]+\s+)|^)\/(?P<commands>\w+( )*)+( )*(--(?P<arg_name>\w+)=(?P<arg_value>("[^"]*"|\S+)))*`, regexp2.RE2) // command+参数格式校验
 	commandArgRepattern  = regexp2.MustCompile(`--(?P<arg_name>\w+)(=(?P<arg_value>("[^"]*"|\S+)))?`, regexp2.RE2)                                            // 提取参数
 )
