@@ -32,6 +32,12 @@ func init() {
 				),
 		).
 		AddSubCommand(
+			newCmd("reply", larkCommandNilFunc).
+				AddSubCommand(
+					newCmd("add", replyAddHandler).AddArgs("word", "reply", "type"),
+				),
+		).
+		AddSubCommand(
 			newCmd("image", larkCommandNilFunc).
 				AddSubCommand(
 					newCmd("add", imageAddHandler).AddArgs("url").AddArgs("img_key"),

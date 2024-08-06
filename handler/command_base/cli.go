@@ -49,8 +49,11 @@ func (c *Command[T]) Execute(ctx context.Context, data T, args []string) error {
 		if usage, ok := subcommand.CheckUsage(args[1:]...); ok {
 			return errors.New(usage)
 		}
-
-		return subcommand.Execute(ctx, data, args[1:])
+		err := subcommand.Execute(ctx, data, args[1:])
+		if err != nil && err == consts.ErrArgsIncompelete {
+			return fmt.Errorf("%w: %s", consts.ErrArgsIncompelete, subcommand.FormatUsage())
+		}
+		return err
 	}
 
 	return fmt.Errorf(

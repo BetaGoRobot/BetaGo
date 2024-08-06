@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/base"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -18,14 +18,14 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ base.Operator[larkim.P2MessageReceiveV1] = &RepeatMsgOperator{}
+var _ handlerbase.Operator[larkim.P2MessageReceiveV1] = &RepeatMsgOperator{}
 
 // RepeatMsgOperator  RepeatMsg Op
 //
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:35:51
 type RepeatMsgOperator struct {
-	base.OperatorBase[larkim.P2MessageReceiveV1]
+	handlerbase.OperatorBase[larkim.P2MessageReceiveV1]
 }
 
 // PreRun Repeat

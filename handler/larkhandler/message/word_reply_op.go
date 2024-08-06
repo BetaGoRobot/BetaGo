@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/base"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -17,14 +17,14 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ base.Operator[larkim.P2MessageReceiveV1] = &WordReplyMsgOperator{}
+var _ handlerbase.Operator[larkim.P2MessageReceiveV1] = &WordReplyMsgOperator{}
 
 // WordReplyMsgOperator  Repeat
 //
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:35:11
 type WordReplyMsgOperator struct {
-	base.OperatorBase[larkim.P2MessageReceiveV1]
+	handlerbase.OperatorBase[larkim.P2MessageReceiveV1]
 }
 
 // PreRun Repeat
@@ -72,8 +72,9 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 	)
 	span.SetAttributes(attribute.Bool("QuoteReplyMsgCustom hitCache", hitCache))
 	for _, data := range customConfig {
-		if strings.Contains(msg, data.SubStr) {
+		if CheckQuoteKeywordMatch(msg, data.Keyword, data.MatchType) {
 			replyStr = data.Reply
+			break
 		}
 	}
 
@@ -82,12 +83,12 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 		data, hitCache := database.FindByCacheFunc(
 			database.QuoteReplyMsg{},
 			func(d database.QuoteReplyMsg) string {
-				return d.SubStr
+				return d.Keyword
 			},
 		)
 		span.SetAttributes(attribute.Bool("QuoteReplyMsg hitCache", hitCache))
 		for _, d := range data {
-			if strings.Contains(msg, d.SubStr) {
+			if CheckQuoteKeywordMatch(msg, d.Keyword, d.MatchType) {
 				replyStr = d.Reply
 				break
 			}
@@ -115,4 +116,17 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 		log.ZapLogger.Info("ReplyMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	}
 	return
+}
+
+func CheckQuoteKeywordMatch(msg string, keyword string, matchType consts.WordMatchType) bool {
+	switch matchType {
+	case consts.MatchTypeFull:
+		return msg == keyword
+	case consts.MatchTypeSubStr:
+		return strings.Contains(msg, keyword)
+	case consts.MatchTypeRegex:
+		return utility.RegexpMatch(msg, keyword)
+	default:
+		panic("unknown match type" + matchType)
+	}
 }

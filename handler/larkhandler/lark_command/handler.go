@@ -211,3 +211,38 @@ func imageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	larkutils.ReplyMsg(ctx, successCopywriting, *data.Event.Message.MessageId, false)
 	return nil
 }
+
+func replyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+	argMap := parseArgs(args...)
+	log.ZapLogger.Info("replyHandler", zaplog.Any("args", argMap))
+	if len(argMap) > 0 {
+		word, ok := argMap["word"]
+		if !ok {
+			return errors.New("arg word is required")
+		}
+		matchType, ok := argMap["type"]
+		if !ok {
+			return errors.New("arg type(substr, regex, full) is required")
+		}
+		if matchType != string(consts.MatchTypeSubStr) && matchType != string(consts.MatchTypeRegex) && matchType != string(consts.MatchTypeFull) {
+			return errors.New("type must be substr, regex or full")
+		}
+		reply, ok := argMap["reply"]
+		if !ok {
+			return errors.New("arg reply is required")
+		}
+		if result := database.GetDbConnection().
+			Clauses(clause.OnConflict{UpdateAll: true}).
+			Create(&database.QuoteReplyMsgCustom{
+				GuildID:   *data.Event.Message.ChatId,
+				MatchType: consts.WordMatchType(matchType),
+				Reply:     reply,
+				Keyword:   word,
+			}); result.Error != nil {
+			return result.Error
+		}
+		larkutils.ReplyMsg(ctx, "回复语句添加成功", *data.Event.Message.MessageId, false)
+		return nil
+	}
+	return consts.ErrArgsIncompelete
+}

@@ -16,6 +16,14 @@ import (
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
+func ReBuildArgs(argName, argValue string) string {
+	if trimmed := strings.Trim(argValue, "\""); trimmed != "" {
+		return strings.Join([]string{"--", argName, "=", trimmed}, "")
+	} else {
+		return strings.Join([]string{"--", argName}, "")
+	}
+}
+
 // PreGetTextMsg 获取消息内容
 //
 //	@param ctx
@@ -38,8 +46,10 @@ func PreGetTextMsg(ctx context.Context, event *larkim.P2MessageReceiveV1) string
 }
 
 var (
-	atMsgRepattern      = regexp2.MustCompile(`@[^ ]+\s+(?P<content>.+)`, regexp2.RE2)
-	commandMsgRepattern = regexp2.MustCompile(`((@[^ ]+\s+)|^)\/(?P<content>.+)`, regexp2.RE2)
+	atMsgRepattern       = regexp2.MustCompile(`@[^ ]+\s+(?P<content>.+)`, regexp2.RE2)
+	commandMsgRepattern  = regexp2.MustCompile(`\/(?P<commands>[^--]+) (--)*`, regexp2.RE2)                                                                   // 只校验是不是合法命令
+	commandFullRepattern = regexp2.MustCompile(`((@[^ ]+\s+)|^)\/(?P<commands>\w+( )*)+( )*(--(?P<arg_name>\w+)=(?P<arg_value>("[^"]*"|\S+)))*`, regexp2.RE2) // command+参数格式校验
+	commandArgRepattern  = regexp2.MustCompile(`--(?P<arg_name>\w+)(=(?P<arg_value>("[^"]*"|\S+)))?`, regexp2.RE2)                                            // 提取参数
 )
 
 // TrimAtMsg trim掉at的消息
@@ -104,13 +114,46 @@ func GetCommandWithMatched(ctx context.Context, content string) (commands []stri
 }
 
 func GetCommand(ctx context.Context, content string) (commands []string) {
-	match, err := commandMsgRepattern.FindStringMatch(content)
+	// 校验合法性
+	matched, err := commandFullRepattern.MatchString(content)
 	if err != nil {
 		log.ZapLogger.Error("GetCommand", zaplog.Error(err))
 		return
 	}
-	if match.GroupByName("content") != nil {
-		commands = strings.Fields(strings.ToLower(strings.TrimLeft(match.GroupByName("content").String(), "/")))
+	if !matched {
+		return nil
+	}
+
+	match, err := commandMsgRepattern.FindStringMatch(content)
+	if match.GroupByName("commands") != nil { // 提取command
+		commands = strings.Fields(match.GroupByName("commands").String())
+
+		// 转换args
+		match, err := commandArgRepattern.FindStringMatch(content)
+		if err != nil {
+			log.ZapLogger.Error("GetCommand", zaplog.Error(err))
+			return
+		}
+		if match != nil {
+			commands = append(commands, ReBuildArgs(
+				match.GroupByName("arg_name").String(),
+				match.GroupByName("arg_value").String()),
+			)
+			for {
+				newMatch, err := commandArgRepattern.FindNextMatch(match)
+				if err != nil {
+					panic(err)
+				}
+				if newMatch == nil {
+					break
+				}
+				match = newMatch
+				commands = append(commands, ReBuildArgs(
+					match.GroupByName("arg_name").String(),
+					match.GroupByName("arg_value").String()),
+				)
+			}
+		}
 	}
 
 	return

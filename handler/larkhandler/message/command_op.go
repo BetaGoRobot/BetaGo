@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/base"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	larkcommand "github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -17,11 +17,11 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ base.Operator[larkim.P2MessageReceiveV1] = &CommandOperator{}
+var _ handlerbase.Operator[larkim.P2MessageReceiveV1] = &CommandOperator{}
 
 // CommandOperator Repeat
 type CommandOperator struct {
-	base.OperatorBase[larkim.P2MessageReceiveV1]
+	handlerbase.OperatorBase[larkim.P2MessageReceiveV1]
 
 	command string
 }
