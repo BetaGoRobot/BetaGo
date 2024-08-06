@@ -2,6 +2,7 @@ package larkcommand
 
 import (
 	commandBase "github.com/BetaGoRobot/BetaGo/handler/command_base"
+	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command/handlers"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
@@ -16,34 +17,43 @@ func init() {
 		AddSubCommand(
 			newCmd("debug", larkCommandNilFunc).
 				AddSubCommand(
-					newCmd("msgid", getIDHandler),
+					newCmd("msgid", handlers.DebugGetIDHandler),
 				).
 				AddSubCommand(
-					newCmd("chatid", getGroupIDHandler),
+					newCmd("chatid", handlers.DebugGetGroupIDHandler),
 				).
 				AddSubCommand(
-					newCmd("panic", tryPanicHandler),
+					newCmd("panic", handlers.DebugTryPanicHandler),
 				).
 				AddSubCommand(
-					newCmd("trace", traceHandler),
+					newCmd("trace", handlers.DebugTraceHandler),
 				),
 		).
 		AddSubCommand(
 			newCmd("word", larkCommandNilFunc).
 				AddSubCommand(
-					newCmd("add", wordAddHandler).AddArgs("word", "rate"),
+					newCmd("add", handlers.WordAddHandler).AddArgs("word", "rate"),
+				).
+				AddSubCommand(
+					newCmd("get", handlers.WordGetHandler),
 				),
 		).
 		AddSubCommand(
 			newCmd("reply", larkCommandNilFunc).
 				AddSubCommand(
-					newCmd("add", replyAddHandler).AddArgs("word", "reply", "type"),
+					newCmd("add", handlers.ReplyAddHandler).AddArgs("word", "reply", "type"),
+				).
+				AddSubCommand(
+					newCmd("get", handlers.ReplyGetHandler),
 				),
 		).
 		AddSubCommand(
 			newCmd("image", larkCommandNilFunc).
 				AddSubCommand(
-					newCmd("add", imageAddHandler).AddArgs("url").AddArgs("img_key"),
+					newCmd("add", handlers.ImageAddHandler).AddArgs("url").AddArgs("img_key"),
+				).
+				AddSubCommand(
+					newCmd("get", handlers.ImageGetHandler),
 				),
 		)
 	LarkRootCommand.BuildChain()
