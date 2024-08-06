@@ -257,6 +257,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 	// TODO: Add id saving
 	resp, err := LarkClient.Im.Message.Create(ctx,
 		larkim.NewCreateMessageReqBuilder().
+			ReceiveIdType(larkim.ReceiveIdTypeChatId).
 			Body(
 				larkim.NewCreateMessageReqBodyBuilder().
 					ReceiveId(chatID).
