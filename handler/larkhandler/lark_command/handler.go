@@ -133,7 +133,7 @@ func traceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...
 			return err
 		}
 	} else if data.Event.Message.ParentId != nil {
-		traceIDs, err := getTraceFromMsgID(ctx, *data.Event.Message.MessageId)
+		traceIDs, err := getTraceFromMsgID(ctx, *data.Event.Message.ParentId)
 		if err != nil {
 			return err
 		}
