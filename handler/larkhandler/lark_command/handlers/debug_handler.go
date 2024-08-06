@@ -163,3 +163,50 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 	}
 	return nil
 }
+
+// DebugRevertHandler DebugTraceHandler to be filled
+//
+//	@param ctx context.Context
+//	@param data *larkim.P2MessageReceiveV1
+//	@param args ...string
+//	@return error
+func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
+	defer span.End()
+
+	if data.Event.Message.ThreadId != nil { // 话题模式，找到所有的traceID
+		resp, err := larkutils.LarkClient.Im.Message.List(ctx, larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
+		if err != nil {
+			return err
+		}
+		for _, msg := range resp.Data.Items {
+			if *msg.Sender.Id == larkutils.BotAppID {
+				resp, err := larkutils.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(*msg.MessageId).Build())
+				if err != nil {
+					return err
+				}
+				if resp.Code != 0 {
+					log.ZapLogger.Error("DeleteMessage", zaplog.String("MessageID", *msg.MessageId), zaplog.Error(errors.New(resp.Error())))
+				}
+			}
+		}
+	} else if data.Event.Message.ParentId != nil {
+		respMsg := larkutils.GetMsgFullByID(ctx, *data.Event.Message.ParentId)
+		msg := respMsg.Data.Items[0]
+		if msg == nil {
+			return errors.New("No parent message found")
+		}
+		if msg.Sender.Id == nil || *msg.Sender.Id != larkutils.BotAppID {
+			return errors.New("Parent message is not sent by bot")
+		}
+		resp, err := larkutils.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(*data.Event.Message.ParentId).Build())
+		if err != nil {
+			return err
+		}
+		if resp.Code != 0 {
+			return errors.New(resp.Error())
+		}
+	}
+	return nil
+}

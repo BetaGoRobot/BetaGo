@@ -27,6 +27,9 @@ func init() {
 				).
 				AddSubCommand(
 					newCmd("trace", handlers.DebugTraceHandler),
+				).
+				AddSubCommand(
+					newCmd("revert", handlers.DebugRevertHandler),
 				),
 		).
 		AddSubCommand(
