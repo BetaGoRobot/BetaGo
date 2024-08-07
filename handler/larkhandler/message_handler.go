@@ -77,6 +77,9 @@ func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReaction
 	if err != nil {
 		return err
 	}
+	if *event.Event.OperatorType != "user_id" {
+		return nil
+	}
 	member, err := larkutils.GetUserMemberFromChat(ctx, chatID, *event.Event.UserId.OpenId)
 	if err != nil {
 		return err
