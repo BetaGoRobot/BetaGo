@@ -19,7 +19,6 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
 	"github.com/kevinmatthe/zaplog"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
-	larkcontact "github.com/larksuite/oapi-sdk-go/v3/service/contact/v3"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -216,27 +215,10 @@ func UploadPicBatch(ctx context.Context, sourceURLIDs map[string]int) chan [2]st
 	return c
 }
 
-func GetUserInfo(ctx context.Context, openID string) (userInfo *larkcontact.User, err error) {
-	req := larkcontact.
-		NewGetUserReqBuilder().
-		UserIdType(larkcontact.MemberIdTypeOpenID).
-		DepartmentIdType(`open_department_id`).
-		UserId(openID).Build()
-	resp, err := LarkClient.Contact.User.Get(ctx,
-		req,
-	)
-	if err != nil {
-		return
-	}
-	if resp.CodeError.Code != 0 {
-		err = errors.New(resp.Error())
-		return
-	}
-	userInfo = resp.Data.User
-	return
-}
-
 func GetUserMapFromChatID(ctx context.Context, chatID string) (memberMap map[string]*larkim.ListMember, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
 	resp, err := LarkClient.Im.ChatMembers.Get(ctx, larkim.
 		NewGetChatMembersReqBuilder().
 		MemberIdType(`open_id`).
@@ -258,6 +240,9 @@ func GetUserMapFromChatID(ctx context.Context, chatID string) (memberMap map[str
 }
 
 func GetUserMemberFromChat(ctx context.Context, chatID, openID string) (member *larkim.ListMember, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
 	memberMap, err := GetUserMapFromChatID(ctx, chatID)
 	if err != nil {
 		return
@@ -266,6 +251,9 @@ func GetUserMemberFromChat(ctx context.Context, chatID, openID string) (member *
 }
 
 func GetChatIDFromMsgID(ctx context.Context, msgID string) (chatID string, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
 	resp := GetMsgFullByID(ctx, msgID)
 	if resp == nil || resp.CodeError.Code != 0 {
 		err = errors.New(resp.Error())

@@ -45,6 +45,20 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).RunStages()
 	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).RunParallelStages()
 
+	chatID, err := larkutils.GetChatIDFromMsgID(ctx, *event.Event.Message.MessageId)
+	if err != nil {
+		return err
+	}
+	member, err := larkutils.GetUserMemberFromChat(ctx, chatID, *event.Event.Sender.SenderId.OpenId)
+	if err != nil {
+		return err
+	}
+	database.GetDbConnection().Create(&database.InteractionStats{
+		OpenID:     *event.Event.Sender.SenderId.OpenId,
+		GuildID:    chatID,
+		UserName:   *member.Name,
+		ActionType: consts.LarkInteractionSendMsg,
+	})
 	log.ZapLogger.Info(larkcore.Prettify(event))
 	return nil
 }
