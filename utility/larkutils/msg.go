@@ -186,12 +186,16 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("msgType").String(msgType), attribute.Key("content").String(content))
 	defer span.End()
+	uuid := (msgID + suffix)
+	if len(uuid) > 50 {
+		uuid = uuid[:50]
+	}
 	req := larkim.NewReplyMessageReqBuilder().Body(
 		larkim.NewReplyMessageReqBodyBuilder().
 			MsgType(msgType).
 			Content(content).
 			ReplyInThread(replyInThread).
-			Uuid((msgID + suffix)[:50]).Build(),
+			Uuid(uuid).Build(),
 	).MessageId(msgID).Build()
 
 	resp, err := LarkClient.Im.V1.Message.Reply(ctx, req)
@@ -262,6 +266,10 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(content))
 	defer span.End()
 	// TODO: Add id saving
+	uuid := (msgID + "_create")
+	if len(uuid) > 50 {
+		uuid = uuid[:50]
+	}
 	resp, err := LarkClient.Im.Message.Create(ctx,
 		larkim.NewCreateMessageReqBuilder().
 			ReceiveIdType(larkim.ReceiveIdTypeChatId).
@@ -269,7 +277,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 				larkim.NewCreateMessageReqBodyBuilder().
 					ReceiveId(chatID).
 					Content(content).
-					Uuid((msgID + "_create")[:50]).
+					Uuid(uuid).
 					MsgType(larkim.MsgTypeText).
 					Build(),
 			).

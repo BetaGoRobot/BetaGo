@@ -152,7 +152,10 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 		log.ZapLogger.Error("marshal error", zaplog.Any("error", err))
 		return
 	}
-
+	uuid := msgID
+	if len(uuid) > 50 {
+		uuid = uuid[:50]
+	}
 	_, err = LarkClient.Im.Message.Reply(ctx,
 		larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).
@@ -160,7 +163,7 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 				larkim.NewReplyMessageReqBodyBuilder().
 					MsgType(larkim.MsgTypeInteractive).
 					ReplyInThread(true).
-					Uuid(msgID[:50]).
+					Uuid(uuid).
 					Content(cardMsg).
 					Build(),
 			).
