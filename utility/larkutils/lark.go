@@ -219,6 +219,7 @@ func GetUserMapFromChatID(ctx context.Context, chatID string) (memberMap map[str
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
+	memberMap = make(map[string]*larkim.ListMember)
 	resp, err := LarkClient.Im.ChatMembers.Get(ctx, larkim.
 		NewGetChatMembersReqBuilder().
 		MemberIdType(`open_id`).
@@ -232,7 +233,7 @@ func GetUserMapFromChatID(ctx context.Context, chatID string) (memberMap map[str
 		err = errors.New(resp.Error())
 		return
 	}
-	memberMap = make(map[string]*larkim.ListMember)
+
 	for _, item := range resp.Data.Items {
 		memberMap[*item.MemberId] = item
 	}
