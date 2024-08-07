@@ -15,6 +15,7 @@ import (
 	"github.com/dlclark/regexp2"
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func ReBuildArgs(argName, argValue string) string {
@@ -173,6 +174,7 @@ func IsCommand(ctx context.Context, content string) bool {
 func AddTraceLog2DB(ctx context.Context, msgID string) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
+
 	log.ZapLogger.Info("AddTraceLog2DB", zaplog.String("msgID", msgID), zaplog.String("traceID", span.SpanContext().TraceID().String()))
 	if result := database.GetDbConnection().Create(&database.MsgTraceLog{
 		MsgID:   msgID,
@@ -183,6 +185,9 @@ func AddTraceLog2DB(ctx context.Context, msgID string) {
 }
 
 func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix string, replyInThread bool) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("msgType").String(msgType), attribute.Key("content").String(content))
+	defer span.End()
 	req := larkim.NewReplyMessageReqBuilder().Body(
 		larkim.NewReplyMessageReqBodyBuilder().
 			MsgType(msgType).
@@ -225,6 +230,7 @@ func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io
 //	@param msgID
 func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread bool) (err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(text))
 	defer span.End()
 
 	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, larkim.NewTextMsgBuilder().Text(text).Build(), suffix, replyInThread)
@@ -237,6 +243,7 @@ func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread
 //	@param msgID
 func ReplyMsgTextRaw(ctx context.Context, text, msgID, suffix string, replyInThread bool) (err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(text))
 	defer span.End()
 
 	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, text, suffix, replyInThread)
@@ -245,6 +252,7 @@ func ReplyMsgTextRaw(ctx context.Context, text, msgID, suffix string, replyInThr
 // CreateMsgText 不需要自行BuildText
 func CreateMsgText(ctx context.Context, content, msgID, chatID string) (err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(content))
 	defer span.End()
 	// TODO: Add id saving
 	return CreateMsgTextRaw(ctx, larkim.NewTextMsgBuilder().Text(content).Build(), msgID, chatID)
@@ -253,6 +261,7 @@ func CreateMsgText(ctx context.Context, content, msgID, chatID string) (err erro
 // CreateMsgTextRaw 需要自行BuildText
 func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(content))
 	defer span.End()
 	// TODO: Add id saving
 	resp, err := LarkClient.Im.Message.Create(ctx,
