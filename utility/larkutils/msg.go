@@ -14,6 +14,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/dlclark/regexp2"
 	"github.com/kevinmatthe/zaplog"
+	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -190,7 +191,7 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 			MsgType(msgType).
 			Content(content).
 			ReplyInThread(replyInThread).
-			Uuid(msgID + suffix).Build(),
+			Uuid((msgID + suffix)[:50]).Build(),
 	).MessageId(msgID).Build()
 
 	resp, err := LarkClient.Im.V1.Message.Reply(ctx, req)
@@ -198,8 +199,8 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err))
 		return err
 	}
-	if resp.Code != 0 {
-		log.ZapLogger.Error("ReplyMessage", zaplog.String("Error", resp.Error()))
+	if resp.CodeError.Code != 0 {
+		log.ZapLogger.Error("ReplyMessage", zaplog.String("Error", larkcore.Prettify(resp.CodeError.Err)))
 		return errors.New(resp.Error())
 	}
 	AddTraceLog2DB(ctx, *resp.Data.MessageId)
@@ -268,7 +269,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 				larkim.NewCreateMessageReqBodyBuilder().
 					ReceiveId(chatID).
 					Content(content).
-					Uuid(msgID+"_create").
+					Uuid((msgID + "_create")[:50]).
 					MsgType(larkim.MsgTypeText).
 					Build(),
 			).
