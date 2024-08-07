@@ -58,6 +58,9 @@ func init() {
 				AddSubCommand(
 					newCmd("get", handlers.ImageGetHandler),
 				),
+		).
+		AddSubCommand(
+			newCmd("music", handlers.MusicSearchHandler).AddArgs("type", "keywords"),
 		)
 	LarkRootCommand.BuildChain()
 }

@@ -8,10 +8,13 @@ type TemplateStru struct {
 }
 
 var (
-	FourColSheetTemplate  = TemplateStru{"AAq0LWXpn9FbS", "1.0.0"}
-	ThreeColSheetTemplate = TemplateStru{"AAq0LIyUeFhNX", "1.0.2"}
-	TwoColSheetTemplate   = TemplateStru{"AAq0LPliGGphg", "1.0.2"}
-	TwoColPicTemplate     = TemplateStru{"AAq0LPJqOoh3s", "1.0.0"}
+	FourColSheetTemplate     = TemplateStru{"AAq0LWXpn9FbS", "1.0.0"}
+	ThreeColSheetTemplate    = TemplateStru{"AAq0LIyUeFhNX", "1.0.2"}
+	TwoColSheetTemplate      = TemplateStru{"AAq0LPliGGphg", "1.0.2"}
+	TwoColPicTemplate        = TemplateStru{"AAq0LPJqOoh3s", "1.0.0"}
+	AlbumListTemplate        = TemplateStru{"AAq0bN2vGqhvl", "1.0.11"}
+	SingleSongDetailTemplate = TemplateStru{"AAqke9FChxpYj", "1.0.1"}
+	FullLyricsTemplate       = TemplateStru{"AAq3mcb9ivduh", "1.0.4"}
 )
 
 type (

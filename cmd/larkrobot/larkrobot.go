@@ -44,6 +44,9 @@ func webHook() {
 		)
 
 	// 注册处理器
+	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("ok"))
+	})
 	http.HandleFunc("/webhook/card", httpserverext.NewCardActionHandlerFunc(cardHandler, larkevent.WithLogLevel(larkcore.LogLevelDebug)))
 
 	// 启动 http 服务

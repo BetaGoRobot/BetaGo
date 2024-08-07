@@ -130,7 +130,7 @@ type InteractionStats struct {
 }
 
 type MsgTraceLog struct {
-	MsgID     string `json:"msg_id" gorm:"primaryKey;autoIncrement:false"`
+	MsgID     string `json:"msg_id" gorm:"index"`
 	TraceID   string `json:"trace_id"`
 	CreatedAt time.Time
 }

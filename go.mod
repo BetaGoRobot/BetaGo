@@ -10,6 +10,7 @@ replace (
 	github.com/BetaGoRobot/BetaGo/neteaseapi => ./neteaseapi
 	github.com/BetaGoRobot/BetaGo/scheduletask => ./scheduletask
 	github.com/BetaGoRobot/BetaGo/utility => ./utility
+// github.com/larksuite/oapi-sdk-go/v3 => ./compat/larksuite/oapi-sdk-go/v3
 )
 
 require (

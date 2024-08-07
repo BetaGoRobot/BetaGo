@@ -34,7 +34,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	defer span.End()
 
 	var imgKey string
-	argMap := parseArgs(args...)
+	argMap, _ := parseArgs(args...)
 	log.ZapLogger.Info("wordAddHandler", zaplog.Any("args", argMap))
 	if len(argMap) > 0 {
 		// by url
@@ -122,7 +122,7 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
-	argMap := parseArgs(args...)
+	argMap, _ := parseArgs(args...)
 	log.ZapLogger.Info("replyGetHandler", zaplog.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
 

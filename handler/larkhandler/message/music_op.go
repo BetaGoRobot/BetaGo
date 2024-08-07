@@ -8,9 +8,9 @@ import (
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
-	"github.com/bytedance/sonic"
 	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -71,25 +71,11 @@ func (r *MusicMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 	if err != nil {
 		return err
 	}
-	listMsg := larkutils.NewSearchListCard()
-	for _, item := range res {
-		var invalid bool
-		if item.SongURL == "" { // 无效歌曲
-			invalid = true
-		}
-		listMsg.AddColumn(ctx, item.ImageKey, item.Name, item.ArtistName, item.ID, invalid)
-	}
-	listMsg.AddJaegerTracer(ctx, span)
-	cardStr, err := sonic.MarshalString(listMsg)
+	cardContent, err := cardutil.SendMusicListCard(ctx, res, neteaseapi.CommentTypeSong)
 	if err != nil {
-		return err
+		return
 	}
-
-	log.ZapLogger.Info("send music list", zaplog.Any("cardStr", cardStr))
-	_, subSpan := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	err = larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, larkim.MsgTypeInteractive, cardStr, "_RunMusicOp", true)
-	subSpan.End()
-
+	err = larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_RunMusicOp", true)
 	if err != nil {
 		log.ZapLogger.Error("send music list error", zaplog.Error(err))
 		return err

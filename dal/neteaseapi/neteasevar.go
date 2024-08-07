@@ -52,16 +52,38 @@ type MusicInfo struct {
 	Name string
 }
 
-type searchMusic struct {
+type SearchMusic struct {
 	Result struct {
 		Songs []Song `json:"songs"`
 	} `json:"result"`
+}
+
+type searchAlbumResult struct {
+	Result struct {
+		Albums []*Album `json:"albums"`
+	} `json:"result"`
+}
+
+type AlbumDetail struct {
+	Songs []Song `json:"songs"`
+}
+
+type Album struct {
+	Name        string `json:"name"`
+	IDStr       string `json:"idStr"`
+	Type        string `json:"type"`
+	PicURL      string `json:"picUrl"`
+	PublishTime int64  `json:"publishTime"`
+	Artist      struct {
+		Name string `json:"name"`
+	} `json:"artist"`
 }
 
 type MusicIDName struct {
 	ID   string
 	Name string
 }
+
 type Song struct {
 	Name string `json:"name"`
 	ID   int    `json:"id"`
@@ -82,6 +104,17 @@ type SearchMusicRes struct {
 	SongURL    string
 	PicURL     string
 	ImageKey   string
+}
+
+type CommentResult struct {
+	Data struct {
+		CommentsTitle string `json:"commentsTitle"`
+		Comments      []struct {
+			Content string `json:"content"`
+			TimeStr string `json:"timeStr"`
+		}
+	} `json:"data"`
+	Message string `json:"message"`
 }
 
 // GlobRecommendMusicRes  推荐音乐返回结果

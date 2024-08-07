@@ -137,23 +137,20 @@ func GetCommand(ctx context.Context, content string) (commands []string) {
 			return
 		}
 		if match != nil {
-			commands = append(commands, ReBuildArgs(
-				match.GroupByName("arg_name").String(),
-				match.GroupByName("arg_value").String()),
-			)
-			for {
-				newMatch, err := commandArgRepattern.FindNextMatch(match)
-				if err != nil {
-					panic(err)
-				}
-				if newMatch == nil {
-					break
-				}
-				match = newMatch
+			lastIdx := 0
+			for match, err = commandArgRepattern.FindStringMatch(content); match != nil; {
+				lastIdx = match.Index + len(match.String()) + 1
 				commands = append(commands, ReBuildArgs(
 					match.GroupByName("arg_name").String(),
 					match.GroupByName("arg_value").String()),
 				)
+				if err != nil {
+					panic(err)
+				}
+				match, err = commandArgRepattern.FindNextMatch(match)
+			}
+			if lastIdx < len(content) {
+				commands = append(commands, content[lastIdx:])
 			}
 		}
 	}
