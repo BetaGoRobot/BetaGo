@@ -19,14 +19,19 @@ func SendMusicListCard(ctx context.Context, res []*neteaseapi.SearchMusicRes, re
 
 	lines := make([]map[string]interface{}, 0)
 	var buttonName string
+	var buttonType string
 	switch resourceType {
 	case neteaseapi.CommentTypeSong:
 		buttonName = "点击播放"
+		buttonType = "song"
 	case neteaseapi.CommentTypeAlbum:
 		buttonName = "查看专辑"
+		buttonType = "album"
 	default:
 		buttonName = "点击查看"
+		buttonType = "null"
 	}
+
 	for _, item := range res {
 		comment, err := neteaseapi.NetEaseGCtx.GetComment(ctx, resourceType, item.ID)
 		if err != nil {
@@ -38,7 +43,7 @@ func SendMusicListCard(ctx context.Context, res []*neteaseapi.SearchMusicRes, re
 			"field_2":     item.ImageKey,
 			"button_info": buttonName,
 			"button_val": map[string]string{
-				"type": "song",
+				"type": buttonType,
 				"id":   item.ID,
 			},
 		}
