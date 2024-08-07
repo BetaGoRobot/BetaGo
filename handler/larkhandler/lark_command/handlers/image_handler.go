@@ -68,7 +68,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 						log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
 					} else {
 						newImgKey := larkutils.UploadPicture2LarkReader(ctx, stickerFile)
-						database.GetDbConnection().Clauses(clause.OnConflict{UpdateAll: true}).Create(database.StickerMapping{
+						database.GetDbConnection().Clauses(clause.OnConflict{UpdateAll: true}).Create(&database.StickerMapping{
 							StickerKey: imgKey,
 							ImageKey:   newImgKey,
 						})
