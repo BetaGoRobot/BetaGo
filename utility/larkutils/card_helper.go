@@ -10,7 +10,7 @@ type TemplateStru struct {
 var (
 	FourColSheetTemplate  = TemplateStru{"AAq0LWXpn9FbS", "1.0.0"}
 	ThreeColSheetTemplate = TemplateStru{"AAq0LIyUeFhNX", "1.0.2"}
-	TwoColSheetTemplate   = TemplateStru{"AAq0LPliGGphg", "1.0.0"}
+	TwoColSheetTemplate   = TemplateStru{"AAq0LPliGGphg", "1.0.2"}
 	TwoColPicTemplate     = TemplateStru{"AAq0LPJqOoh3s", "1.0.0"}
 )
 

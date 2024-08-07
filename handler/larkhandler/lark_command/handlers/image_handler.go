@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -132,18 +133,18 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 		if res.GuildID == ChatID {
 			lines = append(lines, map[string]string{
 				"title1": res.Type,
-				"title2": getImageKeyByStickerKey(res.FileID),
+				"title2": fmt.Sprintf("![picture](%s)", getImageKeyByStickerKey(res.FileID)),
 			})
 		}
 	}
 
 	cardContent := larkutils.NewSheetCardContent(
-		larkutils.TwoColPicTemplate.TemplateID,
-		larkutils.TwoColPicTemplate.TemplateVersion,
+		larkutils.TwoColSheetTemplate.TemplateID,
+		larkutils.TwoColSheetTemplate.TemplateVersion,
 	).
 		AddVariable("title1", "Type").
 		AddVariable("title2", "Picture").
-		AddVariable("object_list_2", lines).String()
+		AddVariable("table_raw_array_1", lines).String()
 
 	err := larkutils.ReplyMsgRawContentType(ctx, *data.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_replyGet", false)
 	if err != nil {

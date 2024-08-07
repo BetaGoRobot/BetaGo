@@ -8,6 +8,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/message"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -58,5 +59,19 @@ func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReaction
 	defer larkutils.RecoverMsg(ctx, *event.Event.MessageId)
 	defer span.End()
 
+	chatID, err := larkutils.GetChatIDFromMsgID(ctx, *event.Event.MessageId)
+	if err != nil {
+		return err
+	}
+	member, err := larkutils.GetUserMemberFromChat(ctx, chatID, *event.Event.UserId.OpenId)
+	if err != nil {
+		return err
+	}
+	database.GetDbConnection().Create(&database.InteractionStats{
+		OpenID:     *event.Event.UserId.OpenId,
+		GuildID:    chatID,
+		UserName:   *member.Name,
+		ActionType: consts.LarkInteractionAddReaction,
+	})
 	return nil
 }

@@ -121,6 +121,14 @@ type StickerMapping struct {
 	ImageKey   string `json:"image_key" gorm:"index"`
 }
 
+type InteractionStats struct {
+	OpenID     string                 `json:"open_id" gorm:"index"`
+	GuildID    string                 `json:"guild_id" gorm:"index"`
+	UserName   string                 `json:"user_name"`
+	ActionType consts.LarkInteraction `json:"action_type" gorm:"index"`
+	CreatedAt  time.Time
+}
+
 type MsgTraceLog struct {
 	MsgID     string `json:"msg_id" gorm:"primaryKey;autoIncrement:false"`
 	TraceID   string `json:"trace_id"`
@@ -186,6 +194,7 @@ func init() {
 		&CopyWritingGeneral{},
 		&MsgTraceLog{},
 		&StickerMapping{},
+		&InteractionStats{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))

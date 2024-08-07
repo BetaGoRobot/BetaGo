@@ -16,3 +16,11 @@ const (
 	LarkResourceTypeImage   string = "image"
 	LarkResourceTypeSticker string = "sticker"
 )
+
+type LarkInteraction string
+
+const (
+	LarkInteractionSendMsg     LarkInteraction = "send_msg"
+	LarkInteractionAddReaction LarkInteraction = "add_reaction"
+	LarkInteractionCallBot     LarkInteraction = "call_bot"
+)
