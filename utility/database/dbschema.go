@@ -115,6 +115,12 @@ type RepeatWordsRateCustom struct {
 	Rate    int    `json:"rate"`
 }
 
+type StickerMapping struct {
+	Genaral
+	StickerKey string `json:"sticker_key" gorm:"primaryKey;autoIncrement:false;index"`
+	ImageKey   string `json:"image_key" gorm:"index"`
+}
+
 type MsgTraceLog struct {
 	MsgID     string `json:"msg_id" gorm:"primaryKey;autoIncrement:false"`
 	TraceID   string `json:"trace_id"`
@@ -179,6 +185,7 @@ func init() {
 		&CopyWritingCustom{},
 		&CopyWritingGeneral{},
 		&MsgTraceLog{},
+		&StickerMapping{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))

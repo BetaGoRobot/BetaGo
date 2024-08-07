@@ -58,7 +58,22 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 			}
 			if *parentMsgItem.MsgType == larkim.MsgTypeSticker {
 				// 表情包为全局file_key，可以直接存下
-				imgKey = contentMap["file_key"]
+				imgKey = contentMap["file_key"] // 其实是StickerKey
+
+				// Save Mapping
+				// 检查存在性
+				res, _ := database.FindByCacheFunc(database.StickerMapping{StickerKey: imgKey}, func(r database.StickerMapping) string { return r.StickerKey })
+				if len(res) == 0 {
+					if stickerFile, err := larkutils.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["file_key"], "image"); err != nil {
+						log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
+					} else {
+						newImgKey := larkutils.UploadPicture2LarkReader(ctx, stickerFile)
+						database.GetDbConnection().Clauses(clause.OnConflict{UpdateAll: true}).Create(database.StickerMapping{
+							StickerKey: imgKey,
+							ImageKey:   newImgKey,
+						})
+					}
+				}
 				if result := database.GetDbConnection().Clauses(clause.OnConflict{DoNothing: true}).
 					Create(&database.ReactImageMeterial{GuildID: *data.Event.Message.ChatId, FileID: imgKey, Type: consts.LarkResourceTypeSticker}); result.Error != nil {
 					return err
@@ -117,7 +132,7 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 		if res.GuildID == ChatID {
 			lines = append(lines, map[string]string{
 				"title1": res.Type,
-				"title2": res.FileID,
+				"title2": getImageKeyByStickerKey(res.FileID),
 			})
 		}
 	}
@@ -135,4 +150,12 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 		return err
 	}
 	return nil
+}
+
+func getImageKeyByStickerKey(stickerKey string) string {
+	res, _ := database.FindByCacheFunc(database.StickerMapping{StickerKey: stickerKey}, func(r database.StickerMapping) string { return r.StickerKey })
+	if len(res) == 0 {
+		return stickerKey
+	}
+	return res[0].ImageKey
 }
