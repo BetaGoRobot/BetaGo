@@ -75,7 +75,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 		return ""
 	}
 
-	lyrics, lyricsURL := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
+	lyrics, playerURL := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
 	lyrics = larkutils.TrimLyrics(lyrics)
 
 	artistNameLissst := make([]map[string]string, 0)
@@ -86,7 +86,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 	}
-	lyricsURL = utility.BuildURL(lyricsURL, musicURL, ossURL, songDetail.Al.Name, songDetail.Name, artistJSON, songDetail.Dt)
+	playerURL = utility.BuildURL(playerURL, musicURL, ossURL, songDetail.Al.Name, songDetail.Name, artistJSON, songDetail.Dt)
 	// eg: page = 1
 	quotaRemain := maxPageSize
 	lyricList := strings.Split(lyrics, "\n")
@@ -120,6 +120,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 		AddVariable("title", songDetail.Name).
 		AddVariable("sub_title", songDetail.Ar[0].Name).
 		AddVariable("imgkey", imageKey).
+		AddVariable("player_url", playerURL).
 		AddVariable("jaeger_trace_info", "JaegerID - "+traceID).
 		AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/"+traceID).
 		AddVariable("full_lyrics_button", map[string]string{

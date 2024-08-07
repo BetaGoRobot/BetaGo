@@ -13,7 +13,7 @@ var (
 	TwoColSheetTemplate      = TemplateStru{"AAq0LPliGGphg", "1.0.2"}
 	TwoColPicTemplate        = TemplateStru{"AAq0LPJqOoh3s", "1.0.0"}
 	AlbumListTemplate        = TemplateStru{"AAq0bN2vGqhvl", "1.0.11"}
-	SingleSongDetailTemplate = TemplateStru{"AAqke9FChxpYj", "1.0.1"}
+	SingleSongDetailTemplate = TemplateStru{"AAqke9FChxpYj", "1.0.3"}
 	FullLyricsTemplate       = TemplateStru{"AAq3mcb9ivduh", "1.0.4"}
 )
 
