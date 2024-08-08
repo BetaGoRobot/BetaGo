@@ -35,47 +35,17 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 			return err
 		}
 
-		// lines := make([]map[string]interface{}, 0)
-		searchRes := []*neteaseapi.SearchMusicRes{}
-		for _, album := range albumList {
-			searchRes = append(searchRes,
-				&neteaseapi.SearchMusicRes{
-					ID:         album.IDStr,
-					Name:       "[" + album.Type + "] " + album.Name,
-					PicURL:     album.PicURL,
-					ArtistName: album.Artist.Name,
-					ImageKey:   larkutils.UploadPicture2Lark(ctx, album.PicURL),
-				},
-			)
-			// lines = append(lines,
-			// 	map[string]interface{}{
-			// 		"field_1": fmt.Sprintf("**%s** - **%s**", album.Name, album.Artist.Name),
-			// 		"field_2": larkutils.UploadPicture2Lark(ctx, album.PicURL),
-			// 		"button_val": map[string]string{
-			// 			"type": "album",
-			// 			"id":   album.IDStr,
-			// 		},
-			// 	},
-			// )
-		}
-
-		// cardContent = larkutils.NewSheetCardContent(
-		// 	larkutils.AlbumListTemplate.TemplateID,
-		// 	larkutils.AlbumListTemplate.TemplateVersion,
-		// ).AddVariable(
-		// 	"object_list_1", lines,
-		// ).AddVariable("jaeger_trace_info", "JaegerID - "+traceID).
-		// 	AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/"+traceID).String()
-		cardContent, err = cardutil.SendMusicListCard(ctx, searchRes, neteaseapi.CommentTypeAlbum)
+		cardContent, err = cardutil.SendMusicListCard(ctx, albumList, cardutil.MusicItemTransAlbum, neteaseapi.CommentTypeAlbum)
 		if err != nil {
 			return err
 		}
+	} else if searchType == "playlist" {
 	} else if searchType == "song" {
-		res, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(ctx, keywords...)
+		musicList, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(ctx, keywords...)
 		if err != nil {
 			return err
 		}
-		cardContent, err = cardutil.SendMusicListCard(ctx, res, neteaseapi.CommentTypeSong)
+		cardContent, err = cardutil.SendMusicListCard(ctx, musicList, cardutil.MusicItemNoTrans, neteaseapi.CommentTypeSong)
 		if err != nil {
 			return err
 		}

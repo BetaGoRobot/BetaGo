@@ -376,8 +376,8 @@ func mergeLyrics(lyrics, translatedLyrics string) string {
 	return resStr
 }
 
-func (neteaseCtx *NetEaseContext) AsyncGetSearchRes(ctx context.Context, searchRes SearchMusic) (result []*SearchMusicRes, err error) {
-	sResChan := make(chan *SearchMusicRes, len(searchRes.Result.Songs))
+func (neteaseCtx *NetEaseContext) AsyncGetSearchRes(ctx context.Context, searchRes SearchMusic) (result []*SearchMusicItem, err error) {
+	sResChan := make(chan *SearchMusicItem, len(searchRes.Result.Songs))
 
 	go neteaseCtx.asyncGetSearchRes(ctx, searchRes, err, sResChan)
 
@@ -396,7 +396,7 @@ func (neteaseCtx *NetEaseContext) AsyncGetSearchRes(ctx context.Context, searchR
 //	@param keywords
 //	@return result
 //	@return err
-func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keywords ...string) (result []*SearchMusicRes, err error) {
+func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keywords ...string) (result []*SearchMusicItem, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("keywords").StringSlice(keywords))
 	defer span.End()
@@ -533,7 +533,7 @@ func uploadPicWorker(ctx context.Context, wg *sync.WaitGroup, url string, musicI
 	return false
 }
 
-func (neteaseCtx *NetEaseContext) asyncGetSearchRes(ctx context.Context, searchMusic SearchMusic, err error, urlChan chan *SearchMusicRes) {
+func (neteaseCtx *NetEaseContext) asyncGetSearchRes(ctx context.Context, searchMusic SearchMusic, err error, urlChan chan *SearchMusicItem) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	defer close(urlChan)
@@ -548,7 +548,7 @@ func (neteaseCtx *NetEaseContext) asyncGetSearchRes(ctx context.Context, searchM
 	musicIDURL, err := neteaseCtx.GetMusicURLByIDs(ctx, songList)
 	for _, ID := range songList {
 		songInfo := songMap[ID]
-		urlChan <- &SearchMusicRes{
+		urlChan <- &SearchMusicItem{
 			// Index:      index,
 			ID:         ID,
 			Name:       songInfo.Name,
@@ -607,7 +607,7 @@ func genArtistName(song *Song) (artistName string) {
 //	@receiver ctx
 //	@return res
 //	@return err
-func (neteaseCtx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicRes, err error) {
+func (neteaseCtx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicItem, err error) {
 	resp, err := consts.HttpClient.R().SetFormDataFromValues(
 		map[string][]string{
 			"limit": {"5"},
@@ -637,7 +637,7 @@ func (neteaseCtx *NetEaseContext) GetNewRecommendMusic() (res []SearchMusicRes, 
 		if len(SongURL) == 0 {
 			continue
 		}
-		res = append(res, SearchMusicRes{
+		res = append(res, SearchMusicItem{
 			ID:         strconv.Itoa(result.Song.ID),
 			Name:       result.Song.Name,
 			ArtistName: ArtistName,

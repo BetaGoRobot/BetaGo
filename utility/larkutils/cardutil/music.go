@@ -12,11 +12,31 @@ import (
 	"github.com/kevinmatthe/zaplog"
 )
 
-func SendMusicListCard(ctx context.Context, res []*neteaseapi.SearchMusicRes, resourceType neteaseapi.CommentType) (content string, err error) {
+type musicItemTransFunc[T any] func(*T) *neteaseapi.SearchMusicItem
+
+func MusicItemNoTrans(item *neteaseapi.SearchMusicItem) *neteaseapi.SearchMusicItem {
+	return item
+}
+
+func MusicItemTransAlbum(album *neteaseapi.Album) *neteaseapi.SearchMusicItem {
+	return &neteaseapi.SearchMusicItem{
+		ID:         album.IDStr,
+		Name:       "[" + album.Type + "] " + album.Name,
+		PicURL:     album.PicURL,
+		ArtistName: album.Artist.Name,
+		ImageKey:   larkutils.UploadPicture2Lark(context.Background(), album.PicURL),
+	}
+}
+
+func SendMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType) (content string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	traceID := span.SpanContext().TraceID().String()
 
+	res := make([]*neteaseapi.SearchMusicItem, len(resList))
+	for i, item := range resList {
+		res[i] = transFunc(item)
+	}
 	lines := make([]map[string]interface{}, 0)
 	var buttonName string
 	var buttonType string

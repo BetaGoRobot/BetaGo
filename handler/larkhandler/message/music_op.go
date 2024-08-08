@@ -71,7 +71,7 @@ func (r *MusicMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 	if err != nil {
 		return err
 	}
-	cardContent, err := cardutil.SendMusicListCard(ctx, res, neteaseapi.CommentTypeSong)
+	cardContent, err := cardutil.SendMusicListCard(ctx, res, cardutil.MusicItemNoTrans, neteaseapi.CommentTypeSong)
 	if err != nil {
 		return
 	}

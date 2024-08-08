@@ -95,8 +95,8 @@ type Song struct {
 	} `json:"al"`
 }
 
-// SearchMusicRes  搜索音乐返回结果
-type SearchMusicRes struct {
+// SearchMusicItem  搜索音乐返回结果
+type SearchMusicItem struct {
 	Index      int
 	ID         string
 	Name       string
