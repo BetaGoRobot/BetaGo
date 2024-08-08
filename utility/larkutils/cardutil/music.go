@@ -62,6 +62,7 @@ func SendMusicListCard[T any](ctx context.Context, resList []*T, transFunc music
 			"field_1":     genMusicTitle(item.Name, item.ArtistName),
 			"field_2":     item.ImageKey,
 			"button_info": buttonName,
+			"element_id":  item.ID,
 			"button_val": map[string]string{
 				"type": buttonType,
 				"id":   item.ID,
