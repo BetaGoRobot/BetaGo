@@ -61,6 +61,9 @@ func init() {
 		).
 		AddSubCommand(
 			newCmd("music", handlers.MusicSearchHandler).AddArgs("type", "keywords"),
+		).
+		AddSubCommand(
+			newCmd("oneword", handlers.OneWordHandler).AddArgs("type"),
 		)
 	LarkRootCommand.BuildChain()
 }

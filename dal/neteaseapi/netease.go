@@ -427,6 +427,10 @@ func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keyw
 	return
 }
 
+func (neteaseCtx *NetEaseContext) SearchPlaylistByKeyWord(ctx context.Context, keywords ...string) {
+	return
+}
+
 // SearchAlbumByKeyWord  通过关键字搜索歌曲
 //
 //	@receiver neteaseCtx *NetEaseContext

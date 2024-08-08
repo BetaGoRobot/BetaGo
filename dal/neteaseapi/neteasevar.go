@@ -78,6 +78,73 @@ type Album struct {
 		Name string `json:"name"`
 	} `json:"artist"`
 }
+type searchPlaylistResult struct {
+	Result struct {
+		SearchQcReminder interface{} `json:"searchQcReminder"`
+		Playlists        []struct {
+			ID          int64  `json:"id"`
+			Name        string `json:"name"`
+			CoverImgURL string `json:"coverImgUrl"`
+			Creator     struct {
+				Nickname   string      `json:"nickname"`
+				UserID     int         `json:"userId"`
+				UserType   int         `json:"userType"`
+				AvatarURL  interface{} `json:"avatarUrl"`
+				AuthStatus int         `json:"authStatus"`
+				ExpertTags interface{} `json:"expertTags"`
+				Experts    interface{} `json:"experts"`
+			} `json:"creator"`
+			Subscribed    bool        `json:"subscribed"`
+			TrackCount    int         `json:"trackCount"`
+			UserID        int         `json:"userId"`
+			PlayCount     int         `json:"playCount"`
+			BookCount     int         `json:"bookCount"`
+			SpecialType   int         `json:"specialType"`
+			OfficialTags  interface{} `json:"officialTags"`
+			Action        interface{} `json:"action"`
+			ActionType    interface{} `json:"actionType"`
+			RecommendText interface{} `json:"recommendText"`
+			Score         interface{} `json:"score"`
+			Description   string      `json:"description"`
+			HighQuality   bool        `json:"highQuality"`
+		} `json:"playlists"`
+		PlaylistCount int `json:"playlistCount"`
+	} `json:"result"`
+}
+type Playlist struct {
+	Result struct {
+		SearchQcReminder interface{} `json:"searchQcReminder"`
+		Playlists        []struct {
+			ID          int64  `json:"id"`
+			Name        string `json:"name"`
+			CoverImgURL string `json:"coverImgUrl"`
+			Creator     struct {
+				Nickname   string      `json:"nickname"`
+				UserID     int         `json:"userId"`
+				UserType   int         `json:"userType"`
+				AvatarURL  interface{} `json:"avatarUrl"`
+				AuthStatus int         `json:"authStatus"`
+				ExpertTags interface{} `json:"expertTags"`
+				Experts    interface{} `json:"experts"`
+			} `json:"creator"`
+			Subscribed    bool        `json:"subscribed"`
+			TrackCount    int         `json:"trackCount"`
+			UserID        int         `json:"userId"`
+			PlayCount     int         `json:"playCount"`
+			BookCount     int         `json:"bookCount"`
+			SpecialType   int         `json:"specialType"`
+			OfficialTags  interface{} `json:"officialTags"`
+			Action        interface{} `json:"action"`
+			ActionType    interface{} `json:"actionType"`
+			RecommendText interface{} `json:"recommendText"`
+			Score         interface{} `json:"score"`
+			Description   string      `json:"description"`
+			HighQuality   bool        `json:"highQuality"`
+		} `json:"playlists"`
+		PlaylistCount int `json:"playlistCount"`
+	} `json:"result"`
+	Code int `json:"code"`
+}
 
 type MusicIDName struct {
 	ID   string
