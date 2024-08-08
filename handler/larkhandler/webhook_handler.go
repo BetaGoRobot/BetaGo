@@ -59,7 +59,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 	traceID := span.SpanContext().TraceID().String()
 	const (
 		maxSingleLineLen = 48
-		maxPageSize      = 9
+		maxPageSize      = 18
 	)
 	musicURL, err := neteaseapi.NetEaseGCtx.GetMusicURL(ctx, musicID)
 	if err != nil {
@@ -111,7 +111,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 
 	lyrics = strings.Join(newList, "\n")
 
-	lyrics = strings.ReplaceAll(lyrics, "\n", "\n\n")
+	// lyrics = strings.ReplaceAll(lyrics, "\n", "\n\n")
 
 	return larkutils.NewSheetCardContent(
 		larkutils.SingleSongDetailTemplate.TemplateID,
@@ -179,8 +179,8 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 	lyric, _ := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
 	lyric = larkutils.TrimLyrics(lyric)
 	sp := strings.Split(lyric, "\n")
-	left := strings.Join(sp[:len(sp)/2], "\n\n")
-	right := strings.Join(sp[len(sp)/2+1:], "\n\n")
+	left := strings.Join(sp[:len(sp)/2], "\n")
+	right := strings.Join(sp[len(sp)/2+1:], "\n")
 	cardStr := larkutils.NewSheetCardContent(
 		larkutils.FullLyricsTemplate.TemplateID,
 		larkutils.FullLyricsTemplate.TemplateVersion,

@@ -338,18 +338,18 @@ func mergeLyrics(lyrics, translatedLyrics string) string {
 		}
 		if match != nil {
 			if lyric := match.GroupByName("line").String(); lyric != "" {
-				lyricsMap[match.GroupByName("time").String()] = lyric
+				lyricsMap[match.GroupByName("time").String()] = lyric + "\n"
 			}
 		}
 	}
-	for _, line := range strings.Split(translatedLyrics, "\n") {
-		match, err := lyricsRepattern.FindStringMatch(line)
+	for _, translatedLine := range strings.Split(translatedLyrics, "\n") {
+		match, err := lyricsRepattern.FindStringMatch(translatedLine)
 		if err != nil {
 			panic(err)
 		}
 		if match != nil {
 			if lyric := match.GroupByName("line").String(); lyric != "" {
-				lyricsMap[match.GroupByName("time").String()] += "\n" + lyric
+				lyricsMap[match.GroupByName("time").String()] += lyric + "\n"
 			}
 		}
 	}
