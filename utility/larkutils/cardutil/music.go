@@ -81,12 +81,12 @@ func SendMusicListCard[T any](ctx context.Context, resList []*T, transFunc music
 		lines = append(lines, line)
 	}
 
+	template := larkutils.GetTemplate(larkutils.AlbumListTemplate)
 	content = larkutils.NewSheetCardContent(
-		larkutils.AlbumListTemplate.TemplateID,
-		larkutils.AlbumListTemplate.TemplateVersion,
-	).AddVariable(
-		"object_list_1", lines,
-	).AddVariable("jaeger_trace_info", "JaegerID - "+traceID).
+		template.TemplateID,
+		template.TemplateVersion,
+	).AddVariable("object_list_1", lines).
+		AddVariable("jaeger_trace_info", "JaegerID - "+traceID).
 		AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/"+traceID).String()
 
 	return

@@ -1,6 +1,9 @@
 package larkutils
 
-import "github.com/bytedance/sonic"
+import (
+	"github.com/BetaGoRobot/BetaGo/utility/database"
+	"github.com/bytedance/sonic"
+)
 
 type TemplateStru struct {
 	TemplateID      string
@@ -8,14 +11,25 @@ type TemplateStru struct {
 }
 
 var (
-	FourColSheetTemplate     = TemplateStru{"AAq0LWXpn9FbS", "1.0.0"}
-	ThreeColSheetTemplate    = TemplateStru{"AAq0LIyUeFhNX", "1.0.2"}
-	TwoColSheetTemplate      = TemplateStru{"AAq0LPliGGphg", "1.0.2"}
-	TwoColPicTemplate        = TemplateStru{"AAq0LPJqOoh3s", "1.0.0"}
-	AlbumListTemplate        = TemplateStru{"AAq0bN2vGqhvl", "1.0.13"}
-	SingleSongDetailTemplate = TemplateStru{"AAqke9FChxpYj", "1.0.3"}
-	FullLyricsTemplate       = TemplateStru{"AAq3mcb9ivduh", "1.0.4"}
+	// 兜底的版本
+	FourColSheetTemplate     = database.TemplateVersion{TemplateID: "AAq0LWXpn9FbS", TemplateVersion: "1.0.0"}
+	ThreeColSheetTemplate    = database.TemplateVersion{TemplateID: "AAq0LIyUeFhNX", TemplateVersion: "1.0.2"}
+	TwoColSheetTemplate      = database.TemplateVersion{TemplateID: "AAq0LPliGGphg", TemplateVersion: "1.0.2"}
+	TwoColPicTemplate        = database.TemplateVersion{TemplateID: "AAq0LPJqOoh3s", TemplateVersion: "1.0.0"}
+	AlbumListTemplate        = database.TemplateVersion{TemplateID: "AAq0bN2vGqhvl", TemplateVersion: "1.0.14"}
+	SingleSongDetailTemplate = database.TemplateVersion{TemplateID: "AAqke9FChxpYj", TemplateVersion: "1.0.3"}
+	FullLyricsTemplate       = database.TemplateVersion{TemplateID: "AAq3mcb9ivduh", TemplateVersion: "1.0.4"}
 )
+
+func GetTemplate(template database.TemplateVersion) database.TemplateVersion {
+	templates, _ := database.FindByCacheFunc(template, func(tpl database.TemplateVersion) string {
+		return tpl.TemplateID
+	})
+	if len(templates) > 0 {
+		return templates[0]
+	}
+	return template
+}
 
 type (
 	TemplateCardContent struct {

@@ -112,10 +112,10 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 	lyrics = strings.Join(newList, "\n")
 
 	// lyrics = strings.ReplaceAll(lyrics, "\n", "\n\n")
-
+	template := larkutils.GetTemplate(larkutils.SingleSongDetailTemplate)
 	return larkutils.NewSheetCardContent(
-		larkutils.SingleSongDetailTemplate.TemplateID,
-		larkutils.SingleSongDetailTemplate.TemplateVersion,
+		template.TemplateID,
+		template.TemplateVersion,
 	).AddVariable("lyrics", lyrics).
 		AddVariable("title", songDetail.Name).
 		AddVariable("sub_title", songDetail.Ar[0].Name).
@@ -123,10 +123,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 		AddVariable("player_url", playerURL).
 		AddVariable("jaeger_trace_info", "JaegerID - "+traceID).
 		AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/"+traceID).
-		AddVariable("full_lyrics_button", map[string]string{
-			"type": "lyrics",
-			"id":   musicID,
-		}).String()
+		AddVariable("full_lyrics_button", map[string]string{"type": "lyrics", "id": musicID}).String()
 }
 
 func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) {
@@ -181,9 +178,11 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 	sp := strings.Split(lyric, "\n")
 	left := strings.Join(sp[:len(sp)/2], "\n")
 	right := strings.Join(sp[len(sp)/2+1:], "\n")
+
+	template := larkutils.GetTemplate(larkutils.FullLyricsTemplate)
 	cardStr := larkutils.NewSheetCardContent(
-		larkutils.FullLyricsTemplate.TemplateID,
-		larkutils.FullLyricsTemplate.TemplateVersion,
+		template.TemplateID,
+		template.TemplateVersion,
 	).AddVariable("left_lyrics", left).
 		AddVariable("right_lyrics", right).
 		AddVariable("title", songDetail.Name).

@@ -92,10 +92,10 @@ func WordGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 			"title3": strconv.Itoa(res.Rate),
 		})
 	}
-
+	template := larkutils.GetTemplate(larkutils.ThreeColSheetTemplate)
 	cardContent := larkutils.NewSheetCardContent(
-		larkutils.ThreeColSheetTemplate.TemplateID,
-		larkutils.ThreeColSheetTemplate.TemplateVersion,
+		template.TemplateID,
+		template.TemplateVersion,
 	).
 		AddVariable("title1", "Scope").
 		AddVariable("title2", "Keyword").

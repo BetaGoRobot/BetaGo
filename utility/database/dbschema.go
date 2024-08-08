@@ -135,6 +135,13 @@ type MsgTraceLog struct {
 	CreatedAt time.Time
 }
 
+type TemplateVersion struct {
+	TemplateID      string `json:"template_id" gorm:"primaryKey;autoIncrement:false"`
+	TemplateVersion string `json:"template_version"`
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+}
+
 // ChannelLogExt  is the struct of channel log
 type ChannelLogExt struct {
 	UserID      string `json:"user_id" gorm:"primaryKey"`
@@ -195,6 +202,7 @@ func init() {
 		&MsgTraceLog{},
 		&StickerMapping{},
 		&InteractionStats{},
+		&TemplateVersion{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))
