@@ -11,14 +11,13 @@ type TemplateStru struct {
 }
 
 var (
-	// 兜底的版本
-	FourColSheetTemplate     = database.TemplateVersion{TemplateID: "AAq0LWXpn9FbS", TemplateVersion: "1.0.0"}
-	ThreeColSheetTemplate    = database.TemplateVersion{TemplateID: "AAq0LIyUeFhNX", TemplateVersion: "1.0.2"}
-	TwoColSheetTemplate      = database.TemplateVersion{TemplateID: "AAq0LPliGGphg", TemplateVersion: "1.0.2"}
-	TwoColPicTemplate        = database.TemplateVersion{TemplateID: "AAq0LPJqOoh3s", TemplateVersion: "1.0.0"}
-	AlbumListTemplate        = database.TemplateVersion{TemplateID: "AAq0bN2vGqhvl", TemplateVersion: "1.0.14"}
-	SingleSongDetailTemplate = database.TemplateVersion{TemplateID: "AAqke9FChxpYj", TemplateVersion: "1.0.3"}
-	FullLyricsTemplate       = database.TemplateVersion{TemplateID: "AAq3mcb9ivduh", TemplateVersion: "1.0.4"}
+	FourColSheetTemplate     = database.TemplateVersion{TemplateID: "AAq0LWXpn9FbS"}
+	ThreeColSheetTemplate    = database.TemplateVersion{TemplateID: "AAq0LIyUeFhNX"}
+	TwoColSheetTemplate      = database.TemplateVersion{TemplateID: "AAq0LPliGGphg"}
+	TwoColPicTemplate        = database.TemplateVersion{TemplateID: "AAq0LPJqOoh3s"}
+	AlbumListTemplate        = database.TemplateVersion{TemplateID: "AAq0bN2vGqhvl"}
+	SingleSongDetailTemplate = database.TemplateVersion{TemplateID: "AAqke9FChxpYj"}
+	FullLyricsTemplate       = database.TemplateVersion{TemplateID: "AAq3mcb9ivduh"}
 )
 
 func GetTemplate(template database.TemplateVersion) database.TemplateVersion {

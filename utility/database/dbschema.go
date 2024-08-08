@@ -74,16 +74,21 @@ type FunctionEnabling struct {
 }
 
 type QuoteReplyMsg struct {
-	MatchType consts.WordMatchType `json:"match_type" gorm:"primaryKey;autoIncrement:false;default:substr"`
-	Keyword   string               `json:"keyword" gorm:"primaryKey;autoIncrement:false"`
-	Reply     string               `json:"reply"`
+	MatchType consts.WordMatchType `json:"match_type" gorm:"primaryKey;index;default:substr"`
+	Keyword   string               `json:"keyword" gorm:"primaryKey;index"`
+	ReplyNType
 }
 
 type QuoteReplyMsgCustom struct {
-	GuildID   string               `json:"guil d_id" gorm:"primaryKey;autoIncrement:false"`
-	MatchType consts.WordMatchType `json:"match_type" gorm:"primaryKey;autoIncrement:false;default:substr"`
-	Keyword   string               `json:"keyword" gorm:"primaryKey;autoIncrement:false"`
-	Reply     string               `json:"reply"`
+	GuildID   string               `json:"guil d_id" gorm:"primaryKey;index"`
+	MatchType consts.WordMatchType `json:"match_type" gorm:"primaryKey;index;default:substr"`
+	Keyword   string               `json:"keyword" gorm:"primaryKey;index"`
+	ReplyNType
+}
+
+type ReplyNType struct {
+	Reply     string           `json:"reply" gorm:"primaryKey;index"`
+	ReplyType consts.ReplyType `json:"reply_type" gorm:"primaryKey;index;default:text"`
 }
 type ReactImageMeterial struct {
 	GuildID string `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`

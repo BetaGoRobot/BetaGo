@@ -11,6 +11,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/bytedance/sonic"
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
@@ -63,22 +64,22 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 	defer span.RecordError(err)
 
 	msg := larkutils.PreGetTextMsg(ctx, event)
-	var replyStr string
+	var replyItem *database.ReplyNType
 	// 检查定制化逻辑, Key为GuildID, 拿到GUI了dID下的所有SubStr配置
 	customConfig, hitCache := database.FindByCacheFunc(database.QuoteReplyMsgCustom{GuildID: *event.Event.Message.ChatId},
 		func(d database.QuoteReplyMsgCustom) string {
 			return d.GuildID
 		},
 	)
+	replyList := make([]*database.ReplyNType, 0)
 	span.SetAttributes(attribute.Bool("QuoteReplyMsgCustom hitCache", hitCache))
 	for _, data := range customConfig {
 		if CheckQuoteKeywordMatch(msg, data.Keyword, data.MatchType) {
-			replyStr = data.Reply
-			break
+			replyList = append(replyList, &database.ReplyNType{Reply: data.Reply, ReplyType: data.ReplyType})
 		}
 	}
 
-	if replyStr == "" {
+	if len(replyList) == 0 {
 		// 无定制化逻辑，走通用判断
 		data, hitCache := database.FindByCacheFunc(
 			database.QuoteReplyMsg{},
@@ -89,19 +90,42 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 		span.SetAttributes(attribute.Bool("QuoteReplyMsg hitCache", hitCache))
 		for _, d := range data {
 			if CheckQuoteKeywordMatch(msg, d.Keyword, d.MatchType) {
-				replyStr = d.Reply
-				break
+				replyList = append(replyList, &database.ReplyNType{Reply: d.Reply, ReplyType: d.ReplyType})
 			}
 		}
 	}
-	if replyStr != "" {
+	if len(replyList) > 0 {
+		replyItem = utility.SampleSlice(replyList)
 		_, subSpan := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-		err := larkutils.ReplyMsgText(ctx, replyStr, *event.Event.Message.MessageId, "_wordReply", false)
-		subSpan.End()
-		if err != nil {
-			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
-			return err
+		defer subSpan.End()
+		if replyItem.ReplyType == consts.ReplyTypeText {
+			err := larkutils.ReplyMsgText(ctx, replyItem.Reply, *event.Event.Message.MessageId, "_wordReply", false)
+			if err != nil {
+				log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				return err
+			}
+		} else if replyItem.ReplyType == consts.ReplyTypeImg {
+			var msgType, content string
+			if strings.HasPrefix(replyItem.Reply, "img") {
+				msgType = larkim.MsgTypeImage
+				content, _ = sonic.MarshalString(map[string]string{
+					"image_key": replyItem.Reply,
+				})
+			} else {
+				msgType = larkim.MsgTypeSticker
+				content, _ = sonic.MarshalString(map[string]string{
+					"file_key": replyItem.Reply,
+				})
+			}
+			err := larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, msgType, content, "_wordReply", false)
+			if err != nil {
+				log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				return err
+			}
+		} else {
+			return errors.New("unknown reply type")
 		}
+
 	}
 	return
 }

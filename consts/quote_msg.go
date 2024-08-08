@@ -7,3 +7,10 @@ const (
 	MatchTypeRegex  WordMatchType = "regex"
 	MatchTypeFull   WordMatchType = "full"
 )
+
+type ReplyType string
+
+const (
+	ReplyTypeText ReplyType = "text"
+	ReplyTypeImg  ReplyType = "img"
+)
