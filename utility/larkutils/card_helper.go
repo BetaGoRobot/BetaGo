@@ -1,7 +1,11 @@
 package larkutils
 
 import (
+	"context"
+
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
 )
 
@@ -42,8 +46,11 @@ type (
 	}
 )
 
-func NewSheetCardContent(templateID, templateVersion string) *TemplateCardContent {
-	return &TemplateCardContent{
+func NewSheetCardContent(ctx context.Context, templateID, templateVersion string) *TemplateCardContent {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+	traceID := span.SpanContext().TraceID().String()
+	t := &TemplateCardContent{
 		Type: "template",
 		Data: CardData{
 			TemplateID:          templateID,
@@ -51,6 +58,18 @@ func NewSheetCardContent(templateID, templateVersion string) *TemplateCardConten
 			TemplateVariable:    make(map[string]interface{}),
 		},
 	}
+	// default参数
+	t.AddJaegerTraceInfo(traceID)
+	t.AddVariable("withdraw_info", "撤回卡片")
+	t.AddVariable("withdraw_title", "撤回本条消息")
+	t.AddVariable("withdraw_confirm", "你确定要撤回这条消息吗？")
+	t.AddVariable("withdraw_object", map[string]string{"type": "withdraw"})
+	return t
+}
+
+func (c *TemplateCardContent) AddJaegerTraceInfo(traceID string) *TemplateCardContent {
+	return c.AddVariable("jaeger_trace_info", "JaegerID - "+traceID).
+		AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/"+traceID)
 }
 
 func (c *TemplateCardContent) AddVariable(key string, value interface{}) *TemplateCardContent {

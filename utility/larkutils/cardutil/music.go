@@ -31,7 +31,6 @@ func MusicItemTransAlbum(album *neteaseapi.Album) *neteaseapi.SearchMusicItem {
 func SendMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType) (content string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-	traceID := span.SpanContext().TraceID().String()
 
 	res := make([]*neteaseapi.SearchMusicItem, len(resList))
 	for i, item := range resList {
@@ -83,11 +82,10 @@ func SendMusicListCard[T any](ctx context.Context, resList []*T, transFunc music
 
 	template := larkutils.GetTemplate(larkutils.AlbumListTemplate)
 	content = larkutils.NewSheetCardContent(
+		ctx,
 		template.TemplateID,
 		template.TemplateVersion,
-	).AddVariable("object_list_1", lines).
-		AddVariable("jaeger_trace_info", "JaegerID - "+traceID).
-		AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/"+traceID).String()
+	).AddVariable("object_list_1", lines).String()
 
 	return
 }

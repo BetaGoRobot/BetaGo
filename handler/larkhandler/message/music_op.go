@@ -75,7 +75,7 @@ func (r *MusicMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 	if err != nil {
 		return
 	}
-	err = larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_RunMusicOp", true)
+	err = larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_RunMusicOp", false)
 	if err != nil {
 		log.ZapLogger.Error("send music list error", zaplog.Error(err))
 		return err

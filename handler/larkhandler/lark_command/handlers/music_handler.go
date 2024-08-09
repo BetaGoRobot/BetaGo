@@ -53,7 +53,7 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 		return errors.New("Unknown search type")
 	}
 
-	err = larkutils.ReplyMsgRawContentType(ctx, *data.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_musicSearch", true)
+	err = larkutils.ReplyMsgRawContentType(ctx, *data.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_musicSearch", false)
 	if err != nil {
 		return err
 	}

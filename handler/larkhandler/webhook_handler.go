@@ -12,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
+	"github.com/kevinmatthe/zaplog"
 	larkcard "github.com/larksuite/oapi-sdk-go/v3/card"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -25,19 +26,23 @@ func WebHookHandler(ctx context.Context, cardAction *larkcard.CardAction) (inter
 	defer span.End()
 
 	if buttonType, ok := cardAction.Action.Value["type"]; ok {
-		if buttonType == "song" {
+		switch buttonType {
+		case "song":
 			if musicID, ok := cardAction.Action.Value["id"]; ok {
 				go SendMusicCard(ctx, musicID.(string), cardAction.OpenMessageID, 1)
 			}
-		} else if buttonType == "album" {
+		case "album":
 			if albumID, ok := cardAction.Action.Value["id"]; ok {
 				_ = albumID
 				go SendAlbumCard(ctx, albumID.(string), cardAction.OpenMessageID)
 			}
-		} else if buttonType == "lyrics" {
+		case "lyrics":
 			if musicID, ok := cardAction.Action.Value["id"]; ok {
 				go HandleFullLyrics(ctx, musicID.(string), cardAction.OpenMessageID)
 			}
+		case "withdraw":
+			// 撤回消息
+			go HandleWithDraw(ctx, cardAction.OpenMessageID)
 		}
 	}
 	// // 处理 cardAction, 这里简单打印卡片内容
@@ -56,7 +61,6 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
 
-	traceID := span.SpanContext().TraceID().String()
 	const (
 		maxSingleLineLen = 48
 		maxPageSize      = 18
@@ -111,18 +115,17 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 
 	lyrics = strings.Join(newList, "\n")
 
-	// lyrics = strings.ReplaceAll(lyrics, "\n", "\n\n")
 	template := larkutils.GetTemplate(larkutils.SingleSongDetailTemplate)
 	return larkutils.NewSheetCardContent(
+		ctx,
 		template.TemplateID,
 		template.TemplateVersion,
-	).AddVariable("lyrics", lyrics).
+	).
+		AddVariable("lyrics", lyrics).
 		AddVariable("title", songDetail.Name).
 		AddVariable("sub_title", songDetail.Ar[0].Name).
 		AddVariable("imgkey", imageKey).
 		AddVariable("player_url", playerURL).
-		AddVariable("jaeger_trace_info", "JaegerID - "+traceID).
-		AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/"+traceID).
 		AddVariable("full_lyrics_button", map[string]string{"type": "lyrics", "id": musicID}).String()
 }
 
@@ -133,7 +136,7 @@ func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) 
 
 	cardStr := GetCardMusicByPage(ctx, musicID, page)
 	fmt.Println(cardStr)
-	err := larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music"+musicID, true)
+	err := larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music"+musicID, false)
 	if err != nil {
 		return
 	}
@@ -159,7 +162,7 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 	if err != nil {
 		return
 	}
-	err = larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardContent, "_album", true)
+	err = larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardContent, "_album", false)
 	if err != nil {
 		return
 	}
@@ -169,7 +172,6 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("musicID").String(musicID))
 	defer span.End()
-	traceID := span.SpanContext().TraceID().String()
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]
 
 	imgKey, _, err := larkutils.UploadPicAllinOne(ctx, songDetail.Al.PicURL, musicID, true)
@@ -181,17 +183,30 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 
 	template := larkutils.GetTemplate(larkutils.FullLyricsTemplate)
 	cardStr := larkutils.NewSheetCardContent(
+		ctx,
 		template.TemplateID,
 		template.TemplateVersion,
-	).AddVariable("left_lyrics", left).
+	).
+		AddVariable("left_lyrics", left).
 		AddVariable("right_lyrics", right).
 		AddVariable("title", songDetail.Name).
 		AddVariable("sub_title", songDetail.Ar[0].Name).
-		AddVariable("imgkey", imgKey).
-		AddVariable("jaeger_trace_info", "JaegerID - "+traceID).
-		AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/"+traceID).String()
-	err = larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music", true)
+		AddVariable("imgkey", imgKey).String()
+	err = larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music", false)
 	if err != nil {
 		return
 	}
+}
+
+func HandleWithDraw(ctx context.Context, msgID string) {
+	// 撤回消息
+	resp, err := larkutils.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(msgID).Build())
+	if err != nil {
+		log.ZapLogger.Error(err.Error())
+		return
+	}
+	if resp.CodeError.Code != 0 {
+		log.ZapLogger.Error("delete message error", zaplog.String("error", resp.Error()))
+	}
+	return
 }

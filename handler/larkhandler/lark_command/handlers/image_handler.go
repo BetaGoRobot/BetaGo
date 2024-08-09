@@ -139,6 +139,7 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	}
 	template := larkutils.GetTemplate(larkutils.TwoColSheetTemplate)
 	cardContent := larkutils.NewSheetCardContent(
+		ctx,
 		template.TemplateID,
 		template.TemplateVersion,
 	).
