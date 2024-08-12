@@ -33,3 +33,10 @@ func init() {
 		panic(err)
 	}
 }
+
+var MusicCardInThread = GetEnvWithDefaultGenerics("MUSIC_CARD_IN_THREAD", false, func(s string) bool {
+	if s == "true" {
+		return true
+	}
+	return false
+})

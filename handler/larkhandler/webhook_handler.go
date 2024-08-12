@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -136,7 +137,7 @@ func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) 
 
 	cardStr := GetCardMusicByPage(ctx, musicID, page)
 	fmt.Println(cardStr)
-	err := larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music"+musicID, false)
+	err := larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music"+musicID, env.MusicCardInThread)
 	if err != nil {
 		return
 	}
@@ -162,7 +163,7 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 	if err != nil {
 		return
 	}
-	err = larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardContent, "_album", false)
+	err = larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardContent, "_album", env.MusicCardInThread)
 	if err != nil {
 		return
 	}
@@ -192,7 +193,7 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 		AddVariable("title", songDetail.Name).
 		AddVariable("sub_title", songDetail.Ar[0].Name).
 		AddVariable("imgkey", imgKey).String()
-	err = larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music", false)
+	err = larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music", env.MusicCardInThread)
 	if err != nil {
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -75,7 +76,7 @@ func (r *MusicMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 	if err != nil {
 		return
 	}
-	err = larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_RunMusicOp", false)
+	err = larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_RunMusicOp", env.MusicCardInThread)
 	if err != nil {
 		log.ZapLogger.Error("send music list error", zaplog.Error(err))
 		return err

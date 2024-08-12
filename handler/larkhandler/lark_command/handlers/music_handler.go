@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -53,7 +54,7 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 		return errors.New("Unknown search type")
 	}
 
-	err = larkutils.ReplyMsgRawContentType(ctx, *data.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_musicSearch", false)
+	err = larkutils.ReplyMsgRawContentType(ctx, *data.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_musicSearch", env.MusicCardInThread)
 	if err != nil {
 		return err
 	}
