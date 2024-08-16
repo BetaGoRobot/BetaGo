@@ -294,3 +294,22 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 	AddTraceLog2DB(ctx, *resp.Data.MessageId)
 	return
 }
+
+func AddReaction(ctx context.Context, reactionType, msgID string) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID))
+	defer span.End()
+
+	req := larkim.NewCreateMessageReactionReqBuilder().Body(larkim.NewCreateMessageReactionReqBodyBuilder().ReactionType(larkim.NewEmojiBuilder().EmojiType(reactionType).Build()).Build()).MessageId(msgID).Build()
+	resp, err := LarkClient.Im.V1.MessageReaction.Create(ctx, req)
+	if err != nil {
+		log.ZapLogger.Error("AddReaction", zaplog.Error(err))
+		return err
+	}
+	if resp.Code != 0 {
+		log.ZapLogger.Error("AddReaction", zaplog.String("Error", resp.Error()))
+		return errors.New(resp.Error())
+	}
+	AddTraceLog2DB(ctx, msgID)
+	return
+}

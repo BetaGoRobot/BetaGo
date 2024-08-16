@@ -107,8 +107,9 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	} else {
 		return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgNotAnyValidArgs))
 	}
-	successCopywriting := copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAddSuccess)
-	larkutils.ReplyMsgText(ctx, successCopywriting, *data.Event.Message.MessageId, "_imgAdd", false)
+	// successCopywriting := copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAddSuccess)
+	larkutils.AddReaction(ctx, "DONE", *data.Event.Message.MessageId)
+	// larkutils.ReplyMsgText(ctx, successCopywriting, *data.Event.Message.MessageId, "_imgAdd", false)
 	return nil
 }
 
