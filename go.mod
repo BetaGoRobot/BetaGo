@@ -44,7 +44,7 @@ require (
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.54
 	github.com/valyala/fasthttp v1.55.0
 	github.com/volcengine/volcengine-go-sdk v1.0.154
-	github.com/wcharczuk/go-chart/v2 v2.1.1
+	github.com/wcharczuk/go-chart/v2 v2.1.2
 	go.opentelemetry.io/otel v1.28.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.28.0
 	go.opentelemetry.io/otel/sdk v1.28.0
