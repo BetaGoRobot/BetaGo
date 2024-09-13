@@ -60,6 +60,20 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 		UserName:   *member.Name,
 		ActionType: consts.LarkInteractionSendMsg,
 	})
+
+	database.GetDbConnection().Create(&database.MessageLog{
+		MessageID:   utility.AddressORNil(event.Event.Message.MessageId),
+		RootID:      utility.AddressORNil(event.Event.Message.RootId),
+		ParentID:    utility.AddressORNil(event.Event.Message.ParentId),
+		ChatID:      utility.AddressORNil(event.Event.Message.ChatId),
+		ThreadID:    utility.AddressORNil(event.Event.Message.ThreadId),
+		ChatType:    utility.AddressORNil(event.Event.Message.ChatType),
+		MessageType: utility.AddressORNil(event.Event.Message.MessageType),
+		UserAgent:   utility.AddressORNil(event.Event.Message.UserAgent),
+		Mentions:    utility.MustMashal(event.Event.Message.Mentions),
+		RawBody:     utility.MustMashal(event),
+		Content:     utility.AddressORNil(event.Event.Message.Content),
+	})
 	log.ZapLogger.Info(larkcore.Prettify(event))
 	return nil
 }
