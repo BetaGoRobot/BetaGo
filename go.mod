@@ -35,6 +35,8 @@ require (
 	github.com/mdaverde/jsonpath v0.2.1
 	github.com/minio/minio-go/v7 v7.0.76
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
+	github.com/opensearch-project/opensearch-go v1.1.0
+	github.com/opensearch-project/opensearch-go/v4 v4.2.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phuslu/log v1.0.110
 	github.com/pkg/errors v0.9.1
@@ -49,6 +51,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.30.0
 	go.opentelemetry.io/otel/sdk v1.30.0
 	go.opentelemetry.io/otel/trace v1.30.0
+	go.uber.org/zap v1.27.0
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.12
 )
@@ -59,7 +62,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
 	github.com/bits-and-blooms/bloom/v3 v3.7.0 // indirect
-	github.com/blend/go-sdk v1.20220411.3 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -94,6 +96,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
@@ -112,12 +115,12 @@ require (
 	github.com/savsgio/gotils v0.0.0-20240704082632-aef3928b8a38 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
+	github.com/volcengine/volc-sdk-golang v1.0.23 // indirect
 	go.mongodb.org/mongo-driver v1.15.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.30.0 // indirect
 	go.opentelemetry.io/otel/metric v1.30.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.27.0 // indirect
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect

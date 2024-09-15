@@ -10,9 +10,12 @@ import (
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/reaction"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
+	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
@@ -38,7 +41,6 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 	defer span.End()
 
 	if isOutDated(*event.Event.Message.CreateTime) {
-		return nil
 	}
 	if *event.Event.Sender.SenderId.OpenId == consts.BotOpenID {
 		return nil
@@ -60,8 +62,7 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 		UserName:   *member.Name,
 		ActionType: consts.LarkInteractionSendMsg,
 	})
-
-	database.GetDbConnection().Create(&database.MessageLog{
+	msgLog := &database.MessageLog{
 		MessageID:   utility.AddressORNil(event.Event.Message.MessageId),
 		RootID:      utility.AddressORNil(event.Event.Message.RootId),
 		ParentID:    utility.AddressORNil(event.Event.Message.ParentId),
@@ -73,7 +74,37 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 		Mentions:    utility.MustMashal(event.Event.Message.Mentions),
 		RawBody:     utility.MustMashal(event),
 		Content:     utility.AddressORNil(event.Event.Message.Content),
-	})
+	}
+	database.GetDbConnection().Create(msgLog)
+	type MessageIndex struct {
+		*database.MessageLog
+		ChatName   string    `json:"chat_name"`
+		CreateTime string    `json:"create_time"`
+		Message    []float32 `json:"message"`
+		UserID     string    `json:"user_id"`
+		UserName   string    `json:"user_name"`
+		RawMessage string    `json:"raw_message"`
+	}
+	content := larkutils.PreGetTextMsg(ctx, event)
+	embedded, err := doubao.EmbeddingText(ctx, content)
+	if err != nil {
+		log.ZapLogger.Error("EmbeddingText error", zaplog.Error(err))
+	}
+	err = opensearchdal.InsertData(
+		ctx, "lark_message_index", *event.Event.Message.MessageId,
+		&MessageIndex{
+			MessageLog: msgLog,
+			ChatName:   larkutils.GetChatName(ctx, chatID),
+			RawMessage: content,
+			CreateTime: utility.EpoMil2DateStr(*event.Event.Message.CreateTime),
+			Message:    embedded,
+			UserID:     *event.Event.Sender.SenderId.OpenId,
+			UserName:   *member.Name,
+		},
+	)
+	if err != nil {
+		log.ZapLogger.Error("InsertData error", zaplog.Error(err))
+	}
 	log.ZapLogger.Info(larkcore.Prettify(event))
 	return nil
 }

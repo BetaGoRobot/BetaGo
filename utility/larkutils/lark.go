@@ -251,6 +251,22 @@ func GetUserMemberFromChat(ctx context.Context, chatID, openID string) (member *
 	return memberMap[openID], err
 }
 
+func GetChatName(ctx context.Context, chatID string) (chatName string) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	resp, err := LarkClient.Im.V1.Chat.Get(ctx, larkim.NewGetChatReqBuilder().ChatId(chatID).Build())
+	if err != nil {
+		return
+	}
+	if resp == nil || resp.CodeError.Code != 0 {
+		err = errors.New(resp.Error())
+		return
+	}
+	chatName = *resp.Data.Name
+	return
+}
+
 func GetChatIDFromMsgID(ctx context.Context, msgID string) (chatID string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
