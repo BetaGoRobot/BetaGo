@@ -41,13 +41,34 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 	defer span.End()
 
 	if isOutDated(*event.Event.Message.CreateTime) {
+		return nil
 	}
 	if *event.Event.Sender.SenderId.OpenId == consts.BotOpenID {
 		return nil
 	}
 	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).RunStages()
 	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).RunParallelStages()
+	go CollectMessage(ctx, event)
 
+	log.ZapLogger.Info(larkcore.Prettify(event))
+	return nil
+}
+
+// MessageReactionHandler Repeat
+//
+//	@param ctx
+//	@param event
+//	@return error
+func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReactionCreatedV1) error {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer larkutils.RecoverMsg(ctx, *event.Event.MessageId)
+	defer span.End()
+
+	go reaction.Handler.Clean().WithCtx(ctx).WithEvent(event).RunParallelStages()
+	return nil
+}
+
+func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	chatID, err := larkutils.GetChatIDFromMsgID(ctx, *event.Event.Message.MessageId)
 	if err != nil {
 		return err
@@ -76,17 +97,8 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 		Content:     utility.AddressORNil(event.Event.Message.Content),
 	}
 	database.GetDbConnection().Create(msgLog)
-	type MessageIndex struct {
-		*database.MessageLog
-		ChatName   string    `json:"chat_name"`
-		CreateTime string    `json:"create_time"`
-		Message    []float32 `json:"message"`
-		UserID     string    `json:"user_id"`
-		UserName   string    `json:"user_name"`
-		RawMessage string    `json:"raw_message"`
-	}
 	content := larkutils.PreGetTextMsg(ctx, event)
-	embedded, err := doubao.EmbeddingText(ctx, content)
+	embedded, usage, err := doubao.EmbeddingText(ctx, content)
 	if err != nil {
 		log.ZapLogger.Error("EmbeddingText error", zaplog.Error(err))
 	}
@@ -100,25 +112,11 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 			Message:    embedded,
 			UserID:     *event.Event.Sender.SenderId.OpenId,
 			UserName:   *member.Name,
+			TokenUsage: usage,
 		},
 	)
 	if err != nil {
 		log.ZapLogger.Error("InsertData error", zaplog.Error(err))
 	}
-	log.ZapLogger.Info(larkcore.Prettify(event))
-	return nil
-}
-
-// MessageReactionHandler Repeat
-//
-//	@param ctx
-//	@param event
-//	@return error
-func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReactionCreatedV1) error {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	defer larkutils.RecoverMsg(ctx, *event.Event.MessageId)
-	defer span.End()
-
-	go reaction.Handler.Clean().WithCtx(ctx).WithEvent(event).RunParallelStages()
-	return nil
+	return
 }

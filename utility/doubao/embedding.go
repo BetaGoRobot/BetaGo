@@ -26,7 +26,7 @@ var client = arkruntime.NewClientWithApiKey(DOUBAO_API_KEY)
 //	@param input
 //	@return embedded
 //	@return err
-func EmbeddingText(ctx context.Context, input string) (embedded []float32, err error) {
+func EmbeddingText(ctx context.Context, input string) (embedded []float32, tokenUsage model.Usage, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("input").String(input))
 	defer span.End()
@@ -41,5 +41,6 @@ func EmbeddingText(ctx context.Context, input string) (embedded []float32, err e
 		return
 	}
 	embedded = resp.Data[0].Embedding
+	tokenUsage = resp.Usage
 	return
 }
