@@ -103,7 +103,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) (err 
 		log.ZapLogger.Error("EmbeddingText error", zaplog.Error(err))
 	}
 	err = opensearchdal.InsertData(
-		ctx, "lark_message_index", *event.Event.Message.MessageId,
+		ctx, "lark_msg_index", *event.Event.Message.MessageId,
 		&MessageIndex{
 			MessageLog: msgLog,
 			ChatName:   larkutils.GetChatName(ctx, chatID),
