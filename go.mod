@@ -44,7 +44,7 @@ require (
 	github.com/redis/go-redis/v9 v9.6.1
 	github.com/spyzhov/ajson v0.9.4
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.55
-	github.com/valyala/fasthttp v1.55.0
+	github.com/valyala/fasthttp v1.56.0
 	github.com/volcengine/volcengine-go-sdk v1.0.158
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 	go.opentelemetry.io/otel v1.30.0
