@@ -322,6 +322,8 @@ github.com/volcengine/volcengine-go-sdk v1.0.158 h1:D0B3D6oOvte0qKe21yCcWmxyKR/B
 github.com/volcengine/volcengine-go-sdk v1.0.158/go.mod h1:oht5AKDJsk0fY6tV2ViqaVlOO14KSRmXZlI8ikK60Tg=
 github.com/volcengine/volcengine-go-sdk v1.0.159 h1:gbyZRQpPbBwN23UeWk7DiaX3GYNge59zoC89P9RphaI=
 github.com/volcengine/volcengine-go-sdk v1.0.159/go.mod h1:oht5AKDJsk0fY6tV2ViqaVlOO14KSRmXZlI8ikK60Tg=
+github.com/volcengine/volcengine-go-sdk v1.0.160 h1:Jpa8MJ/V9Dh5zCbIKgF8AOKhfigVIJqYpSV4pW1tjy0=
+github.com/volcengine/volcengine-go-sdk v1.0.160/go.mod h1:oht5AKDJsk0fY6tV2ViqaVlOO14KSRmXZlI8ikK60Tg=
 github.com/wI2L/jsondiff v0.6.0 h1:zrsH3FbfVa3JO9llxrcDy/XLkYPLgoMX6Mz3T2PP2AI=
 github.com/wI2L/jsondiff v0.6.0/go.mod h1:D6aQ5gKgPF9g17j+E9N7aasmU1O+XvfmWm1y8UMmNpw=
 github.com/wcharczuk/go-chart/v2 v2.1.2 h1:Y17/oYNuXwZg6TFag06qe8sBajwwsuvPiJJXcUcLL6E=
