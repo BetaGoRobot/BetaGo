@@ -42,7 +42,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.19.1
 	github.com/redis/go-redis/v9 v9.7.0
-	github.com/spyzhov/ajson v0.9.4
+	github.com/spyzhov/ajson v0.9.5
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.55
 	github.com/valyala/fasthttp v1.56.0
 	github.com/volcengine/volcengine-go-sdk v1.0.161
