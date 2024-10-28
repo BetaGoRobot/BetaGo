@@ -44,7 +44,7 @@ require (
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/spyzhov/ajson v0.9.5
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.55
-	github.com/valyala/fasthttp v1.56.0
+	github.com/valyala/fasthttp v1.57.0
 	github.com/volcengine/volcengine-go-sdk v1.0.162
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 	go.opentelemetry.io/otel v1.31.0
@@ -57,7 +57,7 @@ require (
 )
 
 require (
-	github.com/andybalholm/brotli v1.1.0 // indirect
+	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
