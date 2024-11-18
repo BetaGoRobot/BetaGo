@@ -57,7 +57,8 @@ func init() {
 				).
 				AddSubCommand(
 					newCmd("get", handlers.ImageGetHandler),
-				),
+				).
+				AddSubCommand(newCmd("del", handlers.ImageDelHandler)),
 		).
 		AddSubCommand(
 			newCmd("music", handlers.MusicSearchHandler).AddArgs("type", "keywords"),

@@ -155,6 +155,127 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	return nil
 }
 
+// ImageDelHandler to be filled
+//
+//	@param ctx context.Context
+//	@param data *larkim.P2MessageReceiveV1
+//	@param args ...string
+//	@return error
+func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
+	defer span.End()
+
+	argMap, _ := parseArgs(args...)
+	log.ZapLogger.Info("replyDelHandler", zaplog.Any("args", argMap))
+
+	if data.Event.Message.ThreadId != nil {
+		// 找到话题中的所有图片
+		resp, err := larkutils.LarkClient.Im.Message.List(ctx, larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
+		if err != nil {
+			return err
+		}
+		for _, msg := range resp.Data.Items {
+			if *msg.Sender.Id != larkutils.BotAppID {
+				contentMap := make(map[string]string)
+				err := sonic.UnmarshalString(*msg.Body.Content, &contentMap)
+				if err != nil {
+					log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
+					return err
+				}
+				switch *msg.MsgType {
+				case "image":
+					return fmt.Errorf("暂不支持Image类型的图片")
+					imageFile, err := larkutils.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["image_key"], "image")
+					md5Str, err := utility.GetFileMD5(imageFile)
+					if err != nil {
+						return err
+					}
+					_ = md5Str
+				case "sticker":
+					// 表情包为全局file_key，可以直接存下
+					imgKey := contentMap["file_key"] // 其实是StickerKey
+
+					if result := database.GetDbConnection().
+						Delete(&database.ReactImageMeterial{GuildID: *data.Event.Message.ChatId, FileID: imgKey, Type: consts.LarkResourceTypeSticker}); result.Error != nil {
+						return err
+					} else {
+						if result.RowsAffected == 0 {
+							return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAlreadyAdd))
+						}
+					}
+				default:
+					// do nothing
+				}
+			}
+		}
+	} else if data.Event.Message.ParentId != nil {
+		parentMsgResp := larkutils.GetMsgFullByID(ctx, *data.Event.Message.ParentId)
+		if len(parentMsgResp.Data.Items) != 0 {
+			msg := parentMsgResp.Data.Items[0]
+			contentMap := make(map[string]string)
+			err := sonic.UnmarshalString(*msg.Body.Content, &contentMap)
+			if err != nil {
+				log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
+				return err
+			}
+			switch *msg.MsgType {
+			case "image":
+				return fmt.Errorf("暂不支持Image类型的图片")
+				imageFile, err := larkutils.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["image_key"], "image")
+				md5Str, err := utility.GetFileMD5(imageFile)
+				if err != nil {
+					return err
+				}
+				_ = md5Str
+			case "sticker":
+				// 表情包为全局file_key，可以直接存下
+				imgKey := contentMap["file_key"] // 其实是StickerKey
+
+				if result := database.GetDbConnection().
+					Delete(&database.ReactImageMeterial{GuildID: *data.Event.Message.ChatId, FileID: imgKey, Type: consts.LarkResourceTypeSticker}); result.Error != nil {
+					return err
+				} else {
+					if result.RowsAffected == 0 {
+						return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAlreadyAdd))
+					}
+				}
+			default:
+				// do nothing
+			}
+		}
+	}
+	return nil
+	// ChatID := *data.Event.Message.ChatId
+
+	// lines := make([]map[string]string, 0)
+	// resList, hitCache := database.FindByCacheFunc(database.ReactImageMeterial{GuildID: ChatID}, func(r database.ReactImageMeterial) string { return r.GuildID })
+	// span.SetAttributes(attribute.Key("hitCache").Bool(hitCache))
+	// for _, res := range resList {
+	// 	if res.GuildID == ChatID {
+	// 		lines = append(lines, map[string]string{
+	// 			"title1": res.Type,
+	// 			"title2": fmt.Sprintf("![picture](%s)", getImageKeyByStickerKey(res.FileID)),
+	// 		})
+	// 	}
+	// }
+	// template := larkutils.GetTemplate(larkutils.TwoColSheetTemplate)
+	// cardContent := larkutils.NewSheetCardContent(
+	// 	ctx,
+	// 	template.TemplateID,
+	// 	template.TemplateVersion,
+	// ).
+	// 	AddVariable("title1", "Type").
+	// 	AddVariable("title2", "Picture").
+	// 	AddVariable("table_raw_array_1", lines).String()
+
+	// err := larkutils.ReplyMsgRawContentType(ctx, *data.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_replyGet", false)
+	// if err != nil {
+	// 	return err
+	// }
+	// return nil
+}
+
 func getImageKeyByStickerKey(stickerKey string) string {
 	res, _ := database.FindByCacheFunc(database.StickerMapping{StickerKey: stickerKey}, func(r database.StickerMapping) string { return r.StickerKey })
 	if len(res) == 0 {
