@@ -69,7 +69,7 @@ func NewSheetCardContent(ctx context.Context, templateID, templateVersion string
 
 func (c *TemplateCardContent) AddJaegerTraceInfo(traceID string) *TemplateCardContent {
 	return c.AddVariable("jaeger_trace_info", "JaegerID - "+traceID).
-		AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/"+traceID)
+		AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/trace/"+traceID)
 }
 
 func (c *TemplateCardContent) AddVariable(key string, value interface{}) *TemplateCardContent {

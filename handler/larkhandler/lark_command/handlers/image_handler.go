@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
@@ -16,7 +15,9 @@ import (
 	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"gorm.io/gorm/clause"
 )
 
@@ -33,10 +34,10 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 
-	var imgKey string
 	argMap, _ := parseArgs(args...)
 	log.ZapLogger.Info("wordAddHandler", zaplog.Any("args", argMap))
 	if len(argMap) > 0 {
+		var imgKey string
 		// by url
 		picURL, ok := argMap["url"]
 		if ok {
@@ -47,60 +48,51 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 		if ok {
 			imgKey = inputImgKey
 		}
+		err := createImage(ctx, *data.Event.Message.MessageId, *data.Event.Message.ChatId, imgKey, consts.LarkResourceTypeImage)
+		if err != nil {
+			return err
+		}
+
+	} else if data.Event.Message.ThreadId != nil {
+		// 找到话题中的所有图片
+		var combinedErr error
+		resp, err := larkutils.LarkClient.Im.Message.List(ctx, larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
+		if err != nil {
+			return err
+		}
+		for _, msg := range resp.Data.Items {
+			if *msg.Sender.Id != larkutils.BotAppID {
+				if imgKey := getImageKey(msg); imgKey != "" {
+					err := createImage(ctx, *msg.MessageId, *msg.ChatId, imgKey, *msg.MsgType)
+					if err != nil {
+						if combinedErr == nil {
+							span.RecordError(err)
+							combinedErr = err
+						} else {
+							combinedErr = errors.Wrapf(combinedErr, "%v", err)
+						}
+					} else {
+						larkutils.AddReaction(ctx, "JIAYI", *msg.MessageId)
+					}
+				}
+			}
+		}
+		if combinedErr != nil {
+			span.SetStatus(codes.Error, "addImage not complete with some error")
+			return errors.New("addImage not complete with some error")
+		}
 	} else if data.Event.Message.ParentId != nil {
 		parentMsg := larkutils.GetMsgFullByID(ctx, *data.Event.Message.ParentId)
 		if len(parentMsg.Data.Items) != 0 {
-			parentMsgItem := parentMsg.Data.Items[0]
-			contentMap := make(map[string]string)
-			err := sonic.UnmarshalString(*parentMsgItem.Body.Content, &contentMap)
+			msg := parentMsg.Data.Items[0]
+			imgKey := getImageKey(msg)
+			err := createImage(ctx, *msg.MessageId, *data.Event.Message.ChatId, imgKey, *msg.MsgType)
 			if err != nil {
-				log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
+				span.SetStatus(codes.Error, "addImage not complete with some error")
+				span.RecordError(err)
 				return err
 			}
-			if *parentMsgItem.MsgType == larkim.MsgTypeSticker {
-				// 表情包为全局file_key，可以直接存下
-				imgKey = contentMap["file_key"] // 其实是StickerKey
-
-				// Save Mapping
-				// 检查存在性
-				res, _ := database.FindByCacheFunc(database.StickerMapping{StickerKey: imgKey}, func(r database.StickerMapping) string { return r.StickerKey })
-				if len(res) == 0 {
-					if stickerFile, err := larkutils.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["file_key"], "image"); err != nil {
-						log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
-					} else {
-						newImgKey := larkutils.UploadPicture2LarkReader(ctx, stickerFile)
-						database.GetDbConnection().Clauses(clause.OnConflict{UpdateAll: true}).Create(&database.StickerMapping{
-							StickerKey: imgKey,
-							ImageKey:   newImgKey,
-						})
-					}
-				}
-				if result := database.GetDbConnection().Clauses(clause.OnConflict{DoNothing: true}).
-					Create(&database.ReactImageMeterial{GuildID: *data.Event.Message.ChatId, FileID: imgKey, Type: consts.LarkResourceTypeSticker}); result.Error != nil {
-					return err
-				} else {
-					if result.RowsAffected == 0 {
-						return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAlreadyAdd))
-					}
-				}
-			} else if *parentMsgItem.MsgType == larkim.MsgTypeImage {
-				imageFile, err := larkutils.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["image_key"], "image")
-				if err != nil {
-					return err
-				}
-				imgKey = larkutils.UploadPicture2LarkReader(ctx, imageFile)
-				if result := database.GetDbConnection().Clauses(clause.OnConflict{DoNothing: true}).
-					Create(&database.ReactImageMeterial{GuildID: *data.Event.Message.ChatId, FileID: imgKey, Type: consts.LarkResourceTypeImage}); result.Error != nil {
-					return err
-				} else {
-					if result.RowsAffected == 0 {
-						return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAlreadyAdd))
-					}
-				}
-
-			} else {
-				return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgNotStickerOrIMG))
-			}
+			larkutils.AddReaction(ctx, "JIAYI", *msg.MessageId)
 		} else {
 			return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgQuoteNoParent))
 		}
@@ -161,43 +153,59 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 //	@param data *larkim.P2MessageReceiveV1
 //	@param args ...string
 //	@return error
-func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer span.RecordError(err)
 
 	argMap, _ := parseArgs(args...)
 	log.ZapLogger.Info("replyDelHandler", zaplog.Any("args", argMap))
 
 	if data.Event.Message.ThreadId != nil {
 		// 找到话题中的所有图片
+		var combinedErr error
 		resp, err := larkutils.LarkClient.Im.Message.List(ctx, larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
 		if err != nil {
 			return err
 		}
 		for _, msg := range resp.Data.Items {
-			if *msg.Sender.Id != larkutils.BotAppID {
-				if imgKey := getImageKey(msg); imgKey != "" {
-					err = deleteImage(ctx, *msg.MessageId, *msg.ChatId, imgKey, *msg.MsgType)
-					if err != nil {
-						log.ZapLogger.Error("Pic Remove Err: ", zaplog.Error(err))
+			if imgKey := getImageKey(msg); imgKey != "" {
+				err = deleteImage(ctx, *msg.MessageId, *msg.ChatId, imgKey, *msg.MsgType)
+				if err != nil {
+					span.RecordError(err)
+					if combinedErr == nil {
+						combinedErr = err
+					} else {
+						combinedErr = errors.Wrapf(combinedErr, "%v", err)
 					}
+				} else {
+					larkutils.AddReaction(ctx, "GeneralDoNotDisturb", *msg.MessageId)
 				}
-				larkutils.AddReaction(ctx, "GeneralDoNotDisturb", *msg.MessageId)
 			}
+		}
+		if combinedErr != nil {
+			span.SetStatus(codes.Error, "delImage not complete with some error")
+			return errors.New("delImage not complete with some error")
 		}
 	} else if data.Event.Message.ParentId != nil {
 		parentMsgResp := larkutils.GetMsgFullByID(ctx, *data.Event.Message.ParentId)
 		if len(parentMsgResp.Data.Items) != 0 {
 			msg := parentMsgResp.Data.Items[0]
-			if imgKey := getImageKey(msg); imgKey != "" {
-				err := deleteImage(ctx, *msg.MessageId, *msg.ChatId, imgKey, *msg.MsgType)
-				if err != nil {
-					return err
+			if *msg.Sender.Id == larkutils.BotAppID {
+				if imgKey := getImageKey(msg); imgKey != "" {
+					err := deleteImage(ctx, *msg.MessageId, *msg.ChatId, imgKey, *msg.MsgType)
+					if err != nil {
+						span.SetStatus(codes.Error, "delImage not complete with some error")
+						span.RecordError(err)
+						return err
+					}
+					larkutils.AddReaction(ctx, "GeneralDoNotDisturb", *msg.MessageId)
 				}
 			}
-			larkutils.AddReaction(ctx, "GeneralDoNotDisturb", *msg.MessageId)
+
 		}
+
 	}
 	return nil
 }
@@ -233,17 +241,47 @@ func getImageKey(msg *larkim.Message) string {
 func deleteImage(ctx context.Context, msgID, chatID, imgKey, msgType string) error {
 	switch msgType {
 	case "image":
-		return fmt.Errorf("暂不支持Image类型的图片")
-		imageFile, err := larkutils.GetMsgImages(ctx, msgID, imgKey, "image")
-		md5Str, err := utility.GetFileMD5(imageFile)
-		if err != nil {
-			return err
+		// 检查存在性
+		if result := database.GetDbConnection().
+			Delete(&database.ReactImageMeterial{GuildID: chatID, FileID: imgKey, Type: consts.LarkResourceTypeImage}); result.Error != nil {
+			return result.Error
+		} else {
+			if result.RowsAffected == 0 {
+				return fmt.Errorf("img_key %s not exists\\n", imgKey)
+			}
 		}
-		_ = md5Str
 	case "sticker":
 		// 表情包为全局file_key，可以直接存下
 		if result := database.GetDbConnection().
 			Delete(&database.ReactImageMeterial{GuildID: chatID, FileID: imgKey, Type: consts.LarkResourceTypeSticker}); result.Error != nil {
+			return result.Error
+		} else {
+			if result.RowsAffected == 0 {
+				return fmt.Errorf("img_key %s not exists\\n", imgKey)
+			}
+		}
+	default:
+		// do nothing
+	}
+	return nil
+}
+
+func createImage(ctx context.Context, msgID, chatID, imgKey, msgType string) error {
+	switch msgType {
+	case "image":
+		// 检查存在性
+		if result := database.GetDbConnection().Clauses(clause.OnConflict{DoNothing: true}).
+			Create(&database.ReactImageMeterial{GuildID: chatID, FileID: imgKey, Type: consts.LarkResourceTypeImage}); result.Error != nil {
+			return result.Error
+		} else {
+			if result.RowsAffected == 0 {
+				return errors.New(copywriting.GetSampleCopyWritings(ctx, chatID, copywriting.ImgAddRespAlreadyAdd))
+			}
+		}
+	case "sticker":
+		// 表情包为全局file_key，可以直接存下
+		if result := database.GetDbConnection().Clauses(clause.OnConflict{DoNothing: true}).
+			Create(&database.ReactImageMeterial{GuildID: chatID, FileID: imgKey, Type: consts.LarkResourceTypeSticker}); result.Error != nil {
 			return result.Error
 		} else {
 			if result.RowsAffected == 0 {
