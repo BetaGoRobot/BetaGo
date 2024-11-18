@@ -49,7 +49,7 @@ func (r *FollowReactionOperator) Run(ctx context.Context, event *larkim.P2Messag
 	defer span.RecordError(err)
 	realRate := utility.MustAtoI(utility.GetEnvWithDefault("REACTION_FOLLOW_DEFAULT_RATE", "10"))
 	if utility.Probability(float64(realRate) / 100) {
-		err = larkutils.AddReaction(ctx, *event.Event.ReactionType.EmojiType, *event.Event.MessageId)
+		_, err = larkutils.AddReaction(ctx, *event.Event.ReactionType.EmojiType, *event.Event.MessageId)
 		if err != nil {
 			return err
 		}

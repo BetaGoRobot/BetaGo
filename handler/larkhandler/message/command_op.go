@@ -59,19 +59,29 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 
 	commands := larkutils.GetCommand(ctx, larkutils.PreGetTextMsg(ctx, event))
 	if len(commands) > 0 {
+		var reactionID string
+		reactionID, err = larkutils.AddReaction(ctx, "OnIt", *event.Event.Message.MessageId)
+		if err != nil {
+			log.ZapLogger.Error("Add reaction to msg failed", zaplog.Error(err))
+		} else {
+			defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
+		}
+
 		err = larkcommand.LarkRootCommand.Execute(ctx, event, commands)
-	}
-	if err != nil {
-		if errors.Is(err, consts.ErrCommandNotFound) {
-			if larkutils.IsMentioned(event.Event.Message.Mentions) {
+		if err != nil {
+			if errors.Is(err, consts.ErrCommandNotFound) {
+				if larkutils.IsMentioned(event.Event.Message.Mentions) {
+					larkutils.ReplyMsgText(ctx, err.Error(), *event.Event.Message.MessageId, "_OpErr", false)
+					return
+				}
+			} else {
 				larkutils.ReplyMsgText(ctx, err.Error(), *event.Event.Message.MessageId, "_OpErr", false)
+				log.ZapLogger.Error("CommandOperator", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 				return
 			}
-		} else {
-			larkutils.ReplyMsgText(ctx, err.Error(), *event.Event.Message.MessageId, "_OpErr", false)
-			log.ZapLogger.Error("CommandOperator", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
-			return
 		}
+		larkutils.AddReaction(ctx, "DONE", *event.Event.Message.MessageId)
 	}
+
 	return nil
 }

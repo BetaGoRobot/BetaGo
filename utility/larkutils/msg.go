@@ -295,7 +295,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 	return
 }
 
-func AddReaction(ctx context.Context, reactionType, msgID string) (err error) {
+func AddReaction(ctx context.Context, reactionType, msgID string) (reactionID string, err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	defer span.End()
@@ -304,10 +304,28 @@ func AddReaction(ctx context.Context, reactionType, msgID string) (err error) {
 	resp, err := LarkClient.Im.V1.MessageReaction.Create(ctx, req)
 	if err != nil {
 		log.ZapLogger.Error("AddReaction", zaplog.Error(err))
-		return err
+		return "", err
 	}
 	if resp.Code != 0 {
 		log.ZapLogger.Error("AddReaction", zaplog.String("Error", resp.Error()))
+		return "", errors.New(resp.Error())
+	}
+	AddTraceLog2DB(ctx, msgID)
+	return *resp.Data.ReactionId, err
+}
+
+func RemoveReaction(ctx context.Context, reactionID, msgID string) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID))
+	defer span.End()
+	req := larkim.NewDeleteMessageReactionReqBuilder().MessageId(msgID).ReactionId(reactionID).Build()
+	resp, err := LarkClient.Im.V1.MessageReaction.Delete(ctx, req)
+	if err != nil {
+		log.ZapLogger.Error("RemoveReaction", zaplog.Error(err))
+		return err
+	}
+	if resp.Code != 0 {
+		log.ZapLogger.Error("RemoveReaction", zaplog.String("Error", resp.Error()))
 		return errors.New(resp.Error())
 	}
 	AddTraceLog2DB(ctx, msgID)
