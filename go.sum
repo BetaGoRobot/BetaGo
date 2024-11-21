@@ -335,6 +335,8 @@ github.com/tencentyun/cos-go-sdk-v5 v0.7.57 h1:V3L7ae7KcsjDEGJcL16DAgkzOBQldHgrt
 github.com/tencentyun/cos-go-sdk-v5 v0.7.57/go.mod h1:8+hG+mQMuRP/OIS9d83syAvXvrMj9HhkND6Q1fLghw0=
 github.com/tencentyun/cos-go-sdk-v5 v0.7.58 h1:YoZTqaRUcv75P4GSvyam93aEtdgOZWGUJWzXzyCV5EM=
 github.com/tencentyun/cos-go-sdk-v5 v0.7.58/go.mod h1:8+hG+mQMuRP/OIS9d83syAvXvrMj9HhkND6Q1fLghw0=
+github.com/tencentyun/cos-go-sdk-v5 v0.7.59 h1:bzB/0fj+gKCUvEfe+c4CNGkqTnrenxzTsLM2rMn3mHE=
+github.com/tencentyun/cos-go-sdk-v5 v0.7.59/go.mod h1:8+hG+mQMuRP/OIS9d83syAvXvrMj9HhkND6Q1fLghw0=
 github.com/tidwall/gjson v1.17.1 h1:wlYEnwqAHgzmhNUFfw7Xalt2JzQvsMx2Se4PcoFCT/U=
 github.com/tidwall/gjson v1.17.1/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
 github.com/tidwall/match v1.1.1 h1:+Ho715JplO36QYgwN9PGYNhgZvoUSc9X2c80KVTi+GA=
