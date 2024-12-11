@@ -272,14 +272,14 @@ func (neteaseCtx *NetEaseContext) CheckIfLogin(ctx context.Context) bool {
 	if err = sonic.Unmarshal(data, &loginStatus); err != nil {
 		log.ZapLogger.Info("error in unmarshal loginStatus", zaplog.Error(err))
 	} else {
-		if loginStatus.Data.Account != nil {
+		if anonimousUser, ok := loginStatus.Data.Account["anonimousUser"].(bool); ok && anonimousUser {
+			return false
+		} else if loginStatus.Data.Account != nil {
 			return true
 		}
 		return false
 	}
-	if anonimousUser, ok := loginStatus.Data.Account["anonimousUser"].(bool); ok && anonimousUser {
-		return false
-	}
+
 	return false
 }
 
