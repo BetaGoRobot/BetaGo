@@ -277,6 +277,9 @@ func (neteaseCtx *NetEaseContext) CheckIfLogin(ctx context.Context) bool {
 		}
 		return false
 	}
+	if anonimousUser, ok := loginStatus.Data.Account["anonimousUser"].(bool); ok && anonimousUser {
+		return false
+	}
 	return false
 }
 
