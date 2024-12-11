@@ -14,26 +14,26 @@ replace (
 )
 
 require (
-	github.com/bytedance/sonic v1.12.4
-	github.com/carlmjohnson/requests v0.24.2
+	github.com/bytedance/sonic v1.12.5
+	github.com/carlmjohnson/requests v0.24.3
 	github.com/dlclark/regexp2 v1.11.4
 	github.com/eko/gocache/lib/v4 v4.1.6
 	github.com/eko/gocache/store/go_cache/v4 v4.2.2
 	github.com/enescakir/emoji v1.0.0
 	github.com/fasthttp/router v1.5.2
-	github.com/go-resty/resty/v2 v2.16.0
+	github.com/go-resty/resty/v2 v2.16.2
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/gotify/go-api-client/v2 v2.0.4
 	github.com/h2non/bimg v1.1.9
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
 	github.com/kevinmatthe/zaplog v0.1.6
-	github.com/larksuite/oapi-sdk-go/v3 v3.3.7
+	github.com/larksuite/oapi-sdk-go/v3 v3.4.0
 	github.com/lib/pq v1.10.9
 	github.com/lonelyevil/kook v0.0.33
 	github.com/lonelyevil/kook/log_adapter/plog v0.0.34
 	github.com/mdaverde/jsonpath v0.2.1
-	github.com/minio/minio-go/v7 v7.0.79
+	github.com/minio/minio-go/v7 v7.0.81
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v4 v4.3.0
@@ -42,17 +42,17 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.19.1
 	github.com/redis/go-redis/v9 v9.7.0
-	github.com/spyzhov/ajson v0.9.5
-	github.com/tencentyun/cos-go-sdk-v5 v0.7.58
+	github.com/spyzhov/ajson v0.9.6
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.59
 	github.com/valyala/fasthttp v1.57.0
-	github.com/volcengine/volcengine-go-sdk v1.0.165
+	github.com/volcengine/volcengine-go-sdk v1.0.166
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 	go.opentelemetry.io/otel v1.32.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.32.0
 	go.opentelemetry.io/otel/sdk v1.32.0
 	go.opentelemetry.io/otel/trace v1.32.0
 	go.uber.org/zap v1.27.0
-	gorm.io/driver/postgres v1.5.9
+	gorm.io/driver/postgres v1.5.10
 	gorm.io/gorm v1.25.12
 )
 
