@@ -40,7 +40,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phuslu/log v1.0.113
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.19.1
+	github.com/prometheus/client_golang v1.20.5
 	github.com/redis/go-redis/v9 v9.7.0
 	github.com/spyzhov/ajson v0.9.6
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.59
@@ -109,8 +109,8 @@ require (
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.53.0 // indirect
-	github.com/prometheus/procfs v0.15.0 // indirect
+	github.com/prometheus/common v0.55.0 // indirect
+	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20240704082632-aef3928b8a38 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
