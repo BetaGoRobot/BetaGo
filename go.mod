@@ -1,8 +1,7 @@
 module github.com/BetaGoRobot/BetaGo
 
 go 1.22
-
-toolchain go1.22.4
+toolchain go1.22.5
 
 replace (
 	github.com/BetaGoRobot/BetaGo/betagovar => ./consts
@@ -47,10 +46,10 @@ require (
 	github.com/valyala/fasthttp v1.57.0
 	github.com/volcengine/volcengine-go-sdk v1.0.166
 	github.com/wcharczuk/go-chart/v2 v2.1.2
-	go.opentelemetry.io/otel v1.32.0
+	go.opentelemetry.io/otel v1.33.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.32.0
 	go.opentelemetry.io/otel/sdk v1.32.0
-	go.opentelemetry.io/otel/trace v1.32.0
+	go.opentelemetry.io/otel/trace v1.33.0
 	go.uber.org/zap v1.27.0
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
@@ -118,7 +117,7 @@ require (
 	github.com/volcengine/volc-sdk-golang v1.0.23 // indirect
 	go.mongodb.org/mongo-driver v1.15.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.32.0 // indirect
-	go.opentelemetry.io/otel/metric v1.32.0 // indirect
+	go.opentelemetry.io/otel/metric v1.33.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
