@@ -158,26 +158,29 @@ func RebuildAtMsg(input string, substrings []string) []string {
 	// Sort the positions to split
 	sort.Slice(splitPositions, func(i, j int) bool { return splitPositions[i] < splitPositions[j] })
 
-	// Remove duplicate positions
-	uniquePositions := []int{}
-	for i, pos := range splitPositions {
-		if i == 0 || pos != splitPositions[i-1] {
-			uniquePositions = append(uniquePositions, pos)
+	if len(splitPositions) > 0 {
+		// Remove duplicate positions
+		uniquePositions := []int{}
+		for i, pos := range splitPositions {
+			if i == 0 || pos != splitPositions[i-1] {
+				uniquePositions = append(uniquePositions, pos)
+			}
 		}
-	}
 
-	// Add start and end of the string to the positions if not already present
-	if uniquePositions[0] != 0 {
-		uniquePositions = append([]int{0}, uniquePositions...)
-	}
-	if uniquePositions[len(uniquePositions)-1] != len(input) {
-		uniquePositions = append(uniquePositions, len(input))
-	}
+		// Add start and end of the string to the positions if not already present
+		if uniquePositions[0] != 0 {
+			uniquePositions = append([]int{0}, uniquePositions...)
+		}
+		if uniquePositions[len(uniquePositions)-1] != len(input) {
+			uniquePositions = append(uniquePositions, len(input))
+		}
 
-	// Extract substrings based on split positions
-	for i := 0; i < len(uniquePositions)-1; i++ {
-		result = append(result, input[uniquePositions[i]:uniquePositions[i+1]])
+		// Extract substrings based on split positions
+		for i := 0; i < len(uniquePositions)-1; i++ {
+			result = append(result, input[uniquePositions[i]:uniquePositions[i+1]])
+		}
+	} else {
+		result = append(result, input)
 	}
-
 	return result
 }
