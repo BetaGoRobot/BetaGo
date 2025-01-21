@@ -108,7 +108,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 		subMsgList := RebuildAtMsg(msg, subStrings)
 		mentionsMap := make(map[string]*larkim.MentionEvent)
 		for _, mention := range event.Event.Message.Mentions {
-			strings.Index(msg, *mention.Key)
+			mentionsMap[*mention.Key] = mention
 		}
 		for index, subMsg := range subMsgList {
 			if mentionEvent, ok := mentionsMap[subMsg]; ok {
