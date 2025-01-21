@@ -1,8 +1,8 @@
 module github.com/BetaGoRobot/BetaGo
 
-go 1.22
+go 1.22.1
 
-toolchain go1.22.4
+toolchain go1.23.0
 
 replace (
 	github.com/BetaGoRobot/BetaGo/betagovar => ./consts
@@ -16,6 +16,7 @@ replace (
 require (
 	github.com/bytedance/sonic v1.12.6
 	github.com/carlmjohnson/requests v0.24.3
+	github.com/defensestation/osquery v1.0.0
 	github.com/dlclark/regexp2 v1.11.4
 	github.com/eko/gocache/lib/v4 v4.1.6
 	github.com/eko/gocache/store/go_cache/v4 v4.2.2
@@ -70,6 +71,7 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/fatih/structs v1.1.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

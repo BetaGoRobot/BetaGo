@@ -40,6 +40,7 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 		if err != nil {
 			return err
 		}
+	} else if searchType == "artist" {
 	} else if searchType == "playlist" {
 	} else if searchType == "song" {
 		musicList, err := neteaseapi.NetEaseGCtx.SearchMusicByKeyWord(ctx, keywords...)

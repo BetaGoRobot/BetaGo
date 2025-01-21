@@ -15,6 +15,7 @@ import (
 
 var (
 	DOUBAO_EMBEDDING_EPID = os.Getenv("DOUBAO_EMBEDDING_EPID")
+	DOUBAO_32K_EPID       = os.Getenv("DOUBAO_32K_EPID")
 	DOUBAO_API_KEY        = os.Getenv("DOUBAO_API_KEY")
 )
 
@@ -43,4 +44,35 @@ func EmbeddingText(ctx context.Context, input string) (embedded []float32, token
 	embedded = resp.Data[0].Embedding
 	tokenUsage = resp.Usage
 	return
+}
+
+func SingleChat(ctx context.Context, sysPrompt, userPrompt string) (string, error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
+	span.SetAttributes(attribute.Key("user_prompt").String(userPrompt))
+	defer span.End()
+
+	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
+		Model: DOUBAO_32K_EPID,
+		Messages: []*model.ChatCompletionMessage{
+			{
+				Role: "system",
+				Content: &model.ChatCompletionMessageContent{
+					StringValue: &sysPrompt,
+				},
+			},
+			{
+				Role: "user",
+				Content: &model.ChatCompletionMessageContent{
+					StringValue: &userPrompt,
+				},
+			},
+		},
+	})
+	if err != nil {
+		log.ZapLogger.Error("chat error", zap.Error(err))
+		return "", err
+	}
+
+	return *resp.Choices[0].Message.Content.StringValue, nil
 }

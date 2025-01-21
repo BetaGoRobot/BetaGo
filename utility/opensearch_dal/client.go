@@ -17,25 +17,27 @@ var opensearchClient *opensearchapi.Client
 
 var opensearchDomain = os.Getenv("OPENSEARCH_DOMAIN")
 
-func init() {
-	var err error
-
-	opensearchClient, err = opensearchapi.NewClient(opensearchapi.Config{
-		Client: opensearch.Config{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+func OpenSearchClient() *opensearchapi.Client {
+	if opensearchClient == nil {
+		var err error
+		opensearchClient, err = opensearchapi.NewClient(opensearchapi.Config{
+			Client: opensearch.Config{
+				Transport: &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				},
+				Addresses: []string{
+					"https://" + opensearchDomain + ":9200",
+					"https://" + opensearchDomain + ":9200",
+				},
+				Username: os.Getenv("OPENSEARCH_USERNAME"),
+				Password: os.Getenv("OPENSEARCH_PASSWORD"),
 			},
-			Addresses: []string{
-				"https://" + opensearchDomain + ":9200",
-				"https://" + opensearchDomain + ":9200",
-			},
-			Username: os.Getenv("OPENSEARCH_USERNAME"),
-			Password: os.Getenv("OPENSEARCH_PASSWORD"),
-		},
-	})
-	if err != nil {
-		panic(err)
+		})
+		if err != nil {
+			panic(err)
+		}
 	}
+	return opensearchClient
 }
 
 func InsertData(ctx context.Context, index string, id string, data any) error {
@@ -47,7 +49,20 @@ func InsertData(ctx context.Context, index string, id string, data any) error {
 		DocumentID: id,
 		Body:       opensearchutil.NewJSONReader(data),
 	}
-	_, err := opensearchClient.Index(ctx, req)
+	_, err := OpenSearchClient().Index(ctx, req)
 
 	return err
+}
+
+func SearchData(ctx context.Context, index string, data any) (*opensearchapi.SearchResp, error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+
+	req := &opensearchapi.SearchReq{
+		Indices: []string{index},
+		Body:    opensearchutil.NewJSONReader(data),
+	}
+	resp, err := OpenSearchClient().Search(ctx, req)
+
+	return resp, err
 }

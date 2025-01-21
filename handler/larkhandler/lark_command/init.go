@@ -65,6 +65,9 @@ func init() {
 		).
 		AddSubCommand(
 			newCmd("oneword", handlers.OneWordHandler).AddArgs("type"),
+		).
+		AddSubCommand(
+			newCmd("imitate", handlers.ImitateHandler),
 		)
 	LarkRootCommand.BuildChain()
 }
