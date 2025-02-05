@@ -8,7 +8,7 @@ import (
 
 func main() {
 	fmt.Println(
-		RebuildAtMsg("@user_1 test @user_2test", []string{"@user_1", "@user_2"}),
+		RebuildAtMsg("@_user_1  123  @_user_2 123 123 123 @_user_3 123", []string{"@_user_1", "@_user_2", "@_user_3"}),
 	)
 }
 

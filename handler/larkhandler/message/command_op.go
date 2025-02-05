@@ -82,7 +82,7 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 				return
 			}
 		}
-		larkutils.AddReaction(ctx, "DONE", *event.Event.Message.MessageId)
+		larkutils.AddReactionAsync(ctx, "DONE", *event.Event.Message.MessageId)
 	}
 
 	return nil

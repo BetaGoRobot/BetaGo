@@ -72,7 +72,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 							combinedErr = errors.Wrapf(combinedErr, "%v", err)
 						}
 					} else {
-						larkutils.AddReaction(ctx, "JIAYI", *msg.MessageId)
+						larkutils.AddReactionAsync(ctx, "JIAYI", *msg.MessageId)
 					}
 				}
 			}
@@ -92,7 +92,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 				span.RecordError(err)
 				return err
 			}
-			larkutils.AddReaction(ctx, "JIAYI", *msg.MessageId)
+			larkutils.AddReactionAsync(ctx, "JIAYI", *msg.MessageId)
 		} else {
 			return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgQuoteNoParent))
 		}
@@ -100,7 +100,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 		return errors.New(copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgNotAnyValidArgs))
 	}
 	// successCopywriting := copywriting.GetSampleCopyWritings(ctx, *data.Event.Message.ChatId, copywriting.ImgAddRespAddSuccess)
-	larkutils.AddReaction(ctx, "DONE", *data.Event.Message.MessageId)
+	larkutils.AddReactionAsync(ctx, "DONE", *data.Event.Message.MessageId)
 	// larkutils.ReplyMsgText(ctx, successCopywriting, *data.Event.Message.MessageId, "_imgAdd", false)
 	return nil
 }
@@ -180,7 +180,7 @@ func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 						combinedErr = errors.Wrapf(combinedErr, "%v", err)
 					}
 				} else {
-					larkutils.AddReaction(ctx, "GeneralDoNotDisturb", *msg.MessageId)
+					larkutils.AddReactionAsync(ctx, "GeneralDoNotDisturb", *msg.MessageId)
 				}
 			}
 		}
@@ -200,7 +200,7 @@ func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 						span.RecordError(err)
 						return err
 					}
-					larkutils.AddReaction(ctx, "GeneralDoNotDisturb", *msg.MessageId)
+					larkutils.AddReactionAsync(ctx, "GeneralDoNotDisturb", *msg.MessageId)
 				}
 			}
 
