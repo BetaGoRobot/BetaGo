@@ -36,7 +36,7 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 			return err
 		}
 
-		cardContent, err = cardutil.SendMusicListCard(ctx, albumList, cardutil.MusicItemTransAlbum, neteaseapi.CommentTypeAlbum)
+		cardContent, err = cardutil.BuildMusicListCard(ctx, albumList, cardutil.MusicItemTransAlbum, neteaseapi.CommentTypeAlbum)
 		if err != nil {
 			return err
 		}
@@ -47,7 +47,7 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 		if err != nil {
 			return err
 		}
-		cardContent, err = cardutil.SendMusicListCard(ctx, musicList, cardutil.MusicItemNoTrans, neteaseapi.CommentTypeSong)
+		cardContent, err = cardutil.BuildMusicListCard(ctx, musicList, cardutil.MusicItemNoTrans, neteaseapi.CommentTypeSong)
 		if err != nil {
 			return err
 		}

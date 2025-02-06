@@ -4,6 +4,8 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"net/url"
+	"path"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -144,15 +146,20 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByIDs(ctx context.Context, musicIDs
 	return
 }
 
-func uploadMusic(ctx context.Context, url string, ID string) {
+func uploadMusic(ctx context.Context, URL string, ID string) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("songID").String(ID))
 	defer span.End()
-	_, err := miniohelper.Client().
+	parsedURL, err := url.Parse(URL)
+	if err != nil {
+		log.ZapLogger.Warn("[PreUploadMusic] parsedURL failed...", zaplog.Error(err))
+		return
+	}
+	_, err = miniohelper.Client().
 		SetContext(ctx).
 		SetBucketName("cloudmusic").
-		SetFileFromURL(url).
-		SetObjName("music/" + ID + filepath.Ext(url)).
+		SetFileFromURL(URL).
+		SetObjName("music/" + ID + path.Ext(path.Base(parsedURL.Path))).
 		SetContentType(ct.ContentTypeAudio).
 		Upload()
 	if err != nil {

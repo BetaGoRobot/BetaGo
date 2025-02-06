@@ -159,7 +159,7 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 	if err != nil {
 		return
 	}
-	cardContent, err := cardutil.SendMusicListCard(ctx, result, cardutil.MusicItemNoTrans, neteaseapi.CommentTypeSong)
+	cardContent, err := cardutil.BuildMusicListCard(ctx, result, cardutil.MusicItemNoTrans, neteaseapi.CommentTypeSong)
 	if err != nil {
 		return
 	}

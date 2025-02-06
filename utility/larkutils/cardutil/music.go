@@ -3,6 +3,7 @@ package cardutil
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -28,7 +29,7 @@ func MusicItemTransAlbum(album *neteaseapi.Album) *neteaseapi.SearchMusicItem {
 	}
 }
 
-func SendMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType) (content string, err error) {
+func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType) (content string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
@@ -51,35 +52,48 @@ func SendMusicListCard[T any](ctx context.Context, resList []*T, transFunc music
 		buttonType = "null"
 	}
 
-	for _, item := range res {
-		comment, err := neteaseapi.NetEaseGCtx.GetComment(ctx, resourceType, item.ID)
-		if err != nil {
-			log.ZapLogger.Error("GetComment", zaplog.Error(err))
+	var (
+		commentChan = make(chan map[string]interface{}, len(resList))
+		wg          = &sync.WaitGroup{}
+	)
+	go func() {
+		defer close(commentChan)
+		defer wg.Wait()
+		for _, item := range res {
+			wg.Add(1)
+			go func(item *neteaseapi.SearchMusicItem) {
+				defer wg.Done()
+				comment, err := neteaseapi.NetEaseGCtx.GetComment(ctx, resourceType, item.ID)
+				if err != nil {
+					log.ZapLogger.Error("GetComment", zaplog.Error(err))
+				}
+				line := map[string]interface{}{
+					"field_1":     genMusicTitle(item.Name, item.ArtistName),
+					"field_2":     item.ImageKey,
+					"button_info": buttonName,
+					"element_id":  item.ID,
+					"button_val": map[string]string{
+						"type": buttonType,
+						"id":   item.ID,
+					},
+				}
+				if len(comment.Data.Comments) != 0 {
+					line["field_3"] = comment.Data.Comments[0].Content
+					if runeSlice := []rune(comment.Data.Comments[0].Content); len(runeSlice) > 50 {
+						line["field_3"] = string(runeSlice[:50]) + "..."
+					}
+					line["comment_time"] = comment.Data.Comments[0].TimeStr
+				}
+				if resourceType == neteaseapi.CommentTypeSong && item.SongURL == "" { // 无效歌曲
+					line["button_info"] = "歌曲无效"
+				}
+				commentChan <- line
+			}(item)
 		}
-
-		line := map[string]interface{}{
-			"field_1":     genMusicTitle(item.Name, item.ArtistName),
-			"field_2":     item.ImageKey,
-			"button_info": buttonName,
-			"element_id":  item.ID,
-			"button_val": map[string]string{
-				"type": buttonType,
-				"id":   item.ID,
-			},
-		}
-		if len(comment.Data.Comments) != 0 {
-			line["field_3"] = comment.Data.Comments[0].Content
-			if runeSlice := []rune(comment.Data.Comments[0].Content); len(runeSlice) > 50 {
-				line["field_3"] = string(runeSlice[:50]) + "..."
-			}
-			line["comment_time"] = comment.Data.Comments[0].TimeStr
-		}
-		if resourceType == neteaseapi.CommentTypeSong && item.SongURL == "" { // 无效歌曲
-			line["button_info"] = "歌曲无效"
-		}
+	}()
+	for line := range commentChan {
 		lines = append(lines, line)
 	}
-
 	template := larkutils.GetTemplate(larkutils.AlbumListTemplate)
 	content = larkutils.NewSheetCardContent(
 		ctx,
