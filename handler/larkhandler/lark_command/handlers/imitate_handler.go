@@ -26,9 +26,9 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 	quoteList := data.Event.Message.Mentions
 	if len(quoteList) == 1 {
 		historyMsg := "- " + strings.Join(SearchByUserID(
-			*quoteList[0].Id.OpenId, 50), "\n- ")
+			*quoteList[0].Id.OpenId, 100, 50), "\n- ")
 		latestMsg := "- " + strings.Join(SearchExcludeUserID(
-			*quoteList[0].Id.OpenId, *data.Event.Message.ChatId, 15,
+			*quoteList[0].Id.OpenId, *data.Event.Message.ChatId, 100, 15,
 		), "\n- ")
 		sysPrompt := `# 角色
 你是一个擅长模仿别人说话语气的人，你言简意赅，不会有很多的修饰语
@@ -87,7 +87,7 @@ type MessageDoc struct {
 	CreateTime string `json:"create_time"`
 }
 
-func SearchByUserID(UserID string, size uint64) (messageList []string) {
+func SearchByUserID(UserID string, batch, size uint64) (messageList []string) {
 	query := osquery.Search().
 		Query(
 			osquery.Bool().Must(
@@ -96,7 +96,7 @@ func SearchByUserID(UserID string, size uint64) (messageList []string) {
 					osquery.Prefix("message_str", "/"),
 				),
 			),
-		).SourceIncludes("raw_message", "mentions", "create_time").Size(size).Sort("create_time", "desc")
+		).SourceIncludes("raw_message", "mentions", "create_time").Size(batch).Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(context.Background(), "lark_msg_index", query)
 	if err != nil {
 		panic(err)
@@ -124,10 +124,13 @@ func SearchByUserID(UserID string, size uint64) (messageList []string) {
 		}
 	}
 	slices.Reverse(messageList)
+	if len(messageList) > int(size) {
+		messageList = messageList[:size]
+	}
 	return
 }
 
-func SearchExcludeUserID(UserID, chatID string, size uint64) (messageList []string) {
+func SearchExcludeUserID(UserID, chatID string, batch, size uint64) (messageList []string) {
 	query := osquery.Search().
 		Query(
 			osquery.Bool().Must(
@@ -137,7 +140,7 @@ func SearchExcludeUserID(UserID, chatID string, size uint64) (messageList []stri
 				osquery.Term("chat_id", chatID),
 			),
 		).SourceIncludes(
-		"raw_message", "mentions", "create_time").Size(size).Sort("create_time", "desc")
+		"raw_message", "mentions", "create_time").Size(batch).Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(
 		context.Background(),
 		"lark_msg_index",
@@ -168,6 +171,9 @@ func SearchExcludeUserID(UserID, chatID string, size uint64) (messageList []stri
 		}
 	}
 	slices.Reverse(messageList)
+	if len(messageList) > int(size) {
+		messageList = messageList[:size]
+	}
 	return
 }
 
