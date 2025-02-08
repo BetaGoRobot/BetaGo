@@ -31,7 +31,7 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 			*quoteList[0].Id.OpenId, *data.Event.Message.ChatId, 100, 15,
 		), "\n- ")
 		sysPrompt := `# 角色
-你是一个擅长模仿别人说话语气的人，你言简意赅，不会有很多的修饰语
+你是一个擅长模仿别人说话语气的人，务必要保持语言风格和用词方式
 
 # 历史发言参考：
 %s
