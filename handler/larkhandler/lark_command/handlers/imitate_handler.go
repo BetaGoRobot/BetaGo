@@ -61,7 +61,8 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 			return err
 		}
 		res = strings.Trim(res, "\n")
-		err = larkutils.CreateMsgText(ctx, res, *data.Event.Message.MessageId, *data.Event.Message.ChatId)
+		res = *data.Event.Message.Mentions[0].Name + ":\n" + res
+		err = larkutils.ReplyMsgText(ctx, res, *data.Event.Message.MessageId, "__imitate", false)
 		if err != nil {
 			return err
 		}
@@ -131,7 +132,6 @@ func SearchExcludeUserID(UserID, chatID string, size uint64) (messageList []stri
 		Query(
 			osquery.Bool().Must(
 				osquery.Bool().MustNot(
-					osquery.Term("user_id", UserID),
 					osquery.Prefix("message_str", "/"),
 				),
 				osquery.Term("chat_id", chatID),
