@@ -234,7 +234,7 @@ func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(text))
 	defer span.End()
-
+	text = strings.ReplaceAll(text, "\n", "\\n")
 	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, larkim.NewTextMsgBuilder().Text(text).Build(), suffix, replyInThread)
 }
 

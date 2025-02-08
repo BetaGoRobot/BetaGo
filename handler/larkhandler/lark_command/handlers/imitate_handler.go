@@ -25,8 +25,12 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 
 	quoteList := data.Event.Message.Mentions
 	if len(quoteList) == 1 {
-		historyMsg := "- " + strings.Join(SearchByUserID(
-			*quoteList[0].Id.OpenId, 100, 50), "\n- ")
+		userMsgs := SearchByUserID(
+			*quoteList[0].Id.OpenId, 100, 50)
+		if len(userMsgs) == 0 {
+			return nil
+		}
+		historyMsg := "- " + strings.Join(userMsgs, "\n- ")
 		latestMsg := "- " + strings.Join(SearchExcludeUserID(
 			*quoteList[0].Id.OpenId, *data.Event.Message.ChatId, 100, 15,
 		), "\n- ")
@@ -52,14 +56,14 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 请给出模仿的输出:`
 		sysPrompt = fmt.Sprintf(sysPrompt, historyMsg)
 		userPrompt = fmt.Sprintf(userPrompt, latestMsg)
+
 		span.SetAttributes(attribute.String("sys_prompt", sysPrompt))
 		span.SetAttributes(attribute.String("user_prompt", userPrompt))
 		res, err := doubao.SingleChat(ctx, sysPrompt, userPrompt)
-		span.SetAttributes(attribute.String("res", res))
-		fmt.Println(sysPrompt, userPrompt)
 		if err != nil {
 			return err
 		}
+		span.SetAttributes(attribute.String("res", res))
 		res = strings.Trim(res, "\n")
 		res = *data.Event.Message.Mentions[0].Name + ":\n" + res
 		err = larkutils.ReplyMsgText(ctx, res, *data.Event.Message.MessageId, "__imitate", false)
@@ -92,12 +96,17 @@ func SearchByUserID(UserID string, batch, size uint64) (messageList []string) {
 		Query(
 			osquery.Bool().Must(
 				osquery.Term("user_id", UserID),
-				osquery.Bool().MustNot(
-					osquery.Prefix("message_str", "/"),
-				),
 			),
-		).SourceIncludes("raw_message", "mentions", "create_time").Size(batch).Sort("create_time", "desc")
-	resp, err := opensearchdal.SearchData(context.Background(), "lark_msg_index", query)
+		).SourceIncludes(
+		"raw_message",
+		"mentions",
+		"create_time").
+		Size(batch).
+		Sort("create_time", "desc")
+	resp, err := opensearchdal.SearchData(
+		context.Background(),
+		"lark_msg_index",
+		query)
 	if err != nil {
 		panic(err)
 	}
@@ -119,14 +128,17 @@ func SearchByUserID(UserID string, batch, size uint64) (messageList []string) {
 		}
 
 		r := replaceMention(res.RawMessage, mentions)
+		if strings.HasPrefix(r, "/") || strings.HasPrefix(r, "{") {
+			continue
+		}
 		if r != "" {
 			messageList = append(messageList, r)
 		}
 	}
-	slices.Reverse(messageList)
 	if len(messageList) > int(size) {
 		messageList = messageList[:size]
 	}
+	slices.Reverse(messageList)
 	return
 }
 
@@ -134,13 +146,11 @@ func SearchExcludeUserID(UserID, chatID string, batch, size uint64) (messageList
 	query := osquery.Search().
 		Query(
 			osquery.Bool().Must(
-				osquery.Bool().MustNot(
-					osquery.Prefix("message_str", "/"),
-				),
 				osquery.Term("chat_id", chatID),
 			),
-		).SourceIncludes(
-		"raw_message", "mentions", "create_time").Size(batch).Sort("create_time", "desc")
+		).SourceIncludes("raw_message", "mentions", "create_time").
+		Size(batch).
+		Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(
 		context.Background(),
 		"lark_msg_index",
@@ -166,14 +176,17 @@ func SearchExcludeUserID(UserID, chatID string, batch, size uint64) (messageList
 			}
 		}
 		r := replaceMention(res.RawMessage, mentions)
+		if strings.HasPrefix(r, "/") || strings.HasPrefix(r, "{") {
+			continue
+		}
 		if r != "" {
 			messageList = append(messageList, r)
 		}
 	}
-	slices.Reverse(messageList)
 	if len(messageList) > int(size) {
 		messageList = messageList[:size]
 	}
+	slices.Reverse(messageList)
 	return
 }
 

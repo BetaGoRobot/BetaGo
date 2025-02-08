@@ -144,7 +144,7 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 			}
 		}
 		traceIDStr := "TraceIDs:\\n" + strings.Join(traceIDs, "\\n")
-		err = larkutils.ReplyMsgText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", false)
+		err = larkutils.ReplyMsgText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", true)
 		if err != nil {
 			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 			return err
@@ -155,7 +155,7 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 			return err
 		}
 		traceIDStr := "TraceIDs:\\n" + strings.Join(traceIDs, "\\n")
-		err = larkutils.ReplyMsgText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", false)
+		err = larkutils.ReplyMsgText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", true)
 		if err != nil {
 			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 			return err
