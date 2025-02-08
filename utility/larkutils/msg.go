@@ -256,6 +256,8 @@ func CreateMsgText(ctx context.Context, content, msgID, chatID string) (err erro
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(content))
 	defer span.End()
+
+	content = strings.ReplaceAll(content, "\n", "\\n")
 	// TODO: Add id saving
 	return CreateMsgTextRaw(ctx, larkim.NewTextMsgBuilder().Text(content).Build(), msgID, chatID)
 }

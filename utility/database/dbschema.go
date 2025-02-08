@@ -149,6 +149,7 @@ type MessageLog struct {
 	RawBody   string `json:"raw_body"`
 	Content   string `json:"message_str"`
 	FileKey   string `json:"file_key"`
+	TraceID   string `json:"trace_id" gorm:"primaryKey;index"`
 	CreatedAt time.Time
 }
 

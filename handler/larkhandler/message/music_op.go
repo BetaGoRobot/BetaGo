@@ -19,14 +19,14 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ handlerbase.Operator[larkim.P2MessageReceiveV1] = &MusicMsgOperator{}
+var _ Op = &MusicMsgOperator{}
 
 // MusicMsgOperator Repeat
 //
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:36:07
 type MusicMsgOperator struct {
-	handlerbase.OperatorBase[larkim.P2MessageReceiveV1]
+	OpBase
 }
 
 // PreRun Music
@@ -37,7 +37,7 @@ type MusicMsgOperator struct {
 //	@return err error
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:34:09
-func (r *MusicMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+func (r *MusicMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	if !larkutils.IsMentioned(event.Event.Message.Mentions) {
@@ -58,7 +58,7 @@ func (r *MusicMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRe
 //	@param ctx
 //	@param event
 //	@return err
-func (r *MusicMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+func (r *MusicMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()

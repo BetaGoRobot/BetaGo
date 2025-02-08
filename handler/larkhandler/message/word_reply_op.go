@@ -18,14 +18,14 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ handlerbase.Operator[larkim.P2MessageReceiveV1] = &WordReplyMsgOperator{}
+var _ Op = &WordReplyMsgOperator{}
 
 // WordReplyMsgOperator  Repeat
 //
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:35:11
 type WordReplyMsgOperator struct {
-	handlerbase.OperatorBase[larkim.P2MessageReceiveV1]
+	OpBase
 }
 
 // PreRun Repeat
@@ -36,7 +36,7 @@ type WordReplyMsgOperator struct {
 //	@return err error
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:35:17
-func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	defer span.RecordError(err)
@@ -58,7 +58,7 @@ func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2Messa
 //	@param ctx
 //	@param event
 //	@return err
-func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	defer span.RecordError(err)

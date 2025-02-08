@@ -18,12 +18,11 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ handlerbase.Operator[larkim.P2MessageReceiveV1] = &CommandOperator{}
+var _ Op = &CommandOperator{}
 
 // CommandOperator Repeat
 type CommandOperator struct {
-	handlerbase.OperatorBase[larkim.P2MessageReceiveV1]
-
+	OpBase
 	command string
 }
 
@@ -35,7 +34,7 @@ type CommandOperator struct {
 //	@return err error
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:34:09
-func (r *CommandOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+func (r *CommandOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	defer span.RecordError(err)
@@ -52,7 +51,7 @@ func (r *CommandOperator) PreRun(ctx context.Context, event *larkim.P2MessageRec
 //	@param ctx
 //	@param event
 //	@return err
-func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
@@ -60,6 +59,7 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 
 	commands := larkutils.GetCommand(ctx, larkutils.PreGetTextMsg(ctx, event))
 	if len(commands) > 0 {
+		meta.IsCommand = true
 		var reactionID string
 		reactionID, err = larkutils.AddReaction(ctx, "OnIt", *event.Event.Message.MessageId)
 		if err != nil {
@@ -67,10 +67,10 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 		} else {
 			defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
 		}
-
 		err = larkcommand.LarkRootCommand.Execute(ctx, event, commands)
 		if err != nil {
 			if errors.Is(err, consts.ErrCommandNotFound) {
+				meta.IsCommand = false
 				if larkutils.IsMentioned(event.Event.Message.Mentions) {
 					larkutils.ReplyMsgText(ctx, err.Error(), *event.Event.Message.MessageId, "_OpErr", false)
 					return

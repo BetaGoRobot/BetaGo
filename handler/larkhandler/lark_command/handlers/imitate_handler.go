@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -24,8 +25,11 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 
 	quoteList := data.Event.Message.Mentions
 	if len(quoteList) == 1 {
-		historyMsg := "- " + strings.Join(SearchByUserID(*quoteList[0].Id.OpenId, 50), "\n- ")
-		latestMsg := "- " + strings.Join(SearchExcludeUserID(*quoteList[0].Id.OpenId, 50)[:3], "\n- ")
+		historyMsg := "- " + strings.Join(SearchByUserID(
+			*quoteList[0].Id.OpenId, 50), "\n- ")
+		latestMsg := "- " + strings.Join(SearchExcludeUserID(
+			*quoteList[0].Id.OpenId, *data.Event.Message.ChatId, 15,
+		), "\n- ")
 		sysPrompt := `# 角色
 你是一个擅长模仿别人说话语气的人，你言简意赅，不会有很多的修饰语
 
@@ -48,11 +52,15 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 请给出模仿的输出:`
 		sysPrompt = fmt.Sprintf(sysPrompt, historyMsg)
 		userPrompt = fmt.Sprintf(userPrompt, latestMsg)
+		span.SetAttributes(attribute.String("sys_prompt", sysPrompt))
+		span.SetAttributes(attribute.String("user_prompt", userPrompt))
 		res, err := doubao.SingleChat(ctx, sysPrompt, userPrompt)
+		span.SetAttributes(attribute.String("res", res))
 		fmt.Println(sysPrompt, userPrompt)
 		if err != nil {
 			return err
 		}
+		res = strings.Trim(res, "\n")
 		err = larkutils.CreateMsgText(ctx, res, *data.Event.Message.MessageId, *data.Event.Message.ChatId)
 		if err != nil {
 			return err
@@ -83,10 +91,11 @@ func SearchByUserID(UserID string, size uint64) (messageList []string) {
 		Query(
 			osquery.Bool().Must(
 				osquery.Term("user_id", UserID),
-				osquery.Term("message_type", "text"),
+				osquery.Bool().MustNot(
+					osquery.Prefix("message_str", "/"),
+				),
 			),
-		).SourceIncludes("raw_message", "mentions", "create_time").Size(size).Sort("create_time", "desc").
-		Map()
+		).SourceIncludes("raw_message", "mentions", "create_time").Size(size).Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(context.Background(), "lark_msg_index", query)
 	if err != nil {
 		panic(err)
@@ -113,21 +122,27 @@ func SearchByUserID(UserID string, size uint64) (messageList []string) {
 			messageList = append(messageList, r)
 		}
 	}
+	slices.Reverse(messageList)
 	return
 }
 
-func SearchExcludeUserID(UserID string, size uint64) (messageList []string) {
+func SearchExcludeUserID(UserID, chatID string, size uint64) (messageList []string) {
 	query := osquery.Search().
 		Query(
 			osquery.Bool().Must(
 				osquery.Bool().MustNot(
 					osquery.Term("user_id", UserID),
+					osquery.Prefix("message_str", "/"),
 				),
-				osquery.Term("message_type", "text"),
+				osquery.Term("chat_id", chatID),
 			),
-		).SourceIncludes("raw_message", "mentions", "create_time").Size(size).Sort("create_time", "desc").
-		Size(size).Map()
-	resp, err := opensearchdal.SearchData(context.Background(), "lark_msg_index", query)
+		).SourceIncludes(
+		"raw_message", "mentions", "create_time").Size(size).Sort("create_time", "desc")
+	resp, err := opensearchdal.SearchData(
+		context.Background(),
+		"lark_msg_index",
+		query,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -152,6 +167,7 @@ func SearchExcludeUserID(UserID string, size uint64) (messageList []string) {
 			messageList = append(messageList, r)
 		}
 	}
+	slices.Reverse(messageList)
 	return
 }
 

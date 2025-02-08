@@ -12,14 +12,14 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ handlerbase.Operator[larkim.P2MessageReactionCreatedV1] = &FollowReactionOperator{}
+var _ Op = &FollowReactionOperator{}
 
 // FollowReactionOperator Repeat
 //
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:36:07
 type FollowReactionOperator struct {
-	handlerbase.OperatorBase[larkim.P2MessageReactionCreatedV1]
+	OpBase
 }
 
 // PreRun Music
@@ -30,7 +30,7 @@ type FollowReactionOperator struct {
 //	@return err error
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:34:09
-func (r *FollowReactionOperator) PreRun(ctx context.Context, event *larkim.P2MessageReactionCreatedV1) (err error) {
+func (r *FollowReactionOperator) PreRun(ctx context.Context, event *larkim.P2MessageReactionCreatedV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	return
@@ -42,7 +42,7 @@ func (r *FollowReactionOperator) PreRun(ctx context.Context, event *larkim.P2Mes
 //	@param ctx
 //	@param event
 //	@return err
-func (r *FollowReactionOperator) Run(ctx context.Context, event *larkim.P2MessageReactionCreatedV1) (err error) {
+func (r *FollowReactionOperator) Run(ctx context.Context, event *larkim.P2MessageReactionCreatedV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()

@@ -19,14 +19,14 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ handlerbase.Operator[larkim.P2MessageReceiveV1] = &RepeatMsgOperator{}
+var _ Op = &RepeatMsgOperator{}
 
 // RepeatMsgOperator  RepeatMsg Op
 //
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:35:51
 type RepeatMsgOperator struct {
-	handlerbase.OperatorBase[larkim.P2MessageReceiveV1]
+	OpBase
 }
 
 // PreRun Repeat
@@ -37,7 +37,7 @@ type RepeatMsgOperator struct {
 //	@return err error
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:35:35
-func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	// 先判断群聊的功能启用情况
@@ -58,7 +58,7 @@ func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageR
 //	@return err error
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:35:41
-func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 

@@ -17,11 +17,11 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-var _ handlerbase.Operator[larkim.P2MessageReceiveV1] = &ReactMsgOperator{}
+var _ Op = &ReactMsgOperator{}
 
 // ReactMsgOperator  Repeat
 type ReactMsgOperator struct {
-	handlerbase.OperatorBase[larkim.P2MessageReceiveV1]
+	OpBase
 }
 
 // PreRun Repeat
@@ -30,7 +30,7 @@ type ReactMsgOperator struct {
 //	@param ctx
 //	@param event
 //	@return err
-func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
@@ -48,7 +48,7 @@ func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRe
 //	@param ctx
 //	@param event
 //	@return err
-func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
+func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 	defer span.RecordError(err)

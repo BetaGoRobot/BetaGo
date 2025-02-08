@@ -9,15 +9,20 @@ import (
 )
 
 // Handler  消息处理器
-var Handler = &handlerbase.Processor[larkim.P2MessageReactionCreatedV1]{}
+var Handler = &handlerbase.Processor[larkim.P2MessageReactionCreatedV1, handlerbase.BaseMetaData]{}
 
-func larkDeferFunc(ctx context.Context, err interface{}, event *larkim.P2MessageReactionCreatedV1) {
+type (
+	OpBase = handlerbase.OperatorBase[larkim.P2MessageReactionCreatedV1, handlerbase.BaseMetaData]
+	Op     = handlerbase.Operator[larkim.P2MessageReactionCreatedV1, handlerbase.BaseMetaData]
+)
+
+func larkDeferFunc(ctx context.Context, err error, event *larkim.P2MessageReactionCreatedV1) {
 	larkutils.SendRecoveredMsg(ctx, err, *event.Event.MessageId)
 }
 
 func init() {
 	Handler = Handler.
-		WithDefer(larkDeferFunc).
+		OnPanic(larkDeferFunc).
 		AddParallelStages(&FollowReactionOperator{}).
 		AddParallelStages(&RecordReactionOperator{})
 }

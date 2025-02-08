@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/message"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/reaction"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -48,7 +49,6 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 	}
 	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).RunStages()
 	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).RunParallelStages()
-	go CollectMessage(ctx, event)
 
 	log.ZapLogger.Info(larkcore.Prettify(event))
 	return nil
@@ -104,7 +104,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1) (err 
 	}
 	err = opensearchdal.InsertData(
 		ctx, "lark_msg_index", *event.Event.Message.MessageId,
-		&MessageIndex{
+		&handlertypes.MessageIndex{
 			MessageLog: msgLog,
 			ChatName:   larkutils.GetChatName(ctx, chatID),
 			RawMessage: content,
