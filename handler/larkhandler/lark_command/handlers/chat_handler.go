@@ -73,7 +73,8 @@ func GenerateChat(ctx context.Context, event *larkim.P2MessageReceiveV1) (res st
 2. 禁止拼接历史对话
 3. 回复的文本需要跟最近几次输入存在关联关系
 4. 务必确保仅回复一条文本`
-	userPrompt := `历史发言输入: %s 请给出模仿的输出:`
+	userPrompt := `历史发言输入: %s 请给出模仿的输出:
+`
 	latestMsg := strings.Join(messageList, "\n- ")
 	userPrompt = fmt.Sprintf(userPrompt, latestMsg)
 	res, err = doubao.SingleChat(ctx, sysPrompt, userPrompt)
