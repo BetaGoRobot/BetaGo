@@ -68,6 +68,9 @@ func init() {
 		).
 		AddSubCommand(
 			newCmd("imitate", handlers.ImitateHandler),
+		).
+		AddSubCommand(
+			newCmd("bb", handlers.ChatHandler),
 		)
 	LarkRootCommand.BuildChain()
 }

@@ -218,6 +218,7 @@ func init() {
 		&ChatContextRecord{},
 		&ChatRecordLog{},
 		&DynamicConfig{},
+		// 123
 		&LarkImg{},
 		&ReactionWhitelist{},
 		&RepeatWhitelist{},
