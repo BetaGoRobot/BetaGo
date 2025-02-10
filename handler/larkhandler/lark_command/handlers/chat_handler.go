@@ -49,7 +49,7 @@ func GenerateChat(ctx context.Context, event *larkim.P2MessageReceiveV1) (res st
 		).
 		SourceIncludes("raw_message", "mentions", "create_time").
 		Size(uint64(size*3)).
-		Sort("create_time", "desc")
+		Sort("CreatedAt", "desc")
 	resp, err := opensearchdal.SearchData(
 		context.Background(),
 		"lark_msg_index",

@@ -101,7 +101,7 @@ func SearchByUserID(UserID string, batch, size uint64) (messageList []string) {
 		).
 		SourceIncludes("raw_message", "mentions", "create_time").
 		Size(batch).
-		Sort("create_time", "desc")
+		Sort("CreatedAt", "desc")
 	resp, err := opensearchdal.SearchData(
 		context.Background(),
 		"lark_msg_index",
@@ -122,7 +122,7 @@ func SearchExcludeUserID(UserID, chatID string, batch, size uint64) (messageList
 		).
 		SourceIncludes("raw_message", "mentions", "create_time").
 		Size(batch).
-		Sort("create_time", "desc")
+		Sort("CreatedAt", "desc")
 	resp, err := opensearchdal.SearchData(
 		context.Background(),
 		"lark_msg_index",
@@ -165,7 +165,7 @@ func FilterMessage(hits []opensearchapi.SearchHit, size int) (msgList []string) 
 		msgList = msgList[:size]
 	}
 	slices.Reverse(msgList)
-	return
+	return msgList
 }
 
 func replaceMention(input string, mentions []Mention) string {
