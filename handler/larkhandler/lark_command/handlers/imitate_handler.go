@@ -15,6 +15,7 @@ import (
 	"github.com/defensestation/osquery"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -97,10 +98,8 @@ func SearchByUserID(UserID string, batch, size uint64) (messageList []string) {
 			osquery.Bool().Must(
 				osquery.Term("user_id", UserID),
 			),
-		).SourceIncludes(
-		"raw_message",
-		"mentions",
-		"create_time").
+		).
+		SourceIncludes("raw_message", "mentions", "create_time").
 		Size(batch).
 		Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(
@@ -110,35 +109,7 @@ func SearchByUserID(UserID string, batch, size uint64) (messageList []string) {
 	if err != nil {
 		panic(err)
 	}
-	messageList = []string{}
-	for _, hit := range resp.Hits.Hits {
-		res := &MessageDoc{}
-		b, _ := hit.Source.MarshalJSON()
-		err = sonic.ConfigStd.Unmarshal(b, res)
-		if err != nil {
-			continue
-		}
-		mentions := make([]Mention, 0)
-
-		if res.Mentions != "null" {
-			err = sonic.UnmarshalString(res.Mentions, &mentions)
-			if err != nil {
-				continue
-			}
-		}
-
-		r := replaceMention(res.RawMessage, mentions)
-		if strings.HasPrefix(r, "/") || strings.HasPrefix(r, "{") {
-			continue
-		}
-		if r != "" {
-			messageList = append(messageList, r)
-		}
-	}
-	if len(messageList) > int(size) {
-		messageList = messageList[:size]
-	}
-	slices.Reverse(messageList)
+	messageList = FilterMessage(resp.Hits.Hits, int(size))
 	return
 }
 
@@ -148,7 +119,8 @@ func SearchExcludeUserID(UserID, chatID string, batch, size uint64) (messageList
 			osquery.Bool().Must(
 				osquery.Term("chat_id", chatID),
 			),
-		).SourceIncludes("raw_message", "mentions", "create_time").
+		).
+		SourceIncludes("raw_message", "mentions", "create_time").
 		Size(batch).
 		Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(
@@ -159,11 +131,16 @@ func SearchExcludeUserID(UserID, chatID string, batch, size uint64) (messageList
 	if err != nil {
 		panic(err)
 	}
-	messageList = []string{}
-	for _, hit := range resp.Hits.Hits {
+	messageList = FilterMessage(resp.Hits.Hits, int(size))
+	return
+}
+
+func FilterMessage(hits []opensearchapi.SearchHit, size int) (msgList []string) {
+	msgList = make([]string, 0)
+	for _, hit := range hits {
 		res := &MessageDoc{}
 		b, _ := hit.Source.MarshalJSON()
-		err = sonic.ConfigStd.Unmarshal(b, res)
+		err := sonic.ConfigStd.Unmarshal(b, res)
 		if err != nil {
 			continue
 		}
@@ -175,18 +152,19 @@ func SearchExcludeUserID(UserID, chatID string, batch, size uint64) (messageList
 				continue
 			}
 		}
+
 		r := replaceMention(res.RawMessage, mentions)
 		if strings.HasPrefix(r, "/") || strings.HasPrefix(r, "{") {
 			continue
 		}
 		if r != "" {
-			messageList = append(messageList, r)
+			msgList = append(msgList, r)
 		}
 	}
-	if len(messageList) > int(size) {
-		messageList = messageList[:size]
+	if len(msgList) > int(size) {
+		msgList = msgList[:size]
 	}
-	slices.Reverse(messageList)
+	slices.Reverse(msgList)
 	return
 }
 

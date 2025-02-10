@@ -120,6 +120,12 @@ type RepeatWordsRateCustom struct {
 	Rate    int    `json:"rate"`
 }
 
+type ImitateRateCustom struct {
+	Genaral
+	GuildID string `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
+	Rate    int    `json:"rate"`
+}
+
 type StickerMapping struct {
 	Genaral
 	StickerKey string `json:"sticker_key" gorm:"primaryKey;autoIncrement:false;index"`
@@ -228,6 +234,7 @@ func init() {
 		&InteractionStats{},
 		&TemplateVersion{},
 		&MessageLog{},
+		&ImitateRateCustom{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))
