@@ -72,7 +72,7 @@ func GenerateChat(ctx context.Context, event *larkim.P2MessageReceiveV1) (res st
 1. 回复内容和历史对话的平均长度基本一致
 2. 禁止拼接历史对话
 3. 回复的文本需要跟最近几次输入存在关联关系
-4. 仅回复一条`
+4. 务必确保仅回复一条文本`
 	userPrompt := `历史发言输入: %s 请给出模仿的输出:`
 	latestMsg := strings.Join(messageList, "\n- ")
 	userPrompt = fmt.Sprintf(userPrompt, latestMsg)
@@ -82,5 +82,6 @@ func GenerateChat(ctx context.Context, event *larkim.P2MessageReceiveV1) (res st
 	}
 	span.SetAttributes(attribute.String("res", res))
 	res = strings.Trim(res, "\n")
+	res = strings.Trim(strings.Split(res, "\n")[0], " - ")
 	return
 }
