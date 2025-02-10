@@ -22,7 +22,7 @@ const (
 	// DBHostCluster k8s的PGHost
 	DBHostCluster = "host=kubernetes.default"
 	// DBHostTest 本地测试的PGHost
-	DBHostTest = "host=pg.kmhomelab.cn"
+	DBHostTest = "host=localhost"
 )
 
 // netease
