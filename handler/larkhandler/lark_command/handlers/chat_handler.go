@@ -69,7 +69,7 @@ func GenerateChat(ctx context.Context, event *larkim.P2MessageReceiveV1) (res st
 3. 如果需要回复，按照他的语气进行回复
 
 # 限制
-1. 回复内容和历史对话的平均长度基本一致
+1. 回复内容和历史对话的内容长度基本一致
 2. 禁止拼接历史对话
 3. 回复的文本需要跟最近几次输入存在关联关系
 4. 务必确保仅回复一条文本`
