@@ -220,22 +220,30 @@ func GetUserMapFromChatID(ctx context.Context, chatID string) (memberMap map[str
 	defer span.End()
 
 	memberMap = make(map[string]*larkim.ListMember)
-	resp, err := LarkClient.Im.ChatMembers.Get(ctx, larkim.
-		NewGetChatMembersReqBuilder().
-		MemberIdType(`open_id`).
-		ChatId(chatID).
-		Build(),
-	)
-	if err != nil {
-		return
-	}
-	if resp.CodeError.Code != 0 {
-		err = errors.New(resp.Error())
-		return
-	}
-
-	for _, item := range resp.Data.Items {
-		memberMap[*item.MemberId] = item
+	hasMore := true
+	pageToken := ""
+	for hasMore {
+		builder := larkim.
+			NewGetChatMembersReqBuilder().
+			MemberIdType(`open_id`).
+			ChatId(chatID).
+			PageSize(20)
+		if pageToken != "" {
+			builder.PageToken(pageToken)
+		}
+		resp, err := LarkClient.Im.ChatMembers.Get(ctx, builder.Build())
+		if err != nil {
+			return memberMap, err
+		}
+		if resp.CodeError.Code != 0 {
+			err = errors.New(resp.Error())
+			return memberMap, err
+		}
+		for _, item := range resp.Data.Items {
+			memberMap[*item.MemberId] = item
+		}
+		hasMore = *resp.Data.HasMore
+		pageToken = *resp.Data.PageToken
 	}
 	return
 }

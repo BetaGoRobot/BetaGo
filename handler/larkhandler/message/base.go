@@ -42,10 +42,16 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		if err != nil {
 			return
 		}
+		userName := ""
+		if member == nil {
+			userName = "NULL"
+		} else {
+			userName = *member.Name
+		}
 		database.GetDbConnection().Create(&database.InteractionStats{
 			OpenID:     *event.Event.Sender.SenderId.OpenId,
 			GuildID:    chatID,
-			UserName:   utility.AddressORNil(member.Name),
+			UserName:   userName,
 			ActionType: consts.LarkInteractionSendMsg,
 		})
 		msgLog := &database.MessageLog{
@@ -77,7 +83,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 				CreateTime:  utility.EpoMil2DateStr(*event.Event.Message.CreateTime),
 				Message:     embedded,
 				UserID:      *event.Event.Sender.SenderId.OpenId,
-				UserName:    *member.Name,
+				UserName:    userName,
 				TokenUsage:  usage,
 				IsCommand:   metaData.IsCommand,
 				MainCommand: metaData.MainCommand,

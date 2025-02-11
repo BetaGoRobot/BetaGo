@@ -48,7 +48,8 @@ type CommandInfo struct {
 	CreatedAt       time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt       time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
-type Genaral struct {
+
+type General struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
@@ -108,28 +109,41 @@ type CopyWritingCustom struct {
 }
 
 type RepeatWordsRate struct {
-	Genaral
+	General
 	Word string `json:"word" gorm:"primaryKey;autoIncrement:false"`
 	Rate int    `json:"rate"`
 }
 
 type RepeatWordsRateCustom struct {
-	Genaral
+	General
 	GuildID string `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
 	Word    string `json:"word" gorm:"primaryKey;autoIncrement:false"`
 	Rate    int    `json:"rate"`
 }
 
 type ImitateRateCustom struct {
-	Genaral
+	General
 	GuildID string `json:"guild_id" gorm:"primaryKey;autoIncrement:false"`
 	Rate    int    `json:"rate"`
 }
 
 type StickerMapping struct {
-	Genaral
+	General
 	StickerKey string `json:"sticker_key" gorm:"primaryKey;autoIncrement:false;index"`
 	ImageKey   string `json:"image_key" gorm:"index"`
+}
+
+type PromptConf struct {
+	General
+	PromptKey       string `json:"prompt_key" gorm:"primaryKey;index"`
+	SystemPromptTpl string `json:"system_prompt_tpl"`
+	UserPromptTpl   string `json:"user_prompt_tpl"`
+}
+
+type GeneralConf struct {
+	General
+	ConfigKey string `json:"config_key" gorm:"primaryKey;index"`
+	ConfigVar string `json:"config_var"`
 }
 
 type InteractionStats struct {
@@ -235,6 +249,7 @@ func init() {
 		&TemplateVersion{},
 		&MessageLog{},
 		&ImitateRateCustom{},
+		&PromptConf{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))
