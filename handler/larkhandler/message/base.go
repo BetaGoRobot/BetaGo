@@ -45,7 +45,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		database.GetDbConnection().Create(&database.InteractionStats{
 			OpenID:     *event.Event.Sender.SenderId.OpenId,
 			GuildID:    chatID,
-			UserName:   *member.Name,
+			UserName:   utility.AddressORNil(member.Name),
 			ActionType: consts.LarkInteractionSendMsg,
 		})
 		msgLog := &database.MessageLog{
