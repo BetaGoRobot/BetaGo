@@ -50,16 +50,16 @@ func init() {
 
 	startUpCtx := context.Background()
 	NetEaseGCtx.TryGetLastCookie(startUpCtx)
-	err := NetEaseGCtx.LoginNetEase(startUpCtx)
-	if err != nil {
-		log.ZapLogger.Info("error in init loginNetease", zaplog.Error(err))
-		err = NetEaseGCtx.LoginNetEaseQR(startUpCtx)
-		if err != nil {
-			log.ZapLogger.Info("error in init loginNeteaseQR", zaplog.Error(err))
-		}
-	}
 
 	go func() {
+		err := NetEaseGCtx.LoginNetEase(startUpCtx)
+		if err != nil {
+			log.ZapLogger.Info("error in init loginNetease", zaplog.Error(err))
+			err = NetEaseGCtx.LoginNetEaseQR(startUpCtx)
+			if err != nil {
+				log.ZapLogger.Info("error in init loginNeteaseQR", zaplog.Error(err))
+			}
+		}
 		for {
 			if NetEaseGCtx.loginType == "qr" {
 				if !NetEaseGCtx.CheckIfLogin(startUpCtx) {
