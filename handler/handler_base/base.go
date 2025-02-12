@@ -8,6 +8,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type Operator[T, K any] interface {
@@ -123,6 +124,7 @@ func (p *Processor[T, K]) RunStages() (err error) {
 		defer p.Defer()
 		err = s.PreRun(p.Context, p.data, p.metaData)
 		if err != nil {
+			trace.SpanFromContext(p.Context).RecordError(err)
 			if errors.Is(err, consts.ErrStageSkip) {
 				log.ZapLogger.Warn("pre run stage skipped: ", zaplog.Error(err))
 			} else {
@@ -132,6 +134,7 @@ func (p *Processor[T, K]) RunStages() (err error) {
 		}
 		err = s.Run(p.Context, p.data, p.metaData)
 		if err != nil {
+			trace.SpanFromContext(p.Context).RecordError(err)
 			if errors.Is(err, consts.ErrStageSkip) {
 				log.ZapLogger.Warn("run stage skipped: ", zaplog.Error(err))
 			} else {
@@ -141,6 +144,7 @@ func (p *Processor[T, K]) RunStages() (err error) {
 		}
 		err = s.PostRun(p.Context, p.data, p.metaData)
 		if err != nil {
+			trace.SpanFromContext(p.Context).RecordError(err)
 			if errors.Is(err, consts.ErrStageSkip) {
 				log.ZapLogger.Warn("post run stage skipped: ", zaplog.Error(err))
 			} else {
@@ -179,6 +183,7 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			}()
 			err = op.PreRun(p.Context, p.data, p.metaData)
 			if err != nil {
+				trace.SpanFromContext(p.Context).RecordError(err)
 				if errors.Is(err, consts.ErrStageSkip) {
 					log.ZapLogger.Warn("pre run stage skipped: ", zaplog.Error(err))
 				} else {
@@ -189,6 +194,7 @@ func (p *Processor[T, K]) RunParallelStages() error {
 
 			err = op.Run(p.Context, p.data, p.metaData)
 			if err != nil {
+				trace.SpanFromContext(p.Context).RecordError(err)
 				if errors.Is(err, consts.ErrStageSkip) {
 					log.ZapLogger.Warn("run stage skipped: ", zaplog.Error(err))
 				} else {
@@ -198,6 +204,7 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			}
 			err = op.PostRun(p.Context, p.data, p.metaData)
 			if err != nil {
+				trace.SpanFromContext(p.Context).RecordError(err)
 				if errors.Is(err, consts.ErrStageSkip) {
 					log.ZapLogger.Warn("post run stage skipped: ", zaplog.Error(err))
 				} else {

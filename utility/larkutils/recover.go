@@ -133,6 +133,9 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 	defer span.End()
 
 	traceID := span.SpanContext().TraceID().String()
+	if e, ok := err.(error); ok {
+		span.RecordError(e)
+	}
 	title := "Panic Detected!"
 	subTitle := "Please check the log for more information."
 	buttonText := "Jaeger Tracer -" + traceID
