@@ -66,7 +66,14 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 		}
 		span.SetAttributes(attribute.String("res", res))
 		res = strings.Trim(res, "\n")
-		res = *data.Event.Message.Mentions[0].Name + ":\n" + res
+		userName := ""
+		name, _ := larkutils.GetUserMemberFromChat(ctx, *data.Event.Message.ChatId, *data.Event.Message.Mentions[0].Id.OpenId)
+		if name != nil {
+			userName = *name.Name
+		}
+		if userName != "" {
+			res = userName + ": " + res
+		}
 		err = larkutils.ReplyMsgText(ctx, res, *data.Event.Message.MessageId, "__imitate", false)
 		if err != nil {
 			return err
