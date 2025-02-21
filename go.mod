@@ -14,7 +14,7 @@ replace (
 )
 
 require (
-	github.com/bytedance/sonic v1.12.8
+	github.com/bytedance/sonic v1.12.9
 	github.com/carlmjohnson/requests v0.24.3
 	github.com/defensestation/osquery v1.0.0
 	github.com/dlclark/regexp2 v1.11.4
