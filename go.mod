@@ -42,7 +42,7 @@ require (
 	github.com/phuslu/log v1.0.113
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.19.1
-	github.com/redis/go-redis/v9 v9.7.0
+	github.com/redis/go-redis/v9 v9.7.1
 	github.com/spyzhov/ajson v0.9.6
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.61
 	github.com/valyala/fasthttp v1.59.0
