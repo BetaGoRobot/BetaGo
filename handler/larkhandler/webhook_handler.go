@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
 	"github.com/kevinmatthe/zaplog"
@@ -80,18 +82,51 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 		return ""
 	}
 
-	lyrics, playerURL := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
+	lyrics, lyricsURL := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
 	lyrics = larkutils.TrimLyrics(lyrics)
 
-	artistNameLissst := make([]map[string]string, 0)
+	artistNameList := make([]map[string]string, 0)
 	for _, ar := range songDetail.Ar {
-		artistNameLissst = append(artistNameLissst, map[string]string{"name": ar.Name})
+		artistNameList = append(artistNameList, map[string]string{"name": ar.Name})
 	}
-	artistJSON, err := sonic.MarshalString(artistNameLissst)
+	artistJSON, err := sonic.MarshalString(artistNameList)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
 	}
-	playerURL = utility.BuildURL(playerURL, musicURL, ossURL, songDetail.Al.Name, songDetail.Name, artistJSON, songDetail.Dt)
+
+	type resultURL struct {
+		Title      string
+		LyricsURL  string
+		MusicURL   string
+		PictureURL string
+		Album      string
+		Artist     []map[string]string
+		Duration   int
+	}
+
+	targetURL := &resultURL{
+		Title:      songDetail.Name,
+		LyricsURL:  lyricsURL,
+		MusicURL:   musicURL,
+		PictureURL: ossURL,
+		Album:      songDetail.Al.Name,
+		Artist:     artistNameList,
+		Duration:   songDetail.Dt,
+	}
+
+	u, err := miniohelper.Client().
+		SetContext(ctx).
+		SetBucketName("cloudmusic").
+		SetFileFromString(utility.MustMashal(targetURL)).
+		SetObjName("info/" + musicID + ".json").
+		SetContentType(ct.ContentTypePlainText).
+		Upload()
+	if err != nil {
+		log.ZapLogger.Error(err.Error())
+		return ""
+	}
+
+	playerURL := utility.BuildURL(u.String())
 	// eg: page = 1
 	quotaRemain := maxPageSize
 	lyricList := strings.Split(lyrics, "\n")

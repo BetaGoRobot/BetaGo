@@ -3,21 +3,15 @@ package utility
 import (
 	"net/url"
 	"os"
-	"strconv"
+	"strings"
 )
 
-func BuildURL(lyricsURL, musicURL, pictureURL, album, title, artist string, duration int) string {
+func BuildURL(jsonURL string) string {
 	u := &url.URL{}
 	u.Host = os.Getenv("PLAYER_URL")
 	u.Scheme = "https"
 	q := u.Query()
-	q.Add("lyrics", lyricsURL)
-	q.Add("music", musicURL)
-	q.Add("picture", pictureURL)
-	q.Add("duration", strconv.Itoa(duration))
-	q.Add("album", album)
-	q.Add("title", title)
-	q.Add("artists", artist)
+	q.Add("target", strings.TrimLeft(jsonURL, "https://kutt.kmhomelab.cn/"))
 	u.RawQuery = q.Encode()
 	return u.String()
 }
