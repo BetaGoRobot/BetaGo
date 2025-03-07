@@ -14,7 +14,6 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
-	"github.com/bytedance/sonic"
 	"github.com/kevinmatthe/zaplog"
 	larkcard "github.com/larksuite/oapi-sdk-go/v3/card"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -88,10 +87,6 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 	artistNameList := make([]map[string]string, 0)
 	for _, ar := range songDetail.Ar {
 		artistNameList = append(artistNameList, map[string]string{"name": ar.Name})
-	}
-	artistJSON, err := sonic.MarshalString(artistNameList)
-	if err != nil {
-		log.ZapLogger.Error(err.Error())
 	}
 
 	type resultURL struct {
