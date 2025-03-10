@@ -94,6 +94,9 @@ type Mention struct {
 	TenantKey string `json:"tenant_key"`
 }
 type MessageDoc struct {
+	UserID     string `json:"user_id"`
+	ChatID     string `json:"chat_id"`
+	UserName   string `json:"user_name"`
 	Mentions   string `json:"mentions"`
 	RawMessage string `json:"raw_message"`
 	CreateTime string `json:"create_time"`
@@ -161,9 +164,11 @@ func FilterMessage(hits []opensearchapi.SearchHit, size int) (msgList []string) 
 		}
 
 		r := replaceMention(res.RawMessage, mentions)
+
 		if strings.HasPrefix(r, "/") || strings.HasPrefix(r, "{") {
 			continue
 		}
+		r = fmt.Sprintf("[%s] <%s>: %s", res.CreateTime, res.UserName, r)
 		if r != "" {
 			msgList = append(msgList, r)
 		}
