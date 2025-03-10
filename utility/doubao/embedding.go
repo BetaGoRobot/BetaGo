@@ -77,6 +77,30 @@ func SingleChat(ctx context.Context, sysPrompt, userPrompt string) (string, erro
 	return *resp.Choices[0].Message.Content.StringValue, nil
 }
 
+func SingleChatPrompt(ctx context.Context, prompt string) (string, error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("prompt").String(prompt))
+	defer span.End()
+
+	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
+		Model: DOUBAO_32K_EPID,
+		Messages: []*model.ChatCompletionMessage{
+			{
+				Role: "system",
+				Content: &model.ChatCompletionMessageContent{
+					StringValue: &prompt,
+				},
+			},
+		},
+	})
+	if err != nil {
+		log.ZapLogger.Error("chat error", zap.Error(err))
+		return "", err
+	}
+
+	return *resp.Choices[0].Message.Content.StringValue, nil
+}
+
 func SingleChatModel(ctx context.Context, sysPrompt, userPrompt, modelID string) (string, error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))

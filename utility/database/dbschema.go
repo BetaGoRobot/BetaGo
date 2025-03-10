@@ -38,6 +38,14 @@ type Administrator struct {
 	UserName string `json:"user_name"`
 	Level    int64  `json:"level"`
 }
+type PromptTemplateArgs struct {
+	PromptID       int      `json:"prompt_id" gorm:"primaryKey;autoIncrement:false"`
+	TemplateStr    string   `json:"template_str"`
+	Task           string   `json:"task"`
+	HistoryRecords []string `json:"history_records" gorm:"-"`
+	Constraints    string   `json:"constraints"`
+	UserInput      []string `json:"user_input" gorm:"-"`
+}
 
 // CommandInfo is the struct of command info
 type CommandInfo struct {
@@ -250,6 +258,7 @@ func init() {
 		&MessageLog{},
 		&ImitateRateCustom{},
 		&PromptConf{},
+		&PromptTemplateArgs{},
 	)
 	if err != nil {
 		log.ZapLogger.Error("init", zaplog.Error(err))
