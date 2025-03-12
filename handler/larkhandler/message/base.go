@@ -103,7 +103,7 @@ func init() {
 		AddParallelStages(&RepeatMsgOperator{}).
 		AddParallelStages(&ReactMsgOperator{}).
 		AddParallelStages(&WordReplyMsgOperator{}).
-		AddParallelStages(&MusicMsgOperator{}).
+		AddParallelStages(&ReplyChatOperator{}).
 		AddParallelStages(&CommandOperator{}).
 		AddParallelStages(&ChatMsgOperator{})
 }
