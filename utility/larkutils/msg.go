@@ -7,9 +7,13 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
+	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
+
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
 	"github.com/dlclark/regexp2"
@@ -35,17 +39,20 @@ func ReBuildArgs(argName, argValue string) string {
 func PreGetTextMsg(ctx context.Context, event *larkim.P2MessageReceiveV1) string {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
+	return getContentFromTextMsg(*event.Event.Message.Content)
+}
+
+func getContentFromTextMsg(s string) string {
 	msgMap := make(map[string]interface{})
-	msg := *event.Event.Message.Content
-	err := sonic.UnmarshalString(msg, &msgMap)
+	err := sonic.UnmarshalString(s, &msgMap)
 	if err != nil {
 		log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
 		return ""
 	}
 	if text, ok := msgMap["text"]; ok {
-		msg = text.(string)
+		s = text.(string)
 	}
-	return msg
+	return s
 }
 
 var (
@@ -208,6 +215,7 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 		return errors.New(resp.Error())
 	}
 	AddTraceLog2DB(ctx, *resp.Data.MessageId)
+	RecordReplyMessage2Opensearch(ctx, resp)
 	return
 }
 
@@ -249,6 +257,88 @@ func ReplyMsgTextRaw(ctx context.Context, text, msgID, suffix string, replyInThr
 	defer span.End()
 
 	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, text, suffix, replyInThread)
+}
+
+func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageResp) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+	content := getContentFromTextMsg(utility.AddressORNil(resp.Data.Body.Content))
+	msgLog := &database.MessageLog{
+		MessageID:   utility.AddressORNil(resp.Data.MessageId),
+		RootID:      utility.AddressORNil(resp.Data.RootId),
+		ParentID:    utility.AddressORNil(resp.Data.ParentId),
+		ChatID:      utility.AddressORNil(resp.Data.ChatId),
+		ThreadID:    utility.AddressORNil(resp.Data.ThreadId),
+		ChatType:    "",
+		MessageType: utility.AddressORNil(resp.Data.MsgType),
+		UserAgent:   "",
+		Mentions:    utility.MustMashal(resp.Data.Mentions),
+		RawBody:     utility.MustMashal(resp),
+		Content:     content,
+		TraceID:     span.SpanContext().TraceID().String(),
+	}
+	database.GetDbConnection().Create(msgLog)
+	embedded, usage, err := doubao.EmbeddingText(ctx, utility.AddressORNil(resp.Data.Body.Content))
+	if err != nil {
+		log.ZapLogger.Error("EmbeddingText error", zaplog.Error(err))
+	}
+	err = opensearchdal.InsertData(ctx, "lark_msg_index", utility.AddressORNil(resp.Data.MessageId),
+		&handlertypes.MessageIndex{
+			MessageLog: msgLog,
+			ChatName:   GetChatName(ctx, utility.AddressORNil(resp.Data.ChatId)),
+			RawMessage: content,
+			CreateTime: utility.EpoMil2DateStr(*resp.Data.CreateTime),
+			Message:    embedded,
+			UserID:     "不太正经的网易云音乐机器人",
+			UserName:   "不太正经的网易云音乐机器人",
+			TokenUsage: usage,
+		},
+	)
+	if err != nil {
+		log.ZapLogger.Error("InsertData", zaplog.Error(err))
+		return
+	}
+}
+
+func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessageResp) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	defer span.End()
+	content := getContentFromTextMsg(utility.AddressORNil(resp.Data.Body.Content))
+	msgLog := &database.MessageLog{
+		MessageID:   utility.AddressORNil(resp.Data.MessageId),
+		RootID:      utility.AddressORNil(resp.Data.RootId),
+		ParentID:    utility.AddressORNil(resp.Data.ParentId),
+		ChatID:      utility.AddressORNil(resp.Data.ChatId),
+		ThreadID:    utility.AddressORNil(resp.Data.ThreadId),
+		ChatType:    "",
+		MessageType: utility.AddressORNil(resp.Data.MsgType),
+		UserAgent:   "",
+		Mentions:    utility.MustMashal(resp.Data.Mentions),
+		RawBody:     utility.MustMashal(resp),
+		Content:     content,
+		TraceID:     span.SpanContext().TraceID().String(),
+	}
+
+	embedded, usage, err := doubao.EmbeddingText(ctx, utility.AddressORNil(resp.Data.Body.Content))
+	if err != nil {
+		log.ZapLogger.Error("EmbeddingText error", zaplog.Error(err))
+	}
+	err = opensearchdal.InsertData(ctx, "lark_msg_index", utility.AddressORNil(resp.Data.MessageId),
+		&handlertypes.MessageIndex{
+			MessageLog: msgLog,
+			ChatName:   GetChatName(ctx, utility.AddressORNil(resp.Data.ChatId)),
+			RawMessage: content,
+			CreateTime: utility.EpoMil2DateStr(*resp.Data.CreateTime),
+			Message:    embedded,
+			UserID:     "机器人",
+			UserName:   "机器人",
+			TokenUsage: usage,
+		},
+	)
+	if err != nil {
+		log.ZapLogger.Error("InsertData", zaplog.Error(err))
+		return
+	}
 }
 
 // CreateMsgText 不需要自行BuildText
@@ -294,6 +384,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 		return errors.New(resp.Error())
 	}
 	AddTraceLog2DB(ctx, *resp.Data.MessageId)
+	RecordMessage2Opensearch(ctx, resp)
 	return
 }
 
