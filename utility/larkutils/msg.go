@@ -289,8 +289,8 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 			RawMessage: content,
 			CreateTime: utility.EpoMil2DateStr(*resp.Data.CreateTime),
 			Message:    embedded,
-			UserID:     "不太正经的网易云音乐机器人",
-			UserName:   "不太正经的网易云音乐机器人",
+			UserID:     "你",
+			UserName:   "你",
 			TokenUsage: usage,
 		},
 	)
@@ -330,8 +330,8 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 			RawMessage: content,
 			CreateTime: utility.EpoMil2DateStr(*resp.Data.CreateTime),
 			Message:    embedded,
-			UserID:     "机器人",
-			UserName:   "机器人",
+			UserID:     "你",
+			UserName:   "你",
 			TokenUsage: usage,
 		},
 	)
