@@ -30,7 +30,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 	defer span.End()
 
 	// sendMsg
-	textMsgBuilder := larkim.NewTextMsgBuilder()
+	textMsgBuilder := larkutils.NewTextMsgBuilder()
 	var res string
 	if chatType == "reply" {
 		res, err = GenerateChatReply(ctx, event, args...)
@@ -59,7 +59,7 @@ func ChatHandlerWithTemplate(ctx context.Context, event *larkim.P2MessageReceive
 	defer span.End()
 
 	// sendMsg
-	textMsgBuilder := larkim.NewTextMsgBuilder()
+	textMsgBuilder := larkutils.NewTextMsgBuilder()
 
 	res, err := GenerateChat(ctx, event, args...)
 	if err != nil {

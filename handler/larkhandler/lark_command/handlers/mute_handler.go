@@ -23,7 +23,7 @@ func MuteHandler(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...
 		res              string
 		muteTimeDuration time.Duration
 	)
-	textMsgBuilder := larkim.NewTextMsgBuilder()
+	textMsgBuilder := larkutils.NewTextMsgBuilder()
 	argMap, _ := parseArgs(args...)
 	if argMap["cancel"] != "" {
 		// 取消禁言

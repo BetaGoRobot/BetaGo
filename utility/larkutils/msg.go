@@ -243,7 +243,7 @@ func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(text))
 	defer span.End()
 	text = strings.ReplaceAll(text, "\n", "\\n")
-	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, larkim.NewTextMsgBuilder().Text(text).Build(), suffix, replyInThread)
+	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, NewTextMsgBuilder().Text(text).Build(), suffix, replyInThread)
 }
 
 // ReplyMsgTextRaw ReplyMsgTextRaw 注意：必须传入已经Build的文本
@@ -349,7 +349,7 @@ func CreateMsgText(ctx context.Context, content, msgID, chatID string) (err erro
 
 	content = strings.ReplaceAll(content, "\n", "\\n")
 	// TODO: Add id saving
-	return CreateMsgTextRaw(ctx, larkim.NewTextMsgBuilder().Text(content).Build(), msgID, chatID)
+	return CreateMsgTextRaw(ctx, NewTextMsgBuilder().Text(content).Build(), msgID, chatID)
 }
 
 // CreateMsgTextRaw 需要自行BuildText
