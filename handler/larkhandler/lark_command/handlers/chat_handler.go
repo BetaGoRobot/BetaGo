@@ -13,7 +13,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/BetaGo/utility/redis"
 	"github.com/defensestation/osquery"
+	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -34,7 +36,14 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 	if chatType == "reply" {
 		res, err = GenerateChatReply(ctx, event, args...)
 	} else {
-		res, err = GenerateChatReply(ctx, event, args...)
+		if ext, err := redis.GetRedisClient().
+			Exists(ctx, MuteRedisKeyPrefix+*event.Event.Message.ChatId).Result(); err != nil {
+			return err
+		} else if ext != 0 {
+			zaplog.SugarLogger.Info("chat is muted, skip")
+			return nil // Do nothing
+		}
+		res, err = GenerateChat(ctx, event, args...)
 	}
 	if err != nil {
 		return err
