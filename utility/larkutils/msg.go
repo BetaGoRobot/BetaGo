@@ -347,7 +347,6 @@ func CreateMsgText(ctx context.Context, content, msgID, chatID string) (err erro
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(content))
 	defer span.End()
 
-	content = strings.ReplaceAll(content, "\n", "\\n")
 	// TODO: Add id saving
 	return CreateMsgTextRaw(ctx, NewTextMsgBuilder().Text(content).Build(), msgID, chatID)
 }

@@ -123,8 +123,8 @@ func GenerateChatByTemplate(ctx context.Context, event *larkim.P2MessageReceiveV
 		return
 	}
 	span.SetAttributes(attribute.String("res", res))
-	res = strings.Trim(res, "\n")
-	res = strings.Trim(strings.Split(res, "\n")[0], " - ")
+	// res = strings.Trim(res, "\n")
+	// res = strings.Trim(strings.Split(res, "\n")[0], " - ")
 	return
 }
 
@@ -236,7 +236,7 @@ func GenerateChatReply(ctx context.Context, event *larkim.P2MessageReceiveV1, ar
 		return
 	}
 	span.SetAttributes(attribute.String("res", res))
-	res = strings.Trim(res, "\n")
-	res = strings.Trim(strings.Split(res, "\n")[0], " - ")
+	// res = strings.Trim(res, "\n")
+	// res = strings.Trim(strings.Split(res, "\n")[0], " - ")
 	return
 }
