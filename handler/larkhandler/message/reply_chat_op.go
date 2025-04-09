@@ -8,7 +8,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command/handlers"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
@@ -56,6 +58,14 @@ func (r *ReplyChatOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
 	defer span.RecordError(err)
+
+	reactionID, err := larkutils.AddReaction(ctx, "OnIt", *event.Event.Message.MessageId)
+	if err != nil {
+		log.ZapLogger.Error("Add reaction to msg failed", zaplog.Error(err))
+	} else {
+		defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
+	}
+	defer larkutils.AddReactionAsync(ctx, "DONE", *event.Event.Message.MessageId)
 
 	msg := larkutils.PreGetTextMsg(ctx, event)
 	msg = larkutils.TrimAtMsg(ctx, msg)
