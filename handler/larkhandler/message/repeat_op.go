@@ -98,7 +98,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 
 	if utility.Probability(float64(realRate) / 100) {
 		// sendMsg
-		textMsgBuilder := larkim.NewTextMsgBuilder()
+		textMsgBuilder := larkutils.NewTextMsgBuilder()
 
 		// rebuild at msg
 		subStrings := []string{}

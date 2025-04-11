@@ -70,7 +70,10 @@ func init() {
 			newCmd("imitate", handlers.ImitateHandler),
 		).
 		AddSubCommand(
-			newCmd("bb", handlers.ChatHandler("chat")),
+			newCmd("bb", handlers.ChatHandler("reply")),
+		).
+		AddSubCommand(
+			newCmd("mute", handlers.MuteHandler).AddArgs("t", "cancel"),
 		)
 	LarkRootCommand.BuildChain()
 }

@@ -1,6 +1,8 @@
 package redis
 
 import (
+	"os"
+
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/redis/go-redis/v9"
 )
@@ -8,7 +10,7 @@ import (
 // RedisClient  12
 var RedisClient *redis.Client
 
-var RedisConnAddr = "redis-ix-chart.ix-redis:6379"
+var RedisConnAddr = os.Getenv("REDIS_CONN_ADDR")
 
 // GetRedisClient 1
 func GetRedisClient() *redis.Client {

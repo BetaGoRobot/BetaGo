@@ -13,6 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/BetaGo/utility/redis"
 	"github.com/defensestation/osquery"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
@@ -29,12 +30,18 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 	defer span.End()
 
 	// sendMsg
-	textMsgBuilder := larkim.NewTextMsgBuilder()
+	textMsgBuilder := larkutils.NewTextMsgBuilder()
 	var res string
 	if chatType == "reply" {
 		res, err = GenerateChatReply(ctx, event, args...)
 	} else {
-		res, err = GenerateChatReply(ctx, event, args...)
+		if ext, err := redis.GetRedisClient().
+			Exists(ctx, MuteRedisKeyPrefix+*event.Event.Message.ChatId).Result(); err != nil {
+			return err
+		} else if ext != 0 {
+			return nil // Do nothing
+		}
+		res, err = GenerateChat(ctx, event, args...)
 	}
 	if err != nil {
 		return err
@@ -52,7 +59,7 @@ func ChatHandlerWithTemplate(ctx context.Context, event *larkim.P2MessageReceive
 	defer span.End()
 
 	// sendMsg
-	textMsgBuilder := larkim.NewTextMsgBuilder()
+	textMsgBuilder := larkutils.NewTextMsgBuilder()
 
 	res, err := GenerateChat(ctx, event, args...)
 	if err != nil {
@@ -116,8 +123,8 @@ func GenerateChatByTemplate(ctx context.Context, event *larkim.P2MessageReceiveV
 		return
 	}
 	span.SetAttributes(attribute.String("res", res))
-	res = strings.Trim(res, "\n")
-	res = strings.Trim(strings.Split(res, "\n")[0], " - ")
+	// res = strings.Trim(res, "\n")
+	// res = strings.Trim(strings.Split(res, "\n")[0], " - ")
 	return
 }
 
@@ -229,7 +236,7 @@ func GenerateChatReply(ctx context.Context, event *larkim.P2MessageReceiveV1, ar
 		return
 	}
 	span.SetAttributes(attribute.String("res", res))
-	res = strings.Trim(res, "\n")
-	res = strings.Trim(strings.Split(res, "\n")[0], " - ")
+	// res = strings.Trim(res, "\n")
+	// res = strings.Trim(strings.Split(res, "\n")[0], " - ")
 	return
 }
