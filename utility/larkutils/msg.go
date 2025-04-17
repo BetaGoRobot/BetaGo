@@ -190,6 +190,11 @@ func AddTraceLog2DB(ctx context.Context, msgID string) {
 }
 
 func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix string, replyInThread bool) (err error) {
+	_, err = ReplyMsgRawContentTypeInner(ctx, msgID, msgType, content, suffix, replyInThread, true)
+	return err
+}
+
+func ReplyMsgRawContentTypeInner(ctx context.Context, msgID, msgType, content, suffix string, replyInThread, needRecord bool) (resp *larkim.ReplyMessageResp, err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("msgType").String(msgType), attribute.Key("content").String(content))
 	defer span.End()
@@ -205,17 +210,19 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 			Uuid(uuid).Build(),
 	).MessageId(msgID).Build()
 
-	resp, err := LarkClient.Im.V1.Message.Reply(ctx, req)
+	resp, err = LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
 		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err))
-		return err
+		return nil, err
 	}
 	if resp.CodeError.Code != 0 {
 		log.ZapLogger.Error("ReplyMessage", zaplog.String("Error", larkcore.Prettify(resp.CodeError.Err)))
-		return errors.New(resp.Error())
+		return nil, errors.New(resp.Error())
 	}
-	AddTraceLog2DB(ctx, *resp.Data.MessageId)
-	RecordReplyMessage2Opensearch(ctx, resp)
+	if needRecord {
+		AddTraceLog2DB(ctx, *resp.Data.MessageId)
+		RecordReplyMessage2Opensearch(ctx, resp)
+	}
 	return
 }
 

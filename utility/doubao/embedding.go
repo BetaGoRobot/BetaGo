@@ -2,7 +2,10 @@ package doubao
 
 import (
 	"context"
+	"io"
+	"iter"
 	"os"
+	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
@@ -17,6 +20,7 @@ var (
 	DOUBAO_EMBEDDING_EPID = os.Getenv("DOUBAO_EMBEDDING_EPID")
 	DOUBAO_32K_EPID       = os.Getenv("DOUBAO_32K_EPID")
 	DOUBAO_API_KEY        = os.Getenv("DOUBAO_API_KEY")
+	DOUBAO_THINK_EPID     = os.Getenv("DOUBAO_THINK_EPID")
 )
 
 var client = arkruntime.NewClientWithApiKey(DOUBAO_API_KEY)
@@ -130,4 +134,61 @@ func SingleChatModel(ctx context.Context, sysPrompt, userPrompt, modelID string)
 	}
 
 	return *resp.Choices[0].Message.Content.StringValue, nil
+}
+
+type ModelStreamRespReasoning struct {
+	ReasoningContent string
+	Content          string
+}
+
+func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string) (iter.Seq[*ModelStreamRespReasoning], error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
+	defer span.End()
+	req := model.CreateChatCompletionRequest{
+		Model: modelID,
+		Messages: []*model.ChatCompletionMessage{
+			{
+				Role: "system",
+				Content: &model.ChatCompletionMessageContent{
+					StringValue: &sysPrompt,
+				},
+			},
+		},
+	}
+
+	r, err := client.CreateChatCompletionStream(ctx, req)
+	if err != nil {
+		log.ZapLogger.Error("chat error", zap.Error(err))
+		return nil, err
+	}
+
+	return func(yield func(*ModelStreamRespReasoning) bool) {
+		content := &strings.Builder{}
+		reasoningContent := &strings.Builder{}
+		for {
+			resp, err := r.Recv()
+			if err != nil {
+				if err == io.EOF {
+					return
+				}
+				return
+			}
+			if len(resp.Choices) > 0 {
+				c := resp.Choices[0]
+				if rc := c.Delta.ReasoningContent; rc != nil {
+					reasoningContent.WriteString(*rc)
+				}
+				if c := c.Delta.Content; c != "" {
+					content.WriteString(c)
+				}
+				if !yield(&ModelStreamRespReasoning{
+					reasoningContent.String(),
+					content.String(),
+				}) {
+					return
+				}
+			}
+		}
+	}, nil
 }

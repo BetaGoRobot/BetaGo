@@ -1,8 +1,6 @@
 module github.com/BetaGoRobot/BetaGo
 
-go 1.22.1
-
-toolchain go1.23.0
+go 1.24.2
 
 replace (
 	github.com/BetaGoRobot/BetaGo/betagovar => ./consts
