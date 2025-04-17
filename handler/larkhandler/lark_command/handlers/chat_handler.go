@@ -72,11 +72,14 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 	msgID := *resp.Data.MessageId
 	lastData := &doubao.ModelStreamRespReasoning{}
 	writeFunc := func(data *doubao.ModelStreamRespReasoning) error {
-		contentSlice := []string{}
-		for _, item := range strings.Split(data.ReasoningContent, "\n") {
-			contentSlice = append(contentSlice, "> "+item)
+		if data.ReasoningContent != "" {
+			contentSlice := []string{}
+			for _, item := range strings.Split(data.ReasoningContent, "\n") {
+				contentSlice = append(contentSlice, "> "+item)
+			}
+			data.ReasoningContent = strings.Join(contentSlice, "\n")
 		}
-		data.ReasoningContent = strings.Join(contentSlice, "\n")
+
 		cardContent := larkutils.NewSheetCardContent(
 			ctx,
 			template.TemplateID,
@@ -156,11 +159,14 @@ func ChatHandlerFunc(ctx context.Context, event *larkim.P2MessageReceiveV1, args
 	// 更新卡片内容
 	idx := 0
 	writeFunc := func(data *doubao.ModelStreamRespReasoning) error {
-		contentSlice := []string{}
-		for _, item := range strings.Split(data.ReasoningContent, "\n") {
-			contentSlice = append(contentSlice, "> "+item)
+		if data.ReasoningContent != "" {
+			contentSlice := []string{}
+			for _, item := range strings.Split(data.ReasoningContent, "\n") {
+				contentSlice = append(contentSlice, "> "+item)
+			}
+			data.ReasoningContent = strings.Join(contentSlice, "\n")
 		}
-		data.ReasoningContent = strings.Join(contentSlice, "\n")
+
 		cardContent := larkutils.NewSheetCardContent(
 			ctx,
 			template.TemplateID,
