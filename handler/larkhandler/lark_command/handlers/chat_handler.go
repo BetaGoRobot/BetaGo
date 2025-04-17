@@ -58,8 +58,10 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		AddVariable("cot", "正在思考...").
 		AddVariable("content", "").String()
 	req := larkim.NewCreateMessageReqBuilder().
+		ReceiveIdType(larkim.ReceiveIdTypeChatId).
 		Body(
 			larkim.NewCreateMessageReqBodyBuilder().
+				ReceiveId(*event.Event.Message.ChatId).
 				MsgType(larkim.MsgTypeInteractive).
 				Content(cardContent).
 				Build(),
@@ -137,10 +139,12 @@ func ChatHandlerFunc(ctx context.Context, event *larkim.P2MessageReceiveV1, args
 		AddVariable("content", "").String()
 
 	req := larkim.NewCreateMessageReqBuilder().
+		ReceiveIdType(larkim.ReceiveIdTypeChatId).
 		Body(
 			larkim.NewCreateMessageReqBodyBuilder().
-				Content(cardContent).
+				ReceiveId(*event.Event.Message.ChatId).
 				MsgType(larkim.MsgTypeInteractive).
+				Content(cardContent).
 				Build(),
 		).
 		Build()
