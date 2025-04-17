@@ -60,6 +60,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 	req := larkim.NewCreateMessageReqBuilder().
 		Body(
 			larkim.NewCreateMessageReqBodyBuilder().
+				MsgType(larkim.MsgTypeInteractive).
 				Content(cardContent).
 				Build(),
 		).
@@ -139,6 +140,7 @@ func ChatHandlerFunc(ctx context.Context, event *larkim.P2MessageReceiveV1, args
 		Body(
 			larkim.NewCreateMessageReqBodyBuilder().
 				Content(cardContent).
+				MsgType(larkim.MsgTypeInteractive).
 				Build(),
 		).
 		Build()
