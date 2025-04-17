@@ -18,7 +18,6 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/redis"
 	"github.com/defensestation/osquery"
-	"github.com/google/uuid"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
@@ -62,7 +61,6 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		Body(
 			larkim.NewCreateMessageReqBodyBuilder().
 				Content(cardContent).
-				Uuid(uuid.NewString()).
 				Build(),
 		).
 		Build()
@@ -141,7 +139,6 @@ func ChatHandlerFunc(ctx context.Context, event *larkim.P2MessageReceiveV1, args
 		Body(
 			larkim.NewCreateMessageReqBodyBuilder().
 				Content(cardContent).
-				Uuid(uuid.NewString()).
 				Build(),
 		).
 		Build()
