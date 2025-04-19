@@ -40,7 +40,11 @@ func EmbeddingText(ctx context.Context, input string) (embedded []float32, token
 		Input: []string{input},
 		Model: DOUBAO_EMBEDDING_EPID,
 	}
-	resp, err := client.CreateEmbeddings(ctx, req)
+	resp, err := client.CreateEmbeddings(
+		ctx,
+		req,
+		arkruntime.WithCustomHeader("x-is-encrypted", "true"),
+	)
 	if err != nil {
 		log.ZapLogger.Error("embeddings error", zap.Error(err))
 		return
@@ -157,7 +161,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string) (
 		},
 	}
 
-	r, err := client.CreateChatCompletionStream(ctx, req)
+	r, err := client.CreateChatCompletionStream(ctx, req, arkruntime.WithCustomHeader("x-is-encrypted", "true"))
 	if err != nil {
 		log.ZapLogger.Error("chat error", zap.Error(err))
 		return nil, err
