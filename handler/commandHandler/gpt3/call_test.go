@@ -58,7 +58,7 @@ func TestGPTClient_PostWithStream(t *testing.T) {
 		if err == io.EOF {
 			break
 		}
-		lineJSON := bytes.TrimLeft(line, "data: ")
+		lineJSON := bytes.TrimPrefix(line, []byte("data: "))
 		res, err := ajson.JSONPath(lineJSON, "$..content")
 		if err != nil {
 			continue

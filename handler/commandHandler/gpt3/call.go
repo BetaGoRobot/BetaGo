@@ -175,7 +175,7 @@ func (g *GPTClient) PostWithStream(ctx context.Context) (err error) {
 			err = nil
 			break
 		}
-		lineJSON := bytes.TrimLeft(line, "data: ")
+		lineJSON := bytes.TrimPrefix(line, []byte("data: "))
 		if bytes.Contains(lineJSON, []byte("maximum")) {
 			err = ErrorMaxToken
 			break

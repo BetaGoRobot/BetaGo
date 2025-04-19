@@ -116,7 +116,7 @@ func GetCommandWithMatched(ctx context.Context, content string) (commands []stri
 			return
 		}
 		if match.GroupByName("content") != nil {
-			commands = strings.Fields(strings.TrimLeft(match.GroupByName("content").String(), "/"))
+			commands = strings.Fields(strings.TrimPrefix(match.GroupByName("content").String(), "/"))
 		}
 	}
 

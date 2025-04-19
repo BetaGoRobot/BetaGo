@@ -11,7 +11,7 @@ func BuildURL(jsonURL string) string {
 	u.Host = os.Getenv("PLAYER_URL")
 	u.Scheme = "https"
 	q := u.Query()
-	q.Add("target", strings.TrimLeft(jsonURL, "https://kutt.kmhomelab.cn/"))
+	q.Add("target", strings.TrimPrefix(jsonURL, "https://kutt.kmhomelab.cn/"))
 	u.RawQuery = q.Encode()
 	return u.String()
 }
