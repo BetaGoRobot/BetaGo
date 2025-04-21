@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
@@ -80,6 +81,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		if err != nil {
 			return err
 		}
+		time.Sleep(time.Second * 1)
 		settingUpdateReq := larkcardkit.NewSettingsCardReqBuilder().
 			CardId(cardID).
 			Body(larkcardkit.NewSettingsCardReqBodyBuilder().
@@ -87,7 +89,6 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 				Sequence(lastIdx + 1).
 				Build()).
 			Build()
-
 		// 发起请求
 		settingUpdateResp, err := larkutils.LarkClient.Cardkit.V1.Card.
 			Settings(ctx, settingUpdateReq)
@@ -124,7 +125,13 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 			return
 		}
 	}
-	writeFunc := func(idx int, data *doubao.ModelStreamRespReasoning, end bool) error {
+	writeFunc := func(idx int, data *doubao.ModelStreamRespReasoning) error {
+		bodyBuilder := larkcardkit.
+			NewContentCardElementReqBodyBuilder().
+			Sequence(idx)
+		updateReqBuilder := larkcardkit.
+			NewContentCardElementReqBuilder().
+			CardId(cardID)
 		if data.ReasoningContent != "" {
 			contentSlice := []string{}
 			for _, item := range strings.Split(data.ReasoningContent, "\n") {
@@ -132,25 +139,17 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 			}
 			data.ReasoningContent = strings.Join(contentSlice, "\n")
 		}
-		bodyBuilder := larkcardkit.
-			NewContentCardElementReqBodyBuilder().
-			Sequence(idx)
-		updateReqBuilder := larkcardkit.
-			NewContentCardElementReqBuilder().
-			CardId(cardID)
-		if data.Content == "" {
+
+		if data.ReasoningContent != "" {
 			bodyBuilder.Content(data.ReasoningContent)
 			updateReqBuilder.ElementId("cot")
-		} else {
+			updateReqBuilder.Body(bodyBuilder.Build())
+			go sendFunc(updateReqBuilder.Build())
+		}
+		if data.Content != "" {
 			bodyBuilder.Content(data.Content)
 			updateReqBuilder.ElementId("content")
-		}
-
-		updateReqBuilder.Body(bodyBuilder.Build())
-		go sendFunc(updateReqBuilder.Build())
-		if end { // end 补充一次cot
-			bodyBuilder.Content(data.ReasoningContent)
-			updateReqBuilder.ElementId("cot")
+			updateReqBuilder.Body(bodyBuilder.Build())
 			go sendFunc(updateReqBuilder.Build())
 		}
 		return nil
@@ -161,12 +160,12 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 		lastIdx++
 		*lastData = *data
 
-		err = writeFunc(lastIdx, data, false)
+		err = writeFunc(lastIdx, data)
 		if err != nil {
 			return
 		}
 	}
-	err = writeFunc(lastIdx, lastData, true)
+	err = writeFunc(lastIdx, lastData)
 	if err != nil {
 		return
 	}
