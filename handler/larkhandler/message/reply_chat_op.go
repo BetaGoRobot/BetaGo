@@ -70,5 +70,5 @@ func (r *ReplyChatOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 	msg := larkutils.PreGetTextMsg(ctx, event)
 	msg = larkutils.TrimAtMsg(ctx, msg)
 
-	return handlers.ChatHandler("reply")(ctx, event, msg)
+	return handlers.ChatHandler("chat")(ctx, event, msg)
 }

@@ -24,6 +24,10 @@ import (
 
 func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
 	return func(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
+		argMap, _ := parseArgs(args...)
+		if _, ok := argMap["r"]; ok {
+			chatType = "reply"
+		}
 		return ChatHandlerInner(ctx, event, chatType, args...)
 	}
 }
@@ -33,57 +37,86 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 	defer span.End()
 
 	var res iter.Seq[*doubao.ModelStreamRespReasoning]
+	if ext, err := redis.GetRedisClient().
+		Exists(ctx, MuteRedisKeyPrefix+*event.Event.Message.ChatId).Result(); err != nil {
+		return err
+	} else if ext != 0 {
+		return nil // Do nothing
+	}
 	if chatType == "reply" {
 		res, err = GenerateChatReply(ctx, event, args...)
-	} else {
-		if ext, err := redis.GetRedisClient().
-			Exists(ctx, MuteRedisKeyPrefix+*event.Event.Message.ChatId).Result(); err != nil {
+		// 创建卡片实体
+		template := larkutils.GetTemplate(larkutils.StreamingReasonTemplate)
+		cardSrc := template.TemplateSrc
+		// 首先Create卡片实体
+		cardEntiReq := larkcardkit.NewCreateCardReqBuilder().Body(
+			larkcardkit.NewCreateCardReqBodyBuilder().
+				Type(`card_json`).
+				Data(cardSrc).
+				Build(),
+		).Build()
+		createEntiResp, err := larkutils.LarkClient.Cardkit.V1.Card.Create(ctx, cardEntiReq)
+		if err != nil {
 			return err
-		} else if ext != 0 {
-			return nil // Do nothing
 		}
+		cardID := *createEntiResp.Data.CardId
 
+		// 发送卡片
+		req := larkim.NewCreateMessageReqBuilder().
+			ReceiveIdType(larkim.ReceiveIdTypeChatId).
+			Body(
+				larkim.NewCreateMessageReqBodyBuilder().
+					ReceiveId(*event.Event.Message.ChatId).
+					MsgType(larkim.MsgTypeInteractive).
+					Content(cardutil.NewCardEntityContent(cardID).String()).
+					Build(),
+			).
+			Build()
+		_, err = larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
+		if err != nil {
+			return err
+		}
+		err, lastIdx := updateCardFunc(ctx, res, cardID)
+		if err != nil {
+			return err
+		}
+		settingUpdateReq := larkcardkit.NewSettingsCardReqBuilder().
+			CardId(cardID).
+			Body(larkcardkit.NewSettingsCardReqBodyBuilder().
+				Settings(cardutil.DisableCardStreaming().String()).
+				Sequence(lastIdx + 1).
+				Build()).
+			Build()
+
+		// 发起请求
+		settingUpdateResp, err := larkutils.LarkClient.Cardkit.V1.Card.
+			Settings(ctx, settingUpdateReq)
+		if err != nil {
+			return err
+		}
+		if settingUpdateResp.CodeError.Err != nil {
+			return errors.New(settingUpdateResp.CodeError.Error())
+		}
+	} else {
 		res, err = GenerateChatSeq(ctx, event, args...)
 		if err != nil {
 			return err
 		}
+		lastData := &doubao.ModelStreamRespReasoning{}
+		for data := range res {
+			lastData = data
+		}
+		err = larkutils.ReplyMsgText(
+			ctx, lastData.Content, *event.Event.Message.MessageId, "_chat_random", false,
+		)
+		if err != nil {
+			return
+		}
 	}
-	// 创建卡片实体
-	template := larkutils.GetTemplate(larkutils.StreamingReasonTemplate)
-	cardSrc := template.TemplateSrc
-	// 首先Create卡片实体
-	cardEntiReq := larkcardkit.NewCreateCardReqBuilder().Body(
-		larkcardkit.NewCreateCardReqBodyBuilder().
-			Type(`card_json`).
-			Data(cardSrc).
-			Build(),
-	).Build()
-	createEntiResp, err := larkutils.LarkClient.Cardkit.V1.Card.Create(ctx, cardEntiReq)
-	if err != nil {
-		return err
-	}
-	cardID := *createEntiResp.Data.CardId
-
-	// 发送卡片
-	req := larkim.NewCreateMessageReqBuilder().
-		ReceiveIdType(larkim.ReceiveIdTypeChatId).
-		Body(
-			larkim.NewCreateMessageReqBodyBuilder().
-				ReceiveId(*event.Event.Message.ChatId).
-				MsgType(larkim.MsgTypeInteractive).
-				Content(cardutil.NewCardEntityContent(cardID).String()).
-				Build(),
-		).
-		Build()
-	_, err = larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
-	if err != nil {
-		return
-	}
-
-	return updateCardFunc(ctx, res, cardID)
+	return
 }
 
-func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespReasoning], cardID string) (err error) {
+func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespReasoning], cardID string) (err error, lastIdx int) {
 	sendFunc := func(req *larkcardkit.ContentCardElementReq) {
 		resp, err := larkutils.LarkClient.Cardkit.V1.CardElement.Content(ctx, req)
 		if err != nil {
@@ -122,63 +155,22 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 		}
 		return nil
 	}
-	idx := 0
+	lastIdx = 0
 	lastData := &doubao.ModelStreamRespReasoning{}
 	for data := range res {
-		idx++
+		lastIdx++
 		*lastData = *data
 
-		err = writeFunc(idx, data, false)
+		err = writeFunc(lastIdx, data, false)
 		if err != nil {
-			return err
+			return
 		}
 	}
-	err = writeFunc(idx, lastData, true)
-	if err != nil {
-		return err
-	}
-	return
-}
-
-func ChatHandlerFunc(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	defer span.End()
-
-	template := larkutils.GetTemplate(larkutils.StreamingReasonTemplate)
-	cardSrc := template.TemplateSrc
-	// 首先Create卡片实体
-	cardEntiReq := larkcardkit.NewCreateCardReqBuilder().Body(
-		larkcardkit.NewCreateCardReqBodyBuilder().
-			Type(`card_json`).
-			Data(cardSrc).
-			Build(),
-	).Build()
-	resp, err := larkutils.LarkClient.Cardkit.V1.Card.Create(ctx, cardEntiReq)
-	if err != nil {
-		return err
-	}
-	cardID := *resp.Data.CardId
-
-	// 发送卡片
-	req := larkim.NewCreateMessageReqBuilder().
-		ReceiveIdType(larkim.ReceiveIdTypeChatId).
-		Body(
-			larkim.NewCreateMessageReqBodyBuilder().
-				ReceiveId(*event.Event.Message.ChatId).
-				MsgType(larkim.MsgTypeInteractive).
-				Content(cardutil.NewCardEntityContent(cardID).String()).
-				Build(),
-		).
-		Build()
-	_, err = larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
+	err = writeFunc(lastIdx, lastData, true)
 	if err != nil {
 		return
 	}
-	res, err := GenerateChatSeq(ctx, event, args...)
-	if err != nil {
-		return err
-	}
-	return updateCardFunc(ctx, res, cardID)
+	return
 }
 
 func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (res iter.Seq[*doubao.ModelStreamRespReasoning], err error) {
@@ -226,13 +218,10 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, args
 		return nil, err
 	}
 
-	res, err = doubao.SingleChatStreamingPrompt(ctx, b.String(), doubao.DOUBAO_THINK_EPID)
+	res, err = doubao.SingleChatStreamingPrompt(ctx, b.String(), doubao.DOUBAO_32K_EPID)
 	if err != nil {
 		return
 	}
-	// span.SetAttributes(attribute.String("res", res))
-	// res = strings.Trim(res, "\n")
-	// res = strings.Trim(strings.Split(res, "\n")[0], " - ")
 	return
 }
 
