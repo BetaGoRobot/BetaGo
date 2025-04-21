@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"errors"
-	"fmt"
 	"iter"
 	"strconv"
 	"strings"
@@ -13,11 +12,13 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/redis"
 	"github.com/defensestation/osquery"
+	larkcardkit "github.com/larksuite/oapi-sdk-go/v3/service/cardkit/v1"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
@@ -47,33 +48,50 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 			return err
 		}
 	}
-
-	// 先Create个卡片
+	// 创建卡片实体
 	template := larkutils.GetTemplate(larkutils.StreamingReasonTemplate)
-	cardContent := larkutils.NewSheetCardContent(
-		ctx,
-		template.TemplateID,
-		template.TemplateVersion,
-	).
-		AddVariable("cot", "正在思考...").
-		AddVariable("content", "").String()
+	cardSrc := template.TemplateSrc
+	// 首先Create卡片实体
+	cardEntiReq := larkcardkit.NewCreateCardReqBuilder().Body(
+		larkcardkit.NewCreateCardReqBodyBuilder().
+			Type(`card_json`).
+			Data(cardSrc).
+			Build(),
+	).Build()
+	createEntiResp, err := larkutils.LarkClient.Cardkit.V1.Card.Create(ctx, cardEntiReq)
+	if err != nil {
+		return err
+	}
+	cardID := *createEntiResp.Data.CardId
+
+	// 发送卡片
 	req := larkim.NewCreateMessageReqBuilder().
 		ReceiveIdType(larkim.ReceiveIdTypeChatId).
 		Body(
 			larkim.NewCreateMessageReqBodyBuilder().
 				ReceiveId(*event.Event.Message.ChatId).
 				MsgType(larkim.MsgTypeInteractive).
-				Content(cardContent).
+				Content(cardutil.NewCardEntityContent(cardID).String()).
 				Build(),
 		).
 		Build()
-	resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
+	_, err = larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
 	if err != nil {
-		return err
+		return
 	}
-	msgID := *resp.Data.MessageId
-	lastData := &doubao.ModelStreamRespReasoning{}
-	writeFunc := func(data *doubao.ModelStreamRespReasoning) error {
+
+	return updateCardFunc(ctx, res, cardID)
+}
+
+func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespReasoning], cardID string) (err error) {
+	sendFunc := func(req *larkcardkit.ContentCardElementReq) {
+		resp, err := larkutils.LarkClient.Cardkit.V1.CardElement.Content(ctx, req)
+		if err != nil {
+			log.ZapLogger.Error("patch message failed with error msg: " + resp.Msg)
+			return
+		}
+	}
+	writeFunc := func(idx int, data *doubao.ModelStreamRespReasoning, end bool) error {
 		if data.ReasoningContent != "" {
 			contentSlice := []string{}
 			for _, item := range strings.Split(data.ReasoningContent, "\n") {
@@ -81,43 +99,41 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 			}
 			data.ReasoningContent = strings.Join(contentSlice, "\n")
 		}
+		bodyBuilder := larkcardkit.
+			NewContentCardElementReqBodyBuilder().
+			Sequence(idx)
+		updateReqBuilder := larkcardkit.
+			NewContentCardElementReqBuilder().
+			CardId(cardID)
+		if data.Content == "" {
+			bodyBuilder.Content(data.ReasoningContent)
+			updateReqBuilder.ElementId("cot")
+		} else {
+			bodyBuilder.Content(data.Content)
+			updateReqBuilder.ElementId("content")
+		}
 
-		cardContent := larkutils.NewSheetCardContent(
-			ctx,
-			template.TemplateID,
-			template.TemplateVersion,
-		).
-			AddVariable("cot", data.ReasoningContent).
-			AddVariable("content", data.Content).String()
-		updateReq := larkim.NewPatchMessageReqBuilder().MessageId(msgID).
-			Body(
-				larkim.NewPatchMessageReqBodyBuilder().
-					Content(cardContent).
-					Build(),
-			).
-			Build()
-		fmt.Println(data.ReasoningContent)
-		resp, err := larkutils.LarkClient.Im.V1.Message.Patch(ctx, updateReq)
-		if err != nil {
-			log.ZapLogger.Error("patch message failed with error msg: " + resp.Msg)
-			return err
+		updateReqBuilder.Body(bodyBuilder.Build())
+		go sendFunc(updateReqBuilder.Build())
+		if end { // end 补充一次cot
+			bodyBuilder.Content(data.ReasoningContent)
+			updateReqBuilder.ElementId("cot")
+			go sendFunc(updateReqBuilder.Build())
 		}
 		return nil
 	}
-	// 更新卡片内容
 	idx := 0
+	lastData := &doubao.ModelStreamRespReasoning{}
 	for data := range res {
 		idx++
 		*lastData = *data
 
-		if idx%10 == 0 {
-			err = writeFunc(data)
-			if err != nil {
-				return err
-			}
+		err = writeFunc(idx, data, false)
+		if err != nil {
+			return err
 		}
 	}
-	err = writeFunc(lastData)
+	err = writeFunc(idx, lastData, true)
 	if err != nil {
 		return err
 	}
@@ -128,87 +144,41 @@ func ChatHandlerFunc(ctx context.Context, event *larkim.P2MessageReceiveV1, args
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
-	// 先Create个卡片
 	template := larkutils.GetTemplate(larkutils.StreamingReasonTemplate)
-	cardContent := larkutils.NewSheetCardContent(
-		ctx,
-		template.TemplateID,
-		template.TemplateVersion,
-	).
-		AddVariable("cot", "正在思考...").
-		AddVariable("content", "").String()
+	cardSrc := template.TemplateSrc
+	// 首先Create卡片实体
+	cardEntiReq := larkcardkit.NewCreateCardReqBuilder().Body(
+		larkcardkit.NewCreateCardReqBodyBuilder().
+			Type(`card_json`).
+			Data(cardSrc).
+			Build(),
+	).Build()
+	resp, err := larkutils.LarkClient.Cardkit.V1.Card.Create(ctx, cardEntiReq)
+	if err != nil {
+		return err
+	}
+	cardID := *resp.Data.CardId
 
+	// 发送卡片
 	req := larkim.NewCreateMessageReqBuilder().
 		ReceiveIdType(larkim.ReceiveIdTypeChatId).
 		Body(
 			larkim.NewCreateMessageReqBodyBuilder().
 				ReceiveId(*event.Event.Message.ChatId).
 				MsgType(larkim.MsgTypeInteractive).
-				Content(cardContent).
+				Content(cardutil.NewCardEntityContent(cardID).String()).
 				Build(),
 		).
 		Build()
-	resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
+	_, err = larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
 	if err != nil {
-		return err
+		return
 	}
-
-	msgID := *resp.Data.MessageId
-
 	res, err := GenerateChatSeq(ctx, event, args...)
 	if err != nil {
 		return err
 	}
-	lastData := &doubao.ModelStreamRespReasoning{}
-	// 更新卡片内容
-	idx := 0
-	writeFunc := func(data *doubao.ModelStreamRespReasoning) error {
-		if data.ReasoningContent != "" {
-			contentSlice := []string{}
-			for _, item := range strings.Split(data.ReasoningContent, "\n") {
-				contentSlice = append(contentSlice, "> "+item)
-			}
-			data.ReasoningContent = strings.Join(contentSlice, "\n")
-		}
-
-		cardContent := larkutils.NewSheetCardContent(
-			ctx,
-			template.TemplateID,
-			template.TemplateVersion,
-		).
-			AddVariable("cot", data.ReasoningContent).
-			AddVariable("content", data.Content).String()
-		updateReq := larkim.NewPatchMessageReqBuilder().MessageId(msgID).
-			Body(
-				larkim.NewPatchMessageReqBodyBuilder().
-					Content(cardContent).
-					Build(),
-			).
-			Build()
-		fmt.Println(data.ReasoningContent)
-		resp, err := larkutils.LarkClient.Im.V1.Message.Patch(ctx, updateReq)
-		if err != nil {
-			log.ZapLogger.Error("patch message failed with error msg: " + resp.Msg)
-			return err
-		}
-		return nil
-	}
-	for data := range res {
-		idx++
-		*lastData = *data
-		if idx%10 == 0 {
-			err = writeFunc(data)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	err = writeFunc(lastData)
-	if err != nil {
-		return err
-	}
-
-	return
+	return updateCardFunc(ctx, res, cardID)
 }
 
 func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (res iter.Seq[*doubao.ModelStreamRespReasoning], err error) {

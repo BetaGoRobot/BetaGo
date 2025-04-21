@@ -31,10 +31,11 @@ func (t *TextBuilder) AtUser(userId, name string) *TextBuilder {
 }
 
 func (t *TextBuilder) Build() string {
+	s := strings.ReplaceAll(t.builder.String(), "\n", "\\n")
 	tmpStruct := struct {
 		Text string `json:"text"`
 	}{
-		Text: t.builder.String(),
+		Text: s,
 	}
 	s, err := sonic.MarshalString(tmpStruct)
 	if err != nil {

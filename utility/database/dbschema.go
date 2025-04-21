@@ -192,6 +192,7 @@ type TemplateVersion struct {
 	TemplateVersion string `json:"template_version"`
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+	TemplateSrc     string `json:"template_src"`
 }
 
 // ChannelLogExt  is the struct of channel log
