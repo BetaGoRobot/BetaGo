@@ -140,15 +140,14 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 			data.ReasoningContent = strings.Join(contentSlice, "\n")
 		}
 
-		if data.ReasoningContent != "" {
-			bodyBuilder.Content(data.ReasoningContent)
-			updateReqBuilder.ElementId("cot")
-			updateReqBuilder.Body(bodyBuilder.Build())
-			go sendFunc(updateReqBuilder.Build())
-		}
 		if data.Content != "" {
 			bodyBuilder.Content(data.Content)
 			updateReqBuilder.ElementId("content")
+			updateReqBuilder.Body(bodyBuilder.Build())
+			go sendFunc(updateReqBuilder.Build())
+		} else {
+			bodyBuilder.Content(data.ReasoningContent)
+			updateReqBuilder.ElementId("cot")
 			updateReqBuilder.Body(bodyBuilder.Build())
 			go sendFunc(updateReqBuilder.Build())
 		}
