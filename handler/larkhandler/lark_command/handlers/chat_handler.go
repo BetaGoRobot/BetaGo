@@ -25,11 +25,12 @@ import (
 
 func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
 	return func(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
+		newChatType := chatType
 		argMap, _ := parseArgs(args...)
 		if _, ok := argMap["r"]; ok {
-			chatType = "reply"
+			newChatType = "reply"
 		}
-		return ChatHandlerInner(ctx, event, chatType, args...)
+		return ChatHandlerInner(ctx, event, newChatType, args...)
 	}
 }
 
