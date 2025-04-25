@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 )
 
@@ -49,7 +49,7 @@ type (
 )
 
 func NewSheetCardContent(ctx context.Context, templateID, templateVersion string) *TemplateCardContent {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	traceID := span.SpanContext().TraceID().String()
 	t := &TemplateCardContent{

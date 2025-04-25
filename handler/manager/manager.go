@@ -8,6 +8,7 @@ import (
 	comcontext "github.com/BetaGoRobot/BetaGo/handler/commandHandler/context"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/lonelyevil/kook"
 	"go.opentelemetry.io/otel/attribute"
@@ -19,7 +20,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 //
 //	@param ctx
 func CommandHandler(baseCtx context.Context, kookCtx *kook.KmarkdownMessageContext) {
-	baseCtx, span := otel.BetaGoOtelTracer.Start(baseCtx, utility.GetCurrentFunc())
+	baseCtx, span := otel.BetaGoOtelTracer.Start(baseCtx, reflecting.GetCurrentFunc())
 	rawRecord, _ := json.Marshal(&kookCtx.Extra)
 	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer span.End()
@@ -51,7 +52,7 @@ func CommandHandler(baseCtx context.Context, kookCtx *kook.KmarkdownMessageConte
 //	@param ctx
 func ChannelJoinedAsyncHandler(kookCtx *kook.GuildChannelMemberAddContext) {
 	newCtx := context.Background()
-	newCtx, span := otel.BetaGoOtelTracer.Start(newCtx, utility.GetCurrentFunc())
+	newCtx, span := otel.BetaGoOtelTracer.Start(newCtx, reflecting.GetCurrentFunc())
 	rawRecord, _ := json.Marshal(&kookCtx.Extra)
 	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer span.End()
@@ -70,7 +71,7 @@ func guildUpdateAsyncHandler(kookCtx *kook.GuildUpdateContext) {
 //	@param ctx
 func ChannelLeftAsyncHandler(kookCtx *kook.GuildChannelMemberDeleteContext) {
 	newCtx := context.Background()
-	newCtx, span := otel.BetaGoOtelTracer.Start(newCtx, utility.GetCurrentFunc())
+	newCtx, span := otel.BetaGoOtelTracer.Start(newCtx, reflecting.GetCurrentFunc())
 	rawRecord, _ := json.Marshal(&kookCtx.Extra)
 	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer span.End()
@@ -82,7 +83,7 @@ func ChannelLeftAsyncHandler(kookCtx *kook.GuildChannelMemberDeleteContext) {
 //	@param ctx
 func ClickEventAsyncHandler(kookCtx *kook.MessageButtonClickContext) {
 	newCtx := context.Background()
-	newCtx, span := otel.BetaGoOtelTracer.Start(newCtx, utility.GetCurrentFunc())
+	newCtx, span := otel.BetaGoOtelTracer.Start(newCtx, reflecting.GetCurrentFunc())
 	rawRecord, _ := json.Marshal(&kookCtx.Extra)
 	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer span.End()
@@ -94,7 +95,7 @@ func ClickEventAsyncHandler(kookCtx *kook.MessageButtonClickContext) {
 //	@param ctx
 func MessageEventAsyncHandler(kookCtx *kook.KmarkdownMessageContext) {
 	newCtx := context.Background()
-	newCtx, span := otel.BetaGoOtelTracer.Start(newCtx, utility.GetCurrentFunc())
+	newCtx, span := otel.BetaGoOtelTracer.Start(newCtx, reflecting.GetCurrentFunc())
 	rawRecord, _ := json.Marshal(&kookCtx.Extra)
 	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer span.End()

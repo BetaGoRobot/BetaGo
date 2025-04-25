@@ -16,6 +16,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	"github.com/lonelyevil/kook"
 	"github.com/spyzhov/ajson"
@@ -23,7 +24,7 @@ import (
 )
 
 func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickContext) {
-	baseCtx, span := otel.BetaGoOtelTracer.Start(baseCtx, utility.GetCurrentFunc())
+	baseCtx, span := otel.BetaGoOtelTracer.Start(baseCtx, reflecting.GetCurrentFunc())
 	s, _ := sonic.MarshalString(ctx)
 	span.SetAttributes(attribute.Key("ClickEvent").String(s))
 	defer span.End()
@@ -262,7 +263,7 @@ func channelLeftHandler(baseCtx context.Context, kookCtx *kook.GuildChannelMembe
 }
 
 func messageEventHandler(baseCtx context.Context, kookCtx *kook.KmarkdownMessageContext) {
-	baseCtx, span := otel.BetaGoOtelTracer.Start(baseCtx, utility.GetCurrentFunc())
+	baseCtx, span := otel.BetaGoOtelTracer.Start(baseCtx, reflecting.GetCurrentFunc())
 	rawRecord, _ := json.Marshal(&kookCtx.Extra)
 	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer span.End()

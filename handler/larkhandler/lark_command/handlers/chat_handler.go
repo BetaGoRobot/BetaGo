@@ -9,7 +9,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -18,6 +17,7 @@ import (
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/redis"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/defensestation/osquery"
 	larkcardkit "github.com/larksuite/oapi-sdk-go/v3/service/cardkit/v1"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -35,7 +35,7 @@ func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2Mess
 }
 
 func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, chatType string, args ...string) (err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	var res iter.Seq[*doubao.ModelStreamRespReasoning]
@@ -177,7 +177,7 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 }
 
 func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (res iter.Seq[*doubao.ModelStreamRespReasoning], err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	// 获取最近30条消息
@@ -229,7 +229,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, args
 }
 
 func GenerateChatReply(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (res iter.Seq[*doubao.ModelStreamRespReasoning], err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	// 获取最近30条消息

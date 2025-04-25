@@ -16,6 +16,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/lonelyevil/kook"
 	"github.com/wcharczuk/go-chart/v2"
 	"go.opentelemetry.io/otel/attribute"
@@ -141,7 +142,7 @@ func (drawCtx *DrawPieAPICtx) BuildRequestURL() string {
 //
 //	@param userID
 func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()
@@ -228,7 +229,7 @@ func ShowCalHandler(ctx context.Context, targetID, quoteID, authorID, guildID st
 //	@param args
 //	@return err
 func ShowCalLocalHandler(ctx context.Context, targetID, quoteID, authorID, guildID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()
@@ -302,7 +303,7 @@ func ShowCalLocalHandler(ctx context.Context, targetID, quoteID, authorID, guild
 //	@param userID
 //	@return map
 func GetUserChannelTimeMap(ctx context.Context, userID, guildID string) map[string]time.Duration {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("userID").String(userID))
 	defer span.End()
 
@@ -344,7 +345,7 @@ func GetUserChannelTimeMap(ctx context.Context, userID, guildID string) map[stri
 //	@param userName
 //	@return string
 func DrawPieChartWithAPI(ctx context.Context, inputMap map[string]time.Duration, userName string) (string, error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	apiURL := "https://image-charts.com/chart?"
@@ -433,7 +434,7 @@ func DrawPieChartWithAPI(ctx context.Context, inputMap map[string]time.Duration,
 //
 //	@return {}
 func DrawPieChartWithLocal1(ctx context.Context, inputMap map[string]time.Duration, userName string) (string, error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	if len(inputMap) == 0 {
@@ -505,7 +506,7 @@ func DrawPieChartWithLocal1(ctx context.Context, inputMap map[string]time.Durati
 //	@return string
 //	@return error
 func DrawPieChartWithLocal(ctx context.Context, inputMap map[string]time.Duration, userName string) (string, error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	if len(inputMap) == 0 {

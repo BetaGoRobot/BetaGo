@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	errorsender "github.com/BetaGoRobot/BetaGo/handler/commandHandler/error_sender"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -155,7 +156,7 @@ func (ctx *CommandContext) ErrorSenderHandlerNew(ctxFunc interface{}, parameters
 //	@param Command
 //	@param parameters
 func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) {
-	ctx.Ctx, ctx.span = otel.BetaGoOtelTracer.Start(ctx.Ctx, utility.GetCurrentFunc())
+	ctx.Ctx, ctx.span = otel.BetaGoOtelTracer.Start(ctx.Ctx, reflecting.GetCurrentFunc())
 	rawRecord, _ := json.Marshal(&ctx.Extra)
 	ctx.span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer ctx.span.End()

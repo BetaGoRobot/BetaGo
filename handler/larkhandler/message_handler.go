@@ -8,10 +8,10 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/message"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/reaction"
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
@@ -31,7 +31,7 @@ func isOutDated(createTime string) bool {
 //	@param event
 //	@return error
 func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) error {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer larkutils.RecoverMsg(ctx, *event.Event.Message.MessageId)
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
@@ -54,7 +54,7 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 //	@param event
 //	@return error
 func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReactionCreatedV1) error {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer larkutils.RecoverMsg(ctx, *event.Event.MessageId)
 	defer span.End()
 

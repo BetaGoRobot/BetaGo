@@ -13,6 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
@@ -37,7 +38,7 @@ func ReBuildArgs(argName, argValue string) string {
 //	@param event
 //	@return string
 func PreGetTextMsg(ctx context.Context, event *larkim.P2MessageReceiveV1) string {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	return getContentFromTextMsg(*event.Event.Message.Content)
 }
@@ -70,7 +71,7 @@ var (
 //	@author heyuhengmatt
 //	@update 2024-07-17 01:39:05
 func TrimAtMsg(ctx context.Context, msg string) string {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	match, err := atMsgRepattern.FindStringMatch(msg)
 	if err != nil {
@@ -177,7 +178,7 @@ func IsCommand(ctx context.Context, content string) bool {
 }
 
 func AddReaction2DB(ctx context.Context, msgID string) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	log.ZapLogger.Info("AddTraceLog2DB", zaplog.String("msgID", msgID), zaplog.String("traceID", span.SpanContext().TraceID().String()))
@@ -190,7 +191,7 @@ func AddReaction2DB(ctx context.Context, msgID string) {
 }
 
 func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix string, replyInThread bool) (err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("msgType").String(msgType), attribute.Key("content").String(content))
 	defer span.End()
 	uuid := (msgID + suffix)
@@ -239,14 +240,14 @@ func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io
 //	@param text
 //	@param msgID
 func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread bool) (err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(text))
 	defer span.End()
 	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, text, suffix, replyInThread)
 }
 
 func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageResp, contents ...string) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	var content string
 	if len(contents) > 0 {
@@ -292,7 +293,7 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 }
 
 func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessageResp, contents ...string) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	var content string
 	if len(contents) > 0 {
@@ -339,7 +340,7 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 
 // CreateMsgText 不需要自行BuildText
 func CreateMsgText(ctx context.Context, content, msgID, chatID string) (err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(content))
 	defer span.End()
 
@@ -349,7 +350,7 @@ func CreateMsgText(ctx context.Context, content, msgID, chatID string) (err erro
 
 // CreateMsgTextRaw 需要自行BuildText
 func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(content))
 	defer span.End()
 	// TODO: Add id saving
@@ -383,7 +384,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 }
 
 func AddReaction(ctx context.Context, reactionType, msgID string) (reactionID string, err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	defer span.End()
 
@@ -402,7 +403,7 @@ func AddReaction(ctx context.Context, reactionType, msgID string) (reactionID st
 }
 
 func AddReactionAsync(ctx context.Context, reactionType, msgID string) (err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	defer span.End()
 
@@ -423,7 +424,7 @@ func AddReactionAsync(ctx context.Context, reactionType, msgID string) (err erro
 }
 
 func RemoveReaction(ctx context.Context, reactionID, msgID string) (err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	defer span.End()
 	req := larkim.NewDeleteMessageReactionReqBuilder().MessageId(msgID).ReactionId(reactionID).Build()

@@ -6,10 +6,10 @@ import (
 	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/kevinmatthe/zaplog"
 )
 
@@ -30,7 +30,7 @@ func MusicItemTransAlbum(album *neteaseapi.Album) *neteaseapi.SearchMusicItem {
 }
 
 func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType) (content *larkutils.TemplateCardContent, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	res := make([]*neteaseapi.SearchMusicItem, len(resList))

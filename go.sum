@@ -1,4 +1,6 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
+github.com/BetaGoRobot/go_utils v0.0.0-20250425125018-108c9ceab6e8 h1:QB5Tbna10jzZYeZl/uyIeaWtwpdIoAAlF2wDFJ9xb5U=
+github.com/BetaGoRobot/go_utils v0.0.0-20250425125018-108c9ceab6e8/go.mod h1:ciJq9vWPcBV1rvnjFNJhKv5KuBwIuMqGtK913Z2S7qU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578/go.mod h1:uGdkoq3SwY9Y+13GIhn11/XLaGBb4BfwItxLd5jeuXE=

@@ -56,6 +56,7 @@ require (
 )
 
 require (
+	github.com/BetaGoRobot/go_utils v0.0.0-20250425125018-108c9ceab6e8 // indirect
 	github.com/andybalholm/brotli v1.1.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

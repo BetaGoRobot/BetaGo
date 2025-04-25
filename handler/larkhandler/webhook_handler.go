@@ -13,6 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/kevinmatthe/zaplog"
 	larkcard "github.com/larksuite/oapi-sdk-go/v3/card"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -21,7 +22,7 @@ import (
 )
 
 func WebHookHandler(ctx context.Context, cardAction *larkcard.CardAction) (interface{}, error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer larkutils.RecoverMsg(ctx, cardAction.OpenMessageID)
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(cardAction)))
 	defer span.End()
@@ -58,7 +59,7 @@ func WebHookHandler(ctx context.Context, cardAction *larkcard.CardAction) (inter
 }
 
 func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutils.TemplateCardContent {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
 
@@ -160,7 +161,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutil
 }
 
 func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
 
@@ -172,7 +173,7 @@ func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) 
 }
 
 func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("albumID").String(albumID))
 	defer span.End()
 
@@ -198,7 +199,7 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 }
 
 func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("musicID").String(musicID))
 	defer span.End()
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]

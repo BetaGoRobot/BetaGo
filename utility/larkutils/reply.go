@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -17,7 +17,7 @@ import (
 //	@param text
 //	@param msgID
 func ReplyCard(ctx context.Context, cardContent *TemplateCardContent, msgID, suffix string, replyInThread bool) (err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	for k, v := range cardContent.Data.TemplateVariable {
 		span.SetAttributes(attribute.Key(k).String(fmt.Sprintf("%v", v)))
@@ -53,7 +53,7 @@ func ReplyCard(ctx context.Context, cardContent *TemplateCardContent, msgID, suf
 //	@param text
 //	@param msgID
 func ReplyCardText(ctx context.Context, text string, msgID, suffix string, replyInThread bool) (err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 
 	defer span.End()

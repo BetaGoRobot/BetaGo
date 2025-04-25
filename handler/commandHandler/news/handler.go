@@ -13,6 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
@@ -52,7 +53,7 @@ var newsCache = cache.New(5*time.Hour, time.Hour)
 //	@param args
 //	@return err
 func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()
@@ -157,7 +158,7 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 //	@param args
 //	@return err
 func MorningHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()

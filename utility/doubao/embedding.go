@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 	"go.opentelemetry.io/otel/attribute"
@@ -32,7 +32,7 @@ var client = arkruntime.NewClientWithApiKey(DOUBAO_API_KEY)
 //	@return embedded
 //	@return err
 func EmbeddingText(ctx context.Context, input string) (embedded []float32, tokenUsage model.Usage, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("input").String(input))
 	defer span.End()
 
@@ -55,7 +55,7 @@ func EmbeddingText(ctx context.Context, input string) (embedded []float32, token
 }
 
 func SingleChat(ctx context.Context, sysPrompt, userPrompt string) (string, error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	span.SetAttributes(attribute.Key("user_prompt").String(userPrompt))
 	defer span.End()
@@ -86,7 +86,7 @@ func SingleChat(ctx context.Context, sysPrompt, userPrompt string) (string, erro
 }
 
 func SingleChatPrompt(ctx context.Context, prompt string) (string, error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("prompt").String(prompt))
 	defer span.End()
 
@@ -110,7 +110,7 @@ func SingleChatPrompt(ctx context.Context, prompt string) (string, error) {
 }
 
 func SingleChatModel(ctx context.Context, sysPrompt, userPrompt, modelID string) (string, error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	span.SetAttributes(attribute.Key("user_prompt").String(userPrompt))
 	defer span.End()
@@ -146,7 +146,7 @@ type ModelStreamRespReasoning struct {
 }
 
 func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string) (iter.Seq[*ModelStreamRespReasoning], error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	defer span.End()
 	req := model.CreateChatCompletionRequest{

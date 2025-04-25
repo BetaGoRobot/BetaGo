@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/opensearch-project/opensearch-go/opensearchutil"
 	"github.com/opensearch-project/opensearch-go/v4"
 	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
@@ -41,7 +41,7 @@ func OpenSearchClient() *opensearchapi.Client {
 }
 
 func InsertData(ctx context.Context, index string, id string, data any) error {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	req := opensearchapi.IndexReq{
@@ -55,7 +55,7 @@ func InsertData(ctx context.Context, index string, id string, data any) error {
 }
 
 func SearchData(ctx context.Context, index string, data any) (*opensearchapi.SearchResp, error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	req := &opensearchapi.SearchReq{

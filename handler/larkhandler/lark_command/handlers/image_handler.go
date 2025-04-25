@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/copywriting"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -30,7 +30,7 @@ import (
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:13
 func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 
@@ -112,7 +112,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 //	@param args ...string
 //	@return error
 func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 	argMap, _ := parseArgs(args...)
@@ -154,7 +154,7 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 //	@param args ...string
 //	@return error
 func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) (err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 	defer span.RecordError(err)

@@ -17,6 +17,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 
 	"github.com/lonelyevil/kook"
 	"github.com/patrickmn/go-cache"
@@ -69,7 +70,7 @@ func DailyGetSen(TargetID string) {
 // DailyRecommand 每日发送歌曲推荐
 func DailyRecommand(TargetID string) {
 	defer utility.CollectPanic(context.Background(), nil, TargetID, "", "")
-	_, span := otel.BetaGoOtelTracer.Start(context.Background(), utility.GetCurrentFunc())
+	_, span := otel.BetaGoOtelTracer.Start(context.Background(), reflecting.GetCurrentFunc())
 	defer span.End()
 	res, err := neteaseapi.NetEaseGCtx.GetNewRecommendMusic()
 	if err != nil {

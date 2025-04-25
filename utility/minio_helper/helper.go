@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
-	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -229,37 +229,37 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	if m.expiration != nil {
 		opts.Expires = *m.expiration
 	}
-	u, err = m.tryGetFile()
+	u, err = m.TryGetFile()
 	if err != nil {
 		m.addTraceCached(false)
 		if m.inputTransFunc != nil {
 			m.inputTransFunc(m)
 		}
 		log.ZapLogger.Warn("tryGetFile failed", zaplog.Error(err))
-		err = m.uploadFile(opts)
+		err = m.UploadFile(opts)
 		if err != nil {
 			log.ZapLogger.Error("uploadFile failed", zaplog.Error(err))
 			return
 		}
-		return m.presignURL()
+		return m.PresignURL()
 	}
 	m.addTraceCached(true)
 	return
 }
 
 // 此函数会修改入参，不返回err外的值
-func (m *MinioManager) tryGetFile() (shareURL *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
+func (m *MinioManager) TryGetFile() (shareURL *url.URL, err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(m, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	if MinioCheckFileExists(ctx, m.bucketName, m.objName) {
-		return m.presignURL()
+		return m.PresignURL()
 	}
 	return nil, errors.New("file not exists")
 }
 
-func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
+func (m *MinioManager) UploadFile(opts minio.PutObjectOptions) (err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(m, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	err = minioUploadReader(ctx, m.bucketName, m.file, m.objName, opts)
@@ -270,8 +270,8 @@ func (m *MinioManager) uploadFile(opts minio.PutObjectOptions) (err error) {
 	return
 }
 
-func (m *MinioManager) presignURL() (u *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(m, utility.GetCurrentFunc())
+func (m *MinioManager) PresignURL() (u *url.URL, err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(m, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	u, err = presignObjInner(ctx, m.bucketName, m.objName)

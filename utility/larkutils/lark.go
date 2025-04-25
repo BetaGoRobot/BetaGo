@@ -17,6 +17,7 @@ import (
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/kevinmatthe/zaplog"
 	lark "github.com/larksuite/oapi-sdk-go/v3"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -25,8 +26,8 @@ import (
 
 var LarkClient *lark.Client = lark.NewClient(env.LarkAppID, env.LarkAppSecret)
 
-func getAndResizePicFromURL(ctx context.Context, imageURL string) (res []byte, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+func GetAndResizePicFromURL(ctx context.Context, imageURL string) (res []byte, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
 	defer span.End()
 
@@ -55,7 +56,7 @@ func checkDBCache(ctx context.Context, musicID string) (imgKey string, err error
 }
 
 func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS bool) (key string, ossURL string, err error) { // also minio
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
 	defer span.End()
 
@@ -64,7 +65,7 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 		log.ZapLogger.Warn("get lark img from db error", zaplog.Error(err))
 		// db 缓存未找到，准备resize上传
 		var picData []byte
-		picData, err = getAndResizePicFromURL(ctx, imageURL)
+		picData, err = GetAndResizePicFromURL(ctx, imageURL)
 		if err != nil {
 			log.ZapLogger.Error("resize pic from url error", zaplog.Error(err))
 			return
@@ -104,7 +105,7 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 }
 
 func Upload2Lark(ctx context.Context, musicID string, bodyReader io.ReadCloser) (imgKey string, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	req := larkim.NewCreateImageReqBuilder().
@@ -137,7 +138,7 @@ func Upload2Lark(ctx context.Context, musicID string, bodyReader io.ReadCloser) 
 }
 
 func UploadPicture2LarkReader(ctx context.Context, picture io.Reader) (imgKey string) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	req := larkim.NewCreateImageReqBuilder().
@@ -163,10 +164,10 @@ func UploadPicture2LarkReader(ctx context.Context, picture io.Reader) (imgKey st
 }
 
 func UploadPicture2Lark(ctx context.Context, URL string) (imgKey string) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
-	picData, err := getAndResizePicFromURL(ctx, URL)
+	picData, err := GetAndResizePicFromURL(ctx, URL)
 	if err != nil {
 		log.ZapLogger.Error("resize pic from url error", zaplog.Error(err))
 	}
@@ -216,7 +217,7 @@ func UploadPicBatch(ctx context.Context, sourceURLIDs map[string]int) chan [2]st
 }
 
 func GetUserMapFromChatID(ctx context.Context, chatID string) (memberMap map[string]*larkim.ListMember, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	memberMap = make(map[string]*larkim.ListMember)
@@ -249,7 +250,7 @@ func GetUserMapFromChatID(ctx context.Context, chatID string) (memberMap map[str
 }
 
 func GetUserMemberFromChat(ctx context.Context, chatID, openID string) (member *larkim.ListMember, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	memberMap, err := GetUserMapFromChatID(ctx, chatID)
@@ -260,7 +261,7 @@ func GetUserMemberFromChat(ctx context.Context, chatID, openID string) (member *
 }
 
 func GetChatName(ctx context.Context, chatID string) (chatName string) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	resp, err := LarkClient.Im.V1.Chat.Get(ctx, larkim.NewGetChatReqBuilder().ChatId(chatID).Build())
@@ -276,7 +277,7 @@ func GetChatName(ctx context.Context, chatID string) (chatName string) {
 }
 
 func GetChatIDFromMsgID(ctx context.Context, msgID string) (chatID string, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	resp := GetMsgFullByID(ctx, msgID)

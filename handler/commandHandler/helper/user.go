@@ -7,6 +7,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/lonelyevil/kook"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -17,7 +18,7 @@ import (
 //	@param guildID
 //	@return err
 func GetUserInfoHandler(ctx context.Context, targetID, quoteID, authorID string, guildID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()

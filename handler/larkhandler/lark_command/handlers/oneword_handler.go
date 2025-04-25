@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/BetaGoRobot/BetaGo/handler/commandHandler/hitokoto"
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
@@ -34,7 +34,7 @@ type RespBody struct {
 }
 
 func OneWordHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	oneWordArgs := []string{}

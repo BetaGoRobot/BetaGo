@@ -11,6 +11,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
@@ -29,7 +30,7 @@ func larkDeferFunc(ctx context.Context, err error, event *larkim.P2MessageReceiv
 
 func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData) {
 	go func() {
-		ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+		ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer span.End()
 
 		chatID, err := larkutils.GetChatIDFromMsgID(ctx, *event.Event.Message.MessageId)

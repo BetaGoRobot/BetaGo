@@ -6,6 +6,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"go.opentelemetry.io/otel/attribute"
 	"gorm.io/gorm/clause"
 )
@@ -21,7 +22,7 @@ const (
 )
 
 func GetCopyWritings(ctx context.Context, chatID, endPoint string) []string {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	// custom copy writing
@@ -61,7 +62,7 @@ func GetCopyWritings(ctx context.Context, chatID, endPoint string) []string {
 }
 
 func GetSampleCopyWritings(ctx context.Context, chatID, endPoint string) string {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	return utility.SampleSlice(GetCopyWritings(ctx, chatID, endPoint))

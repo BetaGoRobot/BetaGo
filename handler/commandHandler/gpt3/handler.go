@@ -13,6 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
@@ -59,7 +60,7 @@ func init() {
 //	@param args
 //	@return err
 func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	// defer span.RecordError(err)
 	defer span.End()
@@ -125,7 +126,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 	}
 	GPTAsyncMap["GPTTrace:"+spanID] = AsyncMapValue{authorID, &g.StopChan}
 	go func(ctx context.Context, curMsgID, quoteID, spanID string, cardMessageStruct kook.CardMessageSection) {
-		ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+		ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer span.End()
 		defer delete(GPTAsyncMap, "GPTTrace:"+spanID)
 
@@ -215,7 +216,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 //	@param args
 //	@return err
 func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID, msgID, msg string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("msg").String(msg))
 	// defer span.RecordError(err)
 	defer span.End()
@@ -268,7 +269,7 @@ func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID,
 	}
 	GPTAsyncMap["GPTTrace:"+spanID] = AsyncMapValue{authorID, &g.StopChan}
 	go func(ctx context.Context, curMsgID, quoteID, spanID string, cardMessageDupStruct kook.CardMessageSection) {
-		ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+		ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer span.End()
 		defer delete(GPTAsyncMap, "GPTTrace:"+spanID)
 
@@ -426,7 +427,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 // @param authorID 发送者ID
 // @return err 错误信息
 func ClientHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()

@@ -15,12 +15,12 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/BetaGo/consts/env"
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	"github.com/kevinmatthe/zaplog"
 )
@@ -30,7 +30,7 @@ import (
 //	@receiver ctx
 //	@return error
 func (neteaseCtx *NetEaseContext) RefreshLogin(ctx context.Context) error {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("RefreshLogin...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
@@ -66,8 +66,8 @@ func (neteaseCtx *NetEaseContext) RefreshLogin(ctx context.Context) error {
 	return err
 }
 
-func (neteaseCtx *NetEaseContext) getUniKey(ctx context.Context) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+func (neteaseCtx *NetEaseContext) GetUniKey(ctx context.Context) (err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("getUniKey...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
@@ -87,8 +87,8 @@ func (neteaseCtx *NetEaseContext) getUniKey(ctx context.Context) (err error) {
 	return
 }
 
-func (neteaseCtx *NetEaseContext) getQRBase64(ctx context.Context) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+func (neteaseCtx *NetEaseContext) GetQRBase64(ctx context.Context) (err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("getQRBase64...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
@@ -167,13 +167,13 @@ func (neteaseCtx *NetEaseContext) checkQRStatus(ctx context.Context) (err error)
 //	@receiver ctx
 //	@return err
 func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	log.ZapLogger.Info("LoginNetEaseQR...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
-	neteaseCtx.getUniKey(ctx)
+	neteaseCtx.GetUniKey(ctx)
 
-	neteaseCtx.getQRBase64(ctx)
+	neteaseCtx.GetQRBase64(ctx)
 	linkURL, err := miniohelper.Client().
 		SetContext(ctx).
 		SetNeedAKA(false).
@@ -194,7 +194,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 }
 
 func qrImgReadCloser(ctx context.Context, imgBase64 string) (r io.ReadCloser) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	i := strings.Index(imgBase64, ",") // string is img/png;base64,xxx
@@ -208,7 +208,7 @@ func qrImgReadCloser(ctx context.Context, imgBase64 string) (r io.ReadCloser) {
 //	@receiver ctx
 //	@return err
 func (neteaseCtx *NetEaseContext) LoginNetEase(ctx context.Context) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	log.ZapLogger.Info("LoginNetEase...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
@@ -254,7 +254,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEase(ctx context.Context) (err error) 
 //	@receiver ctx
 //	@return bool
 func (neteaseCtx *NetEaseContext) CheckIfLogin(ctx context.Context) bool {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	log.ZapLogger.Info("ChekIfLogin...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
@@ -287,7 +287,7 @@ func (neteaseCtx *NetEaseContext) CheckIfLogin(ctx context.Context) bool {
 //
 //	@receiver ctx
 func (neteaseCtx *NetEaseContext) TryGetLastCookie(ctx context.Context) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	f, err := os.Open("/data/last_cookie.json")
@@ -317,7 +317,7 @@ func (neteaseCtx *NetEaseContext) TryGetLastCookie(ctx context.Context) {
 //
 //	@receiver ctx
 func (neteaseCtx *NetEaseContext) SaveCookie(ctx context.Context) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	if neteaseCtx.cookies == nil && len(neteaseCtx.cookies) == 0 {
 		return

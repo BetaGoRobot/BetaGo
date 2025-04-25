@@ -7,8 +7,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	"github.com/mdaverde/jsonpath"
 	"go.opentelemetry.io/otel/attribute"
@@ -248,7 +248,7 @@ var (
 )
 
 func GenFullLyricsCard(ctx context.Context, title, artist, leftLyrics, rightLyrics string) string {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	var jsonData interface{}
@@ -273,7 +273,7 @@ func GenFullLyricsCard(ctx context.Context, title, artist, leftLyrics, rightLyri
 }
 
 func GenerateMusicCardByStruct(ctx context.Context, imgKey, title, artist, playURL, lyrics, musicID string) string {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
 

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	jsoniter "github.com/json-iterator/go"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -49,7 +49,7 @@ func init() {
 //	@return result
 //	@return err
 func (qqCtx *QQmusicContext) SearchMusic(ctx context.Context, keywords []string) (result []SearchMusicRes, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("keywords").StringSlice(keywords))
 	defer span.End()
 	resp, err := requests.
@@ -101,7 +101,7 @@ func (qqCtx *QQmusicContext) SearchMusic(ctx context.Context, keywords []string)
 //	@return musicURL
 //	@return err
 func (qqCtx *QQmusicContext) GetMusicURLByID(ctx context.Context, mid, mediaMid string) (musicURL string, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	resp, err := requests.
 		ReqTimestamp().

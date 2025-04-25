@@ -13,6 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/redis"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/lonelyevil/kook"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -23,7 +24,7 @@ import (
 //	@param quoteID
 //	@return err
 func ShowAdminHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()
@@ -107,7 +108,7 @@ func ShowAdminHandler(ctx context.Context, targetID, quoteID, authorID string, a
 //	@param TargetID
 //	@return err PASS
 func AddAdminHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()
@@ -206,7 +207,7 @@ func AddAdminHandler(ctx context.Context, targetID, quoteID, authorID string, ar
 //	@param TargetID
 //	@return err PASS
 func RemoveAdminHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()
@@ -296,7 +297,7 @@ func RemoveAdminHandler(ctx context.Context, targetID, quoteID, authorID string,
 //	@param args
 //	@return err
 func DeleteAllMessageHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()
@@ -371,7 +372,7 @@ func DeleteAllMessageHandler(ctx context.Context, targetID, quoteID, authorID st
 //	@param args
 //	@return err
 func ReconnectHandler(ctx context.Context, targetID, quoteID, authorID string, args ...string) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("targetID").String(targetID), attribute.Key("quoteID").String(quoteID), attribute.Key("authorID").String(authorID), attribute.Key("args").StringSlice(args))
 	defer span.RecordError(err)
 	defer span.End()
