@@ -31,6 +31,8 @@ func ReplyCard(ctx context.Context, cardContent *TemplateCardContent, msgID, suf
 				larkim.NewReplyMessageReqBodyBuilder().
 					MsgType(larkim.MsgTypeInteractive).
 					Content(cardContent.String()).
+					Uuid(msgID+suffix).
+					ReplyInThread(replyInThread).
 					Build(),
 			).
 			Build(),
@@ -69,6 +71,8 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 				larkim.NewReplyMessageReqBodyBuilder().
 					MsgType(larkim.MsgTypeInteractive).
 					Content(cardContent.String()).
+					Uuid(msgID+suffix).
+					ReplyInThread(replyInThread).
 					Build(),
 			).
 			Build(),
