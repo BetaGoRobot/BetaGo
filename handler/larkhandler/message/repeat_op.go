@@ -133,27 +133,28 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 			if err != nil {
 				log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 			}
-		}
-		repeatReq := larkim.NewCreateMessageReqBuilder().
-			Body(
-				larkim.NewCreateMessageReqBodyBuilder().
-					Content(*event.Event.Message.Content).
-					ReceiveId(*event.Event.Message.ChatId).
-					MsgType(*event.Event.Message.MessageType).
-					Build(),
-			).
-			ReceiveIdType(larkim.ReceiveIdTypeChatId).
-			Build()
-		resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, repeatReq)
-		if err != nil {
-			return err
-		}
-		if resp.StatusCode != 200 {
-			if strings.Contains(resp.Error(), "invalid image_key") {
-				log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
-				return nil
+		} else {
+			repeatReq := larkim.NewCreateMessageReqBuilder().
+				Body(
+					larkim.NewCreateMessageReqBodyBuilder().
+						Content(*event.Event.Message.Content).
+						ReceiveId(*event.Event.Message.ChatId).
+						MsgType(*event.Event.Message.MessageType).
+						Build(),
+				).
+				ReceiveIdType(larkim.ReceiveIdTypeChatId).
+				Build()
+			resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, repeatReq)
+			if err != nil {
+				return err
 			}
-			return errors.New(resp.Error())
+			if resp.StatusCode != 200 {
+				if strings.Contains(resp.Error(), "invalid image_key") {
+					log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+					return nil
+				}
+				return errors.New(resp.Error())
+			}
 		}
 	}
 	return
