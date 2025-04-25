@@ -247,7 +247,7 @@ func deleteImage(ctx context.Context, msgID, chatID, imgKey, msgType string) err
 			return result.Error
 		} else {
 			if result.RowsAffected == 0 {
-				return fmt.Errorf("img_key %s not exists\\n", imgKey)
+				return fmt.Errorf("img_key %s not exists\n", imgKey)
 			}
 		}
 	case "sticker":
@@ -257,7 +257,7 @@ func deleteImage(ctx context.Context, msgID, chatID, imgKey, msgType string) err
 			return result.Error
 		} else {
 			if result.RowsAffected == 0 {
-				return fmt.Errorf("img_key %s not exists\\n", imgKey)
+				return fmt.Errorf("img_key %s not exists\n", imgKey)
 			}
 		}
 	default:
