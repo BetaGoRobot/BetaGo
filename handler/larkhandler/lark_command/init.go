@@ -30,6 +30,9 @@ func init() {
 				).
 				AddSubCommand(
 					newCmd("revert", handlers.DebugRevertHandler),
+				).
+				AddSubCommand(
+					newCmd("repeat", handlers.DebugRepeatHandler),
 				),
 		).
 		AddSubCommand(

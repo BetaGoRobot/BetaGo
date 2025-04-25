@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/kevinmatthe/zaplog"
 	"github.com/pkg/errors"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
@@ -14,7 +15,6 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
-	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -97,38 +97,63 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 	}
 
 	if utility.Probability(float64(realRate) / 100) {
-		// sendMsg
-		textMsgBuilder := larkutils.NewTextMsgBuilder()
+		msgType := strings.ToLower(*event.Event.Message.MessageType)
+		if msgType == "text" {
+			// sendMsg
+			textMsgBuilder := larkutils.NewTextMsgBuilder()
 
-		// rebuild at msg
-		subStrings := []string{}
-		for _, mention := range event.Event.Message.Mentions {
-			subStrings = append(subStrings, *mention.Key)
-		}
-		subMsgList := RebuildAtMsg(msg, subStrings)
-		mentionsMap := make(map[string]*larkim.MentionEvent)
-		for _, mention := range event.Event.Message.Mentions {
-			mentionsMap[*mention.Key] = mention
-		}
-		for index, subMsg := range subMsgList {
-			if mentionEvent, ok := mentionsMap[subMsg]; ok {
-				textMsgBuilder.AtUser(*mentionEvent.Id.UserId, *mentionEvent.Name)
-			} else {
-				textMsgBuilder.Text(subMsg)
+			// rebuild at msg
+			subStrings := []string{}
+			for _, mention := range event.Event.Message.Mentions {
+				subStrings = append(subStrings, *mention.Key)
 			}
-			if index != len(subMsgList)-1 {
-				textMsgBuilder.Text(" ")
+			subMsgList := RebuildAtMsg(msg, subStrings)
+
+			mentionsMap := make(map[string]*larkim.MentionEvent)
+			for _, mention := range event.Event.Message.Mentions {
+				mentionsMap[*mention.Key] = mention
+			}
+			for index, subMsg := range subMsgList {
+				if mentionEvent, ok := mentionsMap[subMsg]; ok {
+					textMsgBuilder.AtUser(*mentionEvent.Id.UserId, *mentionEvent.Name)
+				} else {
+					textMsgBuilder.Text(subMsg)
+				}
+				if index != len(subMsgList)-1 {
+					textMsgBuilder.Text(" ")
+				}
+			}
+			textMsg := textMsgBuilder.Build()
+			err = larkutils.CreateMsgTextRaw(
+				ctx,
+				textMsg,
+				*event.Event.Message.MessageId,
+				*event.Event.Message.ChatId,
+			)
+			if err != nil {
+				log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 			}
 		}
-		textMsg := textMsgBuilder.Build()
-		err := larkutils.CreateMsgTextRaw(
-			ctx,
-			textMsg,
-			*event.Event.Message.MessageId,
-			*event.Event.Message.ChatId,
-		)
+		repeatReq := larkim.NewCreateMessageReqBuilder().
+			Body(
+				larkim.NewCreateMessageReqBodyBuilder().
+					Content(*event.Event.Message.Content).
+					ReceiveId(*event.Event.Message.ChatId).
+					MsgType(*event.Event.Message.MessageType).
+					Build(),
+			).
+			ReceiveIdType(larkim.ReceiveIdTypeChatId).
+			Build()
+		resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, repeatReq)
 		if err != nil {
-			log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+			return err
+		}
+		if resp.StatusCode != 200 {
+			if strings.Contains(resp.Error(), "invalid image_key") {
+				log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				return nil
+			}
+			return errors.New(resp.Error())
 		}
 	}
 	return

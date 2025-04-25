@@ -129,7 +129,12 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 	defer span.End()
 
 	if data.Event.Message.ThreadId != nil { // 话题模式，找到所有的traceID
-		resp, err := larkutils.LarkClient.Im.Message.List(ctx, larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
+		resp, err := larkutils.LarkClient.Im.Message.List(ctx,
+			larkim.NewListMessageReqBuilder().
+				ContainerId(*data.Event.Message.ThreadId).
+				ContainerIdType("thread").
+				Build(),
+		)
 		if err != nil {
 			return err
 		}
@@ -205,6 +210,49 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 			return err
 		}
 		if resp.Code != 0 {
+			return errors.New(resp.Error())
+		}
+	}
+	return nil
+}
+
+func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
+	defer span.End()
+
+	if data.Event.Message.ThreadId != nil {
+		return nil
+	} else if data.Event.Message.ParentId != nil {
+		respMsg := larkutils.GetMsgFullByID(ctx, *data.Event.Message.ParentId)
+		msg := respMsg.Data.Items[0]
+		if msg == nil {
+			return errors.New("No parent message found")
+		}
+		if msg.Sender.Id == nil {
+			return errors.New("Parent message is not sent by bot")
+		}
+		repeatReq := larkim.NewCreateMessageReqBuilder().
+			Body(
+				larkim.NewCreateMessageReqBodyBuilder().
+					MsgType(*msg.MsgType).
+					Content(
+						*msg.Body.Content,
+					).
+					ReceiveId(*msg.ChatId).
+					Build(),
+			).
+			ReceiveIdType(larkim.ReceiveIdTypeChatId).
+			Build()
+		resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, repeatReq)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != 200 {
+			if strings.Contains(resp.Error(), "invalid image_key") {
+				log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				return nil
+			}
 			return errors.New(resp.Error())
 		}
 	}

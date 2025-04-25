@@ -16,6 +16,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/bytedance/sonic"
 	"github.com/golang/freetype/truetype"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
@@ -93,7 +94,7 @@ func GetCurrentTime() (localTime string) {
 }
 
 // ForDebug 用于测试
-func ForDebug(test ...interface{}) {
+func ForDebug(test ...any) {
 	return
 }
 
@@ -182,11 +183,11 @@ func GetChannnelInfo(channelID string) (channelInfo *kook.Channel, err error) {
 //
 //	@param obj
 //	@return map
-func Struct2Map(obj interface{}) map[string]interface{} {
+func Struct2Map(obj any) map[string]any {
 	t := reflect.TypeOf(obj)
 	v := reflect.ValueOf(obj)
 
-	data := make(map[string]interface{})
+	data := make(map[string]any)
 	for i := 0; i < t.NumField(); i++ {
 		if timestamp, ok := v.Field(i).Interface().(kook.MilliTimeStamp); ok {
 			data[t.Field(i).Name] = time.Unix(int64(timestamp)/1000, 0).Format("2006-01-02 15:04:05")
@@ -198,12 +199,12 @@ func Struct2Map(obj interface{}) map[string]interface{} {
 }
 
 // BuildCardMessageCols 创建卡片消息的列
-func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (res []interface{}, err error) {
-	sectionElements := []interface{}{
+func BuildCardMessageCols(titleK, titleV string, kvMap map[string]any) (res []any, err error) {
+	sectionElements := []any{
 		kook.CardMessageSection{
 			Text: kook.CardMessageParagraph{
 				Cols: 2,
-				Fields: []interface{}{
+				Fields: []any{
 					kook.CardMessageElementKMarkdown{
 						Content: titleK,
 					},
@@ -224,7 +225,7 @@ func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (
 					Mode: kook.CardMessageSectionModeRight,
 					Text: kook.CardMessageParagraph{
 						Cols: 2,
-						Fields: []interface{}{
+						Fields: []any{
 							kook.CardMessageElementKMarkdown{
 								Content: "**" + k + "**",
 							},
@@ -242,7 +243,7 @@ func BuildCardMessageCols(titleK, titleV string, kvMap map[string]interface{}) (
 				kook.CardMessageSection{
 					Text: kook.CardMessageParagraph{
 						Cols: 2,
-						Fields: []interface{}{
+						Fields: []any{
 							kook.CardMessageElementKMarkdown{
 								Content: "**" + k + "**",
 							},
@@ -297,7 +298,7 @@ func Reconnect() (err error) {
 // GetFuncFromInstance 1
 //
 //	@return string
-func GetFuncFromInstance(ctxFunc interface{}) string {
+func GetFuncFromInstance(ctxFunc any) string {
 	r := strings.Split(runtime.FuncForPC(reflect.ValueOf(ctxFunc).Pointer()).Name(), "/")
 	return r[len(r)-1]
 }
@@ -320,12 +321,12 @@ func GetCurrentFunc() string {
 // BuildCardMessage 1
 //
 //	@return string
-func BuildCardMessage(theme, size, title, quoteID string, span interface{}, modules ...interface{}) (cardMessageStr string, err error) {
-	var inputCommand interface{}
+func BuildCardMessage(theme, size, title, quoteID string, span any, modules ...any) (cardMessageStr string, err error) {
+	var inputCommand any
 	cardMessageCard := &kook.CardMessageCard{
 		Theme:   kook.CardTheme(theme),
 		Size:    "lg",
-		Modules: make([]interface{}, 0),
+		Modules: make([]any, 0),
 	}
 	cardMessage := kook.CardMessage{cardMessageCard}
 	if quoteID != "" {
@@ -351,7 +352,7 @@ func BuildCardMessage(theme, size, title, quoteID string, span interface{}, modu
 			inputCommand = prevCardMessage[0].Modules
 		}
 	}
-	var titleModule interface{}
+	var titleModule any
 	if title != "" {
 		titleModule = &kook.CardMessageHeader{
 			Text: kook.CardMessageElementText{
@@ -361,7 +362,7 @@ func BuildCardMessage(theme, size, title, quoteID string, span interface{}, modu
 		}
 	}
 
-	var traceModule interface{}
+	var traceModule any
 	if span != nil {
 		if spanTrace, ok := span.(trace.Span); ok {
 			traceModule = GenerateTraceButtonSection(spanTrace.SpanContext().TraceID().String())
@@ -369,7 +370,7 @@ func BuildCardMessage(theme, size, title, quoteID string, span interface{}, modu
 			traceModule = GenerateTraceButtonSection(spanStr)
 		}
 	}
-	resModules := make([]interface{}, 0)
+	resModules := make([]any, 0)
 	if inputCommand != nil {
 		resModules = append(resModules,
 			kook.CardMessageSection{
@@ -377,8 +378,8 @@ func BuildCardMessage(theme, size, title, quoteID string, span interface{}, modu
 					Content: "你的输入：",
 				},
 			})
-		if _, ok := inputCommand.([]interface{}); ok {
-			resModules = append(resModules, inputCommand.([]interface{})...)
+		if _, ok := inputCommand.([]any); ok {
+			resModules = append(resModules, inputCommand.([]any)...)
 		} else {
 			resModules = append(resModules, inputCommand)
 		}
@@ -394,4 +395,39 @@ func BuildCardMessage(theme, size, title, quoteID string, span interface{}, modu
 	cardMessageCard.Modules = resModules
 
 	return cardMessage.BuildMessage()
+}
+
+func RemovePostStyle(content string) (res string) {
+	m := make(map[string]any)
+	err := sonic.UnmarshalString(content, &m)
+	if err != nil {
+		return content
+	}
+	s, err := sonic.MarshalString(map[string]any{"zh_cn": removeStyleKey(m)})
+	if err != nil {
+		return content
+	}
+	return s
+}
+
+// removeStyleKey 递归地从 map 或 slice 中删除 key 为 "style" 的键
+func removeStyleKey(data any) any {
+	switch v := data.(type) {
+	case map[string]any:
+		for key, val := range v {
+			if key == "style" {
+				delete(v, key)
+			} else {
+				v[key] = removeStyleKey(val)
+			}
+		}
+		return v
+	case []any:
+		for i, item := range v {
+			v[i] = removeStyleKey(item)
+		}
+		return v
+	default:
+		return data
+	}
 }
