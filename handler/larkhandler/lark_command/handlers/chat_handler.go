@@ -74,10 +74,14 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 					Build(),
 			).
 			Build()
-		_, err = larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
+		resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
 		if err != nil {
 			return err
 		}
+		if resp.StatusCode != 200 {
+			return errors.New(resp.Error())
+		}
+		larkutils.RecordMessage2Opensearch(ctx, resp)
 		err, lastIdx := updateCardFunc(ctx, res, cardID)
 		if err != nil {
 			return err

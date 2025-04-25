@@ -155,6 +155,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 				}
 				return errors.New(resp.Error())
 			}
+			larkutils.RecordMessage2Opensearch(ctx, resp)
 		}
 	}
 	return

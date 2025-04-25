@@ -255,6 +255,7 @@ func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 			}
 			return errors.New(resp.Error())
 		}
+		larkutils.RecordMessage2Opensearch(ctx, resp)
 	}
 	return nil
 }
