@@ -47,7 +47,7 @@ func DebugGetIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 		return errors.New("No parent Msg Quoted")
 	}
 
-	err := larkutils.ReplyMsgText(ctx, getIDText+*data.Event.Message.ParentId, *data.Event.Message.MessageId, "_getID", false)
+	err := larkutils.ReplyCardText(ctx, getIDText+*data.Event.Message.ParentId, *data.Event.Message.MessageId, "_getID", false)
 	if err != nil {
 		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		return err
@@ -69,7 +69,7 @@ func DebugGetGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1
 	defer span.End()
 	chatID := data.Event.Message.ChatId
 	if chatID != nil {
-		err := larkutils.ReplyMsgText(ctx, getGroupIDText+*chatID, *data.Event.Message.MessageId, "_getGroupID", false)
+		err := larkutils.ReplyCardText(ctx, getGroupIDText+*chatID, *data.Event.Message.MessageId, "_getGroupID", false)
 		if err != nil {
 			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 			return err
