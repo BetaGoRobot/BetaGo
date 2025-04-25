@@ -44,7 +44,7 @@ require (
 	github.com/spyzhov/ajson v0.9.6
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.64
 	github.com/valyala/fasthttp v1.61.0
-	github.com/volcengine/volcengine-go-sdk v1.1.1
+	github.com/volcengine/volcengine-go-sdk v1.1.5
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 	go.opentelemetry.io/otel v1.35.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.35.0
