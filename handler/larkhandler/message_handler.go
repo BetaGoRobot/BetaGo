@@ -42,8 +42,7 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 	if *event.Event.Sender.SenderId.OpenId == consts.BotOpenID {
 		return nil
 	}
-	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).RunStages()
-	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).RunParallelStages()
+	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).Run()
 
 	log.ZapLogger.Info(larkcore.Prettify(event))
 	return nil
@@ -59,6 +58,6 @@ func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReaction
 	defer larkutils.RecoverMsg(ctx, *event.Event.MessageId)
 	defer span.End()
 
-	go reaction.Handler.Clean().WithCtx(ctx).WithEvent(event).RunParallelStages()
+	go reaction.Handler.Clean().WithCtx(ctx).WithEvent(event).Run()
 	return nil
 }

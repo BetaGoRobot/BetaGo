@@ -138,9 +138,9 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	).
 		AddVariable("title1", "Type").
 		AddVariable("title2", "Picture").
-		AddVariable("table_raw_array_1", lines).String()
+		AddVariable("table_raw_array_1", lines)
 
-	err := larkutils.ReplyMsgRawContentType(ctx, *data.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_replyGet", false)
+	err := larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)
 	if err != nil {
 		return err
 	}

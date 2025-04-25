@@ -29,7 +29,7 @@ func MusicItemTransAlbum(album *neteaseapi.Album) *neteaseapi.SearchMusicItem {
 	}
 }
 
-func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType) (content string, err error) {
+func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType) (content *larkutils.TemplateCardContent, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
@@ -99,7 +99,7 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 		ctx,
 		template.TemplateID,
 		template.TemplateVersion,
-	).AddVariable("object_list_1", lines).String()
+	).AddVariable("object_list_1", lines)
 
 	return
 }

@@ -23,7 +23,6 @@ func MuteHandler(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...
 		res              string
 		muteTimeDuration time.Duration
 	)
-	textMsgBuilder := larkutils.NewTextMsgBuilder()
 	argMap, _ := parseArgs(args...)
 	if argMap["cancel"] != "" {
 		// 取消禁言
@@ -47,7 +46,7 @@ func MuteHandler(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...
 		}
 		res = "已启用" + muteTimeDuration.String() + "禁言"
 	}
-	err = larkutils.ReplyMsgTextRaw(ctx, textMsgBuilder.Text(res).Build(), *event.Event.Message.MessageId, "_mute", true)
+	err = larkutils.ReplyCardText(ctx, res, *event.Event.Message.MessageId, "_mute", true)
 	if err != nil {
 		return err
 	}

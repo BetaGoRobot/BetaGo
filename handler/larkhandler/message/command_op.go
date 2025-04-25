@@ -69,15 +69,16 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 		}
 		err = larkcommand.LarkRootCommand.Execute(ctx, event, commands)
 		if err != nil {
+			span.RecordError(err)
 			if errors.Is(err, consts.ErrCommandNotFound) {
 				meta.IsCommand = false
 				if larkutils.IsMentioned(event.Event.Message.Mentions) {
-					larkutils.ReplyMsgText(ctx, err.Error(), *event.Event.Message.MessageId, "_OpErr", false)
+					larkutils.ReplyCardText(ctx, err.Error(), *event.Event.Message.MessageId, "_OpErr", false)
 					return
 				}
 			} else {
 				text := fmt.Sprintf("%v\n[Jaeger Trace](https://jaeger.kmhomelab.cn/trace/%s)", err.Error(), span.SpanContext().TraceID().String())
-				larkutils.ReplyMsgText(ctx, text, *event.Event.Message.MessageId, "_OpErr", false)
+				larkutils.ReplyCardText(ctx, text, *event.Event.Message.MessageId, "_OpErr", false)
 				log.ZapLogger.Error("CommandOperator", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 				return
 			}

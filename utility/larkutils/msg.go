@@ -176,7 +176,7 @@ func IsCommand(ctx context.Context, content string) bool {
 	return matched
 }
 
-func AddTraceLog2DB(ctx context.Context, msgID string) {
+func AddReaction2DB(ctx context.Context, msgID string) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
@@ -190,11 +190,6 @@ func AddTraceLog2DB(ctx context.Context, msgID string) {
 }
 
 func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix string, replyInThread bool) (err error) {
-	_, err = ReplyMsgRawContentTypeInner(ctx, msgID, msgType, content, suffix, replyInThread, true)
-	return err
-}
-
-func ReplyMsgRawContentTypeInner(ctx context.Context, msgID, msgType, content, suffix string, replyInThread, needRecord bool) (resp *larkim.ReplyMessageResp, err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("msgType").String(msgType), attribute.Key("content").String(content))
 	defer span.End()
@@ -202,27 +197,25 @@ func ReplyMsgRawContentTypeInner(ctx context.Context, msgID, msgType, content, s
 	if len(uuid) > 50 {
 		uuid = uuid[:50]
 	}
+
 	req := larkim.NewReplyMessageReqBuilder().Body(
 		larkim.NewReplyMessageReqBodyBuilder().
 			MsgType(msgType).
-			Content(content).
+			Content(NewTextMsgBuilder().Text(content).Build()).
 			ReplyInThread(replyInThread).
 			Uuid(uuid).Build(),
 	).MessageId(msgID).Build()
 
-	resp, err = LarkClient.Im.V1.Message.Reply(ctx, req)
+	resp, err := LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
 		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err))
-		return nil, err
+		return err
 	}
 	if resp.CodeError.Code != 0 {
 		log.ZapLogger.Error("ReplyMessage", zaplog.String("Error", larkcore.Prettify(resp.CodeError.Err)))
-		return nil, errors.New(resp.Error())
+		return errors.New(resp.Error())
 	}
-	if needRecord {
-		AddTraceLog2DB(ctx, *resp.Data.MessageId)
-		RecordReplyMessage2Opensearch(ctx, resp)
-	}
+	RecordReplyMessage2Opensearch(ctx, resp, content)
 	return
 }
 
@@ -249,27 +242,19 @@ func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(text))
 	defer span.End()
-	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, NewTextMsgBuilder().Text(text).Build(), suffix, replyInThread)
-}
-
-// ReplyMsgTextRaw ReplyMsgTextRaw 注意：必须传入已经Build的文本
-//
-//	@param ctx
-//	@param text
-//	@param msgID
-func ReplyMsgTextRaw(ctx context.Context, text, msgID, suffix string, replyInThread bool) (err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
-	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(text))
-	defer span.End()
-
 	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, text, suffix, replyInThread)
 }
 
-func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageResp) {
+func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageResp, contents ...string) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-	content := getContentFromTextMsg(utility.AddressORNil(resp.Data.Body.Content))
-	msgLog := &database.MessageLog{
+	var content string
+	if len(contents) > 0 {
+		content = strings.Join(contents, "\n")
+	} else {
+		content = getContentFromTextMsg(utility.AddressORNil(resp.Data.Body.Content))
+	}
+	msgLog := &handlertypes.MessageLog{
 		MessageID:   utility.AddressORNil(resp.Data.MessageId),
 		RootID:      utility.AddressORNil(resp.Data.RootId),
 		ParentID:    utility.AddressORNil(resp.Data.ParentId),
@@ -283,12 +268,12 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 		Content:     content,
 		TraceID:     span.SpanContext().TraceID().String(),
 	}
-	database.GetDbConnection().Create(msgLog)
 	embedded, usage, err := doubao.EmbeddingText(ctx, utility.AddressORNil(resp.Data.Body.Content))
 	if err != nil {
 		log.ZapLogger.Error("EmbeddingText error", zaplog.Error(err))
 	}
-	err = opensearchdal.InsertData(ctx, "lark_msg_index", utility.AddressORNil(resp.Data.MessageId),
+	err = opensearchdal.InsertData(ctx, "lark_msg_index",
+		utility.AddressORNil(resp.Data.MessageId),
 		&handlertypes.MessageIndex{
 			MessageLog: msgLog,
 			ChatName:   GetChatName(ctx, utility.AddressORNil(resp.Data.ChatId)),
@@ -306,11 +291,16 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 	}
 }
 
-func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessageResp) {
+func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessageResp, contents ...string) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
-	content := getContentFromTextMsg(utility.AddressORNil(resp.Data.Body.Content))
-	msgLog := &database.MessageLog{
+	var content string
+	if len(contents) > 0 {
+		content = strings.Join(contents, "\n")
+	} else {
+		content = getContentFromTextMsg(utility.AddressORNil(resp.Data.Body.Content))
+	}
+	msgLog := &handlertypes.MessageLog{
 		MessageID:   utility.AddressORNil(resp.Data.MessageId),
 		RootID:      utility.AddressORNil(resp.Data.RootId),
 		ParentID:    utility.AddressORNil(resp.Data.ParentId),
@@ -388,7 +378,6 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 		log.ZapLogger.Error("CreateMessage", zaplog.String("Error", resp.Error()))
 		return errors.New(resp.Error())
 	}
-	AddTraceLog2DB(ctx, *resp.Data.MessageId)
 	RecordMessage2Opensearch(ctx, resp)
 	return
 }
@@ -408,7 +397,7 @@ func AddReaction(ctx context.Context, reactionType, msgID string) (reactionID st
 		log.ZapLogger.Error("AddReaction", zaplog.String("Error", resp.Error()))
 		return "", errors.New(resp.Error())
 	}
-	AddTraceLog2DB(ctx, msgID)
+	AddReaction2DB(ctx, msgID)
 	return *resp.Data.ReactionId, err
 }
 
@@ -428,7 +417,7 @@ func AddReactionAsync(ctx context.Context, reactionType, msgID string) (err erro
 			log.ZapLogger.Error("AddReaction", zaplog.String("Error", resp.Error()))
 			return
 		}
-		AddTraceLog2DB(ctx, msgID)
+		AddReaction2DB(ctx, msgID)
 	}()
 	return nil
 }
@@ -447,6 +436,6 @@ func RemoveReaction(ctx context.Context, reactionID, msgID string) (err error) {
 		log.ZapLogger.Error("RemoveReaction", zaplog.String("Error", resp.Error()))
 		return errors.New(resp.Error())
 	}
-	AddTraceLog2DB(ctx, msgID)
+	AddReaction2DB(ctx, msgID)
 	return
 }

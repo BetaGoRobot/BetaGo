@@ -101,9 +101,9 @@ func WordGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 		AddVariable("title1", "Scope").
 		AddVariable("title2", "Keyword").
 		AddVariable("title3", "Rate").
-		AddVariable("table_raw_array_1", lines).String()
+		AddVariable("table_raw_array_1", lines)
 
-	err := larkutils.ReplyMsgRawContentType(ctx, *data.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_wordGet", false)
+	err := larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_wordGet", false)
 	if err != nil {
 		return err
 	}

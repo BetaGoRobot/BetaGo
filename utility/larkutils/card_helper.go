@@ -2,6 +2,7 @@ package larkutils
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
@@ -85,7 +86,18 @@ func (c *TemplateCardContent) UpdateVariables(m map[string]interface{}) *Templat
 	return c
 }
 
+func (c *TemplateCardContent) GetVariables() []string {
+	s := make([]string, 0, len(c.Data.TemplateVariable))
+	for _, v := range c.Data.TemplateVariable {
+		s = append(s, fmt.Sprint(v))
+	}
+	return s
+}
+
 func (c *TemplateCardContent) String() string {
+	if c == nil {
+		return ""
+	}
 	res, err := sonic.MarshalString(c)
 	if err != nil {
 		return ""

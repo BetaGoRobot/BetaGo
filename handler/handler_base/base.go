@@ -113,13 +113,6 @@ func (p *Processor[T, K]) AddParallelStages(stage Operator[T, K]) *Processor[T, 
 //	@param ctx
 //	@param event
 func (p *Processor[T, K]) RunStages() (err error) {
-	p.metaData = new(K)
-	for _, fn := range p.deferFn {
-		if fn != nil {
-			defer fn(p.Context, p.data, p.metaData)
-		}
-	}
-
 	for _, s := range p.stages {
 		defer p.Defer()
 		err = s.PreRun(p.Context, p.data, p.metaData)
@@ -156,6 +149,23 @@ func (p *Processor[T, K]) RunStages() (err error) {
 	return
 }
 
+// Run  运行
+//
+//	@receiver p
+//	@param ctx
+//	@param event
+func (p *Processor[T, K]) Run() {
+	p.metaData = new(K)
+	for _, fn := range p.deferFn {
+		if fn != nil {
+			defer fn(p.Context, p.data, p.metaData)
+		}
+	}
+
+	go p.RunStages()
+	go p.RunParallelStages()
+}
+
 // RunParallelStages  运行并行处理阶段
 //
 //	@receiver p
@@ -163,14 +173,8 @@ func (p *Processor[T, K]) RunStages() (err error) {
 //	@param event
 //	@return error
 func (p *Processor[T, K]) RunParallelStages() error {
-	wg := sync.WaitGroup{}
+	wg := &sync.WaitGroup{}
 	errorChan := make(chan error, len(p.parrallelStages))
-	p.metaData = new(K)
-	for _, fn := range p.deferFn {
-		if fn != nil {
-			defer fn(p.Context, p.data, p.metaData)
-		}
-	}
 
 	for _, operator := range p.parrallelStages {
 		wg.Add(1)

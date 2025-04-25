@@ -3,13 +3,17 @@ package handlers
 import (
 	"context"
 	"errors"
+	"iter"
 	"strings"
 
+	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/bytedance/sonic"
+	"github.com/defensestation/osquery"
 	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -20,6 +24,11 @@ const (
 	getIDText      = "Quoted Msg OpenID is "
 	getGroupIDText = "Current ChatID is "
 )
+
+type traceItem struct {
+	TraceID    string `json:"trace_id"`
+	CreateTime string `json:"create_time"`
+}
 
 // DebugGetIDHandler to be filled
 //
@@ -82,11 +91,11 @@ func DebugTryPanicHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, 
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
-	panic("try panic!")
+	panic(errors.New("try panic!"))
 }
 
-func getTraceURLMD(traceID string) string {
-	return strings.Join([]string{"[Trace-", traceID[:8], "]", "(https://jaeger.kmhomelab.cn/trace/", traceID, ")"}, "")
+func (t *traceItem) TraceURLMD() string {
+	return strings.Join([]string{t.CreateTime, ": [Trace-", t.TraceID[:8], "]", "(https://jaeger.kmhomelab.cn/trace/", t.TraceID, ")"}, "")
 }
 
 // GetTraceFromMsgID to be filled
@@ -97,22 +106,38 @@ func getTraceURLMD(traceID string) string {
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:37
-func GetTraceFromMsgID(ctx context.Context, msgID string) ([]string, error) {
+func GetTraceFromMsgID(ctx context.Context, msgID string) (iter.Seq[*traceItem], error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	defer span.End()
 
-	traceLogs, hitCache := database.FindByCacheFunc(database.MsgTraceLog{MsgID: msgID}, func(d database.MsgTraceLog) string {
-		return d.MsgID
-	})
-	span.SetAttributes(attribute.Bool("MsgTraceLog hitCache", hitCache))
-	if len(traceLogs) == 0 {
-		return nil, errors.New("No trace log found for the message qouted")
+	query := osquery.Search().
+		Query(
+			osquery.Bool().Must(
+				osquery.Term("message_id", msgID),
+			),
+		).
+		SourceIncludes("create_time", "trace_id").
+		Sort("create_time", "desc")
+	resp, err := opensearchdal.SearchData(
+		ctx, "lark_msg_index", query,
+	)
+	if err != nil {
+		return nil, err
 	}
-	traceIDs := make([]string, 0)
-	for _, traceLog := range traceLogs {
-		traceIDs = append(traceIDs, getTraceURLMD(traceLog.TraceID))
-	}
-	return traceIDs, nil
+	return func(yield func(*traceItem) bool) {
+		for _, hit := range resp.Hits.Hits {
+			src := &handlertypes.MessageIndex{}
+			err = sonic.Unmarshal(hit.Source, &src)
+			if err != nil {
+				return
+			}
+			if src.TraceID != "" {
+				if !yield(&traceItem{src.TraceID, src.CreateTime}) {
+					return
+				}
+			}
+		}
+	}, nil
 }
 
 // DebugTraceHandler to be filled
@@ -127,8 +152,13 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
-
+	var (
+		m             = map[string]struct{}{}
+		traceIDs      = make([]string, 0)
+		replyInThread bool
+	)
 	if data.Event.Message.ThreadId != nil { // 话题模式，找到所有的traceID
+		replyInThread = true
 		resp, err := larkutils.LarkClient.Im.Message.List(ctx,
 			larkim.NewListMessageReqBuilder().
 				ContainerId(*data.Event.Message.ThreadId).
@@ -138,33 +168,40 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 		if err != nil {
 			return err
 		}
-		traceIDs := make([]string, 0)
 		for _, msg := range resp.Data.Items {
-			if *msg.Sender.Id == larkutils.BotAppID {
-				traceIDsTmp, err := GetTraceFromMsgID(ctx, *msg.MessageId)
-				if err != nil {
-					return err
+			traceIters, err := GetTraceFromMsgID(ctx, *msg.MessageId)
+			if err != nil {
+				return err
+			}
+			for item := range traceIters {
+				if _, ok := m[item.TraceID]; ok {
+					continue
 				}
-				traceIDs = append(traceIDs, traceIDsTmp...)
+				m[item.TraceID] = struct{}{}
+				traceIDs = append(traceIDs, item.TraceURLMD())
 			}
 		}
-		traceIDStr := "TraceIDs:\n" + strings.Join(traceIDs, "\n")
-		err = larkutils.ReplyMsgText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", true)
-		if err != nil {
-			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
-			return err
-		}
 	} else if data.Event.Message.ParentId != nil {
-		traceIDs, err := GetTraceFromMsgID(ctx, *data.Event.Message.ParentId)
+		traceIters, err := GetTraceFromMsgID(ctx, *data.Event.Message.ParentId)
 		if err != nil {
 			return err
 		}
-		traceIDStr := "TraceIDs:\n" + strings.Join(traceIDs, "\n")
-		err = larkutils.ReplyMsgText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", true)
-		if err != nil {
-			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
-			return err
+		for item := range traceIters {
+			if _, ok := m[item.TraceID]; ok {
+				continue
+			}
+			m[item.TraceID] = struct{}{}
+			traceIDs = append(traceIDs, item.TraceURLMD())
 		}
+	}
+	if len(traceIDs) == 0 {
+		return errors.New("No traceID found")
+	}
+	traceIDStr := "TraceIDs:\n" + strings.Join(traceIDs, "\n")
+	err := larkutils.ReplyCardText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", replyInThread)
+	if err != nil {
+		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+		return err
 	}
 	return nil
 }

@@ -3,11 +3,9 @@ package message
 import (
 	"context"
 
-	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
@@ -48,13 +46,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		} else {
 			userName = *member.Name
 		}
-		database.GetDbConnection().Create(&database.InteractionStats{
-			OpenID:     *event.Event.Sender.SenderId.OpenId,
-			GuildID:    chatID,
-			UserName:   userName,
-			ActionType: consts.LarkInteractionSendMsg,
-		})
-		msgLog := &database.MessageLog{
+		msgLog := &handlertypes.MessageLog{
 			MessageID:   utility.AddressORNil(event.Event.Message.MessageId),
 			RootID:      utility.AddressORNil(event.Event.Message.RootId),
 			ParentID:    utility.AddressORNil(event.Event.Message.ParentId),
@@ -68,7 +60,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 			Content:     utility.AddressORNil(event.Event.Message.Content),
 			TraceID:     span.SpanContext().TraceID().String(),
 		}
-		database.GetDbConnection().Create(msgLog)
+
 		content := larkutils.PreGetTextMsg(ctx, event)
 		embedded, usage, err := doubao.EmbeddingText(ctx, content)
 		if err != nil {

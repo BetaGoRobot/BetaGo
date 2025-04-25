@@ -2,7 +2,6 @@ package larkhandler
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
@@ -58,7 +57,7 @@ func WebHookHandler(ctx context.Context, cardAction *larkcard.CardAction) (inter
 	return nil, nil
 }
 
-func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
+func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutils.TemplateCardContent {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, utility.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
@@ -70,7 +69,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 	musicURL, err := neteaseapi.NetEaseGCtx.GetMusicURL(ctx, musicID)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
-		return ""
+		return nil
 	}
 
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]
@@ -78,7 +77,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 	imageKey, ossURL, err := larkutils.UploadPicAllinOne(ctx, picURL, musicID, true)
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
-		return ""
+		return nil
 	}
 
 	lyrics, lyricsURL := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
@@ -118,7 +117,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 		Upload()
 	if err != nil {
 		log.ZapLogger.Error(err.Error())
-		return ""
+		return nil
 	}
 
 	playerURL := utility.BuildURL(u.String())
@@ -157,7 +156,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) string {
 		AddVariable("sub_title", songDetail.Ar[0].Name).
 		AddVariable("imgkey", imageKey).
 		AddVariable("player_url", playerURL).
-		AddVariable("full_lyrics_button", map[string]string{"type": "lyrics", "id": musicID}).String()
+		AddVariable("full_lyrics_button", map[string]string{"type": "lyrics", "id": musicID})
 }
 
 func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) {
@@ -165,9 +164,8 @@ func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) 
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
 
-	cardStr := GetCardMusicByPage(ctx, musicID, page)
-	fmt.Println(cardStr)
-	err := larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music"+musicID, env.MusicCardInThread)
+	card := GetCardMusicByPage(ctx, musicID, page)
+	err := larkutils.ReplyCard(ctx, card, msgID, "_music"+musicID, env.MusicCardInThread)
 	if err != nil {
 		return
 	}
@@ -193,7 +191,7 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 	if err != nil {
 		return
 	}
-	err = larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardContent, "_album", env.MusicCardInThread)
+	err = larkutils.ReplyCard(ctx, cardContent, msgID, "_album", env.MusicCardInThread)
 	if err != nil {
 		return
 	}
@@ -213,7 +211,7 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 	right := strings.Join(sp[len(sp)/2+1:], "\n")
 
 	template := larkutils.GetTemplate(larkutils.FullLyricsTemplate)
-	cardStr := larkutils.NewSheetCardContent(
+	cardContent := larkutils.NewSheetCardContent(
 		ctx,
 		template.TemplateID,
 		template.TemplateVersion,
@@ -222,8 +220,8 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 		AddVariable("right_lyrics", right).
 		AddVariable("title", songDetail.Name).
 		AddVariable("sub_title", songDetail.Ar[0].Name).
-		AddVariable("imgkey", imgKey).String()
-	err = larkutils.ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeInteractive, cardStr, "_music", env.MusicCardInThread)
+		AddVariable("imgkey", imgKey)
+	err = larkutils.ReplyCard(ctx, cardContent, msgID, "_music", env.MusicCardInThread)
 	if err != nil {
 		return
 	}

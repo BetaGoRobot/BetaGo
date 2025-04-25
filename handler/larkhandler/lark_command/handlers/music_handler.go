@@ -29,7 +29,7 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 
 	keywords := []string{input}
 
-	var cardContent string
+	var cardContent *larkutils.TemplateCardContent
 	if searchType == "album" {
 		albumList, err := neteaseapi.NetEaseGCtx.SearchAlbumByKeyWord(ctx, keywords...)
 		if err != nil {
@@ -55,7 +55,7 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 		return errors.New("Unknown search type")
 	}
 
-	err = larkutils.ReplyMsgRawContentType(ctx, *data.Event.Message.MessageId, larkim.MsgTypeInteractive, cardContent, "_musicSearch", env.MusicCardInThread)
+	err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_musicSearch", env.MusicCardInThread)
 	if err != nil {
 		return err
 	}
