@@ -24,7 +24,7 @@ func MuteHandler(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...
 		muteTimeDuration time.Duration
 	)
 	argMap, _ := parseArgs(args...)
-	if argMap["cancel"] != "" {
+	if _, ok := argMap["cancel"]; ok {
 		// 取消禁言
 		if err := redis.GetRedisClient().Del(ctx, MuteRedisKeyPrefix+*event.Event.Message.ChatId).Err(); err != nil {
 			return err
