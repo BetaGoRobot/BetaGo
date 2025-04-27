@@ -237,8 +237,11 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 		userName = *member.Name
 	}
 
-	promptTemplate.UserInput = commonutils.TransSlice(input, func(s string) string {
-		return fmt.Sprintf("[%s] <%s>: %s", utility.EpoMil2DateStr(*event.Event.Message.CreateTime), userName, strings.ReplaceAll(s, "\n", "\\n"))
+	promptTemplate.UserInput = commonutils.TransSliceWithSkip(input, func(s string) (string, bool) {
+		if strings.TrimSpace(s) != "" {
+			return fmt.Sprintf("[%s] <%s>: %s", utility.EpoMil2DateStr(*event.Event.Message.CreateTime), userName, strings.ReplaceAll(s, "\n", "\\n")), false
+		}
+		return "", true
 	})
 	promptTemplate.HistoryRecords = messageList
 	b := &strings.Builder{}
