@@ -152,8 +152,8 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string) (
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	defer span.End()
 
-	botReq := model.BotChatCompletionRequest{
-		BotId: "bot-20250427115429-6zzzb",
+	req := model.CreateChatCompletionRequest{
+		Model: modelID,
 		Messages: []*model.ChatCompletionMessage{
 			{
 				Role: "system",
@@ -164,7 +164,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string) (
 		},
 	}
 
-	r, err := client.CreateBotChatCompletionStream(ctx, botReq, arkruntime.WithCustomHeader("x-is-encrypted", "true"))
+	r, err := client.CreateChatCompletionStream(ctx, req, arkruntime.WithCustomHeader("x-is-encrypted", "true"))
 	if err != nil {
 		log.ZapLogger.Error("chat error", zap.Error(err))
 		return nil, err
