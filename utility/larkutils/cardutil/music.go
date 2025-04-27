@@ -65,7 +65,7 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 				defer wg.Done()
 				comment, err := neteaseapi.NetEaseGCtx.GetComment(ctx, resourceType, item.ID)
 				if err != nil {
-					log.ZapLogger.Error("GetComment", zaplog.Error(err))
+					log.Zlog.Error("GetComment", zaplog.Error(err))
 				}
 				line := map[string]interface{}{
 					"field_1":     genMusicTitle(item.Name, item.ArtistName),

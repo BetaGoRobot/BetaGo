@@ -98,7 +98,7 @@ func (m *MinioManager) SetFileFromURL(url string) *MinioManager {
 		m.span.SetAttributes(attribute.Key("url").String(url))
 		resp, err := requests.Req().SetContext(m.Context).SetDoNotParseResponse(true).Get(url)
 		if err != nil {
-			log.ZapLogger.Error("Get file failed", zaplog.Error(err))
+			log.Zlog.Error("Get file failed", zaplog.Error(err))
 			m.err = err
 			m.span.SetStatus(2, err.Error())
 			return
@@ -199,10 +199,10 @@ func (m *MinioManager) addTracePresigned(u *url.URL) {
 		if url := u.String(); url != "" {
 			m.span.SetAttributes(attribute.String("presigned_url", url))
 		} else {
-			log.ZapLogger.Error("presigned url is empty")
+			log.Zlog.Error("presigned url is empty")
 		}
 	} else {
-		log.ZapLogger.Error("presigned url is nil")
+		log.Zlog.Error("presigned url is nil")
 	}
 }
 
@@ -235,10 +235,10 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 		if m.inputTransFunc != nil {
 			m.inputTransFunc(m)
 		}
-		log.ZapLogger.Warn("tryGetFile failed", zaplog.Error(err))
+		log.Zlog.Warn("tryGetFile failed", zaplog.Error(err))
 		err = m.UploadFile(opts)
 		if err != nil {
-			log.ZapLogger.Error("uploadFile failed", zaplog.Error(err))
+			log.Zlog.Error("uploadFile failed", zaplog.Error(err))
 			return
 		}
 		return m.PresignURL()
@@ -264,7 +264,7 @@ func (m *MinioManager) UploadFile(opts minio.PutObjectOptions) (err error) {
 
 	err = minioUploadReader(ctx, m.bucketName, m.file, m.objName, opts)
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
+		log.Zlog.Error(err.Error())
 		return
 	}
 	return

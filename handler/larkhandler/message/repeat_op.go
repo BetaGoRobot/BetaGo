@@ -132,7 +132,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 				*event.Event.Message.ChatId,
 			)
 			if err != nil {
-				log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				log.Zlog.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 			}
 		} else {
 			repeatReq := larkim.NewCreateMessageReqBuilder().
@@ -151,7 +151,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 			}
 			if resp.StatusCode != 200 {
 				if strings.Contains(resp.Error(), "invalid image_key") {
-					log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+					log.Zlog.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 					return nil
 				}
 				return errors.New(resp.Error())

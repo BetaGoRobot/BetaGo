@@ -35,7 +35,7 @@ func WordAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 		return errors.ErrUnsupported
 	}
 	argMap, _ := parseArgs(args...)
-	log.ZapLogger.Info("wordAddHandler", zaplog.Any("args", argMap))
+	log.Zlog.Info("wordAddHandler", zaplog.Any("args", argMap))
 
 	word, ok := argMap["word"]
 	if !ok {
@@ -69,7 +69,7 @@ func WordGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 	argMap, _ := parseArgs(args...)
-	log.ZapLogger.Info("wordGetHandler", zaplog.Any("args", argMap))
+	log.Zlog.Info("wordGetHandler", zaplog.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
 
 	lines := make([]map[string]string, 0)

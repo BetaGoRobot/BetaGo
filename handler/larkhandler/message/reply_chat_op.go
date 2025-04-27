@@ -61,7 +61,7 @@ func (r *ReplyChatOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 
 	reactionID, err := larkutils.AddReaction(ctx, "OnIt", *event.Event.Message.MessageId)
 	if err != nil {
-		log.ZapLogger.Error("Add reaction to msg failed", zaplog.Error(err))
+		log.Zlog.Error("Add reaction to msg failed", zaplog.Error(err))
 	} else {
 		defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
 	}

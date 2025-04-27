@@ -125,7 +125,7 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 			},
 		})
 		if err != nil {
-			log.ZapLogger.Error(err.Error())
+			log.Zlog.Error(err.Error())
 			return
 		}
 		return

@@ -50,7 +50,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 				fmt.Sprintf("%s Panic-Collected!",
 					emoji.Warning.String()), ctx)
 		}
-		log.SugerLogger.Errorf("=====Panic====== %s", string(debug.Stack()))
+		log.SLog.Errorf("=====Panic====== %s", string(debug.Stack()))
 	}
 }
 

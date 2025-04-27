@@ -30,7 +30,7 @@ import (
 //	@update 2024-08-06 08:27:18
 func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
 	argMap, _ := parseArgs(args...)
-	log.ZapLogger.Info("replyHandler", zaplog.Any("args", argMap))
+	log.Zlog.Info("replyHandler", zaplog.Any("args", argMap))
 	if len(argMap) > 0 {
 		word, ok := argMap["word"]
 		if !ok {
@@ -60,7 +60,7 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 				contentMap := make(map[string]string)
 				err := sonic.UnmarshalString(*parentMsgItem.Body.Content, &contentMap)
 				if err != nil {
-					log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
+					log.Zlog.Error("repeatMessage", zaplog.Error(err))
 					return err
 				}
 				if *parentMsgItem.MsgType == larkim.MsgTypeSticker {
@@ -68,7 +68,7 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 					res, _ := database.FindByCacheFunc(database.StickerMapping{StickerKey: imgKey}, func(r database.StickerMapping) string { return r.StickerKey })
 					if len(res) == 0 {
 						if stickerFile, err := larkutils.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["file_key"], "image"); err != nil {
-							log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
+							log.Zlog.Error("repeatMessage", zaplog.Error(err))
 						} else {
 							newImgKey := larkutils.UploadPicture2LarkReader(ctx, stickerFile)
 							database.GetDbConnection().Clauses(clause.OnConflict{UpdateAll: true}).Create(&database.StickerMapping{
@@ -124,7 +124,7 @@ func ReplyGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 	argMap, _ := parseArgs(args...)
-	log.ZapLogger.Info("replyGetHandler", zaplog.Any("args", argMap))
+	log.Zlog.Info("replyGetHandler", zaplog.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
 
 	lines := make([]map[string]string, 0)

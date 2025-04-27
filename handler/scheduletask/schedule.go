@@ -202,7 +202,7 @@ func selfCheckInner() {
 	time.Sleep(time.Second * 1)
 	select {
 	case <-betagovar.SelfCheckChan:
-		log.ZapLogger.Info("Self check successful")
+		log.Zlog.Info("Self check successful")
 	default:
 		gotify.SendMessage(context.Background(), "", "Self check failed, reconnecting...", 7)
 		betagovar.ReconnectChan <- "reconnect"

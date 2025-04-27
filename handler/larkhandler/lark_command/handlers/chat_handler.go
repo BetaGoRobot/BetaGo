@@ -139,7 +139,7 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 	sendFunc := func(req *larkcardkit.ContentCardElementReq) {
 		resp, err := larkutils.LarkClient.Cardkit.V1.CardElement.Content(ctx, req)
 		if err != nil {
-			log.ZapLogger.Error("patch message failed with error msg: " + resp.Msg)
+			log.Zlog.Error("patch message failed with error msg: " + resp.Msg)
 			return
 		}
 	}

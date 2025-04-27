@@ -227,7 +227,7 @@ var (
 func init() {
 	// try get db conn
 	if GetDbConnection() == nil {
-		log.ZapLogger.Error("get db connection error")
+		log.Zlog.Error("get db connection error")
 		os.Exit(-1)
 	}
 
@@ -262,12 +262,12 @@ func init() {
 		&PromptTemplateArgs{},
 	)
 	if err != nil {
-		log.ZapLogger.Error("init", zaplog.Error(err))
+		log.Zlog.Error("init", zaplog.Error(err))
 	}
 	utility.GetReceieverEmailList(consts.GlobalDBConn)
 	sqlDb, err := db.DB()
 	if err != nil {
-		log.ZapLogger.Panic(" get sql db error")
+		log.Zlog.Panic(" get sql db error")
 	}
 	sqlDb.SetMaxIdleConns(10)
 	sqlDb.SetMaxOpenConns(100)
@@ -302,7 +302,7 @@ func GetDbConnection() *gorm.DB {
 				},
 			})
 			if err != nil {
-				log.ZapLogger.Error("get db connection error, will try local version", zaplog.Error(err))
+				log.Zlog.Error("get db connection error, will try local version", zaplog.Error(err))
 				return
 			}
 		},

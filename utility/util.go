@@ -62,12 +62,12 @@ func InitGlowSansSCFontType() {
 	fontFile := filepath.Join(consts.FontPath, "Microsoft Yahei.ttf")
 	fontBytes, err := ioutil.ReadFile(fontFile)
 	if err != nil {
-		log.ZapLogger.Info("errot init font", zaplog.Error(err))
+		log.Zlog.Info("errot init font", zaplog.Error(err))
 		return
 	}
 	MicrosoftYaHei, err = truetype.Parse(fontBytes)
 	if err != nil {
-		log.ZapLogger.Info("errot init font", zaplog.Error(err))
+		log.Zlog.Info("errot init font", zaplog.Error(err))
 		return
 	}
 }
@@ -148,7 +148,7 @@ func GetUserInfo(userID, guildID string) (userInfo *kook.User, err error) {
 func GetGuildIDFromChannelID(channelID string) (GuildID string) {
 	c, err := consts.GlobalSession.ChannelView(channelID)
 	if err != nil {
-		log.ZapLogger.Error("Error getting guild", zaplog.Error(err))
+		log.Zlog.Error("Error getting guild", zaplog.Error(err))
 	}
 	return c.GuildID
 }
@@ -290,7 +290,7 @@ func Reconnect() (err error) {
 	// 		return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
 	// 	}
 	// }
-	log.ZapLogger.Info("Reconnecting successfully")
+	log.Zlog.Info("Reconnecting successfully")
 	time.Sleep(time.Second * 5)
 	return
 }
@@ -332,7 +332,7 @@ func BuildCardMessage(theme, size, title, quoteID string, span any, modules ...a
 	if quoteID != "" {
 		m, err := consts.GlobalSession.MessageView(quoteID)
 		if err != nil {
-			log.ZapLogger.Error("MessageView Error", zaplog.Error(err))
+			log.Zlog.Error("MessageView Error", zaplog.Error(err))
 		}
 		prevCardMessage := make(kook.CardMessage, 0)
 		err = json.UnmarshalFromString(m.Content, &prevCardMessage)

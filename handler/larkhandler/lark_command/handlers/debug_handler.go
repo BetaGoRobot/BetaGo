@@ -49,7 +49,7 @@ func DebugGetIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 
 	err := larkutils.ReplyCardText(ctx, getIDText+*data.Event.Message.ParentId, *data.Event.Message.MessageId, "_getID", false)
 	if err != nil {
-		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+		log.Zlog.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		return err
 	}
 	return nil
@@ -71,7 +71,7 @@ func DebugGetGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1
 	if chatID != nil {
 		err := larkutils.ReplyCardText(ctx, getGroupIDText+*chatID, *data.Event.Message.MessageId, "_getGroupID", false)
 		if err != nil {
-			log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+			log.Zlog.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 			return err
 		}
 	}
@@ -200,7 +200,7 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 	traceIDStr := "TraceIDs:\n" + strings.Join(traceIDs, "\n")
 	err := larkutils.ReplyCardText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", replyInThread)
 	if err != nil {
-		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+		log.Zlog.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		return err
 	}
 	return nil
@@ -229,7 +229,7 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 					return err
 				}
 				if !resp.Success() {
-					log.ZapLogger.Error("DeleteMessage", zaplog.String("MessageID", *msg.MessageId), zaplog.Error(errors.New(resp.Error())))
+					log.Zlog.Error("DeleteMessage", zaplog.String("MessageID", *msg.MessageId), zaplog.Error(errors.New(resp.Error())))
 				}
 			}
 		}
@@ -287,7 +287,7 @@ func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 		}
 		if resp.StatusCode != 200 {
 			if strings.Contains(resp.Error(), "invalid image_key") {
-				log.ZapLogger.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				log.Zlog.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 				return nil
 			}
 			return errors.New(resp.Error())

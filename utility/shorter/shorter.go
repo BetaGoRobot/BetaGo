@@ -91,7 +91,7 @@ func GenAKA(u *url.URL) (newURL *url.URL) {
 	}
 	reqBody, err := sonic.Marshal(req)
 	if err != nil {
-		log.ZapLogger.Error("Marshal failed", zaplog.Error(err))
+		log.Zlog.Error("Marshal failed", zaplog.Error(err))
 		return
 	}
 	r, err := consts.HttpClient.R().
@@ -100,21 +100,21 @@ func GenAKA(u *url.URL) (newURL *url.URL) {
 		SetBody(reqBody).
 		Post("https://kutt.kmhomelab.cn/api/links")
 	if err != nil || (r.StatusCode() != 200 && r.StatusCode() != 201) {
-		log.ZapLogger.Error("Post failed", zaplog.Error(err), zaplog.Int("status_code", r.StatusCode()))
+		log.Zlog.Error("Post failed", zaplog.Error(err), zaplog.Int("status_code", r.StatusCode()))
 		return
 	}
 	resp := &KuttResp{}
 	err = sonic.Unmarshal(r.Body(), resp)
 	if err != nil {
-		log.ZapLogger.Error("Unmarshal failed", zaplog.Error(err))
+		log.Zlog.Error("Unmarshal failed", zaplog.Error(err))
 		return
 	}
 	newURL, err = url.Parse(resp.Link)
 	if err != nil {
-		log.ZapLogger.Error("Parse url failed", zaplog.Error(err))
+		log.Zlog.Error("Parse url failed", zaplog.Error(err))
 		return
 	}
-	log.ZapLogger.Info("GenAKA with url", zaplog.String("new_url", newURL.String()), zaplog.String("old_url", oldURL))
+	log.Zlog.Info("GenAKA with url", zaplog.String("new_url", newURL.String()), zaplog.String("old_url", oldURL))
 	return
 }
 
@@ -127,7 +127,7 @@ func GenAKAKutt(u *url.URL, expires ExpireTime) (newURL *url.URL) {
 	}
 	reqBody, err := sonic.Marshal(req)
 	if err != nil {
-		log.ZapLogger.Error("Marshal failed", zaplog.Error(err))
+		log.Zlog.Error("Marshal failed", zaplog.Error(err))
 		return
 	}
 	r, err := consts.HttpClient.R().
@@ -136,21 +136,21 @@ func GenAKAKutt(u *url.URL, expires ExpireTime) (newURL *url.URL) {
 		SetBody(reqBody).
 		Post("https://kutt.kmhomelab.cn/api/links")
 	if err != nil || (r.StatusCode() != 200 && r.StatusCode() != 201) {
-		log.ZapLogger.Error("Post failed", zaplog.Error(err), zaplog.Int("status_code", r.StatusCode()))
+		log.Zlog.Error("Post failed", zaplog.Error(err), zaplog.Int("status_code", r.StatusCode()))
 		return
 	}
 	resp := &KuttResp{}
 	err = sonic.Unmarshal(r.Body(), resp)
 	if err != nil {
-		log.ZapLogger.Error("Unmarshal failed", zaplog.Error(err))
+		log.Zlog.Error("Unmarshal failed", zaplog.Error(err))
 		return
 	}
 	newURL, err = url.Parse(resp.Link)
 	if err != nil {
-		log.ZapLogger.Error("Parse url failed", zaplog.Error(err))
+		log.Zlog.Error("Parse url failed", zaplog.Error(err))
 		return
 	}
-	log.ZapLogger.Info("GenAKA with url", zaplog.String("new_url", newURL.String()), zaplog.String("old_url", oldURL))
+	log.Zlog.Info("GenAKA with url", zaplog.String("new_url", newURL.String()), zaplog.String("old_url", oldURL))
 	return
 }
 

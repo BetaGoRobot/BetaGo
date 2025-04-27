@@ -128,11 +128,11 @@ func GetHitokotoHandler(ctx context.Context, targetID, quoteID, authorID string,
 func GetHitokoto(field ...string) (hitokotoRes RespBody, err error) {
 	resp, err := requests.Req().SetQueryParamsFromValues(map[string][]string{"c": field}).Get(hitokotoURL)
 	if err != nil {
-		log.ZapLogger.Error("获取一言失败", zaplog.Error(err))
+		log.Zlog.Error("获取一言失败", zaplog.Error(err))
 		return
 	}
 	if err = json.Unmarshal(resp.Body(), &hitokotoRes); err != nil {
-		log.ZapLogger.Error("获取一言失败", zaplog.Error(err))
+		log.Zlog.Error("获取一言失败", zaplog.Error(err))
 		return
 	}
 	return

@@ -69,7 +69,7 @@ func Reconnect() (err error) {
 	// 		return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
 	// 	}
 	// }
-	log.ZapLogger.Info("Reconnecting successfully")
+	log.Zlog.Info("Reconnecting successfully")
 	time.Sleep(time.Second * 5)
 	return
 }

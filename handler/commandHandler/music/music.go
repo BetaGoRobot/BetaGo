@@ -146,7 +146,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 		}
 		cardStr, err = cardMessage.BuildMessage()
 		if err != nil {
-			log.ZapLogger.Error("构建消息失败", zaplog.Error(err))
+			log.Zlog.Error("构建消息失败", zaplog.Error(err))
 			return
 		}
 	} else {

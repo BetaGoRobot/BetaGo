@@ -35,7 +35,7 @@ func init() {
 func SendMessage(ctx context.Context, title, msg string, priority int) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, "SendMessage")
 	defer span.End()
-	log.ZapLogger.Info("SendMessage...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
+	log.Zlog.Info("SendMessage...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
 
 	if title == "" {
 		title = "BetaGo Notification"
@@ -53,8 +53,8 @@ func SendMessage(ctx context.Context, title, msg string, priority int) {
 
 	_, err := DefaultGotifyClient.Message.CreateMessage(params, tokenParsed)
 	if err != nil {
-		log.ZapLogger.Error("Could not send message %v", zaplog.Error(err))
+		log.Zlog.Error("Could not send message %v", zaplog.Error(err))
 		return
 	}
-	log.ZapLogger.Info("Gotify Message Sent!")
+	log.Zlog.Info("Gotify Message Sent!")
 }

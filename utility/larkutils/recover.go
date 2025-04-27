@@ -141,7 +141,7 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 	buttonText := "Jaeger Tracer -" + traceID
 	stack := string(debug.Stack())
 
-	log.ZapLogger.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("msg_id", msgID))
+	log.Zlog.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("msg_id", msgID))
 
 	newCard := newPattern()
 	newCard.I18NElements.ZhCn[0].Content = "```go\n" + stack + "\n```"
@@ -152,7 +152,7 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 
 	cardMsg, err := sonic.MarshalString(newCard)
 	if err != nil {
-		log.ZapLogger.Error("marshal error", zaplog.Any("error", err))
+		log.Zlog.Error("marshal error", zaplog.Any("error", err))
 		return
 	}
 	uuid := msgID
@@ -173,6 +173,6 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 			Build(),
 	)
 	if err != nil {
-		log.ZapLogger.Error("send error", zaplog.Any("error", err))
+		log.Zlog.Error("send error", zaplog.Any("error", err))
 	}
 }

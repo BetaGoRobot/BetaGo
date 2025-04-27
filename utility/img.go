@@ -17,7 +17,7 @@ func ResizeIMGFromReader(ctx context.Context, r io.ReadCloser) (output []byte) {
 	defer span.End()
 	imgBody, err := io.ReadAll(r)
 	if err != nil {
-		log.ZapLogger.Error("read image error", zaplog.Error(err))
+		log.Zlog.Error("read image error", zaplog.Error(err))
 		return
 	}
 	newImage, err := bimg.NewImage(imgBody).Resize(512, 512)

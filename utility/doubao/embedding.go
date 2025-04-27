@@ -48,7 +48,7 @@ func EmbeddingText(ctx context.Context, input string) (embedded []float32, token
 		arkruntime.WithCustomHeader("x-is-encrypted", "true"),
 	)
 	if err != nil {
-		log.ZapLogger.Error("embeddings error", zap.Error(err))
+		log.Zlog.Error("embeddings error", zap.Error(err))
 		return
 	}
 	embedded = resp.Data[0].Embedding
@@ -80,7 +80,7 @@ func SingleChat(ctx context.Context, sysPrompt, userPrompt string) (string, erro
 		},
 	})
 	if err != nil {
-		log.ZapLogger.Error("chat error", zap.Error(err))
+		log.Zlog.Error("chat error", zap.Error(err))
 		return "", err
 	}
 
@@ -104,7 +104,7 @@ func SingleChatPrompt(ctx context.Context, prompt string) (string, error) {
 		},
 	})
 	if err != nil {
-		log.ZapLogger.Error("chat error", zap.Error(err))
+		log.Zlog.Error("chat error", zap.Error(err))
 		return "", err
 	}
 
@@ -135,7 +135,7 @@ func SingleChatModel(ctx context.Context, sysPrompt, userPrompt, modelID string)
 		},
 	})
 	if err != nil {
-		log.ZapLogger.Error("chat error", zap.Error(err))
+		log.Zlog.Error("chat error", zap.Error(err))
 		return "", err
 	}
 
@@ -166,7 +166,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string) (
 
 	r, err := client.CreateChatCompletionStream(ctx, req, arkruntime.WithCustomHeader("x-is-encrypted", "true"))
 	if err != nil {
-		log.ZapLogger.Error("chat error", zap.Error(err))
+		log.Zlog.Error("chat error", zap.Error(err))
 		return nil, err
 	}
 

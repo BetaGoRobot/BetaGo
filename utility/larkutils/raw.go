@@ -33,13 +33,13 @@ func GetTenantAccessToken(ctx context.Context) string {
 			Build(),
 	)
 	if err != nil {
-		log.ZapLogger.Error("get tenant access token error", zaplog.Error(err))
+		log.Zlog.Error("get tenant access token error", zaplog.Error(err))
 		return ""
 	}
 	var resMap map[string]interface{}
 	err = resp.JSONUnmarshalBody(&resMap, nil)
 	if err != nil {
-		log.ZapLogger.Error("json unmarshal error", zaplog.Error(err))
+		log.Zlog.Error("json unmarshal error", zaplog.Error(err))
 		return ""
 	}
 	return resMap["tenant_access_token"].(string)
@@ -49,7 +49,7 @@ func SendEphemeral(ctx context.Context, chatID, openID, card string) {
 	var tmpCard interface{}
 	err := sonic.UnmarshalString(card, &tmpCard)
 	if err != nil {
-		log.ZapLogger.Error("json unmarshal error", zaplog.Error(err))
+		log.Zlog.Error("json unmarshal error", zaplog.Error(err))
 		return
 	}
 	tmpCard = map[string]interface{}{"elements": tmpCard.(map[string]interface{})["i18n_elements"].(map[string]interface{})["zh_cn"]}
@@ -63,7 +63,7 @@ func SendEphemeral(ctx context.Context, chatID, openID, card string) {
 	bodyJSON, err := sonic.MarshalString(body)
 	fmt.Println(bodyJSON)
 	if err != nil {
-		log.ZapLogger.Error("json marshal error", zaplog.Error(err))
+		log.Zlog.Error("json marshal error", zaplog.Error(err))
 		return
 	}
 	resp, err := LarkClient.Do(
@@ -76,7 +76,7 @@ func SendEphemeral(ctx context.Context, chatID, openID, card string) {
 		},
 	)
 	if err != nil {
-		log.ZapLogger.Error("send ephemeral error", zaplog.Error(err))
+		log.Zlog.Error("send ephemeral error", zaplog.Error(err))
 		return
 	}
 	fmt.Println(string(resp.RawBody))

@@ -63,7 +63,7 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 		var reactionID string
 		reactionID, err = larkutils.AddReaction(ctx, "OnIt", *event.Event.Message.MessageId)
 		if err != nil {
-			log.ZapLogger.Error("Add reaction to msg failed", zaplog.Error(err))
+			log.Zlog.Error("Add reaction to msg failed", zaplog.Error(err))
 		} else {
 			defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
 		}
@@ -79,7 +79,7 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 			} else {
 				text := fmt.Sprintf("%v\n[Jaeger Trace](https://jaeger.kmhomelab.cn/trace/%s)", err.Error(), span.SpanContext().TraceID().String())
 				larkutils.ReplyCardText(ctx, text, *event.Event.Message.MessageId, "_OpErr", false)
-				log.ZapLogger.Error("CommandOperator", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				log.Zlog.Error("CommandOperator", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 				return
 			}
 		}

@@ -34,7 +34,7 @@ func SendMessageTempAndDelete(targetID, QuoteID, authorID, newMsg string) {
 			},
 		})
 	if err != nil {
-		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		log.Zlog.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
 	_, err = consts.GlobalSession.MessageCreate(
@@ -84,7 +84,7 @@ func SendMessageTemp(targetID, QuoteID, authorID, newMsg string) {
 		},
 	}.BuildMessage()
 	if err != nil {
-		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		log.Zlog.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
 	consts.GlobalSession.MessageCreate(
@@ -127,7 +127,7 @@ func SendMessage(targetID, QuoteID, authorID string, message string) {
 		},
 	}.BuildMessage()
 	if err != nil {
-		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		log.Zlog.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
 	consts.GlobalSession.MessageCreate(
@@ -164,7 +164,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		},
 	}.BuildMessage()
 	if err != nil {
-		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		log.Zlog.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
 	resp, err := consts.GlobalSession.MessageCreate(
@@ -178,7 +178,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		},
 	)
 	if err != nil {
-		log.ZapLogger.Error("Send msg failed", zaplog.Error(err))
+		log.Zlog.Error("Send msg failed", zaplog.Error(err))
 	}
 	return resp.MsgID
 }
@@ -210,7 +210,7 @@ func SendErrorMessageWithTitle(targetID, QuoteID, authorID, message, title strin
 		},
 	}.BuildMessage()
 	if err != nil {
-		log.ZapLogger.Error("发送消息错误: ", zaplog.Error(err))
+		log.Zlog.Error("发送消息错误: ", zaplog.Error(err))
 		return
 	}
 	consts.GlobalSession.MessageCreate(

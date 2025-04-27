@@ -28,7 +28,7 @@ func main() {
 	check.CheckEnv()
 	e := consts.GlobalSession.Open()
 	if e != nil {
-		log.ZapLogger.Error("连接失败", zaplog.Error(e))
+		log.Zlog.Error("连接失败", zaplog.Error(e))
 		panic(e)
 	}
 	notifier.StartAutoService()

@@ -74,7 +74,7 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 			SetQueryParam("type", newsType).
 			Get(apiBaseURL)
 		if err != nil {
-			log.ZapLogger.Error("获取新闻失败...", zaplog.Error(err))
+			log.Zlog.Error("获取新闻失败...", zaplog.Error(err))
 			return err
 		}
 
@@ -86,7 +86,7 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 		fmt.Println(string(resp.Body()))
 		err = json.Unmarshal(resp.Body(), &res)
 		if err != nil {
-			log.ZapLogger.Error("Unmarshal err", zaplog.Error(err))
+			log.Zlog.Error("Unmarshal err", zaplog.Error(err))
 			return err
 		}
 		newsCache.Set(newsType, res, 0)
@@ -177,7 +177,7 @@ func MorningHandler(ctx context.Context, targetID, quoteID, authorID string, arg
 			SetBody(fmt.Sprintf("token=%s&format=json", apiKey)).
 			Post(apiDailyMorningReport)
 		if err != nil || resp.StatusCode() != 200 {
-			log.ZapLogger.Error("获取新闻失败...", zaplog.Error(err))
+			log.Zlog.Error("获取新闻失败...", zaplog.Error(err))
 			return fmt.Errorf("StatusCode: %d, err is %v", resp.StatusCode(), err)
 		}
 		fmt.Println(resp)

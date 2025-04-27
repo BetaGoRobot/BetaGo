@@ -65,7 +65,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		content := larkutils.PreGetTextMsg(ctx, event)
 		embedded, usage, err := doubao.EmbeddingText(ctx, content)
 		if err != nil {
-			log.ZapLogger.Error("EmbeddingText error", zaplog.Error(err))
+			log.Zlog.Error("EmbeddingText error", zaplog.Error(err))
 		}
 		err = opensearchdal.InsertData(
 			ctx, "lark_msg_index", *event.Event.Message.MessageId,
@@ -83,7 +83,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 			},
 		)
 		if err != nil {
-			log.ZapLogger.Error("InsertData error", zaplog.Error(err))
+			log.Zlog.Error("InsertData error", zaplog.Error(err))
 		}
 		return
 	}()
@@ -93,6 +93,7 @@ func init() {
 	Handler = Handler.
 		OnPanic(larkDeferFunc).
 		WithDefer(CollectMessage).
+		AddParallelStages(&RecordMsgOperator{}).
 		AddParallelStages(&RepeatMsgOperator{}).
 		AddParallelStages(&ReactMsgOperator{}).
 		AddParallelStages(&WordReplyMsgOperator{}).

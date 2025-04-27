@@ -27,7 +27,7 @@ func RegexpMatch(str, pattern string) bool {
 	}
 	re, err := regexp2.Compile(pattern, 0)
 	if err != nil {
-		log.ZapLogger.Error("compile regexp error", zaplog.Error(err))
+		log.Zlog.Error("compile regexp error", zaplog.Error(err))
 		return false
 	}
 	repatternCache.Set(context.Background(), pattern, re)

@@ -31,17 +31,17 @@ func ExtractLyrics(lyric string) (s string, err error) {
 	)
 	for _, lyric := range lyricList {
 		if matched, err := rePattern.MatchString(lyric); err != nil {
-			log.ZapLogger.Warn("match string error", zaplog.String("lyric", lyric))
+			log.Zlog.Warn("match string error", zaplog.String("lyric", lyric))
 			continue
 		} else if matched {
 			m, err := rePattern.FindStringMatch(lyric)
 			if err != nil {
-				log.ZapLogger.Warn("find string match error", zaplog.String("lyric", lyric))
+				log.Zlog.Warn("find string match error", zaplog.String("lyric", lyric))
 				continue
 			}
 			group := m.Groups()
 			if len(group) < 3 {
-				log.ZapLogger.Warn("group length less than 3", zaplog.String("lyric", lyric))
+				log.Zlog.Warn("group length less than 3", zaplog.String("lyric", lyric))
 				continue
 			}
 			minuteStr := group[1].String()
@@ -49,12 +49,12 @@ func ExtractLyrics(lyric string) (s string, err error) {
 			content := group[3].String()
 			minute, err := strconv.Atoi(minuteStr)
 			if err != nil {
-				log.ZapLogger.Warn("convert minute to int error", zaplog.String("minute", minuteStr))
+				log.Zlog.Warn("convert minute to int error", zaplog.String("minute", minuteStr))
 				continue
 			}
 			second, err := strconv.ParseFloat(secondStr, 64)
 			if err != nil {
-				log.ZapLogger.Warn("convert second to float error", zaplog.String("second", secondStr))
+				log.Zlog.Warn("convert second to float error", zaplog.String("second", secondStr))
 				continue
 			}
 
@@ -68,7 +68,7 @@ func ExtractLyrics(lyric string) (s string, err error) {
 	}
 	s, err = sonic.MarshalString(lyricMap{newLyrics})
 	if err != nil {
-		log.ZapLogger.Error("marshal string error", zaplog.Error(err))
+		log.Zlog.Error("marshal string error", zaplog.Error(err))
 		return
 	}
 	return

@@ -30,6 +30,6 @@ func init() {
 		Secure: useSSL,
 	})
 	if err != nil {
-		log.ZapLogger.Panic(err.Error())
+		log.Zlog.Panic(err.Error())
 	}
 }

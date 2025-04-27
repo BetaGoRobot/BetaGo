@@ -69,7 +69,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutil
 	)
 	musicURL, err := neteaseapi.NetEaseGCtx.GetMusicURL(ctx, musicID)
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
+		log.Zlog.Error(err.Error())
 		return nil
 	}
 
@@ -77,7 +77,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutil
 	picURL := songDetail.Al.PicURL
 	imageKey, ossURL, err := larkutils.UploadPicAllinOne(ctx, picURL, musicID, true)
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
+		log.Zlog.Error(err.Error())
 		return nil
 	}
 
@@ -117,7 +117,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutil
 		SetContentType(ct.ContentTypePlainText).
 		Upload()
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
+		log.Zlog.Error(err.Error())
 		return nil
 	}
 
@@ -179,7 +179,7 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 
 	albumDetails, err := neteaseapi.NetEaseGCtx.GetAlbumDetail(ctx, albumID)
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
+		log.Zlog.Error(err.Error())
 		return
 	}
 	searchRes := neteaseapi.SearchMusic{Result: *albumDetails}
@@ -232,11 +232,11 @@ func HandleWithDraw(ctx context.Context, msgID string) {
 	// 撤回消息
 	resp, err := larkutils.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(msgID).Build())
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
+		log.Zlog.Error(err.Error())
 		return
 	}
 	if !resp.Success() {
-		log.ZapLogger.Error("delete message error", zaplog.String("error", resp.Error()))
+		log.Zlog.Error("delete message error", zaplog.String("error", resp.Error()))
 	}
 	return
 }

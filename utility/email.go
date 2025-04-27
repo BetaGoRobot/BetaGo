@@ -33,9 +33,9 @@ func SendEmail(Subject string, Body string) {
 	em.Text = []byte(Body)
 	err := em.Send(netEaseEmailURLWithPort, smtp.PlainAuth("", netEaseEmailAddress, netEaseEmailSecret, netEaseEmailURL))
 	if err != nil {
-		log.ZapLogger.DPanic("Send email failed", zaplog.Error(err))
+		log.Zlog.DPanic("Send email failed", zaplog.Error(err))
 	}
-	log.ZapLogger.Info("Send email success")
+	log.Zlog.Info("Send email success")
 }
 
 // SendQRCodeMail is the function to send QRCode mail

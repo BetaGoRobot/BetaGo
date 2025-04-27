@@ -35,7 +35,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	defer span.End()
 
 	argMap, _ := parseArgs(args...)
-	log.ZapLogger.Info("wordAddHandler", zaplog.Any("args", argMap))
+	log.Zlog.Info("wordAddHandler", zaplog.Any("args", argMap))
 	if len(argMap) > 0 {
 		var imgKey string
 		// by url
@@ -116,7 +116,7 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 	argMap, _ := parseArgs(args...)
-	log.ZapLogger.Info("replyGetHandler", zaplog.Any("args", argMap))
+	log.Zlog.Info("replyGetHandler", zaplog.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
 
 	lines := make([]map[string]string, 0)
@@ -160,7 +160,7 @@ func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 	defer span.RecordError(err)
 
 	argMap, _ := parseArgs(args...)
-	log.ZapLogger.Info("replyDelHandler", zaplog.Any("args", argMap))
+	log.Zlog.Info("replyDelHandler", zaplog.Any("args", argMap))
 
 	if data.Event.Message.ThreadId != nil {
 		// 找到话题中的所有图片
@@ -223,7 +223,7 @@ func getImageKey(msg *larkim.Message) string {
 		contentMap := make(map[string]string)
 		err := sonic.UnmarshalString(*msg.Body.Content, &contentMap)
 		if err != nil {
-			log.ZapLogger.Error("repeatMessage", zaplog.Error(err))
+			log.Zlog.Error("repeatMessage", zaplog.Error(err))
 			return ""
 		}
 		switch *msg.MsgType {

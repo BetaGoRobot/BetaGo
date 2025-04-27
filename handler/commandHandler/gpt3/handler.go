@@ -26,7 +26,7 @@ var chatCache = cache.New(time.Minute*30, time.Minute*1)
 func init() {
 	go func() {
 		for {
-			log.ZapLogger.Info("Syncing chat cache to db...")
+			log.Zlog.Info("Syncing chat cache to db...")
 			for authorID, messages := range chatCache.Items() {
 				m, err := json.Marshal(messages.Object.([]Message))
 				if err != nil {
@@ -382,7 +382,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		}}
 		m, err := consts.GlobalSession.MessageView(quoteID)
 		if err != nil {
-			log.ZapLogger.Error("MessageView error", zaplog.Error(err))
+			log.Zlog.Error("MessageView error", zaplog.Error(err))
 			return
 		}
 
@@ -407,7 +407,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		modules...,
 	)
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
+		log.Zlog.Error(err.Error())
 	}
 	err = consts.GlobalSession.MessageUpdate(&kook.MessageUpdate{
 		MessageUpdateBase: kook.MessageUpdateBase{
@@ -416,7 +416,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		},
 	})
 	if err != nil {
-		log.ZapLogger.Error(err.Error())
+		log.Zlog.Error(err.Error())
 	}
 }
 

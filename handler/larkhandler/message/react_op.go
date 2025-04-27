@@ -74,10 +74,10 @@ func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 			Build()
 		resp, err := larkutils.LarkClient.Im.V1.MessageReaction.Create(ctx, req)
 		if err != nil {
-			log.ZapLogger.Error("reactMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+			log.Zlog.Error("reactMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 			return err
 		}
-		log.ZapLogger.Info("reactMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+		log.Zlog.Info("reactMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 	} else {
 		if utility.Probability(float64(realRate) / 100) {
 			res, hitCache := database.FindByCacheFunc(database.ReactImageMeterial{

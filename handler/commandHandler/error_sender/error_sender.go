@@ -81,7 +81,7 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx cont
 	}
 
 	if err != nil {
-		log.ZapLogger.Error("SendErrorInfo", zaplog.Error(sourceErr))
+		log.Zlog.Error("SendErrorInfo", zaplog.Error(sourceErr))
 		return
 	}
 	consts.GlobalSession.MessageCreate(&kook.MessageCreate{
