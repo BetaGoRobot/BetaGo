@@ -190,7 +190,7 @@ func AddReaction2DB(ctx context.Context, msgID string) {
 	}
 }
 
-func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix string, replyInThread bool) (err error) {
+func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix string, replyInThread bool) (resp *larkim.ReplyMessageResp, err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("msgType").String(msgType), attribute.Key("content").String(content))
 	defer span.End()
@@ -207,14 +207,14 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 			Uuid(uuid).Build(),
 	).MessageId(msgID).Build()
 
-	resp, err := LarkClient.Im.V1.Message.Reply(ctx, req)
+	resp, err = LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
 		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err))
-		return err
+		return nil, err
 	}
 	if resp.CodeError.Code != 0 {
 		log.ZapLogger.Error("ReplyMessage", zaplog.String("Error", larkcore.Prettify(resp.CodeError.Err)))
-		return errors.New(resp.Error())
+		return nil, errors.New(resp.Error())
 	}
 	RecordReplyMessage2Opensearch(ctx, resp, content)
 	return
@@ -239,7 +239,7 @@ func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io
 //	@param ctx
 //	@param text
 //	@param msgID
-func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread bool) (err error) {
+func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread bool) (resp *larkim.ReplyMessageResp, err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(text))
 	defer span.End()

@@ -71,7 +71,6 @@ func init() {
 	reflecting.GetFunctionName(handlers.DebugRevertHandler)                       // from handler/larkhandler/lark_command/handlers/debug_handler.go:216
 	reflecting.GetFunctionName(handlers.DebugTraceHandler)                        // from handler/larkhandler/lark_command/handlers/debug_handler.go:152
 	reflecting.GetFunctionName(handlers.DebugTryPanicHandler)                     // from handler/larkhandler/lark_command/handlers/debug_handler.go:91
-	reflecting.GetFunctionName(handlers.GenerateChatReply)                        // from handler/larkhandler/lark_command/handlers/chat_handler.go:232
 	reflecting.GetFunctionName(handlers.GenerateChatSeq)                          // from handler/larkhandler/lark_command/handlers/chat_handler.go:180
 	reflecting.GetFunctionName(handlers.GetTraceFromMsgID)                        // from handler/larkhandler/lark_command/handlers/debug_handler.go:110
 	reflecting.GetFunctionName(handlers.ImageAddHandler)                          // from handler/larkhandler/lark_command/handlers/image_handler.go:33

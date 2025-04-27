@@ -18,9 +18,11 @@ import (
 
 var (
 	DOUBAO_EMBEDDING_EPID = os.Getenv("DOUBAO_EMBEDDING_EPID")
-	DOUBAO_32K_EPID       = os.Getenv("DOUBAO_32K_EPID")
+	ARK_NORMAL_EPID       = os.Getenv("ARK_NORMAL_EPID")
 	DOUBAO_API_KEY        = os.Getenv("DOUBAO_API_KEY")
-	DOUBAO_THINK_EPID     = os.Getenv("DOUBAO_THINK_EPID")
+	ARK_REASON_EPID       = os.Getenv("ARK_REASON_EPID")
+	NORMAL_MODEL_BOT_ID   = os.Getenv("NORMAL_MODEL_BOT_ID")
+	REASON_MODEL_BOT_ID   = os.Getenv("REASON_MODEL_BOT_ID")
 )
 
 var client = arkruntime.NewClientWithApiKey(DOUBAO_API_KEY)
@@ -61,7 +63,7 @@ func SingleChat(ctx context.Context, sysPrompt, userPrompt string) (string, erro
 	defer span.End()
 
 	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
-		Model: DOUBAO_32K_EPID,
+		Model: ARK_NORMAL_EPID,
 		Messages: []*model.ChatCompletionMessage{
 			{
 				Role: "system",
@@ -91,7 +93,7 @@ func SingleChatPrompt(ctx context.Context, prompt string) (string, error) {
 	defer span.End()
 
 	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
-		Model: DOUBAO_32K_EPID,
+		Model: ARK_NORMAL_EPID,
 		Messages: []*model.ChatCompletionMessage{
 			{
 				Role: "system",
@@ -116,7 +118,7 @@ func SingleChatModel(ctx context.Context, sysPrompt, userPrompt, modelID string)
 	defer span.End()
 
 	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
-		Model: DOUBAO_32K_EPID,
+		Model: ARK_NORMAL_EPID,
 		Messages: []*model.ChatCompletionMessage{
 			{
 				Role: "system",
@@ -149,8 +151,9 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string) (
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	defer span.End()
-	req := model.CreateChatCompletionRequest{
-		Model: modelID,
+
+	botReq := model.BotChatCompletionRequest{
+		BotId: "bot-20250427115429-6zzzb",
 		Messages: []*model.ChatCompletionMessage{
 			{
 				Role: "system",
@@ -161,7 +164,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string) (
 		},
 	}
 
-	r, err := client.CreateChatCompletionStream(ctx, req, arkruntime.WithCustomHeader("x-is-encrypted", "true"))
+	r, err := client.CreateBotChatCompletionStream(ctx, botReq, arkruntime.WithCustomHeader("x-is-encrypted", "true"))
 	if err != nil {
 		log.ZapLogger.Error("chat error", zap.Error(err))
 		return nil, err

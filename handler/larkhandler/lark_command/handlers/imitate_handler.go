@@ -74,7 +74,7 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 		if userName != "" {
 			res = userName + ": " + res
 		}
-		err = larkutils.ReplyMsgText(ctx, res, *data.Event.Message.MessageId, "__imitate", false)
+		_, err = larkutils.ReplyMsgText(ctx, res, *data.Event.Message.MessageId, "__imitate", false)
 		if err != nil {
 			return err
 		}

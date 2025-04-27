@@ -73,6 +73,6 @@ func OneWordHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args .
 		return err
 	}
 	msg := fmt.Sprintf("%s 很喜欢《%s》中的一句话\n%s", emoji.Mountain.String(), hitokotoRes.From, hitokotoRes.Hitokoto)
-	err = larkutils.ReplyMsgText(ctx, msg, *data.Event.Message.MessageId, "_oneWord", false)
+	_, err = larkutils.ReplyMsgText(ctx, msg, *data.Event.Message.MessageId, "_oneWord", false)
 	return
 }

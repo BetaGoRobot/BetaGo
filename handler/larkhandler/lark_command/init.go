@@ -73,7 +73,7 @@ func init() {
 			newCmd("imitate", handlers.ImitateHandler),
 		).
 		AddSubCommand(
-			newCmd("bb", handlers.ChatHandler("chat")).AddArgs("r"),
+			newCmd("bb", handlers.ChatHandler("chat")).AddArgs("r", "c"),
 		).
 		AddSubCommand(
 			newCmd("mute", handlers.MuteHandler).AddArgs("t", "cancel"),

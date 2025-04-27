@@ -3,12 +3,14 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"iter"
 	"strconv"
 	"strings"
 	"text/template"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -26,15 +28,21 @@ import (
 func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
 	return func(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
 		newChatType := chatType
+		size := new(int)
+		*size = 20
 		argMap, input := parseArgs(args...)
 		if _, ok := argMap["r"]; ok {
-			newChatType = "reply"
+			newChatType = consts.MODEL_TYPE_REASON
 		}
-		return ChatHandlerInner(ctx, event, newChatType, input)
+		if _, ok := argMap["c"]; ok {
+			// no context
+			*size = 0
+		}
+		return ChatHandlerInner(ctx, event, newChatType, size, input)
 	}
 }
 
-func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, chatType string, args ...string) (err error) {
+func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, chatType string, size *int, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
@@ -45,8 +53,8 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 	} else if ext != 0 {
 		return nil // Do nothing
 	}
-	if chatType == "reply" {
-		res, err = GenerateChatReply(ctx, event, args...)
+	if chatType == consts.MODEL_TYPE_REASON {
+		res, err = GenerateChatSeq(ctx, event, doubao.ARK_REASON_EPID, size, args...)
 		// 创建卡片实体
 		template := larkutils.GetTemplate(larkutils.StreamingReasonTemplate)
 		cardSrc := template.TemplateSrc
@@ -104,7 +112,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 			return errors.New(settingUpdateResp.CodeError.Error())
 		}
 	} else {
-		res, err = GenerateChatSeq(ctx, event, args...)
+		res, err = GenerateChatSeq(ctx, event, doubao.ARK_NORMAL_EPID, size, args...)
 		if err != nil {
 			return err
 		}
@@ -112,7 +120,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		for data := range res {
 			lastData = data
 		}
-		err = larkutils.ReplyMsgText(
+		_, err = larkutils.ReplyMsgText(
 			ctx, lastData.Content, *event.Event.Message.MessageId, "_chat_random", false,
 		)
 		if err != nil {
@@ -176,12 +184,15 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 	return
 }
 
-func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, input ...string) (res iter.Seq[*doubao.ModelStreamRespReasoning], err error) {
+func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, modelID string, size *int, input ...string) (res iter.Seq[*doubao.ModelStreamRespReasoning], err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
-	// 获取最近30条消息
-	size := 20
+	// 默认获取最近20条消息
+	if size == nil {
+		size = new(int)
+		*size = 20
+	}
 	chatID := *event.Event.Message.ChatId
 	query := osquery.Search().
 		Query(
@@ -190,7 +201,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, inpu
 			),
 		).
 		SourceIncludes("raw_message", "mentions", "create_time", "user_id", "chat_id", "user_name").
-		Size(uint64(size*3)).
+		Size(uint64(*size*3)).
 		Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(
 		context.Background(),
@@ -199,7 +210,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, inpu
 	if err != nil {
 		panic(err)
 	}
-	messageList := FilterMessage(resp.Hits.Hits, size)
+	messageList := FilterMessage(resp.Hits.Hits, *size)
 
 	templateRows, _ := database.FindByCacheFunc(database.PromptTemplateArgs{PromptID: 1}, func(d database.PromptTemplateArgs) string {
 		return strconv.Itoa(d.PromptID)
@@ -220,68 +231,10 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, inpu
 	if err != nil {
 		return nil, err
 	}
-
-	res, err = doubao.SingleChatStreamingPrompt(ctx, b.String(), doubao.DOUBAO_32K_EPID)
+	fmt.Println(b.String())
+	res, err = doubao.SingleChatStreamingPrompt(ctx, b.String(), modelID)
 	if err != nil {
 		return
 	}
-	return
-}
-
-func GenerateChatReply(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (res iter.Seq[*doubao.ModelStreamRespReasoning], err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
-	defer span.End()
-
-	// 获取最近30条消息
-	size := 20
-	chatID := *event.Event.Message.ChatId
-	query := osquery.Search().
-		Query(
-			osquery.Bool().Must(
-				osquery.Term("chat_id", chatID),
-			),
-		).
-		SourceIncludes("raw_message", "mentions", "create_time", "user_id", "chat_id", "user_name").
-		Size(uint64(size*3)).
-		Sort("create_time", "desc")
-	resp, err := opensearchdal.SearchData(
-		context.Background(),
-		"lark_msg_index",
-		query)
-	if err != nil {
-		panic(err)
-	}
-	messageList := FilterMessage(resp.Hits.Hits, size)
-
-	templateRows, _ := database.FindByCacheFunc(
-		database.PromptTemplateArgs{PromptID: 2},
-		func(d database.PromptTemplateArgs) string {
-			return strconv.Itoa(d.PromptID)
-		},
-	)
-	if len(templateRows) == 0 {
-		return nil, errors.New("prompt template not found")
-	}
-	promptTemplate := templateRows[0]
-	promptTemplateStr := promptTemplate.TemplateStr
-	tp, err := template.New("prompt").Parse(promptTemplateStr)
-	if err != nil {
-		return nil, err
-	}
-	promptTemplate.UserInput = args
-	promptTemplate.HistoryRecords = messageList
-	b := &strings.Builder{}
-	err = tp.Execute(b, promptTemplate)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err = doubao.SingleChatStreamingPrompt(ctx, b.String(), doubao.DOUBAO_THINK_EPID)
-	if err != nil {
-		return
-	}
-	// span.SetAttributes(attribute.String("res", res))
-	// res = strings.Trim(res, "\n")
-	// res = strings.Trim(strings.Split(res, "\n")[0], " - ")
 	return
 }

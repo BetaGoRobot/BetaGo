@@ -100,7 +100,7 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 		_, subSpan := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer subSpan.End()
 		if replyItem.ReplyType == consts.ReplyTypeText {
-			err := larkutils.ReplyMsgText(ctx, replyItem.Reply, *event.Event.Message.MessageId, "_wordReply", false)
+			_, err := larkutils.ReplyMsgText(ctx, replyItem.Reply, *event.Event.Message.MessageId, "_wordReply", false)
 			if err != nil {
 				log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 				return err
@@ -118,7 +118,7 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 					"file_key": replyItem.Reply,
 				})
 			}
-			err := larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, msgType, content, "_wordReply", false)
+			_, err := larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, msgType, content, "_wordReply", false)
 			if err != nil {
 				log.ZapLogger.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 				return err

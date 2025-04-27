@@ -6,5 +6,5 @@ NeteaseCloudMusicApi
 debug_bin
 betago.zip
 local-build.sh
-__debug_bin
+**/__debug_bin/**
 testdata
