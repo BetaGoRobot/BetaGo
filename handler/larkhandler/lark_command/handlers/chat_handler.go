@@ -110,7 +110,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		if err != nil {
 			return err
 		}
-		if settingUpdateResp.CodeError.Err != nil {
+		if !settingUpdateResp.Success() {
 			return errors.New(settingUpdateResp.CodeError.Error())
 		}
 	} else {
@@ -122,11 +122,14 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		for data := range res {
 			lastData = data
 		}
-		_, err = larkutils.ReplyMsgText(
+		resp, err := larkutils.ReplyMsgText(
 			ctx, lastData.Content, *event.Event.Message.MessageId, "_chat_random", false,
 		)
 		if err != nil {
-			return
+			return err
+		}
+		if !resp.Success() {
+			return errors.New(resp.Error())
 		}
 	}
 	return

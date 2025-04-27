@@ -121,7 +121,7 @@ func Upload2Lark(ctx context.Context, musicID string, bodyReader io.ReadCloser) 
 		log.ZapLogger.Error(err.Error())
 		return "", nil
 	}
-	if resp.Err != nil {
+	if !resp.Success() {
 		return "", errors.New("error with code" + strconv.Itoa(resp.Code))
 	}
 	imgKey = *resp.Data.ImageKey
@@ -155,7 +155,7 @@ func UploadPicture2LarkReader(ctx context.Context, picture io.Reader) (imgKey st
 		log.ZapLogger.Error(err.Error())
 		return
 	}
-	if resp.Err != nil {
+	if !resp.Success() {
 		log.ZapLogger.Error("error with code" + strconv.Itoa(resp.Code))
 		return
 	}
@@ -186,7 +186,7 @@ func UploadPicture2Lark(ctx context.Context, URL string) (imgKey string) {
 		log.ZapLogger.Error(err.Error())
 		return
 	}
-	if resp.Err != nil {
+	if !resp.Success() {
 		log.ZapLogger.Error("error with code" + strconv.Itoa(resp.Code))
 		return
 	}
@@ -236,7 +236,7 @@ func GetUserMapFromChatID(ctx context.Context, chatID string) (memberMap map[str
 		if err != nil {
 			return memberMap, err
 		}
-		if resp.CodeError.Code != 0 {
+		if !resp.Success() {
 			err = errors.New(resp.Error())
 			return memberMap, err
 		}
@@ -268,7 +268,7 @@ func GetChatName(ctx context.Context, chatID string) (chatName string) {
 	if err != nil {
 		return
 	}
-	if resp == nil || resp.CodeError.Code != 0 {
+	if !resp.Success() {
 		err = errors.New(resp.Error())
 		return
 	}
@@ -281,7 +281,7 @@ func GetChatIDFromMsgID(ctx context.Context, msgID string) (chatID string, err e
 	defer span.End()
 
 	resp := GetMsgFullByID(ctx, msgID)
-	if resp == nil || resp.CodeError.Code != 0 {
+	if !resp.Success() {
 		err = errors.New(resp.Error())
 		return
 	}

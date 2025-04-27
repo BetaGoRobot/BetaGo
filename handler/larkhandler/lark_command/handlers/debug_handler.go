@@ -228,7 +228,7 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 				if err != nil {
 					return err
 				}
-				if resp.Code != 0 {
+				if !resp.Success() {
 					log.ZapLogger.Error("DeleteMessage", zaplog.String("MessageID", *msg.MessageId), zaplog.Error(errors.New(resp.Error())))
 				}
 			}
@@ -246,7 +246,7 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 		if err != nil {
 			return err
 		}
-		if resp.Code != 0 {
+		if !resp.Success() {
 			return errors.New(resp.Error())
 		}
 	}

@@ -212,7 +212,7 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 		log.ZapLogger.Error("ReplyMessage", zaplog.Error(err))
 		return nil, err
 	}
-	if resp.CodeError.Code != 0 {
+	if !resp.Success() {
 		log.ZapLogger.Error("ReplyMessage", zaplog.String("Error", larkcore.Prettify(resp.CodeError.Err)))
 		return nil, errors.New(resp.Error())
 	}
@@ -227,7 +227,7 @@ func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io
 		log.ZapLogger.Error("GetMsgImages", zaplog.Error(err))
 		return nil, err
 	}
-	if resp.Code != 0 {
+	if !resp.Success() {
 		log.ZapLogger.Error("GetMsgImages", zaplog.String("Error", resp.Error()))
 		return nil, errors.New(resp.Error())
 	}
@@ -375,7 +375,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 		log.ZapLogger.Error("CreateMessage", zaplog.Error(err))
 		return err
 	}
-	if resp.Code != 0 {
+	if !resp.Success() {
 		log.ZapLogger.Error("CreateMessage", zaplog.String("Error", resp.Error()))
 		return errors.New(resp.Error())
 	}
@@ -394,7 +394,7 @@ func AddReaction(ctx context.Context, reactionType, msgID string) (reactionID st
 		log.ZapLogger.Error("AddReaction", zaplog.Error(err))
 		return "", err
 	}
-	if resp.Code != 0 {
+	if !resp.Success() {
 		log.ZapLogger.Error("AddReaction", zaplog.String("Error", resp.Error()))
 		return "", errors.New(resp.Error())
 	}
@@ -414,7 +414,7 @@ func AddReactionAsync(ctx context.Context, reactionType, msgID string) (err erro
 			log.ZapLogger.Error("AddReaction", zaplog.Error(err))
 			return
 		}
-		if resp.Code != 0 {
+		if !resp.Success() {
 			log.ZapLogger.Error("AddReaction", zaplog.String("Error", resp.Error()))
 			return
 		}
@@ -433,7 +433,7 @@ func RemoveReaction(ctx context.Context, reactionID, msgID string) (err error) {
 		log.ZapLogger.Error("RemoveReaction", zaplog.Error(err))
 		return err
 	}
-	if resp.Code != 0 {
+	if !resp.Success() {
 		log.ZapLogger.Error("RemoveReaction", zaplog.String("Error", resp.Error()))
 		return errors.New(resp.Error())
 	}

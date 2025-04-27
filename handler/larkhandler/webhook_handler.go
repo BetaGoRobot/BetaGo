@@ -235,7 +235,7 @@ func HandleWithDraw(ctx context.Context, msgID string) {
 		log.ZapLogger.Error(err.Error())
 		return
 	}
-	if resp.CodeError.Code != 0 {
+	if !resp.Success() {
 		log.ZapLogger.Error("delete message error", zaplog.String("error", resp.Error()))
 	}
 	return
