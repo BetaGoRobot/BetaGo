@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -19,6 +20,7 @@ import (
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/redis"
+	commonutils "github.com/BetaGoRobot/go_utils/common_utils"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/defensestation/osquery"
 	larkcardkit "github.com/larksuite/oapi-sdk-go/v3/service/cardkit/v1"
@@ -224,7 +226,20 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	if err != nil {
 		return nil, err
 	}
-	promptTemplate.UserInput = input
+	member, err := larkutils.GetUserMemberFromChat(ctx, chatID, *event.Event.Sender.SenderId.OpenId)
+	if err != nil {
+		return
+	}
+	userName := ""
+	if member == nil {
+		userName = "NULL"
+	} else {
+		userName = *member.Name
+	}
+
+	promptTemplate.UserInput = commonutils.TransSlice(input, func(s string) string {
+		return fmt.Sprintf("[%s] <%s>: %s", utility.EpoMil2DateStr(*event.Event.Message.CreateTime), userName, strings.ReplaceAll(s, "\n", "\\n"))
+	})
 	promptTemplate.HistoryRecords = messageList
 	b := &strings.Builder{}
 	err = tp.Execute(b, promptTemplate)
