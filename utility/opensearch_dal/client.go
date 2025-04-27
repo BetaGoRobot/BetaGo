@@ -49,8 +49,8 @@ func InsertData(ctx context.Context, index string, id string, data any) error {
 		DocumentID: id,
 		Body:       opensearchutil.NewJSONReader(data),
 	}
-	_, err := OpenSearchClient().Index(ctx, req)
-
+	resp, err := OpenSearchClient().Index(ctx, req)
+	_ = resp
 	return err
 }
 

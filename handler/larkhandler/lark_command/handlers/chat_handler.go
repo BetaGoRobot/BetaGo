@@ -191,7 +191,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, args
 		).
 		SourceIncludes("raw_message", "mentions", "create_time", "user_id", "chat_id", "user_name").
 		Size(uint64(size*3)).
-		Sort("CreatedAt", "desc")
+		Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(
 		context.Background(),
 		"lark_msg_index",
@@ -243,7 +243,7 @@ func GenerateChatReply(ctx context.Context, event *larkim.P2MessageReceiveV1, ar
 		).
 		SourceIncludes("raw_message", "mentions", "create_time", "user_id", "chat_id", "user_name").
 		Size(uint64(size*3)).
-		Sort("CreatedAt", "desc")
+		Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(
 		context.Background(),
 		"lark_msg_index",
