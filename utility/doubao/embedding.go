@@ -171,9 +171,15 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string) (
 		_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 		defer span.End()
-
 		content := &strings.Builder{}
 		reasoningContent := &strings.Builder{}
+		defer span.SetAttributes(attribute.
+			Key("content").
+			String(content.String()))
+		defer span.SetAttributes(attribute.
+			Key("reasoning_content").
+			String(reasoningContent.String()))
+
 		for {
 			resp, err := r.Recv()
 			if err != nil {

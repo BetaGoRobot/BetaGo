@@ -26,11 +26,11 @@ import (
 func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
 	return func(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
 		newChatType := chatType
-		argMap, _ := parseArgs(args...)
+		argMap, input := parseArgs(args...)
 		if _, ok := argMap["r"]; ok {
 			newChatType = "reply"
 		}
-		return ChatHandlerInner(ctx, event, newChatType, args...)
+		return ChatHandlerInner(ctx, event, newChatType, input)
 	}
 }
 
@@ -176,7 +176,7 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 	return
 }
 
-func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (res iter.Seq[*doubao.ModelStreamRespReasoning], err error) {
+func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, input ...string) (res iter.Seq[*doubao.ModelStreamRespReasoning], err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
@@ -213,7 +213,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, args
 	if err != nil {
 		return nil, err
 	}
-	promptTemplate.UserInput = args
+	promptTemplate.UserInput = input
 	promptTemplate.HistoryRecords = messageList
 	b := &strings.Builder{}
 	err = tp.Execute(b, promptTemplate)
