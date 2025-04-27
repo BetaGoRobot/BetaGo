@@ -11,6 +11,13 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
+func TruncString(str string, length int) string {
+	if len(str) > length {
+		return str[:length]
+	}
+	return str
+}
+
 // ReplyCard  注意：不要传入已经Build过的文本
 //
 //	@param ctx
@@ -31,7 +38,7 @@ func ReplyCard(ctx context.Context, cardContent *TemplateCardContent, msgID, suf
 				larkim.NewReplyMessageReqBodyBuilder().
 					MsgType(larkim.MsgTypeInteractive).
 					Content(cardContent.String()).
-					Uuid(msgID+suffix).
+					Uuid(TruncString(msgID+suffix, 50)).
 					ReplyInThread(replyInThread).
 					Build(),
 			).
@@ -71,7 +78,7 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 				larkim.NewReplyMessageReqBodyBuilder().
 					MsgType(larkim.MsgTypeInteractive).
 					Content(cardContent.String()).
-					Uuid(msgID+suffix).
+					Uuid(TruncString(msgID+suffix, 50)).
 					ReplyInThread(replyInThread).
 					Build(),
 			).
