@@ -43,7 +43,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/spyzhov/ajson v0.9.6
-	github.com/tencentyun/cos-go-sdk-v5 v0.7.64
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.65
 	github.com/valyala/fasthttp v1.61.0
 	github.com/volcengine/volcengine-go-sdk v1.1.5
 	github.com/wcharczuk/go-chart/v2 v2.1.2
