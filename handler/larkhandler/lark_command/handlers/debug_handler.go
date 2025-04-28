@@ -7,8 +7,10 @@ import (
 	"strings"
 
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
+	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/message"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -293,6 +295,44 @@ func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 			return errors.New(resp.Error())
 		}
 		larkutils.RecordMessage2Opensearch(ctx, resp)
+	}
+	return nil
+}
+
+func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
+	defer span.End()
+	seq, err := larkutils.GetAllImgURLFromParent(ctx, data)
+	if err != nil {
+		return err
+	}
+	if seq == nil {
+		return nil
+	}
+	urls := make([]string, 0)
+	for url := range seq {
+		url = strings.ReplaceAll(url, "kmhomelab.cn", "kevinmatt.top")
+		urls = append(urls, url)
+	}
+	var inputPrompt string
+	if _, input := parseArgs(args...); input == "" {
+		inputPrompt = "图里都是些什么？"
+	} else {
+		inputPrompt = input
+	}
+	dataSeq, err := doubao.SingleChatStreamingPrompt(
+		ctx,
+		inputPrompt,
+		doubao.ARK_VISION_EPID,
+		urls...,
+	)
+	if err != nil {
+		return err
+	}
+	err = message.SendAndUpdateStreamingCard(ctx, data.Event.Message, dataSeq)
+	if err != nil {
+		return err
 	}
 	return nil
 }

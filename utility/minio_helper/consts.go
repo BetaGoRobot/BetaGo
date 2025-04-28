@@ -22,7 +22,8 @@ func init() {
 	// 	endPoint = "192.168.31.74:29000"
 	// 	useSSL = false
 	// } else {
-	endPoint = "minioapi.kmhomelab.cn"
+	// endPoint = "minioapi.kmhomelab.cn"
+	endPoint = "minioapi.kmhomelab.online:19828"
 	useSSL = true
 	// }
 	minioClient, err = minio.New(endPoint, &minio.Options{

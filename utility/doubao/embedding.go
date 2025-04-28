@@ -18,11 +18,13 @@ import (
 
 var (
 	DOUBAO_EMBEDDING_EPID = os.Getenv("DOUBAO_EMBEDDING_EPID")
-	ARK_NORMAL_EPID       = os.Getenv("ARK_NORMAL_EPID")
 	DOUBAO_API_KEY        = os.Getenv("DOUBAO_API_KEY")
+	ARK_NORMAL_EPID       = os.Getenv("ARK_NORMAL_EPID")
 	ARK_REASON_EPID       = os.Getenv("ARK_REASON_EPID")
-	NORMAL_MODEL_BOT_ID   = os.Getenv("NORMAL_MODEL_BOT_ID")
-	REASON_MODEL_BOT_ID   = os.Getenv("REASON_MODEL_BOT_ID")
+	ARK_VISION_EPID       = os.Getenv("ARK_VISION_EPID")
+
+	NORMAL_MODEL_BOT_ID = os.Getenv("NORMAL_MODEL_BOT_ID")
+	REASON_MODEL_BOT_ID = os.Getenv("REASON_MODEL_BOT_ID")
 )
 
 var client = arkruntime.NewClientWithApiKey(DOUBAO_API_KEY)
@@ -147,21 +149,52 @@ type ModelStreamRespReasoning struct {
 	Content          string
 }
 
-func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string) (iter.Seq[*ModelStreamRespReasoning], error) {
+func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, files ...string) (iter.Seq[*ModelStreamRespReasoning], error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
+	span.SetAttributes(attribute.Key("model_id").String(modelID))
 	defer span.End()
-
-	req := model.CreateChatCompletionRequest{
-		Model: modelID,
-		Messages: []*model.ChatCompletionMessage{
-			{
-				Role: "system",
-				Content: &model.ChatCompletionMessageContent{
-					StringValue: &sysPrompt,
+	var req model.CreateChatCompletionRequest
+	if len(files) > 0 {
+		span.SetAttributes(attribute.Key("files").String(strings.Join(files, ",")))
+		modelID = ARK_VISION_EPID
+		listValue := make([]*model.ChatCompletionMessageContentPart, len(files)+1)
+		listValue[0] = &model.ChatCompletionMessageContentPart{
+			Type: model.ChatCompletionMessageContentPartTypeText,
+			Text: sysPrompt,
+		}
+		for i, f := range files {
+			listValue[i+1] = &model.ChatCompletionMessageContentPart{
+				Type: model.ChatCompletionMessageContentPartTypeImageURL,
+				ImageURL: &model.ChatMessageImageURL{
+					URL:    f,
+					Detail: model.ImageURLDetailAuto,
+				},
+			}
+		}
+		req = model.CreateChatCompletionRequest{
+			Model: modelID,
+			Messages: []*model.ChatCompletionMessage{
+				{
+					Role: "system",
+					Content: &model.ChatCompletionMessageContent{
+						ListValue: listValue,
+					},
 				},
 			},
-		},
+		}
+	} else {
+		req = model.CreateChatCompletionRequest{
+			Model: modelID,
+			Messages: []*model.ChatCompletionMessage{
+				{
+					Role: "system",
+					Content: &model.ChatCompletionMessageContent{
+						StringValue: &sysPrompt,
+					},
+				},
+			},
+		}
 	}
 
 	r, err := client.CreateChatCompletionStream(ctx, req, arkruntime.WithCustomHeader("x-is-encrypted", "true"))

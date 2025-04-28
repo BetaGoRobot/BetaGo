@@ -36,6 +36,7 @@ type MinioManager struct {
 	contentType    ct.ContentType
 	inputTransFunc minioUploadStage
 	needAKA        bool
+	domain         string
 }
 
 // Client 返回一个新的minioManager Client
@@ -43,6 +44,7 @@ func Client() *MinioManager {
 	return &MinioManager{
 		Context: context.Background(),
 		needAKA: true,
+		domain:  "kutt.kmhomelab.cn",
 	}
 }
 
@@ -181,6 +183,30 @@ func (m *MinioManager) SetContentType(contentType ct.ContentType) *MinioManager 
 	return m
 }
 
+// SetV4 to be filled SetV4  设置contentType
+//
+//	@receiver m *MinioManager
+//	@return *MinioManager
+//	@author kevinmatthe
+//	@update 2025-04-28 21:07:40
+func (m *MinioManager) SetV4() *MinioManager {
+	m.span.SetAttributes(attribute.Key("stack").String("V4"))
+	m.domain = "kutt.kevinmatt.top"
+	return m
+}
+
+// SetV6  设置V6
+//
+//	@receiver m *MinioManager
+//	@return *MinioManager
+//	@author kevinmatthe
+//	@update 2025-04-28 21:07:40
+func (m *MinioManager) SetV6() *MinioManager {
+	m.span.SetAttributes(attribute.Key("stack").String("V6"))
+	m.domain = "kutt.kmhomelab.cn"
+	return m
+}
+
 // SetExpiration  设置过期时间
 //
 //	@receiver m *MinioManager
@@ -281,6 +307,7 @@ func (m *MinioManager) PresignURL() (u *url.URL, err error) {
 	m.span.SetAttributes(attribute.String("presigned_url", u.String()))
 	if m.needAKA {
 		u = shortenURL(ctx, u)
+		u.Host = m.domain
 		m.span.SetAttributes(attribute.String("presigned_url_shortened", u.String()))
 	}
 	return

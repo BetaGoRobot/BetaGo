@@ -14,7 +14,7 @@ func init() {
 	reflecting.GetFunctionName(AddReactionAsync)              // from utility/larkutils/msg.go:406
 	reflecting.GetFunctionName(CreateMsgText)                 // from utility/larkutils/msg.go:343
 	reflecting.GetFunctionName(CreateMsgTextRaw)              // from utility/larkutils/msg.go:353
-	reflecting.GetFunctionName(DownloadImageFromMsgWithUpload)          // from utility/larkutils/image.go:25
+	reflecting.GetFunctionName(DownImgFromMsgAsync)          // from utility/larkutils/image.go:25
 	reflecting.GetFunctionName(GenFullLyricsCard)             // from utility/larkutils/cards.go:251
 	reflecting.GetFunctionName(GenerateMusicCardByStruct)     // from utility/larkutils/cards.go:276
 	reflecting.GetFunctionName(GetAndResizePicFromURL)        // from utility/larkutils/lark.go:30

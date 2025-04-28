@@ -33,6 +33,9 @@ func init() {
 				).
 				AddSubCommand(
 					newCmd("repeat", handlers.DebugRepeatHandler),
+				).
+				AddSubCommand(
+					newCmd("image", handlers.DebugImageHandler),
 				),
 		).
 		AddSubCommand(
