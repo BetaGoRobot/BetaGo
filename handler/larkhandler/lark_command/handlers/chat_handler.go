@@ -64,6 +64,16 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 			files = append(files, url)
 		}
 	}
+	// 看看有没有quote的消息包含图片
+	urlSeq, err = larkutils.GetAllImgURLFromParent(ctx, event)
+	if err != nil {
+		return err
+	}
+	if urlSeq != nil {
+		for url := range urlSeq {
+			files = append(files, url)
+		}
+	}
 	if chatType == consts.MODEL_TYPE_REASON {
 		res, err = GenerateChatSeq(ctx, event, doubao.ARK_REASON_EPID, size, files, args...)
 		if err != nil {

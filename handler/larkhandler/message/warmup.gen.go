@@ -15,6 +15,8 @@ func init() {
 	reflecting.GetFunctionName((*CommandOperator).Run)         // from handler/larkhandler/message/command_op.go:55
 	reflecting.GetFunctionName((*ReactMsgOperator).PreRun)     // from handler/larkhandler/message/react_op.go:35
 	reflecting.GetFunctionName((*ReactMsgOperator).Run)        // from handler/larkhandler/message/react_op.go:53
+	reflecting.GetFunctionName((*RecordMsgOperator).PreRun)    // from handler/larkhandler/message/record_op.go:32
+	reflecting.GetFunctionName((*RecordMsgOperator).Run)       // from handler/larkhandler/message/record_op.go:47
 	reflecting.GetFunctionName((*RepeatMsgOperator).PreRun)    // from handler/larkhandler/message/repeat_op.go:42
 	reflecting.GetFunctionName((*RepeatMsgOperator).Run)       // from handler/larkhandler/message/repeat_op.go:63
 	reflecting.GetFunctionName((*ReplyChatOperator).PreRun)    // from handler/larkhandler/message/reply_chat_op.go:39

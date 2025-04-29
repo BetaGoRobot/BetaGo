@@ -368,9 +368,11 @@ func GetAllImgURLFromParent(ctx context.Context, data *larkim.P2MessageReceiveV1
 				if err != nil {
 					return
 				}
-				for url := range seq {
-					if !yield(url) {
-						return
+				if seq != nil {
+					for url := range seq {
+						if !yield(url) {
+							return
+						}
 					}
 				}
 			}
@@ -381,9 +383,11 @@ func GetAllImgURLFromParent(ctx context.Context, data *larkim.P2MessageReceiveV1
 			if err != nil {
 				return
 			}
-			for url := range seq {
-				if !yield(url) {
-					return
+			if seq != nil {
+				for url := range seq {
+					if !yield(url) {
+						return
+					}
 				}
 			}
 		}, nil

@@ -9,10 +9,10 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName(EmbeddingText)             // from utility/doubao/embedding.go:37
+	reflecting.GetFunctionName(EmbeddingText)             // from utility/doubao/embedding.go:39
 	reflecting.GetFunctionName(GenerateChat)              // from utility/doubao/tools.go:11
-	reflecting.GetFunctionName(SingleChat)                // from utility/doubao/embedding.go:60
-	reflecting.GetFunctionName(SingleChatModel)           // from utility/doubao/embedding.go:115
-	reflecting.GetFunctionName(SingleChatPrompt)          // from utility/doubao/embedding.go:91
-	reflecting.GetFunctionName(SingleChatStreamingPrompt) // from utility/doubao/embedding.go:151, utility/doubao/embedding.go:174
+	reflecting.GetFunctionName(SingleChat)                // from utility/doubao/embedding.go:62
+	reflecting.GetFunctionName(SingleChatModel)           // from utility/doubao/embedding.go:117
+	reflecting.GetFunctionName(SingleChatPrompt)          // from utility/doubao/embedding.go:93
+	reflecting.GetFunctionName(SingleChatStreamingPrompt) // from utility/doubao/embedding.go:153, utility/doubao/embedding.go:207
 }

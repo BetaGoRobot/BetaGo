@@ -14,9 +14,12 @@ func init() {
 	reflecting.GetFunctionName(AddReactionAsync)              // from utility/larkutils/msg.go:406
 	reflecting.GetFunctionName(CreateMsgText)                 // from utility/larkutils/msg.go:343
 	reflecting.GetFunctionName(CreateMsgTextRaw)              // from utility/larkutils/msg.go:353
-	reflecting.GetFunctionName(DownImgFromMsgAsync)          // from utility/larkutils/image.go:25
+	reflecting.GetFunctionName(DownImgFromMsgAsync)           // from utility/larkutils/image.go:101
+	reflecting.GetFunctionName(DownImgFromMsgSync)            // from utility/larkutils/image.go:35
 	reflecting.GetFunctionName(GenFullLyricsCard)             // from utility/larkutils/cards.go:251
 	reflecting.GetFunctionName(GenerateMusicCardByStruct)     // from utility/larkutils/cards.go:276
+	reflecting.GetFunctionName(GetAllImageFromMsgEvent)       // from utility/larkutils/image.go:265
+	reflecting.GetFunctionName(GetAllImgTagFromMsg)           // from utility/larkutils/image.go:227
 	reflecting.GetFunctionName(GetAndResizePicFromURL)        // from utility/larkutils/lark.go:30
 	reflecting.GetFunctionName(GetChatIDFromMsgID)            // from utility/larkutils/lark.go:280
 	reflecting.GetFunctionName(GetChatName)                   // from utility/larkutils/lark.go:264
@@ -36,4 +39,5 @@ func init() {
 	reflecting.GetFunctionName(UploadPicAllinOne)             // from utility/larkutils/lark.go:59
 	reflecting.GetFunctionName(UploadPicture2Lark)            // from utility/larkutils/lark.go:167
 	reflecting.GetFunctionName(UploadPicture2LarkReader)      // from utility/larkutils/lark.go:141
+	reflecting.GetFunctionName(getAllImage)                   // from utility/larkutils/image.go:299
 }

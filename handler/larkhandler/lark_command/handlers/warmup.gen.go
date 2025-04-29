@@ -9,15 +9,16 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName(ChatHandlerInner)       // from handler/larkhandler/lark_command/handlers/chat_handler.go:48
-	reflecting.GetFunctionName(DebugGetGroupIDHandler) // from handler/larkhandler/lark_command/handlers/debug_handler.go:67
-	reflecting.GetFunctionName(DebugGetIDHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:42
-	reflecting.GetFunctionName(DebugRepeatHandler)     // from handler/larkhandler/lark_command/handlers/debug_handler.go:257
-	reflecting.GetFunctionName(DebugRevertHandler)     // from handler/larkhandler/lark_command/handlers/debug_handler.go:216
-	reflecting.GetFunctionName(DebugTraceHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:152
-	reflecting.GetFunctionName(DebugTryPanicHandler)   // from handler/larkhandler/lark_command/handlers/debug_handler.go:91
-	reflecting.GetFunctionName(GenerateChatSeq)        // from handler/larkhandler/lark_command/handlers/chat_handler.go:193
-	reflecting.GetFunctionName(GetTraceFromMsgID)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:110
+	reflecting.GetFunctionName(ChatHandlerInner)       // from handler/larkhandler/lark_command/handlers/chat_handler.go:45
+	reflecting.GetFunctionName(DebugGetGroupIDHandler) // from handler/larkhandler/lark_command/handlers/debug_handler.go:69
+	reflecting.GetFunctionName(DebugGetIDHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:44
+	reflecting.GetFunctionName(DebugImageHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:303
+	reflecting.GetFunctionName(DebugRepeatHandler)     // from handler/larkhandler/lark_command/handlers/debug_handler.go:259
+	reflecting.GetFunctionName(DebugRevertHandler)     // from handler/larkhandler/lark_command/handlers/debug_handler.go:218
+	reflecting.GetFunctionName(DebugTraceHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:154
+	reflecting.GetFunctionName(DebugTryPanicHandler)   // from handler/larkhandler/lark_command/handlers/debug_handler.go:93
+	reflecting.GetFunctionName(GenerateChatSeq)        // from handler/larkhandler/lark_command/handlers/chat_handler.go:99
+	reflecting.GetFunctionName(GetTraceFromMsgID)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:112
 	reflecting.GetFunctionName(ImageAddHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:33
 	reflecting.GetFunctionName(ImageDelHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:157
 	reflecting.GetFunctionName(ImageGetHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:115
