@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
@@ -148,7 +149,7 @@ func SearchExcludeUserID(UserID, chatID string, batch, size uint64) (messageList
 func FilterMessage(hits []opensearchapi.SearchHit, size int) (msgList []string) {
 	msgList = make([]string, 0)
 	for _, hit := range hits {
-		res := &MessageDoc{}
+		res := &handlertypes.MessageIndex{}
 		b, _ := hit.Source.MarshalJSON()
 		err := sonic.ConfigStd.Unmarshal(b, res)
 		if err != nil {

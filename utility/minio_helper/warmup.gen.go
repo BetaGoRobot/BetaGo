@@ -9,9 +9,9 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName((*MinioManager).PresignURL) // from utility/minio_helper/helper.go:300
-	reflecting.GetFunctionName((*MinioManager).TryGetFile) // from utility/minio_helper/helper.go:278
-	reflecting.GetFunctionName((*MinioManager).UploadFile) // from utility/minio_helper/helper.go:288
+	reflecting.GetFunctionName((*MinioManager).PresignURL) // from utility/minio_helper/helper.go:328
+	reflecting.GetFunctionName((*MinioManager).TryGetFile) // from utility/minio_helper/helper.go:306
+	reflecting.GetFunctionName((*MinioManager).UploadFile) // from utility/minio_helper/helper.go:316
 	reflecting.GetFunctionName(MinioCheckFileExists)       // from utility/minio_helper/uploads.go:67
 	reflecting.GetFunctionName(MinioTryGetFile)            // from utility/minio_helper/uploads.go:56
 	reflecting.GetFunctionName(minioUploadReader)          // from utility/minio_helper/uploads.go:80

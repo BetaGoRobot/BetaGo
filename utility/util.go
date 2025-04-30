@@ -431,3 +431,29 @@ func removeStyleKey(data any) any {
 		return data
 	}
 }
+
+func UnmarshallString[T any](s string) (*T, error) {
+	t := new(T)
+	err := sonic.UnmarshalString(s, &t)
+	if err != nil {
+		return t, err
+	}
+	return t, nil
+}
+
+func MustUnmarshallString[T any](s string) *T {
+	t := new(T)
+	err := sonic.UnmarshalString(s, &t)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
+func UnmarshallStringPre[T any](s string, val *T) error {
+	err := sonic.UnmarshalString(s, &val)
+	if err != nil {
+		return err
+	}
+	return nil
+}

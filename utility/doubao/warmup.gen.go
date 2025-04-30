@@ -14,5 +14,5 @@ func init() {
 	reflecting.GetFunctionName(SingleChat)                // from utility/doubao/embedding.go:62
 	reflecting.GetFunctionName(SingleChatModel)           // from utility/doubao/embedding.go:117
 	reflecting.GetFunctionName(SingleChatPrompt)          // from utility/doubao/embedding.go:93
-	reflecting.GetFunctionName(SingleChatStreamingPrompt) // from utility/doubao/embedding.go:153, utility/doubao/embedding.go:207
+	reflecting.GetFunctionName(SingleChatStreamingPrompt) // from utility/doubao/embedding.go:153, utility/doubao/embedding.go:209
 }

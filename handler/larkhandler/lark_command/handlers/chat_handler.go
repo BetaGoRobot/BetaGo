@@ -13,9 +13,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
+	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/message"
-	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/redis"
 	commonutils "github.com/BetaGoRobot/go_utils/common_utils"
@@ -115,24 +115,17 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 		*size = 20
 	}
 	chatID := *event.Event.Message.ChatId
-	query := osquery.Search().
-		Query(
-			osquery.Bool().Must(
-				osquery.Term("chat_id", chatID),
-			),
-		).
-		SourceIncludes("raw_message", "mentions", "create_time", "user_id", "chat_id", "user_name").
+	messageList, err := history.New(ctx).Query(
+		osquery.Bool().Must(
+			osquery.Term("chat_id", chatID),
+		),
+	).
+		Source("raw_message", "mentions", "create_time", "user_id", "chat_id", "user_name", "message_type").
 		Size(uint64(*size*3)).
-		Sort("create_time", "desc")
-	resp, err := opensearchdal.SearchData(
-		context.Background(),
-		"lark_msg_index",
-		query)
+		Sort("create_time", "desc").GetMsg()
 	if err != nil {
-		panic(err)
+		return
 	}
-	messageList := FilterMessage(resp.Hits.Hits, *size)
-
 	templateRows, _ := database.FindByCacheFunc(database.PromptTemplateArgs{PromptID: 1}, func(d database.PromptTemplateArgs) string {
 		return strconv.Itoa(d.PromptID)
 	})

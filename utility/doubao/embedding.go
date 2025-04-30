@@ -151,9 +151,11 @@ type ModelStreamRespReasoning struct {
 
 func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, files ...string) (iter.Seq[*ModelStreamRespReasoning], error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	span.SetAttributes(attribute.Key("model_id").String(modelID))
-	defer span.End()
+	span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))
+
 	var req model.CreateChatCompletionRequest
 	if len(files) > 0 {
 		span.SetAttributes(attribute.Key("files").String(strings.Join(files, ",")))
