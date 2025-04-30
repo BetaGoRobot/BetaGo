@@ -47,7 +47,7 @@ func ReplyCard(ctx context.Context, cardContent *TemplateCardContent, msgID, suf
 	if err != nil {
 		return
 	}
-	if resp.StatusCode != 200 {
+	if !resp.Success() {
 		return errors.New(resp.Error())
 	}
 	RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
