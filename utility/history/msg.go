@@ -15,6 +15,7 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/defensestation/osquery"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+
 	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -137,16 +138,41 @@ func FilterMessage(hits []opensearchapi.SearchHit) (msgList []string) {
 		if err != nil {
 			continue
 		}
+		mentions := make([]*larkim.Mention, 0)
+		utility.UnmarshallStringPre(res.Mentions, &mentions)
 
-		msgList := make([]string, 0)
-		for msgItem := range larkmsgutils.GetContentItemsSeq(&larkim.EventMessage{
-			Content:     &res.RawMessage,
-			MessageType: &res.MessageType,
-		}) {
-			msgList = append(msgList, strings.ReplaceAll(msgItem.Content, "\n", "<换行>"))
+		tmpList := make([]string, 0)
+		for msgItem := range larkmsgutils.
+			GetContentItemsSeq(
+				&larkim.EventMessage{
+					Content:     &res.RawMessage,
+					MessageType: &res.MessageType,
+				},
+			) {
+			switch msgItem.Tag {
+			case "at", "text":
+				if len(mentions) > 0 {
+					for _, mention := range mentions {
+						if mention.Key != nil {
+							if *mention.Name == "不太正经的网易云音乐机器人" {
+								*mention.Name = "你"
+							}
+							msgItem.Content = strings.ReplaceAll(msgItem.Content, *mention.Key, fmt.Sprintf("@%s", *mention.Name))
+						}
+					}
+				}
+				fallthrough
+			default:
+				content := strings.ReplaceAll(msgItem.Content, "\n", "<换行>")
+				if strings.TrimSpace(content) != "" {
+					tmpList = append(tmpList, content)
+				}
+			}
 		}
-
-		if r := fmt.Sprintf("[%s] <%s>: %s", res.CreateTime, res.UserName, strings.Join(msgList, ";")); r != "" {
+		if len(tmpList) == 0 {
+			continue
+		}
+		if r := fmt.Sprintf("[%s] <%s>: %s", res.CreateTime, res.UserName, strings.Join(tmpList, ";")); r != "" {
 			msgList = append(msgList, r)
 		}
 	}
