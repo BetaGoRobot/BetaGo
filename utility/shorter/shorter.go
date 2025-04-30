@@ -80,7 +80,7 @@ type KuttResp struct {
 
 func GenAKA(u *url.URL) (newURL *url.URL) {
 	expires := ExpireTime{
-		Value: 7,
+		Value: 30,
 		Unit:  TimeUnitsDay,
 	}
 	oldURL := u.String()
