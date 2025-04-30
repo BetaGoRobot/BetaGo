@@ -115,6 +115,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutil
 		SetFileFromString(utility.MustMashal(targetURL)).
 		SetObjName("info/" + musicID + ".json").
 		SetContentType(ct.ContentTypePlainText).
+		Overwrite().
 		Upload()
 	if err != nil {
 		log.Zlog.Error(err.Error())

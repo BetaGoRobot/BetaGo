@@ -149,7 +149,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 			if err != nil {
 				return err
 			}
-			if resp.StatusCode != 200 {
+			if !resp.Success() {
 				if strings.Contains(resp.Error(), "invalid image_key") {
 					log.Zlog.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 					return nil

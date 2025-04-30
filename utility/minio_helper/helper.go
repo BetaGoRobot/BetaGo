@@ -37,6 +37,7 @@ type MinioManager struct {
 	inputTransFunc minioUploadStage
 	needAKA        bool
 	domain         string
+	overwrite      bool
 }
 
 // Client 返回一个新的minioManager Client
@@ -58,6 +59,18 @@ func Client() *MinioManager {
 func (m *MinioManager) SetNeedAKA(needAKA bool) *MinioManager {
 	m.span.SetAttributes(attribute.Bool("needAKA", needAKA))
 	m.needAKA = needAKA
+	return m
+}
+
+// Overwrite 是否覆盖文件
+//
+//	@receiver m *MinioManager
+//	@param ctx context.Context
+//	@return *MinioManager
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:54:13
+func (m *MinioManager) Overwrite() *MinioManager {
+	m.overwrite = true
 	return m
 }
 
@@ -255,22 +268,37 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	if m.expiration != nil {
 		opts.Expires = *m.expiration
 	}
-	u, err = m.TryGetFile()
-	if err != nil {
-		m.addTraceCached(false)
-		if m.inputTransFunc != nil {
-			m.inputTransFunc(m)
-		}
-		log.Zlog.Warn("tryGetFile failed", zaplog.Error(err))
-		err = m.UploadFile(opts)
+	if !m.overwrite {
+		u, err = m.TryGetFile()
 		if err != nil {
-			log.Zlog.Error("uploadFile failed", zaplog.Error(err))
+			u, err = m.UploadFileOverwrite(opts)
+			if err != nil {
+				return
+			}
+		}
+	} else {
+		u, err = m.UploadFileOverwrite(opts)
+		if err != nil {
 			return
 		}
-		return m.PresignURL()
 	}
+
 	m.addTraceCached(true)
 	return
+}
+
+func (m *MinioManager) UploadFileOverwrite(opts minio.PutObjectOptions) (u *url.URL, err error) {
+	m.addTraceCached(false)
+	if m.inputTransFunc != nil {
+		m.inputTransFunc(m)
+	}
+	log.Zlog.Warn("tryGetFile failed", zaplog.Error(err))
+	err = m.UploadFile(opts)
+	if err != nil {
+		log.Zlog.Error("uploadFile failed", zaplog.Error(err))
+		return
+	}
+	return m.PresignURL()
 }
 
 // 此函数会修改入参，不返回err外的值
