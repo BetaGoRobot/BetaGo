@@ -3,6 +3,7 @@ package larkutils
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -66,6 +67,7 @@ func NewSheetCardContent(ctx context.Context, templateID, templateVersion string
 	t.AddVariable("withdraw_title", "撤回本条消息")
 	t.AddVariable("withdraw_confirm", "你确定要撤回这条消息吗？")
 	t.AddVariable("withdraw_object", map[string]string{"type": "withdraw"})
+	t.AddVariable("refresh_time", time.Now().UTC().Add(time.Hour*8).Format(time.DateTime))
 	return t
 }
 

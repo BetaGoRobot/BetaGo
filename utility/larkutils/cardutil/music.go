@@ -37,7 +37,7 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 	for i, item := range resList {
 		res[i] = transFunc(item)
 	}
-	lines := make([]map[string]interface{}, 0)
+	lines := make([]map[string]interface{}, len(res))
 	var buttonName string
 	var buttonType string
 	switch resourceType {
@@ -59,7 +59,7 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 	go func() {
 		defer close(commentChan)
 		defer wg.Wait()
-		for _, item := range res {
+		for idx, item := range res {
 			wg.Add(1)
 			go func(item *neteaseapi.SearchMusicItem) {
 				defer wg.Done()
@@ -68,6 +68,7 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 					log.Zlog.Error("GetComment", zaplog.Error(err))
 				}
 				line := map[string]interface{}{
+					"idx":         idx,
 					"field_1":     genMusicTitle(item.Name, item.ArtistName),
 					"field_2":     item.ImageKey,
 					"button_info": buttonName,
@@ -92,7 +93,8 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 		}
 	}()
 	for line := range commentChan {
-		lines = append(lines, line)
+		idx := line["idx"].(int)
+		lines[idx] = line
 	}
 	template := larkutils.GetTemplate(larkutils.AlbumListTemplate)
 	content = larkutils.NewSheetCardContent(

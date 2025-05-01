@@ -45,6 +45,10 @@ func WebHookHandler(ctx context.Context, cardAction *larkcard.CardAction) (inter
 		case "withdraw":
 			// 撤回消息
 			go HandleWithDraw(ctx, cardAction.OpenMessageID)
+		case "refresh":
+			if musicID, ok := cardAction.Action.Value["id"]; ok {
+				go HandleRefresh(ctx, musicID.(string), cardAction.OpenMessageID)
+			}
 		}
 	}
 	// // 处理 cardAction, 这里简单打印卡片内容
@@ -158,7 +162,8 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutil
 		AddVariable("sub_title", songDetail.Ar[0].Name).
 		AddVariable("imgkey", imageKey).
 		AddVariable("player_url", playerURL).
-		AddVariable("full_lyrics_button", map[string]string{"type": "lyrics", "id": musicID})
+		AddVariable("full_lyrics_button", map[string]string{"type": "lyrics", "id": musicID}).
+		AddVariable("refresh_id", map[string]string{"type": "refresh", "id": musicID})
 }
 
 func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) {
@@ -238,6 +243,32 @@ func HandleWithDraw(ctx context.Context, msgID string) {
 	}
 	if !resp.Success() {
 		log.Zlog.Error("delete message error", zaplog.String("error", resp.Error()))
+	}
+	return
+}
+
+func HandleRefresh(ctx context.Context, musicID, msgID string) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("musicID").String(musicID))
+	defer span.End()
+
+	card := GetCardMusicByPage(ctx, musicID, 1)
+	resp, err := larkutils.LarkClient.Im.V1.Message.Patch(
+		ctx, larkim.NewPatchMessageReqBuilder().
+			MessageId(msgID).
+			Body(
+				larkim.NewPatchMessageReqBodyBuilder().
+					Content(card.String()).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		return
+	}
+	if !resp.Success() {
+		log.Zlog.Error("refresh music card error", zaplog.Error(err))
+		return
 	}
 	return
 }
