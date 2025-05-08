@@ -204,7 +204,7 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 			MsgType(msgType).
 			Content(NewTextMsgBuilder().Text(content).Build()).
 			ReplyInThread(replyInThread).
-			Uuid(TruncString(uuid, 50)).Build(),
+			Uuid(GenUUIDStr(uuid, 50)).Build(),
 	).MessageId(msgID).Build()
 
 	resp, err = LarkClient.Im.V1.Message.Reply(ctx, req)
@@ -365,7 +365,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 				larkim.NewCreateMessageReqBodyBuilder().
 					ReceiveId(chatID).
 					Content(content).
-					Uuid(TruncString(uuid, 50)).
+					Uuid(GenUUIDStr(uuid, 50)).
 					MsgType(larkim.MsgTypeText).
 					Build(),
 			).

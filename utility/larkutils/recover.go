@@ -166,7 +166,7 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 				larkim.NewReplyMessageReqBodyBuilder().
 					MsgType(larkim.MsgTypeInteractive).
 					ReplyInThread(true).
-					Uuid(TruncString(uuid, 50)).
+					Uuid(GenUUIDStr(uuid, 50)).
 					Content(cardMsg).
 					Build(),
 			).

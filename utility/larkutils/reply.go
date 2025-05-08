@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -11,7 +13,9 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func TruncString(str string, length int) string {
+func GenUUIDStr(str string, length int) string {
+	st := strconv.Itoa(int(time.Now().Truncate(time.Minute * 2).Unix()))
+	str = st + str
 	if len(str) > length {
 		return str[:length]
 	}
@@ -30,7 +34,6 @@ func ReplyCard(ctx context.Context, cardContent *TemplateCardContent, msgID, suf
 		span.SetAttributes(attribute.Key(k).String(fmt.Sprintf("%v", v)))
 	}
 	defer span.End()
-
 	resp, err := LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).
@@ -38,7 +41,7 @@ func ReplyCard(ctx context.Context, cardContent *TemplateCardContent, msgID, suf
 				larkim.NewReplyMessageReqBodyBuilder().
 					MsgType(larkim.MsgTypeInteractive).
 					Content(cardContent.String()).
-					Uuid(TruncString(msgID+suffix, 50)).
+					Uuid(GenUUIDStr(msgID+suffix, 50)).
 					ReplyInThread(replyInThread).
 					Build(),
 			).
@@ -78,7 +81,7 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 				larkim.NewReplyMessageReqBodyBuilder().
 					MsgType(larkim.MsgTypeInteractive).
 					Content(cardContent.String()).
-					Uuid(TruncString(msgID+suffix, 50)).
+					Uuid(GenUUIDStr(msgID+suffix, 50)).
 					ReplyInThread(replyInThread).
 					Build(),
 			).
