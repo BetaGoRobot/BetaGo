@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -115,7 +116,7 @@ func SearchByUserID(UserID string, batch, size uint64) (messageList []string) {
 		Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(
 		context.Background(),
-		"lark_msg_index",
+		consts.LarkMsgIndex,
 		query)
 	if err != nil {
 		panic(err)
@@ -136,7 +137,7 @@ func SearchExcludeUserID(UserID, chatID string, batch, size uint64) (messageList
 		Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(
 		context.Background(),
-		"lark_msg_index",
+		consts.LarkMsgIndex,
 		query,
 	)
 	if err != nil {

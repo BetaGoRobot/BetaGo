@@ -273,7 +273,7 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 	if err != nil {
 		log.Zlog.Error("EmbeddingText error", zaplog.Error(err))
 	}
-	err = opensearchdal.InsertData(ctx, "lark_msg_index",
+	err = opensearchdal.InsertData(ctx, consts.LarkMsgIndex,
 		utility.AddressORNil(resp.Data.MessageId),
 		&handlertypes.MessageIndex{
 			MessageLog: msgLog,
@@ -320,7 +320,7 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 	if err != nil {
 		log.Zlog.Error("EmbeddingText error", zaplog.Error(err))
 	}
-	err = opensearchdal.InsertData(ctx, "lark_msg_index", utility.AddressORNil(resp.Data.MessageId),
+	err = opensearchdal.InsertData(ctx, consts.LarkMsgIndex, utility.AddressORNil(resp.Data.MessageId),
 		&handlertypes.MessageIndex{
 			MessageLog: msgLog,
 			ChatName:   GetChatName(ctx, utility.AddressORNil(resp.Data.ChatId)),

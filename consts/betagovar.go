@@ -148,3 +148,5 @@ func (fc *FlowControlType) Top() (err error) {
 	fc.M.RUnlock()
 	return
 }
+
+const LarkMsgIndex = "lark_msg_index_ik"

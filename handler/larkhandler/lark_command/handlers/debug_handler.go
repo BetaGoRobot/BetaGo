@@ -6,6 +6,7 @@ import (
 	"iter"
 	"strings"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -121,7 +122,7 @@ func GetTraceFromMsgID(ctx context.Context, msgID string) (iter.Seq[*traceItem],
 		SourceIncludes("create_time", "trace_id").
 		Sort("create_time", "desc")
 	resp, err := opensearchdal.SearchData(
-		ctx, "lark_msg_index", query,
+		ctx, consts.LarkMsgIndex, query,
 	)
 	if err != nil {
 		return nil, err
