@@ -78,7 +78,7 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 				}
 			} else {
 				text := fmt.Sprintf("%v\n[Jaeger Trace](https://jaeger.kmhomelab.cn/trace/%s)", err.Error(), span.SpanContext().TraceID().String())
-				larkutils.ReplyCardText(ctx, text, *event.Event.Message.MessageId, "_OpErr", false)
+				larkutils.ReplyCardText(ctx, text, *event.Event.Message.MessageId, "_OpErr", true)
 				log.Zlog.Error("CommandOperator", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 				return
 			}
