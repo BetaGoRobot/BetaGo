@@ -9,4 +9,6 @@ var (
 	ErrArgsIncompelete   = errors.New("ArgsIncompeleteError")
 	ErrCommandNotFound   = errors.New("CommandNotFoundError")
 	ErrCommandIncomplete = errors.New("CommandIncompleteError")
+
+	ErrCheckUsage = errors.New("Usage")
 )

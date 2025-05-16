@@ -73,7 +73,7 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 			if errors.Is(err, consts.ErrCommandNotFound) {
 				meta.IsCommand = false
 				if larkutils.IsMentioned(event.Event.Message.Mentions) {
-					larkutils.ReplyCardText(ctx, err.Error(), *event.Event.Message.MessageId, "_OpErr", false)
+					larkutils.ReplyCardText(ctx, err.Error(), *event.Event.Message.MessageId, "_OpErr", true)
 					return
 				}
 			} else {

@@ -5,7 +5,6 @@ package commandBase
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -47,7 +46,7 @@ func (c *Command[T]) Execute(ctx context.Context, data T, args []string) error {
 
 	if subcommand, ok := c.SubCommands[args[0]]; ok {
 		if usage, ok := subcommand.CheckUsage(args[1:]...); ok {
-			return errors.New(usage)
+			return fmt.Errorf("%w: %s", consts.ErrCheckUsage, usage)
 		}
 		err := subcommand.Execute(ctx, data, args[1:])
 		if err != nil && err == consts.ErrArgsIncompelete {
