@@ -48,6 +48,7 @@ require (
 	github.com/valyala/fasthttp v1.62.0
 	github.com/volcengine/volcengine-go-sdk v1.1.8
 	github.com/wcharczuk/go-chart/v2 v2.1.2
+	github.com/yanyiwu/gojieba v1.4.5
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.36.0
 	go.opentelemetry.io/otel/sdk v1.36.0
@@ -64,7 +65,6 @@ require (
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
 	github.com/bits-and-blooms/bloom/v3 v3.7.0 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
-	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/clbanning/mxj v1.8.4 // indirect

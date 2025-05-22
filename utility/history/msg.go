@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
@@ -119,7 +120,7 @@ func (h *Helper) GetMsg() (messageList []string, err error) {
 	resp, err := opensearchdal.
 		SearchData(
 			ctx,
-			"lark_msg_index",
+			consts.LarkMsgIndex,
 			h.req,
 		)
 	if err != nil {

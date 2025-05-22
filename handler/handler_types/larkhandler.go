@@ -26,13 +26,14 @@ type MessageLog struct {
 
 type MessageIndex struct {
 	*MessageLog
-	ChatName    string      `json:"chat_name"`
-	CreateTime  string      `json:"create_time"`
-	Message     []float32   `json:"message"`
-	UserID      string      `json:"user_id"`
-	UserName    string      `json:"user_name"`
-	RawMessage  string      `json:"raw_message"`
-	TokenUsage  model.Usage `json:"token_usage"`
-	IsCommand   bool        `json:"is_command"`
-	MainCommand string      `json:"main_command"`
+	ChatName        string      `json:"chat_name"`
+	CreateTime      string      `json:"create_time"`
+	Message         []float32   `json:"message"`
+	UserID          string      `json:"user_id"`
+	UserName        string      `json:"user_name"`
+	RawMessage      string      `json:"raw_message"`
+	RawMessageJieba string      `json:"raw_message_jieba"`
+	TokenUsage      model.Usage `json:"token_usage"`
+	IsCommand       bool        `json:"is_command"`
+	MainCommand     string      `json:"main_command"`
 }

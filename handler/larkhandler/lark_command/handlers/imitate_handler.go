@@ -109,6 +109,10 @@ func SearchByUserID(UserID string, batch, size uint64) (messageList []string) {
 		Query(
 			osquery.Bool().Must(
 				osquery.Term("user_id", UserID),
+			).MustNot(
+				osquery.MatchPhrase(
+					"raw_message_seg", "file _ key",
+				),
 			),
 		).
 		SourceIncludes("raw_message", "mentions", "create_time").
@@ -130,6 +134,10 @@ func SearchExcludeUserID(UserID, chatID string, batch, size uint64) (messageList
 		Query(
 			osquery.Bool().Must(
 				osquery.Term("chat_id", chatID),
+			).MustNot(
+				osquery.MatchPhrase(
+					"raw_message_seg", "file _ key",
+				),
 			),
 		).
 		SourceIncludes("raw_message", "mentions", "create_time").

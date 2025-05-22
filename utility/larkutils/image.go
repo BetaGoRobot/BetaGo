@@ -69,6 +69,7 @@ func DownImgFromMsgSync(ctx context.Context, msgID, fileType, fileKey string) (u
 		SetFileFromReader(reader).
 		SetObjName(filepath.Join("chat_image", fileType, fileKey+suffix)).
 		SetContentType(ct.ContentType(contentType)).
+		SetNeedAKA(true).
 		SetV4().
 		Upload()
 	if err != nil {
