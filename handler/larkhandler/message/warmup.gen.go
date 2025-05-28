@@ -23,5 +23,5 @@ func init() {
 	reflecting.GetFunctionName((*ReplyChatOperator).Run)       // from handler/larkhandler/message/reply_chat_op.go:57
 	reflecting.GetFunctionName((*WordReplyMsgOperator).PreRun) // from handler/larkhandler/message/word_reply_op.go:41
 	reflecting.GetFunctionName((*WordReplyMsgOperator).Run)    // from handler/larkhandler/message/word_reply_op.go:63, handler/larkhandler/message/word_reply_op.go:100
-	reflecting.GetFunctionName(CollectMessage)                 // from handler/larkhandler/message/base.go:33
+	reflecting.GetFunctionName(CollectMessage)                 // from handler/larkhandler/message/base.go:34
 }

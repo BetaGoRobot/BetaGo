@@ -67,9 +67,8 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 
 	defer span.End()
-	template := GetTemplate(StreamingReasonTemplate)
-	cardContent := NewSheetCardContent(
-		ctx, template.TemplateID, template.TemplateVersion,
+	cardContent := NewCardContent(
+		ctx, StreamingReasonTemplate,
 	).
 		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
 		AddVariable("content", text)

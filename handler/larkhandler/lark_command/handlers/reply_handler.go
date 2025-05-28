@@ -164,11 +164,9 @@ func ReplyGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 			"title4": string(res.MatchType),
 		})
 	}
-	template := larkutils.GetTemplate(larkutils.FourColSheetTemplate)
-	cardContent := larkutils.NewSheetCardContent(
+	cardContent := larkutils.NewCardContent(
 		ctx,
-		template.TemplateID,
-		template.TemplateVersion,
+		larkutils.FourColSheetTemplate,
 	).
 		AddVariable("title1", "Scope").
 		AddVariable("title2", "Keyword").

@@ -9,5 +9,5 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName((*Helper).GetMsg) // from utility/history/msg.go:109
+	reflecting.GetFunctionName((*Helper).GetMsg) // from utility/history/msg.go:111
 }

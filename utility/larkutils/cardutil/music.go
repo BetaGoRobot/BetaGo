@@ -96,11 +96,9 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 		idx := line["idx"].(int)
 		lines[idx] = line
 	}
-	template := larkutils.GetTemplate(larkutils.AlbumListTemplate)
-	content = larkutils.NewSheetCardContent(
+	content = larkutils.NewCardContent(
 		ctx,
-		template.TemplateID,
-		template.TemplateVersion,
+		larkutils.AlbumListTemplate,
 	).AddVariable("object_list_1", lines)
 
 	return

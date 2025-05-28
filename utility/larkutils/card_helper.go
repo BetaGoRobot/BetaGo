@@ -49,15 +49,17 @@ type (
 	}
 )
 
-func NewSheetCardContent(ctx context.Context, templateID, templateVersion string) *TemplateCardContent {
+func NewCardContent(ctx context.Context, template database.TemplateVersion) *TemplateCardContent {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+
+	templateVersion := GetTemplate(template)
 	traceID := span.SpanContext().TraceID().String()
 	t := &TemplateCardContent{
 		Type: "template",
 		Data: CardData{
-			TemplateID:          templateID,
-			TemplateVersionName: templateVersion,
+			TemplateID:          templateVersion.TemplateID,
+			TemplateVersionName: templateVersion.TemplateVersion,
 			TemplateVariable:    make(map[string]interface{}),
 		},
 	}
@@ -86,6 +88,10 @@ func (c *TemplateCardContent) UpdateVariables(m map[string]interface{}) *Templat
 		c.Data.TemplateVariable[k] = v
 	}
 	return c
+}
+
+func (c *TemplateCardContent) BuildTemplate() string {
+	return ""
 }
 
 func (c *TemplateCardContent) GetVariables() []string {
