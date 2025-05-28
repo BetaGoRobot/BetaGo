@@ -15,39 +15,39 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/kevinmatthe/zaplog"
-	larkcard "github.com/larksuite/oapi-sdk-go/v3/card"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
+	"github.com/larksuite/oapi-sdk-go/v3/event/dispatcher/callback"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func WebHookHandler(ctx context.Context, cardAction *larkcard.CardAction) (interface{}, error) {
+func WebHookHandler(ctx context.Context, cardAction *callback.CardActionTriggerEvent) (*callback.CardActionTriggerResponse, error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
-	defer larkutils.RecoverMsg(ctx, cardAction.OpenMessageID)
+	defer larkutils.RecoverMsg(ctx, cardAction.Event.Context.OpenMessageID)
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(cardAction)))
 	defer span.End()
 
-	if buttonType, ok := cardAction.Action.Value["type"]; ok {
+	if buttonType, ok := cardAction.Event.Action.Value["type"]; ok {
 		switch buttonType {
 		case "song":
-			if musicID, ok := cardAction.Action.Value["id"]; ok {
-				go SendMusicCard(ctx, musicID.(string), cardAction.OpenMessageID, 1)
+			if musicID, ok := cardAction.Event.Action.Value["id"]; ok {
+				go SendMusicCard(ctx, musicID.(string), cardAction.Event.Context.OpenMessageID, 1)
 			}
 		case "album":
-			if albumID, ok := cardAction.Action.Value["id"]; ok {
+			if albumID, ok := cardAction.Event.Action.Value["id"]; ok {
 				_ = albumID
-				go SendAlbumCard(ctx, albumID.(string), cardAction.OpenMessageID)
+				go SendAlbumCard(ctx, albumID.(string), cardAction.Event.Context.OpenMessageID)
 			}
 		case "lyrics":
-			if musicID, ok := cardAction.Action.Value["id"]; ok {
-				go HandleFullLyrics(ctx, musicID.(string), cardAction.OpenMessageID)
+			if musicID, ok := cardAction.Event.Action.Value["id"]; ok {
+				go HandleFullLyrics(ctx, musicID.(string), cardAction.Event.Context.OpenMessageID)
 			}
 		case "withdraw":
 			// 撤回消息
-			go HandleWithDraw(ctx, cardAction.OpenMessageID)
+			go HandleWithDraw(ctx, cardAction.Event.Context.OpenMessageID)
 		case "refresh":
-			if musicID, ok := cardAction.Action.Value["id"]; ok {
-				go HandleRefresh(ctx, musicID.(string), cardAction.OpenMessageID)
+			if musicID, ok := cardAction.Event.Action.Value["id"]; ok {
+				go HandleRefresh(ctx, musicID.(string), cardAction.Event.Context.OpenMessageID)
 			}
 		}
 	}
