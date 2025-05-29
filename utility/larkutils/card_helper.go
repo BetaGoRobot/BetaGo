@@ -18,15 +18,16 @@ type TemplateStru struct {
 }
 
 var (
-	FourColSheetTemplate     = database.TemplateVersion{TemplateID: "AAq0LWXpn9FbS"}
-	ThreeColSheetTemplate    = database.TemplateVersion{TemplateID: "AAq0LIyUeFhNX"}
-	TwoColSheetTemplate      = database.TemplateVersion{TemplateID: "AAq0LPliGGphg"}
-	TwoColPicTemplate        = database.TemplateVersion{TemplateID: "AAq0LPJqOoh3s"}
-	AlbumListTemplate        = database.TemplateVersion{TemplateID: "AAqdqaEBaxJaf"}
-	SingleSongDetailTemplate = database.TemplateVersion{TemplateID: "AAqdrtjg8g1s8"}
-	FullLyricsTemplate       = database.TemplateVersion{TemplateID: "AAq3mcb9ivduh"}
-	StreamingReasonTemplate  = database.TemplateVersion{TemplateID: "ONLY_SRC_STERAMING_CARD"}
-	NormalCardReplyTemplate  = database.TemplateVersion{TemplateID: "AAqRQtNPSJbsZ"}
+	FourColSheetTemplate         = database.TemplateVersion{TemplateID: "AAq0LWXpn9FbS"}
+	ThreeColSheetTemplate        = database.TemplateVersion{TemplateID: "AAq0LIyUeFhNX"}
+	TwoColSheetTemplate          = database.TemplateVersion{TemplateID: "AAq0LPliGGphg"}
+	TwoColPicTemplate            = database.TemplateVersion{TemplateID: "AAq0LPJqOoh3s"}
+	AlbumListTemplate            = database.TemplateVersion{TemplateID: "AAqdqaEBaxJaf"}
+	SingleSongDetailTemplate     = database.TemplateVersion{TemplateID: "AAqdrtjg8g1s8"}
+	FullLyricsTemplate           = database.TemplateVersion{TemplateID: "AAq3mcb9ivduh"}
+	StreamingReasonTemplate      = database.TemplateVersion{TemplateID: "ONLY_SRC_STERAMING_CARD"}
+	NormalCardReplyTemplate      = database.TemplateVersion{TemplateID: "AAqRQtNPSJbsZ"}
+	NormalCardGraphReplyTemplate = database.TemplateVersion{TemplateID: "AAqdmx3wt8mit"}
 )
 
 func GetTemplate(template database.TemplateVersion) database.TemplateVersion {

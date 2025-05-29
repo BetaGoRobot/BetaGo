@@ -95,3 +95,43 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 	RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
 	return
 }
+
+// ReplyCardTextGraph 123
+//
+//	@param ctx
+//	@param text
+//	@param msgID
+func ReplyCardTextGraph(ctx context.Context, text string, graph any, msgID, suffix string, replyInThread bool) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID))
+
+	defer span.End()
+	cardContent := NewCardContent(
+		ctx, NormalCardGraphReplyTemplate,
+	).
+		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
+		AddVariable("content", text).
+		AddVariable("graph", graph)
+	fmt.Println(cardContent.String())
+	resp, err := LarkClient.Im.V1.Message.Reply(
+		ctx, larkim.NewReplyMessageReqBuilder().
+			MessageId(msgID).
+			Body(
+				larkim.NewReplyMessageReqBodyBuilder().
+					MsgType(larkim.MsgTypeInteractive).
+					Content(cardContent.String()).
+					Uuid(GenUUIDStr(msgID+suffix, 50)).
+					ReplyInThread(replyInThread).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		return
+	}
+	if !resp.Success() {
+		return errors.New(resp.Error())
+	}
+	RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
+	return
+}

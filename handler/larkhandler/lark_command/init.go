@@ -83,7 +83,10 @@ func init() {
 		).
 		AddSubCommand(
 			newCmd("stock", larkCommandNilFunc).AddSubCommand(
-				newCmd("gold", handlers.StockHandler("gold")),
+				newCmd("gold", handlers.StockHandler("gold")).
+					AddArgs(
+						"r", "h",
+					),
 			),
 		)
 	LarkRootCommand.BuildChain()
