@@ -71,7 +71,7 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 				line := map[string]interface{}{
 					"idx":         idx,
 					"field_1":     genMusicTitle(item.Name, item.ArtistName),
-					"field_2":     item.ImageKey,
+					"field_2":     map[string]any{"img_key": item.ImageKey},
 					"button_info": buttonName,
 					"element_id":  item.ID,
 					"button_val": map[string]string{
