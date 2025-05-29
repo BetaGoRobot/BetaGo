@@ -125,13 +125,11 @@ func (c *TemplateCardContent) String() string {
 		s, _ := sonic.MarshalString(v)
 		s = strings.Trim(s, "\"")
 		switch v.(type) {
-		case map[string]any:
-			// 对象类型得带着引号一起过滤。。。
-			replacedSrc = strings.ReplaceAll(replacedSrc, "\"${"+k+"}\"", s)
-		default:
+		case string:
 			replacedSrc = strings.ReplaceAll(replacedSrc, "${"+k+"}", s)
+		default:
+			replacedSrc = strings.ReplaceAll(replacedSrc, "\"${"+k+"}\"", s)
 		}
 	}
-	fmt.Println(replacedSrc)
 	return replacedSrc
 }
