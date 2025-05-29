@@ -3,6 +3,7 @@ package larkutils
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility/database"
@@ -22,7 +23,7 @@ var (
 	TwoColSheetTemplate      = database.TemplateVersion{TemplateID: "AAq0LPliGGphg"}
 	TwoColPicTemplate        = database.TemplateVersion{TemplateID: "AAq0LPJqOoh3s"}
 	AlbumListTemplate        = database.TemplateVersion{TemplateID: "AAq0bN2vGqhvl"}
-	SingleSongDetailTemplate = database.TemplateVersion{TemplateID: "AAqke9FChxpYj"}
+	SingleSongDetailTemplate = database.TemplateVersion{TemplateID: "AAqdrtjg8g1s8"}
 	FullLyricsTemplate       = database.TemplateVersion{TemplateID: "AAq3mcb9ivduh"}
 	StreamingReasonTemplate  = database.TemplateVersion{TemplateID: "AAqRQtNPSJbsZ"}
 )
@@ -46,16 +47,18 @@ type (
 		TemplateID          string                 `json:"template_id"`
 		TemplateVersionName string                 `json:"template_version_name"`
 		TemplateVariable    map[string]interface{} `json:"template_variable"`
+		TemplateSrc         string                 `json:"template_src"`
 	}
 )
 
 func NewCardContent(ctx context.Context, template database.TemplateVersion) *TemplateCardContent {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
-
-	templateVersion := GetTemplate(template)
 	traceID := span.SpanContext().TraceID().String()
-	t := &TemplateCardContent{
+	templateVersion := GetTemplate(template)
+	var t *TemplateCardContent
+	// 纯template
+	t = &TemplateCardContent{
 		Type: "template",
 		Data: CardData{
 			TemplateID:          templateVersion.TemplateID,
@@ -63,6 +66,10 @@ func NewCardContent(ctx context.Context, template database.TemplateVersion) *Tem
 			TemplateVariable:    make(map[string]interface{}),
 		},
 	}
+	if templateVersion.TemplateSrc != "" {
+		t.Data.TemplateSrc = templateVersion.TemplateSrc
+	}
+
 	// default参数
 	t.AddJaegerTraceInfo(traceID)
 	t.AddVariable("withdraw_info", "撤回卡片")
@@ -106,9 +113,25 @@ func (c *TemplateCardContent) String() string {
 	if c == nil {
 		return ""
 	}
-	res, err := sonic.MarshalString(c)
-	if err != nil {
-		return ""
+	if c.Data.TemplateSrc == "" {
+		res, err := sonic.MarshalString(c)
+		if err != nil {
+			return ""
+		}
+		return res
 	}
-	return res
+	replacedSrc := c.Data.TemplateSrc
+	for k, v := range c.Data.TemplateVariable {
+		s, _ := sonic.MarshalString(v)
+		s = strings.Trim(s, "\"")
+		switch v.(type) {
+		case map[string]any:
+			// 对象类型得带着引号一起过滤。。。
+			replacedSrc = strings.ReplaceAll(replacedSrc, "\"${"+k+"}\"", s)
+		default:
+			replacedSrc = strings.ReplaceAll(replacedSrc, "${"+k+"}", s)
+		}
+	}
+	fmt.Println(replacedSrc)
+	return replacedSrc
 }
