@@ -22,7 +22,7 @@ var (
 	ThreeColSheetTemplate    = database.TemplateVersion{TemplateID: "AAq0LIyUeFhNX"}
 	TwoColSheetTemplate      = database.TemplateVersion{TemplateID: "AAq0LPliGGphg"}
 	TwoColPicTemplate        = database.TemplateVersion{TemplateID: "AAq0LPJqOoh3s"}
-	AlbumListTemplate        = database.TemplateVersion{TemplateID: "AAq0bN2vGqhvl"}
+	AlbumListTemplate        = database.TemplateVersion{TemplateID: "AAqdqaEBaxJaf"}
 	SingleSongDetailTemplate = database.TemplateVersion{TemplateID: "AAqdrtjg8g1s8"}
 	FullLyricsTemplate       = database.TemplateVersion{TemplateID: "AAq3mcb9ivduh"}
 	StreamingReasonTemplate  = database.TemplateVersion{TemplateID: "AAqRQtNPSJbsZ"}

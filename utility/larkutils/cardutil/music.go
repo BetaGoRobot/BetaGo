@@ -3,6 +3,7 @@ package cardutil
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
@@ -29,7 +30,7 @@ func MusicItemTransAlbum(album *neteaseapi.Album) *neteaseapi.SearchMusicItem {
 	}
 }
 
-func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType) (content *larkutils.TemplateCardContent, err error) {
+func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType, keywords ...string) (content *larkutils.TemplateCardContent, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
@@ -99,7 +100,9 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 	content = larkutils.NewCardContent(
 		ctx,
 		larkutils.AlbumListTemplate,
-	).AddVariable("object_list_1", lines)
+	).
+		AddVariable("object_list_1", lines).
+		AddVariable("query", fmt.Sprintf("[%s]", strings.Join(keywords, " ")))
 
 	return
 }
