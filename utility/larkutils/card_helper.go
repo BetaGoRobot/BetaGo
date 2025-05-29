@@ -25,7 +25,8 @@ var (
 	AlbumListTemplate        = database.TemplateVersion{TemplateID: "AAqdqaEBaxJaf"}
 	SingleSongDetailTemplate = database.TemplateVersion{TemplateID: "AAqdrtjg8g1s8"}
 	FullLyricsTemplate       = database.TemplateVersion{TemplateID: "AAq3mcb9ivduh"}
-	StreamingReasonTemplate  = database.TemplateVersion{TemplateID: "AAqRQtNPSJbsZ"}
+	StreamingReasonTemplate  = database.TemplateVersion{TemplateID: "ONLY_SRC_STERAMING_CARD"}
+	NormalCardReplyTemplate  = database.TemplateVersion{TemplateID: "AAqRQtNPSJbsZ"}
 )
 
 func GetTemplate(template database.TemplateVersion) database.TemplateVersion {

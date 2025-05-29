@@ -68,11 +68,11 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 
 	defer span.End()
 	cardContent := NewCardContent(
-		ctx, StreamingReasonTemplate,
+		ctx, NormalCardReplyTemplate,
 	).
 		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
 		AddVariable("content", text)
-
+	fmt.Println(cardContent.String())
 	resp, err := LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).

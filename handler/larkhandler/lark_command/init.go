@@ -80,6 +80,11 @@ func init() {
 		).
 		AddSubCommand(
 			newCmd("mute", handlers.MuteHandler).AddArgs("t", "cancel"),
+		).
+		AddSubCommand(
+			newCmd("stock", larkCommandNilFunc).AddSubCommand(
+				newCmd("gold", handlers.StockHandler("gold")),
+			),
 		)
 	LarkRootCommand.BuildChain()
 }
