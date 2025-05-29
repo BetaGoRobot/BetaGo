@@ -108,5 +108,5 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 }
 
 func genMusicTitle(title, artist string) string {
-	return fmt.Sprintf("**%s** - **%s**", title, artist)
+	return fmt.Sprintf("**%s**\n**%s**", title, artist)
 }
