@@ -88,6 +88,10 @@ func init() {
 						"r", "h",
 					),
 			),
+		).
+		AddSubCommand(
+			newCmd("talkrate", handlers.TrendHandler).
+				AddArgs("days", "interval"),
 		)
 	LarkRootCommand.BuildChain()
 }

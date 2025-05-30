@@ -76,8 +76,8 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...s
 			graph.AddData(d, price.High, "最高价")
 			graph.AddData(d, price.Low, "最低价")
 			if min == nil || max == nil {
-				min = &price.Low
-				max = &price.High
+				min, max = new(float64), new(float64)
+				*min, *max = price.Low, price.High
 			}
 			if price.Low < *min {
 				*min = price.Low

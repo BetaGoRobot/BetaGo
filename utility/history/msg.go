@@ -130,6 +130,97 @@ func (h *Helper) GetMsg() (messageList []string, err error) {
 	return
 }
 
+type (
+	TrendSeries []*TrendItem
+	TrendItem   struct {
+		Time  string `json:"time"`  // x轴
+		Value int64  `json:"value"` // y轴
+		Key   string `json:"key"`   // 序列
+	}
+	TrendAggData struct {
+		Agg1 struct {
+			Buckets []struct {
+				KeyAsString string `json:"key_as_string"`
+				Key         int64  `json:"key"`
+				DocCount    int    `json:"doc_count"`
+				Agg2        struct {
+					DocCountErrorUpperBound int `json:"doc_count_error_upper_bound"`
+					SumOtherDocCount        int `json:"sum_other_doc_count"`
+					Buckets                 []struct {
+						Key      string `json:"key"`
+						DocCount int    `json:"doc_count"`
+					} `json:"buckets"`
+				} `json:"agg2"`
+			} `json:"buckets"`
+		} `json:"agg1"`
+	}
+)
+
+func (h *Helper) GetTrend(interval, termField string) (trendList TrendSeries, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.Key("index").String(h.index),
+		attribute.Key("query").String(utility.MustMashal(h.query)),
+		attribute.Key("source").StringSlice(h.source),
+		attribute.Key("size").Int64(int64(h.size)),
+	)
+
+	aggKey1 := "agg1"
+	aggKey2 := "agg2"
+	h.req.Aggs(
+		osquery.CustomAgg(
+			aggKey1,
+			map[string]any{
+				"date_histogram": map[string]any{
+					"field":    "create_time",
+					"interval": interval,
+				},
+				"aggs": map[string]any{
+					aggKey2: map[string]any{
+						"terms": map[string]any{
+							"field": termField,
+						},
+					},
+				},
+			},
+		),
+	)
+	resp, err := opensearchdal.
+		SearchData(
+			ctx,
+			consts.LarkMsgIndex,
+			h.req,
+		)
+	if err != nil {
+		return
+	}
+
+	trendList = make(TrendSeries, 0)
+
+	jsonBytes, err := resp.Aggregations.MarshalJSON()
+	if err != nil {
+		return
+	}
+	aggData := &TrendAggData{}
+	err = sonic.ConfigStd.Unmarshal(jsonBytes, aggData)
+	if err != nil {
+		return
+	}
+
+	for _, bucket := range aggData.Agg1.Buckets {
+		for _, item := range bucket.Agg2.Buckets {
+			trendList = append(trendList, &TrendItem{
+				Time:  bucket.KeyAsString,
+				Value: int64(item.DocCount),
+				Key:   item.Key,
+			})
+		}
+	}
+	return
+}
+
 func FilterMessage(hits []opensearchapi.SearchHit) (msgList []string) {
 	msgList = make([]string, 0)
 	for _, hit := range hits {
