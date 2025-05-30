@@ -14,6 +14,7 @@ type MultiSeriesLineGraph[X, Y Numeric] struct {
 	Title struct {
 		Text string `json:"text"`
 	} `json:"title"`
+	Point       *PStruct          `json:"point"`
 	Legends     *LegentConf       `json:"legends"`
 	Data        *DataStruct[X, Y] `json:"data"`
 	XField      string            `json:"xField"`
@@ -23,6 +24,12 @@ type MultiSeriesLineGraph[X, Y Numeric] struct {
 	Axes        []*AxesStruct[Y]  `json:"axes"`
 }
 
+type PStruct struct {
+	Style *StyleStruct `json:"style"`
+}
+type StyleStruct struct {
+	Size int `json:"size"`
+}
 type LegentConf struct {
 	Type    string `json:"type"`
 	Visible bool   `json:"visible"`
@@ -58,6 +65,11 @@ func NewMultiSeriesLineGraph[X, Y Numeric]() *MultiSeriesLineGraph[X, Y] {
 		Title: struct {
 			Text string `json:"text"`
 		}{},
+		Point: &PStruct{
+			&StyleStruct{
+				Size: 0,
+			},
+		},
 		Legends: &LegentConf{
 			Type:    "discrete",
 			Visible: true,
