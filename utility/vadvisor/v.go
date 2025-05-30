@@ -39,8 +39,10 @@ type PointStyle struct {
 	Size int `json:"size"`
 }
 type LegentConf struct {
-	Type    string `json:"type"`
-	Visible bool   `json:"visible"`
+	Type    string       `json:"type"`
+	Visible bool         `json:"visible"`
+	Orient  string       `json:"orient"`
+	Pager   *PagerStruct `json:"pager"`
 }
 type AxesStruct[Y Numeric] struct {
 	Orient    string `json:"orient"`
@@ -49,6 +51,10 @@ type AxesStruct[Y Numeric] struct {
 		Min Y `json:"min"`
 		Max Y `json:"max"`
 	} `json:"range"`
+}
+
+type PagerStruct struct {
+	Type string `json:"type"`
 }
 
 type DataStruct[X, Y Numeric] struct {
@@ -86,6 +92,7 @@ func NewMultiSeriesLineGraph[X, Y Numeric]() *MultiSeriesLineGraph[X, Y] {
 		Legends: &LegentConf{
 			Type:    "discrete",
 			Visible: true,
+			Orient:  "right",
 		},
 		Data: &DataStruct[X, Y]{
 			make([]*DataValue[X, Y], 0),
