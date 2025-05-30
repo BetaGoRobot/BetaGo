@@ -149,4 +149,7 @@ func (fc *FlowControlType) Top() (err error) {
 	return
 }
 
-const LarkMsgIndex = "lark_msg_index_jieba"
+const (
+	LarkMsgIndex        = "lark_msg_index_jieba"
+	LarkCardActionIndex = "lark_card_action_index"
+)

@@ -27,6 +27,8 @@ func WebHookHandler(ctx context.Context, cardAction *callback.CardActionTriggerE
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(cardAction)))
 	defer span.End()
 
+	// 记录一下操作记录
+	defer larkutils.RecordCardAction2Opensearch(ctx, cardAction)
 	if buttonType, ok := cardAction.Event.Action.Value["type"]; ok {
 		switch buttonType {
 		case "song":

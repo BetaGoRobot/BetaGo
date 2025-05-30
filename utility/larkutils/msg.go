@@ -3,6 +3,7 @@ package larkutils
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/dlclark/regexp2"
 	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
+	"github.com/larksuite/oapi-sdk-go/v3/event/dispatcher/callback"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -289,6 +291,36 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 			UserName:   "你",
 			TokenUsage: usage,
 		},
+	)
+	if err != nil {
+		log.Zlog.Error("InsertData", zaplog.Error(err))
+		return
+	}
+}
+
+func RecordCardAction2Opensearch(ctx context.Context, cardAction *callback.CardActionTriggerEvent) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	chatID := cardAction.Event.Context.OpenChatID
+	userID := cardAction.Event.Operator.OpenID
+	member, err := GetUserMemberFromChat(ctx, chatID, userID)
+	if err != nil {
+		return
+	}
+	idxData := &handlertypes.CardActionIndex{
+		CardActionTriggerEvent: cardAction,
+		ChatName:               GetChatName(ctx, userID),
+		CreateTime:             utility.EpoMicro2DateStr(cardAction.EventV2Base.Header.CreateTime),
+		UserID:                 cardAction.Event.Operator.OpenID,
+		UserName:               utility.AddressORNil(member.Name),
+		ActionValue:            cardAction.Event.Action.Value,
+	}
+	fmt.Println(sonic.MarshalString(idxData))
+	err = opensearchdal.InsertData(ctx,
+		consts.LarkCardActionIndex,
+		cardAction.Event.Operator.OpenID,
+		idxData,
 	)
 	if err != nil {
 		log.Zlog.Error("InsertData", zaplog.Error(err))

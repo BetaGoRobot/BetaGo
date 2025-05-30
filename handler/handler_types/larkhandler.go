@@ -3,6 +3,7 @@ package handlertypes
 import (
 	"time"
 
+	"github.com/larksuite/oapi-sdk-go/v3/event/dispatcher/callback"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 )
 
@@ -36,4 +37,13 @@ type MessageIndex struct {
 	TokenUsage      model.Usage `json:"token_usage"`
 	IsCommand       bool        `json:"is_command"`
 	MainCommand     string      `json:"main_command"`
+}
+
+type CardActionIndex struct {
+	*callback.CardActionTriggerEvent
+	ChatName    string         `json:"chat_name"`
+	CreateTime  string         `json:"create_time"`
+	UserID      string         `json:"user_id"`
+	UserName    string         `json:"user_name"`
+	ActionValue map[string]any `json:"action_value"`
 }

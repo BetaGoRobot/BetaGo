@@ -219,6 +219,12 @@ type ChatRecordLog struct {
 	RecordStr string `json:"record_str"`
 }
 
+type CardActionRecordLog struct {
+	UserID   string `json:"user_id" gorm:"primaryKey"`
+	UserName string `json:"user_name"`
+	EventSrc string `json:"event_src"`
+}
+
 var (
 	isTest    = os.Getenv("IS_TEST")
 	isCluster = os.Getenv("IS_CLUSTER")
@@ -234,6 +240,7 @@ func init() {
 	// migrate
 	db := GetDbConnection()
 	err := db.AutoMigrate(
+		&CardActionRecordLog{},
 		&Administrator{},
 		&CommandInfo{},
 		&ChannelLogExt{},
