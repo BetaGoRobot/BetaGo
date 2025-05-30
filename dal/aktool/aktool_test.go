@@ -8,3 +8,7 @@ import (
 func TestGetRealtimeGoldPrice(t *testing.T) {
 	GetRealtimeGoldPrice(context.Background())
 }
+
+func TestGetStockPrice(t *testing.T) {
+	GetStockPrice(context.TODO(), "600988")
+}

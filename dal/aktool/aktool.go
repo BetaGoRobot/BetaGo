@@ -15,6 +15,8 @@ var (
 	PublicAPIURI            = "/api/public/"
 	GoldHandlerNameRealtime = "spot_quotations_sge"
 	GoldHandlerNameHistory  = "spot_hist_sge"
+
+	StockHandlerNameRealtime = "stock_individual_info_em"
 )
 
 type (
@@ -63,6 +65,29 @@ func GetHistoryGoldPrice(ctx context.Context) (res GoldPriceDataHS, err error) {
 	req, resp := protocol.AcquireRequest(), protocol.AcquireResponse()
 	req.SetRequestURI(BaseURL + PublicAPIURI + GoldHandlerNameHistory)
 	req.SetMethod("GET")
+
+	err = c.Do(ctx, req, resp)
+	if err != nil {
+		return
+	}
+	if resp.StatusCode() != 200 {
+		return nil, fmt.Errorf("get gold price failed, status code: %d", resp.StatusCode())
+	}
+
+	err = sonic.Unmarshal(resp.Body(), &res)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func GetStockPrice(ctx context.Context, symbol string) (res GoldPriceDataHS, err error) {
+	res = make(GoldPriceDataHS, 0)
+	c, _ := client.NewClient()
+	req, resp := protocol.AcquireRequest(), protocol.AcquireResponse()
+	req.SetRequestURI(BaseURL + PublicAPIURI + StockHandlerNameRealtime)
+	req.SetMethod("GET")
+	req.SetQueryString(fmt.Sprintf("symbol=%s", symbol))
 
 	err = c.Do(ctx, req, resp)
 	if err != nil {

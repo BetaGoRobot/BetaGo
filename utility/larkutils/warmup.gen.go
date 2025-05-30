@@ -25,13 +25,14 @@ func init() {
 	reflecting.GetFunctionName(GetChatName)                   // from utility/larkutils/lark.go:264
 	reflecting.GetFunctionName(GetUserMapFromChatID)          // from utility/larkutils/lark.go:220
 	reflecting.GetFunctionName(GetUserMemberFromChat)         // from utility/larkutils/lark.go:253
-	reflecting.GetFunctionName(NewCardContent)                // from utility/larkutils/card_helper.go:53
+	reflecting.GetFunctionName(NewCardContent)                // from utility/larkutils/card_helper.go:57
 	reflecting.GetFunctionName(PreGetTextMsg)                 // from utility/larkutils/msg.go:41
 	reflecting.GetFunctionName(RecordMessage2Opensearch)      // from utility/larkutils/msg.go:250
 	reflecting.GetFunctionName(RecordReplyMessage2Opensearch) // from utility/larkutils/msg.go:300
 	reflecting.GetFunctionName(RemoveReaction)                // from utility/larkutils/msg.go:436
 	reflecting.GetFunctionName(ReplyCard)                     // from utility/larkutils/reply.go:31
 	reflecting.GetFunctionName(ReplyCardText)                 // from utility/larkutils/reply.go:66
+	reflecting.GetFunctionName(ReplyCardTextGraph)            // from utility/larkutils/reply.go:105
 	reflecting.GetFunctionName(ReplyMsgRawContentType)        // from utility/larkutils/msg.go:194
 	reflecting.GetFunctionName(ReplyMsgText)                  // from utility/larkutils/msg.go:243
 	reflecting.GetFunctionName(TrimAtMsg)                     // from utility/larkutils/msg.go:74

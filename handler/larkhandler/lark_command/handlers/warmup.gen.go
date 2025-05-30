@@ -19,6 +19,7 @@ func init() {
 	reflecting.GetFunctionName(DebugTryPanicHandler)   // from handler/larkhandler/lark_command/handlers/debug_handler.go:94
 	reflecting.GetFunctionName(GenerateChatSeq)        // from handler/larkhandler/lark_command/handlers/chat_handler.go:109
 	reflecting.GetFunctionName(GetTraceFromMsgID)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:113
+	reflecting.GetFunctionName(GoldHandler)            // from handler/larkhandler/lark_command/handlers/stock_handler.go:29
 	reflecting.GetFunctionName(ImageAddHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:33
 	reflecting.GetFunctionName(ImageDelHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:155
 	reflecting.GetFunctionName(ImageGetHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:115
