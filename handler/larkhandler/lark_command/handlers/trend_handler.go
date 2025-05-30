@@ -75,9 +75,11 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...
 			*max = item.Value
 		}
 	}
-
-	graph.SetRange(*min, *max)
-	graph.SetTitle(fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days))
+	title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days)
+	graph.
+		SetTitle(title).
+		SetRange(*min, *max).
+		SetStack()
 	err = larkutils.ReplyCardTextGraph(
 		ctx,
 		"",
