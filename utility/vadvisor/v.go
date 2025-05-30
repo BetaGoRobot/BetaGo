@@ -39,10 +39,9 @@ type PointStyle struct {
 	Size int `json:"size"`
 }
 type LegentConf struct {
-	Type    string       `json:"type"`
-	Visible bool         `json:"visible"`
-	Orient  string       `json:"orient"`
-	Pager   *PagerStruct `json:"pager"`
+	Type    string `json:"type"`
+	Visible bool   `json:"visible"`
+	Orient  string `json:"orient"`
 }
 type AxesStruct[Y Numeric] struct {
 	Orient    string `json:"orient"`
