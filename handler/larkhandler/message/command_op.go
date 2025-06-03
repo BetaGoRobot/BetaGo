@@ -56,8 +56,19 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
 	defer span.RecordError(err)
+	rawCommand := larkutils.PreGetTextMsg(ctx, event)
 
-	commands := larkutils.GetCommand(ctx, larkutils.PreGetTextMsg(ctx, event))
+	return ExecuteFromRawCommand(ctx, event, meta, rawCommand)
+}
+
+func ExecuteFromRawCommand(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData, rawCommand string) (err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
+	defer span.End()
+	defer span.RecordError(err)
+
+	ctx = context.WithValue(ctx, consts.ContextVarSrcCmd, rawCommand)
+	commands := larkutils.GetCommand(ctx, rawCommand)
 	if len(commands) > 0 {
 		meta.IsCommand = true
 		var reactionID string
@@ -67,7 +78,7 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 		} else {
 			defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
 		}
-		err = larkcommand.LarkRootCommand.Execute(ctx, event, commands)
+		err = larkcommand.LarkRootCommand.Execute(ctx, event, meta, commands)
 		if err != nil {
 			span.RecordError(err)
 			if errors.Is(err, consts.ErrCommandNotFound) {
@@ -85,6 +96,5 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 		}
 		larkutils.AddReactionAsync(ctx, "DONE", *event.Event.Message.MessageId)
 	}
-
-	return nil
+	return
 }

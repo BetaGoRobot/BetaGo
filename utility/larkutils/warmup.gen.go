@@ -9,11 +9,11 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName(AddReaction)                   // from utility/larkutils/msg.go:396
-	reflecting.GetFunctionName(AddReaction2DB)                // from utility/larkutils/msg.go:181
-	reflecting.GetFunctionName(AddReactionAsync)              // from utility/larkutils/msg.go:415
-	reflecting.GetFunctionName(CreateMsgText)                 // from utility/larkutils/msg.go:352
-	reflecting.GetFunctionName(CreateMsgTextRaw)              // from utility/larkutils/msg.go:362
+	reflecting.GetFunctionName(AddReaction)                   // from utility/larkutils/msg.go:428
+	reflecting.GetFunctionName(AddReaction2DB)                // from utility/larkutils/msg.go:183
+	reflecting.GetFunctionName(AddReactionAsync)              // from utility/larkutils/msg.go:447
+	reflecting.GetFunctionName(CreateMsgText)                 // from utility/larkutils/msg.go:384
+	reflecting.GetFunctionName(CreateMsgTextRaw)              // from utility/larkutils/msg.go:394
 	reflecting.GetFunctionName(DownImgFromMsgAsync)           // from utility/larkutils/image.go:102
 	reflecting.GetFunctionName(DownImgFromMsgSync)            // from utility/larkutils/image.go:35
 	reflecting.GetFunctionName(GenFullLyricsCard)             // from utility/larkutils/cards.go:251
@@ -25,17 +25,19 @@ func init() {
 	reflecting.GetFunctionName(GetChatName)                   // from utility/larkutils/lark.go:264
 	reflecting.GetFunctionName(GetUserMapFromChatID)          // from utility/larkutils/lark.go:220
 	reflecting.GetFunctionName(GetUserMemberFromChat)         // from utility/larkutils/lark.go:253
-	reflecting.GetFunctionName(NewCardContent)                // from utility/larkutils/card_helper.go:57
-	reflecting.GetFunctionName(PreGetTextMsg)                 // from utility/larkutils/msg.go:41
-	reflecting.GetFunctionName(RecordMessage2Opensearch)      // from utility/larkutils/msg.go:250
-	reflecting.GetFunctionName(RecordReplyMessage2Opensearch) // from utility/larkutils/msg.go:300
-	reflecting.GetFunctionName(RemoveReaction)                // from utility/larkutils/msg.go:436
+	reflecting.GetFunctionName(NewCardContent)                // from utility/larkutils/card_helper.go:58
+	reflecting.GetFunctionName(PatchCardTextGraph)            // from utility/larkutils/reply.go:151
+	reflecting.GetFunctionName(PreGetTextMsg)                 // from utility/larkutils/msg.go:43
+	reflecting.GetFunctionName(RecordCardAction2Opensearch)   // from utility/larkutils/msg.go:302
+	reflecting.GetFunctionName(RecordMessage2Opensearch)      // from utility/larkutils/msg.go:252
+	reflecting.GetFunctionName(RecordReplyMessage2Opensearch) // from utility/larkutils/msg.go:332
+	reflecting.GetFunctionName(RemoveReaction)                // from utility/larkutils/msg.go:468
 	reflecting.GetFunctionName(ReplyCard)                     // from utility/larkutils/reply.go:31
 	reflecting.GetFunctionName(ReplyCardText)                 // from utility/larkutils/reply.go:66
 	reflecting.GetFunctionName(ReplyCardTextGraph)            // from utility/larkutils/reply.go:105
-	reflecting.GetFunctionName(ReplyMsgRawContentType)        // from utility/larkutils/msg.go:194
-	reflecting.GetFunctionName(ReplyMsgText)                  // from utility/larkutils/msg.go:243
-	reflecting.GetFunctionName(TrimAtMsg)                     // from utility/larkutils/msg.go:74
+	reflecting.GetFunctionName(ReplyMsgRawContentType)        // from utility/larkutils/msg.go:196
+	reflecting.GetFunctionName(ReplyMsgText)                  // from utility/larkutils/msg.go:245
+	reflecting.GetFunctionName(TrimAtMsg)                     // from utility/larkutils/msg.go:76
 	reflecting.GetFunctionName(Upload2Lark)                   // from utility/larkutils/lark.go:108
 	reflecting.GetFunctionName(UploadPicAllinOne)             // from utility/larkutils/lark.go:59
 	reflecting.GetFunctionName(UploadPicture2Lark)            // from utility/larkutils/lark.go:167

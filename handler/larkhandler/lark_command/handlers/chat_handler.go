@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
@@ -24,8 +25,8 @@ import (
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
-func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
-	return func(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
+func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
+	return func(ctx context.Context, event *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 		newChatType := chatType
 		size := new(int)
 		*size = 20

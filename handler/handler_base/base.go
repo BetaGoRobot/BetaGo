@@ -20,6 +20,7 @@ type Operator[T, K any] interface {
 type (
 	OperatorBase[T, K any] struct{}
 	BaseMetaData           struct {
+		Refresh     bool
 		IsCommand   bool
 		MainCommand string
 		TraceID     string

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
@@ -28,7 +29,7 @@ import (
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:18
-func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	argMap, _ := parseArgs(args...)
 	log.Zlog.Info("replyHandler", zaplog.Any("args", argMap))
 	if len(argMap) > 0 {
@@ -119,7 +120,7 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 //	@param data *larkim.P2MessageReceiveV1
 //	@param args ...string
 //	@return error
-func ReplyGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func ReplyGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()

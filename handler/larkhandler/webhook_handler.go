@@ -7,6 +7,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/message"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
@@ -49,17 +51,13 @@ func WebHookHandler(ctx context.Context, cardAction *callback.CardActionTriggerE
 			go HandleWithDraw(ctx, cardAction.Event.Context.OpenMessageID)
 		case "refresh":
 			if musicID, ok := cardAction.Event.Action.Value["id"]; ok {
-				go HandleRefresh(ctx, musicID.(string), cardAction.Event.Context.OpenMessageID)
+				go HandleRefreshMusic(ctx, musicID.(string), cardAction.Event.Context.OpenMessageID)
 			}
+		case "refresh_obj":
+			// 通用的卡片刷新结构，重点是记录触发的command重新触发？
+			go HandleRefreshObj(ctx, cardAction.Event.Action.Value["command"].(string), cardAction.Event.Context.OpenMessageID)
 		}
 	}
-	// // 处理 cardAction, 这里简单打印卡片内容
-	// if musicID, ok := cardAction.Action.Value["show_music"]; ok {
-	// 	go SendMusicCard(ctx, musicID.(string), cardAction.OpenMessageID, 1)
-	// }
-	// if musicID, ok := cardAction.Action.Value["music_id"]; ok {
-	// 	go HandleFullLyrics(ctx, musicID.(string), cardAction.OpenMessageID)
-	// }
 	// 无返回值示例
 	return nil, nil
 }
@@ -249,7 +247,7 @@ func HandleWithDraw(ctx context.Context, msgID string) {
 	return
 }
 
-func HandleRefresh(ctx context.Context, musicID, msgID string) {
+func HandleRefreshMusic(ctx context.Context, musicID, msgID string) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("musicID").String(musicID))
 	defer span.End()
@@ -273,4 +271,23 @@ func HandleRefresh(ctx context.Context, musicID, msgID string) {
 		return
 	}
 	return
+}
+
+func HandleRefreshObj(ctx context.Context, srcCmd, msgID string) {
+	data := new(larkim.P2MessageReceiveV1)
+	data.Event = new(larkim.P2MessageReceiveV1Data)
+	data.Event.Message = new(larkim.EventMessage)
+	data.Event.Message.MessageId = utility.StrPointer(msgID)
+
+	err := message.ExecuteFromRawCommand(
+		ctx,
+		data,
+		&handlerbase.BaseMetaData{
+			Refresh: true,
+		},
+		srcCmd,
+	)
+	if err != nil {
+		log.Zlog.Error("refresh obj error", zaplog.Error(err))
+	}
 }

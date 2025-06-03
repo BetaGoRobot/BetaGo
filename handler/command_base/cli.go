@@ -9,13 +9,14 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 )
 
 // CommandFunc Repeat
 //
 //	@author heyuhengmatt
 //	@update 2024-07-18 04:43:42
-type CommandFunc[T any] func(ctx context.Context, data T, args ...string) error
+type CommandFunc[T any] func(ctx context.Context, data T, metaData *handlerbase.BaseMetaData, args ...string) error
 
 // Command Repeat
 //
@@ -36,9 +37,9 @@ type Command[T any] struct {
 //	@return Execute
 //	@author heyuhengmatt
 //	@update 2024-07-18 05:30:21
-func (c *Command[T]) Execute(ctx context.Context, data T, args []string) error {
+func (c *Command[T]) Execute(ctx context.Context, data T, metaData *handlerbase.BaseMetaData, args []string) error {
 	if c.Func != nil { // 当前Command有执行方法，直接执行
-		return c.Func(ctx, data, args...)
+		return c.Func(ctx, data, metaData, args...)
 	}
 	if len(args) == 0 { // 无执行方法且无后续参数
 		return fmt.Errorf("%w: %s", consts.ErrCommandIncomplete, c.FormatUsage())
@@ -48,7 +49,7 @@ func (c *Command[T]) Execute(ctx context.Context, data T, args []string) error {
 		if usage, ok := subcommand.CheckUsage(args[1:]...); ok {
 			return fmt.Errorf("%w: %s", consts.ErrCheckUsage, usage)
 		}
-		err := subcommand.Execute(ctx, data, args[1:])
+		err := subcommand.Execute(ctx, data, metaData, args[1:])
 		if err != nil && err == consts.ErrArgsIncompelete {
 			return fmt.Errorf("%w: %s", consts.ErrArgsIncompelete, subcommand.FormatUsage())
 		}

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -41,7 +42,7 @@ type traceItem struct {
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:33
-func DebugGetIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func DebugGetIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
@@ -66,7 +67,7 @@ func DebugGetIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:29
-func DebugGetGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func DebugGetGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
@@ -90,7 +91,7 @@ func DebugGetGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:25
-func DebugTryPanicHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func DebugTryPanicHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
@@ -155,7 +156,7 @@ func GetTraceFromMsgID(ctx context.Context, msgID string) (iter.Seq[*traceItem],
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:23
-func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
@@ -219,7 +220,7 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, arg
 //	@param data *larkim.P2MessageReceiveV1
 //	@param args ...string
 //	@return error
-func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
@@ -260,7 +261,7 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 	return nil
 }
 
-func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
@@ -304,7 +305,7 @@ func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, ar
 	return nil
 }
 
-func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()

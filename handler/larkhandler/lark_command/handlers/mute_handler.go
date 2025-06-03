@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/redis"
@@ -16,7 +17,7 @@ const (
 	MuteRedisKeyPrefix = "mute:"
 )
 
-func MuteHandler(ctx context.Context, event *larkim.P2MessageReceiveV1, args ...string) (err error) {
+func MuteHandler(ctx context.Context, event *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	var (

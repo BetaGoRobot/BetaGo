@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -21,7 +22,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) (err error) {
+func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()

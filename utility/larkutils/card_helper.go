@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -56,6 +57,7 @@ type (
 func NewCardContent(ctx context.Context, template database.TemplateVersion) *TemplateCardContent {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+
 	traceID := span.SpanContext().TraceID().String()
 	templateVersion := GetTemplate(template)
 	var t *TemplateCardContent
@@ -78,6 +80,9 @@ func NewCardContent(ctx context.Context, template database.TemplateVersion) *Tem
 	t.AddVariable("withdraw_title", "撤回本条消息")
 	t.AddVariable("withdraw_confirm", "你确定要撤回这条消息吗？")
 	t.AddVariable("withdraw_object", map[string]string{"type": "withdraw"})
+	if srcCmd := ctx.Value(consts.ContextVarSrcCmd); srcCmd != nil {
+		t.AddVariable("refresh_obj", map[string]string{"type": "refresh_obj", "command": srcCmd.(string)})
+	}
 	t.AddVariable("refresh_time", time.Now().UTC().Add(time.Hour*8).Format(time.DateTime))
 	return t
 }

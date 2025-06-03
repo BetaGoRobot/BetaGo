@@ -6,6 +6,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -15,7 +16,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) (err error) {
+func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()

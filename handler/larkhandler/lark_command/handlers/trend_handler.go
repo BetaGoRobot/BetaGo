@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -25,7 +26,7 @@ import (
 //	@return err error
 //	@author kevinmatthe
 //	@update 2025-05-30 15:19:56
-func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) (err error) {
+func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()

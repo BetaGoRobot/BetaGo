@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -10,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func StatsGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) (err error) {
+func StatsGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 

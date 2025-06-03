@@ -135,3 +135,44 @@ func ReplyCardTextGraph(ctx context.Context, text string, graph any, msgID, suff
 	RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
 	return
 }
+
+// PatchCardTextGraph to be filled
+//
+//	@param ctx context.Context
+//	@param text string
+//	@param graph any
+//	@param msgID string
+//	@param suffix string
+//	@param replyInThread bool
+//	@return err error
+//	@author kevinmatthe
+//	@update 2025-06-03 13:29:07
+func PatchCardTextGraph(ctx context.Context, text string, graph any, msgID string) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID))
+
+	defer span.End()
+	cardContent := NewCardContent(
+		ctx, NormalCardGraphReplyTemplate,
+	).
+		AddVariable("content", text).
+		AddVariable("graph", graph)
+	fmt.Println(cardContent.String())
+	resp, err := LarkClient.Im.V1.Message.Patch(
+		ctx, larkim.NewPatchMessageReqBuilder().
+			MessageId(msgID).
+			Body(
+				larkim.NewPatchMessageReqBodyBuilder().
+					Content(cardContent.String()).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		return
+	}
+	if !resp.Success() {
+		return errors.New(resp.Error())
+	}
+	return
+}

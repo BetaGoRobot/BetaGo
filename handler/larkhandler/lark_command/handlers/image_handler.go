@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/copywriting"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -29,7 +30,7 @@ import (
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:13
-func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
@@ -111,7 +112,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 //	@param data *larkim.P2MessageReceiveV1
 //	@param args ...string
 //	@return error
-func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) error {
+func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
@@ -151,7 +152,7 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args 
 //	@param data *larkim.P2MessageReceiveV1
 //	@param args ...string
 //	@return error
-func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...string) (err error) {
+func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()

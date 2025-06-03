@@ -79,7 +79,7 @@ func (r *ChatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 
 	if utility.Probability(float64(realRate) / 100) {
 		// sendMsg
-		err := handlers.ChatHandler("chat")(ctx, event)
+		err := handlers.ChatHandler("chat")(ctx, event, meta)
 		if err != nil {
 			return err
 		}
