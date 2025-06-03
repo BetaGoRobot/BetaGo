@@ -174,6 +174,9 @@ func (g *MultiSeriesLineGraph[X, Y]) AddPointSeries(
 		}
 		g.AddData(v.XField, v.YField, v.SeriesField)
 	}
+	if min == nil || max == nil {
+		return g
+	}
 	g.SetRange(float64(*min), float64(*max))
 	return g
 }
