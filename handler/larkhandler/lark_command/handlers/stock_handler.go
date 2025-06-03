@@ -58,7 +58,7 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 		return
 	}
 
-	if metaData.Refresh {
+	if metaData != nil && metaData.Refresh {
 		err = larkutils.PatchCardTextGraph(
 			ctx,
 			"",
