@@ -8,6 +8,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/dal/aktool"
 	commandBase "github.com/BetaGoRobot/BetaGo/handler/command_base"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
@@ -31,19 +32,43 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...s
 	defer span.End()
 
 	argMap, _ := parseArgs(args...)
-	if _, ok := argMap["r"]; ok {
+
+	graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
+
+	if hours, ok := argMap["r"]; ok {
+		hoursInt, e := strconv.Atoi(hours)
+		if e != nil || hoursInt <= 0 {
+			hoursInt = 1
+		}
 		var goldPrice aktool.GoldPriceDataRTList
 		goldPrice, err = aktool.GetRealtimeGoldPrice(ctx)
 		if err != nil {
 			return
 		}
-		var latestPrice string
-		if len(goldPrice) > 0 {
-			latestPrice = fmt.Sprintf("*%.2f*", goldPrice[0].Price)
-		}
-		err = larkutils.ReplyCardText(
+
+		graph.
+			AddPointSeries(
+				func(yield func(vadvisor.XYSUnit[string, float64]) bool) {
+					for _, price := range goldPrice {
+						dStr := time.Now().Format(time.DateOnly) + " " + price.Time
+						t, err := time.ParseInLocation(time.DateTime, dStr, utility.UTCPlus8Loc())
+						if err != nil {
+							return
+						}
+						if t.Before(time.Now().Add(-1 * time.Hour * time.Duration(hoursInt))) {
+							continue
+						}
+						if !yield(vadvisor.XYSUnit[string, float64]{XField: t.Format(time.TimeOnly), YField: price.Price, SeriesField: price.Kind}) {
+							return
+						}
+					}
+				},
+			).
+			SetTitle(fmt.Sprintf("上交所黄金价格- *[T-%d]* (hour)", hoursInt))
+		err = larkutils.ReplyCardTextGraph(
 			ctx,
-			"上交所当前金价: "+latestPrice,
+			"",
+			graph,
 			*data.Event.Message.MessageId,
 			"_getID",
 			false,
@@ -56,39 +81,34 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, args ...s
 		if err != nil {
 			return err
 		}
-		graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
+
 		days, err := strconv.Atoi(daysStr)
 		if err != nil || days <= 0 {
 			days = 30
 		}
-		var min, max *float64
-		for _, price := range goldPrices {
-			t, err := time.Parse("2006-01-02T00:00:00.000", price.Date)
-			if err != nil {
-				return err
-			}
-			if t.Before(time.Now().AddDate(0, 0, -1*days)) {
-				continue
-			}
-			d := t.Format(time.DateOnly)
-			graph.AddData(d, price.Close, "收盘价")
-			graph.AddData(d, price.Open, "开盘价")
-			graph.AddData(d, price.High, "最高价")
-			graph.AddData(d, price.Low, "最低价")
-			if min == nil || max == nil {
-				min, max = new(float64), new(float64)
-				*min, *max = price.Low, price.High
-			}
-			if price.Low < *min {
-				*min = price.Low
-			}
-			if price.High > *max {
-				*max = price.High
-			}
-		}
 
-		graph.SetRange((1-0.1)**min, (1+0.1)**max)
-		graph.SetTitle(fmt.Sprintf("上交所黄金价格-%ddays", days))
+		graph.
+			AddPointSeries(
+				func(yield func(vadvisor.XYSUnit[string, float64]) bool) {
+					for _, price := range goldPrices {
+						t, err := time.Parse("2006-01-02T00:00:00.000", price.Date)
+						if err != nil {
+							return
+						}
+						if t.Before(time.Now().AddDate(0, 0, -1*days)) {
+							continue
+						}
+						d := t.Format(time.DateOnly)
+						if !yield(vadvisor.XYSUnit[string, float64]{XField: d, YField: price.Close, SeriesField: "收盘价"}) ||
+							!yield(vadvisor.XYSUnit[string, float64]{XField: d, YField: price.Open, SeriesField: "开盘价"}) ||
+							!yield(vadvisor.XYSUnit[string, float64]{XField: d, YField: price.High, SeriesField: "最高价"}) ||
+							!yield(vadvisor.XYSUnit[string, float64]{XField: d, YField: price.Low, SeriesField: "最低价"}) {
+							return
+						}
+					}
+				},
+			).
+			SetTitle(fmt.Sprintf("上交所黄金价格- *[T-%d]* (day)", days))
 		err = larkutils.ReplyCardTextGraph(
 			ctx,
 			"",

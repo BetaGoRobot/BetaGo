@@ -1,15 +1,21 @@
 package vadvisor
 
 import (
+	"iter"
+
 	"github.com/bytedance/sonic"
 	"golang.org/x/exp/constraints"
 )
 
-type Numeric interface {
+type ValidType interface {
 	constraints.Integer | constraints.Float | string
 }
 
-type MultiSeriesLineGraph[X, Y Numeric] struct {
+type Numeric interface {
+	constraints.Integer | constraints.Float
+}
+
+type MultiSeriesLineGraph[X ValidType, Y Numeric] struct {
 	Type  string `json:"type"`
 	Title struct {
 		Text string `json:"text"`
@@ -22,7 +28,7 @@ type MultiSeriesLineGraph[X, Y Numeric] struct {
 	YField      string            `json:"yField"`
 	SeriesField string            `json:"seriesField"`
 	InvalidType string            `json:"invalidType"`
-	Axes        []*AxesStruct[Y]  `json:"axes"`
+	Axes        []*AxesStruct     `json:"axes"`
 	Stack       bool              `json:"stack"`
 }
 type LineConf struct {
@@ -43,12 +49,12 @@ type LegentConf struct {
 	Visible bool   `json:"visible"`
 	Orient  string `json:"orient"`
 }
-type AxesStruct[Y Numeric] struct {
+type AxesStruct struct {
 	Orient    string `json:"orient"`
 	AliasName string `json:"_alias_name"`
 	Range     struct {
-		Min Y `json:"min"`
-		Max Y `json:"max"`
+		Min float64 `json:"min"`
+		Max float64 `json:"max"`
 	} `json:"range"`
 }
 
@@ -56,11 +62,11 @@ type PagerStruct struct {
 	Type string `json:"type"`
 }
 
-type DataStruct[X, Y Numeric] struct {
+type DataStruct[X, Y ValidType] struct {
 	Values []*DataValue[X, Y] `json:"values"`
 }
 
-type DataValue[X, Y Numeric] struct {
+type DataValue[X, Y ValidType] struct {
 	SeriesField string `json:"seriesField"`
 	XField      X      `json:"xField"`
 	YField      Y      `json:"yField"`
@@ -72,7 +78,7 @@ const (
 	YField      = "yField"
 )
 
-func NewMultiSeriesLineGraph[X, Y Numeric]() *MultiSeriesLineGraph[X, Y] {
+func NewMultiSeriesLineGraph[X ValidType, Y Numeric]() *MultiSeriesLineGraph[X, Y] {
 	return &MultiSeriesLineGraph[X, Y]{
 		Type: "line",
 		Title: struct {
@@ -100,7 +106,7 @@ func NewMultiSeriesLineGraph[X, Y Numeric]() *MultiSeriesLineGraph[X, Y] {
 		YField:      YField,
 		SeriesField: SeriesField,
 		InvalidType: "link",
-		Axes:        make([]*AxesStruct[Y], 0),
+		Axes:        make([]*AxesStruct, 0),
 	}
 }
 
@@ -118,13 +124,13 @@ func (g *MultiSeriesLineGraph[X, Y]) SetTitle(title string) *MultiSeriesLineGrap
 	return g
 }
 
-func (g *MultiSeriesLineGraph[X, Y]) SetRange(min, max Y) *MultiSeriesLineGraph[X, Y] {
-	g.Axes = append(g.Axes, &AxesStruct[Y]{
+func (g *MultiSeriesLineGraph[X, Y]) SetRange(min, max float64) *MultiSeriesLineGraph[X, Y] {
+	g.Axes = append(g.Axes, &AxesStruct{
 		Orient:    "left",
 		AliasName: "yAxis",
 		Range: struct {
-			Min Y `json:"min"`
-			Max Y `json:"max"`
+			Min float64 `json:"min"`
+			Max float64 `json:"max"`
 		}{
 			Min: min,
 			Max: max,
@@ -141,4 +147,33 @@ func (g *MultiSeriesLineGraph[X, Y]) SetStack() *MultiSeriesLineGraph[X, Y] {
 func (g *MultiSeriesLineGraph[X, Y]) String() string {
 	s, _ := sonic.MarshalString(g)
 	return s
+}
+
+type (
+	XYSUnit[X, Y ValidType] struct {
+		XField      X
+		YField      Y
+		SeriesField string
+	}
+)
+
+func (g *MultiSeriesLineGraph[X, Y]) AddPointSeries(
+	pFunc iter.Seq[XYSUnit[X, Y]],
+) *MultiSeriesLineGraph[X, Y] {
+	var min, max *Y
+	for v := range pFunc {
+		if min == nil || max == nil {
+			min, max = new(Y), new(Y)
+			*min, *max = v.YField, v.YField
+		}
+		if *min > v.YField {
+			*min = v.YField
+		}
+		if *max < v.YField {
+			*max = v.YField
+		}
+		g.AddData(v.XField, v.YField, v.SeriesField)
+	}
+	g.SetRange(float64(*min), float64(*max))
+	return g
 }
