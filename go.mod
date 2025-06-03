@@ -13,7 +13,7 @@ replace (
 
 require (
 	github.com/BetaGoRobot/go_utils v0.0.2
-	github.com/bytedance/sonic v1.13.2
+	github.com/bytedance/sonic v1.13.3
 	github.com/carlmjohnson/requests v0.24.3
 	github.com/cloudwego/hertz v0.10.0
 	github.com/defensestation/osquery v1.0.0
