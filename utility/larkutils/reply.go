@@ -7,7 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/cts"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
@@ -96,12 +98,55 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 	return
 }
 
+// SendCardText to be filled
+//
+//	@param ctx context.Context
+//	@param text string
+//	@param msgID string
+//	@param suffix string
+//	@param replyInThread bool
+//	@return err error
+//	@author kevinmatthe
+//	@update 2025-06-04 16:25:42
+func SendCardText(ctx context.Context, text string, chatID, suffix string, replyInThread bool) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("chatID").String(chatID))
+
+	defer span.End()
+	cardContent := NewCardContent(
+		ctx, NormalCardReplyTemplate,
+	).
+		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
+		AddVariable("content", text)
+	fmt.Println(cardContent.String())
+	resp, err := LarkClient.Im.V1.Message.Create(
+		ctx, larkim.NewCreateMessageReqBuilder().ReceiveIdType(larkim.ReceiveIdTypeChatId).
+			Body(
+				larkim.NewCreateMessageReqBodyBuilder().
+					ReceiveId(chatID).
+					MsgType(larkim.MsgTypeInteractive).
+					Content(cardContent.String()).
+					Uuid(GenUUIDStr(chatID+suffix, 50)).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		return
+	}
+	if !resp.Success() {
+		return errors.New(resp.Error())
+	}
+	RecordMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
+	return
+}
+
 // ReplyCardTextGraph 123
 //
 //	@param ctx
 //	@param text
 //	@param msgID
-func ReplyCardTextGraph(ctx context.Context, text string, graph any, msgID, suffix string, replyInThread bool) (err error) {
+func ReplyCardTextGraph[X cts.ValidType, Y cts.Numeric](ctx context.Context, text string, graph *vadvisor.MultiSeriesLineGraph[X, Y], msgID, suffix string, replyInThread bool) (err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 

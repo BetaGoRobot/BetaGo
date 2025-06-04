@@ -26,17 +26,17 @@ func init() {
 	reflecting.GetFunctionName(GetUserMapFromChatID)          // from utility/larkutils/lark.go:220
 	reflecting.GetFunctionName(GetUserMemberFromChat)         // from utility/larkutils/lark.go:253
 	reflecting.GetFunctionName(NewCardContent)                // from utility/larkutils/card_helper.go:58
-	reflecting.GetFunctionName(PatchCardTextGraph)            // from utility/larkutils/reply.go:151
+	reflecting.GetFunctionName(PatchCardTextGraph)            // from utility/larkutils/reply.go:195
 	reflecting.GetFunctionName(PreGetTextMsg)                 // from utility/larkutils/msg.go:43
 	reflecting.GetFunctionName(RecordCardAction2Opensearch)   // from utility/larkutils/msg.go:302
 	reflecting.GetFunctionName(RecordMessage2Opensearch)      // from utility/larkutils/msg.go:252
 	reflecting.GetFunctionName(RecordReplyMessage2Opensearch) // from utility/larkutils/msg.go:332
 	reflecting.GetFunctionName(RemoveReaction)                // from utility/larkutils/msg.go:468
-	reflecting.GetFunctionName(ReplyCard)                     // from utility/larkutils/reply.go:31
-	reflecting.GetFunctionName(ReplyCardText)                 // from utility/larkutils/reply.go:66
-	reflecting.GetFunctionName(ReplyCardTextGraph)            // from utility/larkutils/reply.go:105
+	reflecting.GetFunctionName(ReplyCard)                     // from utility/larkutils/reply.go:32
+	reflecting.GetFunctionName(ReplyCardText)                 // from utility/larkutils/reply.go:67
 	reflecting.GetFunctionName(ReplyMsgRawContentType)        // from utility/larkutils/msg.go:196
 	reflecting.GetFunctionName(ReplyMsgText)                  // from utility/larkutils/msg.go:245
+	reflecting.GetFunctionName(SendCardText)                  // from utility/larkutils/reply.go:111
 	reflecting.GetFunctionName(TrimAtMsg)                     // from utility/larkutils/msg.go:76
 	reflecting.GetFunctionName(Upload2Lark)                   // from utility/larkutils/lark.go:108
 	reflecting.GetFunctionName(UploadPicAllinOne)             // from utility/larkutils/lark.go:59

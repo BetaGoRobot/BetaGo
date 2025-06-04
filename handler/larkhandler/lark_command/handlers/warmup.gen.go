@@ -24,7 +24,7 @@ func init() {
 	reflecting.GetFunctionName(ImageDelHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:156
 	reflecting.GetFunctionName(ImageGetHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:116
 	reflecting.GetFunctionName(ImitateHandler)         // from handler/larkhandler/lark_command/handlers/imitate_handler.go:26
-	reflecting.GetFunctionName(MusicSearchHandler)     // from handler/larkhandler/lark_command/handlers/music_handler.go:19
+	reflecting.GetFunctionName(MusicSearchHandler)     // from handler/larkhandler/lark_command/handlers/music_handler.go:20
 	reflecting.GetFunctionName(MuteHandler)            // from handler/larkhandler/lark_command/handlers/mute_handler.go:21
 	reflecting.GetFunctionName(OneWordHandler)         // from handler/larkhandler/lark_command/handlers/oneword_handler.go:38
 	reflecting.GetFunctionName(ReplyGetHandler)        // from handler/larkhandler/lark_command/handlers/reply_handler.go:124

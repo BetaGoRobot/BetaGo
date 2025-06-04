@@ -3,19 +3,11 @@ package vadvisor
 import (
 	"iter"
 
+	"github.com/BetaGoRobot/BetaGo/cts"
 	"github.com/bytedance/sonic"
-	"golang.org/x/exp/constraints"
 )
 
-type ValidType interface {
-	constraints.Integer | constraints.Float | string
-}
-
-type Numeric interface {
-	constraints.Integer | constraints.Float
-}
-
-type MultiSeriesLineGraph[X ValidType, Y Numeric] struct {
+type MultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric] struct {
 	Type  string `json:"type"`
 	Title struct {
 		Text string `json:"text"`
@@ -62,11 +54,11 @@ type PagerStruct struct {
 	Type string `json:"type"`
 }
 
-type DataStruct[X, Y ValidType] struct {
+type DataStruct[X, Y cts.ValidType] struct {
 	Values []*DataValue[X, Y] `json:"values"`
 }
 
-type DataValue[X, Y ValidType] struct {
+type DataValue[X, Y cts.ValidType] struct {
 	SeriesField string `json:"seriesField"`
 	XField      X      `json:"xField"`
 	YField      Y      `json:"yField"`
@@ -78,7 +70,7 @@ const (
 	YField      = "yField"
 )
 
-func NewMultiSeriesLineGraph[X ValidType, Y Numeric]() *MultiSeriesLineGraph[X, Y] {
+func NewMultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric]() *MultiSeriesLineGraph[X, Y] {
 	return &MultiSeriesLineGraph[X, Y]{
 		Type: "line",
 		Title: struct {
@@ -150,7 +142,7 @@ func (g *MultiSeriesLineGraph[X, Y]) String() string {
 }
 
 type (
-	XYSUnit[X, Y ValidType] struct {
+	XYSUnit[X, Y cts.ValidType] struct {
 		XField      X
 		YField      Y
 		SeriesField string

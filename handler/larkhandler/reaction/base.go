@@ -16,7 +16,7 @@ type (
 	Op     = handlerbase.Operator[larkim.P2MessageReactionCreatedV1, handlerbase.BaseMetaData]
 )
 
-func larkDeferFunc(ctx context.Context, err error, event *larkim.P2MessageReactionCreatedV1) {
+func larkDeferFunc(ctx context.Context, err error, event *larkim.P2MessageReactionCreatedV1, metaData *handlerbase.BaseMetaData) {
 	larkutils.SendRecoveredMsg(ctx, err, *event.Event.MessageId)
 }
 

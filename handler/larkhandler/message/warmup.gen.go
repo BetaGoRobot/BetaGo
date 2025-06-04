@@ -24,4 +24,5 @@ func init() {
 	reflecting.GetFunctionName((*WordReplyMsgOperator).PreRun) // from handler/larkhandler/message/word_reply_op.go:41
 	reflecting.GetFunctionName((*WordReplyMsgOperator).Run)    // from handler/larkhandler/message/word_reply_op.go:63, handler/larkhandler/message/word_reply_op.go:100
 	reflecting.GetFunctionName(CollectMessage)                 // from handler/larkhandler/message/base.go:34
+	reflecting.GetFunctionName(ExecuteFromRawCommand)          // from handler/larkhandler/message/command_op.go:65
 }

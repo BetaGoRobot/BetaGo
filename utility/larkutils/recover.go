@@ -136,42 +136,34 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 	if e, ok := err.(error); ok {
 		span.RecordError(e)
 	}
-	title := "Panic Detected!"
-	subTitle := "Please check the log for more information."
-	buttonText := "Jaeger Tracer -" + traceID
+	stack := string(debug.Stack())
+	log.Zlog.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("msg_id", msgID))
+	err = ReplyCardText(ctx, "```go\n"+stack+"\n```", msgID, "", true)
+	if err != nil {
+		log.Zlog.Error("send error", zaplog.Any("error", err))
+	}
+}
+
+// SendRecoveredMsgUserID to be filled
+//
+//	@param ctx context.Context
+//	@param err any
+//	@param chatID string
+//	@param userID string
+//	@author kevinmatthe
+//	@update 2025-06-04 16:30:33
+func SendRecoveredMsgUserID(ctx context.Context, err any, chatID, userID string) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, "RecoverMsg")
+	defer span.End()
+
+	traceID := span.SpanContext().TraceID().String()
+	if e, ok := err.(error); ok {
+		span.RecordError(e)
+	}
 	stack := string(debug.Stack())
 
-	log.Zlog.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("msg_id", msgID))
-
-	newCard := newPattern()
-	newCard.I18NElements.ZhCn[0].Content = "```go\n" + stack + "\n```"
-	newCard.I18NElements.ZhCn[1].Actions[0].Text.Content = buttonText
-	newCard.I18NElements.ZhCn[1].Actions[0].MultiURL.URL = "https://jaeger.kmhomelab.cn/trace/" + traceID
-	newCard.I18NHeader.ZhCn.Title.Content = title
-	newCard.I18NHeader.ZhCn.Subtitle.Content = subTitle
-
-	cardMsg, err := sonic.MarshalString(newCard)
-	if err != nil {
-		log.Zlog.Error("marshal error", zaplog.Any("error", err))
-		return
-	}
-	uuid := msgID
-	if len(uuid) > 50 {
-		uuid = uuid[:50]
-	}
-	_, err = LarkClient.Im.Message.Reply(ctx,
-		larkim.NewReplyMessageReqBuilder().
-			MessageId(msgID).
-			Body(
-				larkim.NewReplyMessageReqBodyBuilder().
-					MsgType(larkim.MsgTypeInteractive).
-					ReplyInThread(true).
-					Uuid(GenUUIDStr(uuid, 50)).
-					Content(cardMsg).
-					Build(),
-			).
-			Build(),
-	)
+	log.Zlog.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("chat_id", chatID))
+	err = SendCardText(ctx, "```go\n"+stack+"\n```", chatID, "", true)
 	if err != nil {
 		log.Zlog.Error("send error", zaplog.Any("error", err))
 	}

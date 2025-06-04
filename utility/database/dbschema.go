@@ -225,6 +225,12 @@ type CardActionRecordLog struct {
 	EventSrc string `json:"event_src"`
 }
 
+type CronCmdTask struct {
+	TaskName string `json:"task_name" gorm:"primaryKey"`
+	TaskCron string `json:"task_cron"`
+	TaskCmd  string `json:"task_cmd"`
+}
+
 var (
 	isTest    = os.Getenv("IS_TEST")
 	isCluster = os.Getenv("IS_CLUSTER")
@@ -240,6 +246,7 @@ func init() {
 	// migrate
 	db := GetDbConnection()
 	err := db.AutoMigrate(
+		&CronCmdTask{},
 		&CardActionRecordLog{},
 		&Administrator{},
 		&CommandInfo{},

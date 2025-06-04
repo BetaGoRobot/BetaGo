@@ -15,6 +15,8 @@ type Operator[T, K any] interface {
 	PreRun(context.Context, *T, *K) error
 	Run(context.Context, *T, *K) error
 	PostRun(context.Context, *T, *K) error
+
+	MetaInit() *K
 }
 
 type (
@@ -24,12 +26,14 @@ type (
 		IsCommand   bool
 		MainCommand string
 		TraceID     string
+		UserID      string
 	}
 )
 
 type (
-	ProcPanicFunc[T, K any] func(context.Context, K, *T)
+	ProcPanicFunc[T, K any] func(context.Context, error, *T, *K)
 	ProcDeferFunc[T, K any] func(context.Context, *T, *K)
+	MetaInitFunc[T, K any]  func(context.Context) (*K, error)
 	Processor[T, K any]     struct {
 		context.Context
 		needBreak       bool
@@ -37,7 +41,7 @@ type (
 		metaData        *K
 		stages          []Operator[T, K]
 		parrallelStages []Operator[T, K]
-		onPanicFn       ProcPanicFunc[T, error]
+		onPanicFn       ProcPanicFunc[T, K]
 		deferFn         []ProcDeferFunc[T, K]
 	}
 )
@@ -54,12 +58,16 @@ func (op *OperatorBase[T, K]) PostRun(context.Context, *T, *K) error {
 	return nil
 }
 
+func (op *OperatorBase[T, K]) MetaInit() *K {
+	return new(K)
+}
+
 func (p *Processor[T, K]) WithCtx(ctx context.Context) *Processor[T, K] {
 	p.Context = ctx
 	return p
 }
 
-func (p *Processor[T, K]) OnPanic(fn ProcPanicFunc[T, error]) *Processor[T, K] {
+func (p *Processor[T, K]) OnPanic(fn ProcPanicFunc[T, K]) *Processor[T, K] {
 	p.onPanicFn = fn
 	return p
 }
@@ -83,7 +91,7 @@ func (p *Processor[T, K]) Clean() *Processor[T, K] {
 func (p *Processor[T, K]) Defer() {
 	if err := recover(); err != nil {
 		if p.onPanicFn != nil {
-			p.onPanicFn(p.Context, err.(error), p.data)
+			p.onPanicFn(p.Context, err.(error), p.data, p.metaData)
 		}
 	}
 }
@@ -219,8 +227,10 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			}
 		}(operator)
 	}
-	wg.Wait()
-	close(errorChan)
+	go func() {
+		defer close(errorChan)
+		wg.Wait()
+	}()
 	var mergedErr error
 	for err := range errorChan {
 		if err != nil {
