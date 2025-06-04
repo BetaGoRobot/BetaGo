@@ -40,6 +40,27 @@ jobs:
         id: timestamp
         run: echo "timestamp=$(date +%s%3N)" >> $GITHUB_OUTPUT
 
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: kevinmatt
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Log in to Tencent Cloud Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.TENCENT_HEADER }}
+          username: "100016072032"
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+    
+      
       - name: Build and Save Docker image
         run: |
           zip -r -9 -q betago.zip . -x ".git/*" -x "dal/qqmusicapi/qqmusic-api-service/*" -x "dal/neteaseapi/netease-api-service/*"
