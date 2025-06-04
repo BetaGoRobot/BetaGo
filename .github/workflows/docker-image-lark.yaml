@@ -26,84 +26,123 @@ env:
   NETEASE_PHONE: "${{ secrets.NETEASE_PHONE }}"
   NETEASE_PASSWORD: "${{ secrets.NETEASE_PASSWORD }}"
   TENCENT_HEADER: ccr.ccs.tencentyun.com
+
 jobs:
-  Build_Push:
+  Build:
     runs-on: ubuntu-latest
+    outputs:
+      timestamp: ${{ steps.timestamp.outputs.timestamp }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Log into registry ghcr.io
-        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+
+      - name: Calculate timestamp
+        id: timestamp
+        run: echo "timestamp=$(date +%s%3N)" >> $GITHUB_OUTPUT
+
+      - name: Build and Save Docker image
+        run: |
+          zip -r -9 -q betago.zip . -x ".git/*" -x "dal/qqmusicapi/qqmusic-api-service/*" -x "dal/neteaseapi/netease-api-service/*"
+          DOCKER_BUILDKIT=1 docker build . \
+            --file scripts/larkrobot/Dockerfile \
+            --tag $IMAGE_NAME:latest \
+            --tag $IMAGE_NAME:latest-${{ steps.timestamp.outputs.timestamp }}
+          docker save $IMAGE_NAME:latest | gzip > image_latest.tar.gz
+          docker save $IMAGE_NAME:latest-${{ steps.timestamp.outputs.timestamp }} | gzip > image_timestamp.tar.gz
+
+      - name: Upload image artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-images
+          path: |
+            image_latest.tar.gz
+            image_timestamp.tar.gz
+
+  PushToDockerHub:
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: docker-images
+
+      - name: Load Docker image
+        run: |
+          gunzip -c image_latest.tar.gz | docker load
+          gunzip -c image_timestamp.tar.gz | docker load
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: kevinmatt
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+      - name: Push to DockerHub
+        run: |
+          docker push $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
+
+  PushToGHCR:
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: docker-images
+
+      - name: Load Docker image
+        run: |
+          gunzip -c image_latest.tar.gz | docker load
+          gunzip -c image_timestamp.tar.gz | docker load
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Log into registry dockerhub
-        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+
+      - name: Push to GHCR
+        run: |
+          docker tag $IMAGE_NAME:latest ghcr.io/${{ github.repository_owner }}/larkbot:latest
+          docker tag $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }} ghcr.io/${{ github.repository_owner }}/larkbot:latest-${{ needs.Build.outputs.timestamp }}
+          docker push ghcr.io/${{ github.repository_owner }}/larkbot:latest
+          docker push ghcr.io/${{ github.repository_owner }}/larkbot:latest-${{ needs.Build.outputs.timestamp }}
+
+  PushToTencentCloud:
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
         with:
-          username: kevinmatt
-          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-      - name: Log into registry tencentcloud
-        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+          name: docker-images
+
+      - name: Load Docker image
+        run: |
+          gunzip -c image_latest.tar.gz | docker load
+          gunzip -c image_timestamp.tar.gz | docker load
+
+      - name: Log in to Tencent Cloud Registry
+        uses: docker/login-action@v2
         with:
-          registry: ccr.ccs.tencentyun.com
+          registry: ${{ env.TENCENT_HEADER }}
           username: "100016072032"
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-      - name: Build image
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          retry_wait_seconds: 15
-          command:  |
-            zip \
-            -r \
-            -9 \
-            -q betago.zip \
-            . \
-            -x ".git/*" \
-            -x "dal/qqmusicapi/qqmusic-api-service/*" \
-            -x "dal/neteaseapi/netease-api-service/*"
-            DOCKER_BUILDKIT=1 docker build \
-             . \
-             --file scripts/larkrobot/Dockerfile \
-             --tag $IMAGE_NAME
-      - name: Push image
-        if: github.event_name != 'pull_request'
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          retry_wait_seconds: 15
-          command:  |
-            current=`date "+%Y-%m-%d %H:%M:%S"`
-            timeStamp=`date -d "$current" +%s` 
-            #将current转换为时间戳，精确到毫秒  
-            currentTimeStamp=$((timeStamp*1000+`date "+%N"`/1000000)) 
 
-            IMAGE_ID=$IMAGE_NAME
-            
-            # 将所有的大写字母转为小写
-            IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+      - name: Push to Tencent
+        run: |
+          docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }} $TENCENT_HEADER/$IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
+          docker push $TENCENT_HEADER/$IMAGE_NAME:latest
+          docker push $TENCENT_HEADER/$IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
 
-            # 从 tag 名字中替换 v 字符
-            [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-            # 设置镜像 id 和版本号
-            docker tag $IMAGE_NAME $IMAGE_NAME:latest
-            
-            # 进行 push
-            docker push $IMAGE_NAME:latest
-            docker tag $IMAGE_NAME:latest $IMAGE_NAME:latest-$currentTimeStamp
-            docker push $IMAGE_NAME:latest-$currentTimeStamp
-
-            # docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest 
-            # docker push $TENCENT_HEADER/$IMAGE_NAME:latest
-            # docker tag $TENCENT_HEADER/$IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
-            # docker push $TENCENT_HEADER/$IMAGE_NAME:latest-$currentTimeStamp
+  Notify:
+    if: github.event_name != 'pull_request'
+    needs: [PushToDockerHub, PushToGHCR, PushToTencentCloud]
+    runs-on: ubuntu-latest
+    steps:
       - name: Gotify Notification
         uses: eikendev/gotify-action@master
-        if: github.event_name != 'pull_request'
         with:
           gotify_api_base: '${{ secrets.GOTIFY_URL }}'
           gotify_app_token: '${{ secrets.GOTIFY_APP_TOKEN }}'
