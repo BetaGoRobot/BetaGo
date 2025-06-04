@@ -51,7 +51,7 @@ jobs:
           docker save $IMAGE_NAME:latest-${{ steps.timestamp.outputs.timestamp }} | gzip > image_timestamp.tar.gz
 
       - name: Upload image artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-images
           path: |
