@@ -103,6 +103,33 @@ jobs:
           docker push $IMAGE_NAME:latest
           docker push $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
 
+  # PushToGHCR:
+  #   needs: Build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: docker-images
+
+  #     - name: Load Docker image
+  #       run: |
+  #         gunzip -c image_latest.tar.gz | docker load
+  #         gunzip -c image_timestamp.tar.gz | docker load
+
+  #     - name: Log in to GHCR
+  #       uses: docker/login-action@v2
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+
+  #     - name: Push to GHCR
+  #       run: |
+  #         docker tag $IMAGE_NAME:latest ghcr.io/${{ github.repository_owner }}/larkbot:latest
+  #         docker tag $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }} ghcr.io/${{ github.repository_owner }}/larkbot:latest-${{ needs.Build.outputs.timestamp }}
+  #         docker push ghcr.io/${{ github.repository_owner }}/larkbot:latest
+  #         docker push ghcr.io/${{ github.repository_owner }}/larkbot:latest-${{ needs.Build.outputs.timestamp }}
+
   # PushToTencentCloud:
   #   needs: Build
   #   runs-on: ubuntu-latest
@@ -132,7 +159,7 @@ jobs:
 
   Notify:
     if: github.event_name != 'pull_request'
-    needs: [PushToDockerHub, PushToGHCR, PushToTencentCloud]
+    needs: [PushToDockerHub]
     runs-on: ubuntu-latest
     steps:
       - name: Gotify Notification
