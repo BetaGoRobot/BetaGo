@@ -103,32 +103,32 @@ jobs:
           docker push $IMAGE_NAME:latest
           docker push $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
 
-  PushToTencentCloud:
-    needs: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: docker-images
+  # PushToTencentCloud:
+  #   needs: Build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         name: docker-images
 
-      - name: Load Docker image
-        run: |
-          gunzip -c image_latest.tar.gz | docker load
-          gunzip -c image_timestamp.tar.gz | docker load
+  #     - name: Load Docker image
+  #       run: |
+  #         gunzip -c image_latest.tar.gz | docker load
+  #         gunzip -c image_timestamp.tar.gz | docker load
 
-      - name: Log in to Tencent Cloud Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.TENCENT_HEADER }}
-          username: "100016072032"
-          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+  #     - name: Log in to Tencent Cloud Registry
+  #       uses: docker/login-action@v2
+  #       with:
+  #         registry: ${{ env.TENCENT_HEADER }}
+  #         username: "100016072032"
+  #         password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
-      - name: Push to Tencent
-        run: |
-          docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest
-          docker tag $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }} $TENCENT_HEADER/$IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
-          docker push $TENCENT_HEADER/$IMAGE_NAME:latest
-          docker push $TENCENT_HEADER/$IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
+  #     - name: Push to Tencent
+  #       run: |
+  #         docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest
+  #         docker tag $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }} $TENCENT_HEADER/$IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
+  #         docker push $TENCENT_HEADER/$IMAGE_NAME:latest
+  #         docker push $TENCENT_HEADER/$IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
 
   Notify:
     if: github.event_name != 'pull_request'
