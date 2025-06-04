@@ -6,9 +6,9 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
+	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi/neteaselark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -37,9 +37,9 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 			return err
 		}
 
-		cardContent, err = cardutil.BuildMusicListCard(ctx,
+		cardContent, err = neteaselark.BuildMusicListCard(ctx,
 			albumList,
-			cardutil.MusicItemTransAlbum,
+			neteaselark.MusicItemTransAlbum,
 			neteaseapi.CommentTypeAlbum,
 			keywords...,
 		)
@@ -53,9 +53,9 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 		if err != nil {
 			return err
 		}
-		cardContent, err = cardutil.BuildMusicListCard(ctx,
+		cardContent, err = neteaselark.BuildMusicListCard(ctx,
 			musicList,
-			cardutil.MusicItemNoTrans,
+			neteaselark.MusicItemNoTrans,
 			neteaseapi.CommentTypeSong,
 			keywords...,
 		)

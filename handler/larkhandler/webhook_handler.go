@@ -7,11 +7,11 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
+	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi/neteaselark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/message"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -192,9 +192,9 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 	if err != nil {
 		return
 	}
-	cardContent, err := cardutil.BuildMusicListCard(ctx,
+	cardContent, err := neteaselark.BuildMusicListCard(ctx,
 		result,
-		cardutil.MusicItemNoTrans,
+		neteaselark.MusicItemNoTrans,
 		neteaseapi.CommentTypeSong,
 	)
 	if err != nil {
