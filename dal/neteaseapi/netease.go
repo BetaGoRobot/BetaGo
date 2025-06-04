@@ -15,7 +15,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -535,7 +535,7 @@ func asyncUploadPics(ctx context.Context, musicInfos SearchMusic) map[string]str
 
 func uploadPicWorker(ctx context.Context, wg *sync.WaitGroup, url string, musicID int, c chan [2]string) bool {
 	defer wg.Done()
-	imgKey, _, err := larkutils.UploadPicAllinOne(ctx, url, strconv.Itoa(musicID), true)
+	imgKey, _, err := larkimg.UploadPicAllinOne(ctx, url, strconv.Itoa(musicID), true)
 	if err != nil {
 		log.Zlog.Error("upload pic to lark error", zaplog.Error(err))
 		return true

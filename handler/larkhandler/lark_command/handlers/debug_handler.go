@@ -11,6 +11,7 @@ import (
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/message"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
@@ -309,7 +310,7 @@ func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
-	seq, err := larkutils.GetAllImgURLFromParent(ctx, data)
+	seq, err := larkimg.GetAllImgURLFromParent(ctx, data)
 	if err != nil {
 		return err
 	}

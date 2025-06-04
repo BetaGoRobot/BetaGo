@@ -9,27 +9,27 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName(ChatHandlerInner)       // from handler/larkhandler/lark_command/handlers/chat_handler.go:46
-	reflecting.GetFunctionName(DebugGetGroupIDHandler) // from handler/larkhandler/lark_command/handlers/debug_handler.go:71
-	reflecting.GetFunctionName(DebugGetIDHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:46
-	reflecting.GetFunctionName(DebugImageHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:309
-	reflecting.GetFunctionName(DebugRepeatHandler)     // from handler/larkhandler/lark_command/handlers/debug_handler.go:265
-	reflecting.GetFunctionName(DebugRevertHandler)     // from handler/larkhandler/lark_command/handlers/debug_handler.go:224
-	reflecting.GetFunctionName(DebugTraceHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:160
-	reflecting.GetFunctionName(DebugTryPanicHandler)   // from handler/larkhandler/lark_command/handlers/debug_handler.go:95
-	reflecting.GetFunctionName(GenerateChatSeq)        // from handler/larkhandler/lark_command/handlers/chat_handler.go:110
-	reflecting.GetFunctionName(GetTraceFromMsgID)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:114
+	reflecting.GetFunctionName(ChatHandlerInner)       // from handler/larkhandler/lark_command/handlers/chat_handler.go:47
+	reflecting.GetFunctionName(DebugGetGroupIDHandler) // from handler/larkhandler/lark_command/handlers/debug_handler.go:72
+	reflecting.GetFunctionName(DebugGetIDHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:47
+	reflecting.GetFunctionName(DebugImageHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:310
+	reflecting.GetFunctionName(DebugRepeatHandler)     // from handler/larkhandler/lark_command/handlers/debug_handler.go:266
+	reflecting.GetFunctionName(DebugRevertHandler)     // from handler/larkhandler/lark_command/handlers/debug_handler.go:225
+	reflecting.GetFunctionName(DebugTraceHandler)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:161
+	reflecting.GetFunctionName(DebugTryPanicHandler)   // from handler/larkhandler/lark_command/handlers/debug_handler.go:96
+	reflecting.GetFunctionName(GenerateChatSeq)        // from handler/larkhandler/lark_command/handlers/chat_handler.go:111
+	reflecting.GetFunctionName(GetTraceFromMsgID)      // from handler/larkhandler/lark_command/handlers/debug_handler.go:115
 	reflecting.GetFunctionName(GoldHandler)            // from handler/larkhandler/lark_command/handlers/stock_handler.go:31
-	reflecting.GetFunctionName(ImageAddHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:34
-	reflecting.GetFunctionName(ImageDelHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:156
-	reflecting.GetFunctionName(ImageGetHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:116
+	reflecting.GetFunctionName(ImageAddHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:36
+	reflecting.GetFunctionName(ImageDelHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:158
+	reflecting.GetFunctionName(ImageGetHandler)        // from handler/larkhandler/lark_command/handlers/image_handler.go:118
 	reflecting.GetFunctionName(ImitateHandler)         // from handler/larkhandler/lark_command/handlers/imitate_handler.go:26
-	reflecting.GetFunctionName(MusicSearchHandler)     // from handler/larkhandler/lark_command/handlers/music_handler.go:20
+	reflecting.GetFunctionName(MusicSearchHandler)     // from handler/larkhandler/lark_command/handlers/music_handler.go:21
 	reflecting.GetFunctionName(MuteHandler)            // from handler/larkhandler/lark_command/handlers/mute_handler.go:21
 	reflecting.GetFunctionName(OneWordHandler)         // from handler/larkhandler/lark_command/handlers/oneword_handler.go:38
-	reflecting.GetFunctionName(ReplyGetHandler)        // from handler/larkhandler/lark_command/handlers/reply_handler.go:124
+	reflecting.GetFunctionName(ReplyGetHandler)        // from handler/larkhandler/lark_command/handlers/reply_handler.go:126
 	reflecting.GetFunctionName(StatsGetHandler)        // from handler/larkhandler/lark_command/handlers/stats_handler.go:15
 	reflecting.GetFunctionName(TrendHandler)           // from handler/larkhandler/lark_command/handlers/trend_handler.go:30
-	reflecting.GetFunctionName(WordAddHandler)         // from handler/larkhandler/lark_command/handlers/word_handler.go:31
-	reflecting.GetFunctionName(WordGetHandler)         // from handler/larkhandler/lark_command/handlers/word_handler.go:69
+	reflecting.GetFunctionName(WordAddHandler)         // from handler/larkhandler/lark_command/handlers/word_handler.go:32
+	reflecting.GetFunctionName(WordGetHandler)         // from handler/larkhandler/lark_command/handlers/word_handler.go:70
 }

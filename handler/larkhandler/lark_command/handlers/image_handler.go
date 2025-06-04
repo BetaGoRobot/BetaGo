@@ -9,6 +9,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/copywriting"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -42,7 +44,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 		// by url
 		picURL, ok := argMap["url"]
 		if ok {
-			imgKey = larkutils.UploadPicture2Lark(ctx, picURL)
+			imgKey = larkimg.UploadPicture2Lark(ctx, picURL)
 		}
 		// by img_key
 		inputImgKey, ok := argMap["img_key"]
@@ -131,9 +133,9 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 			})
 		}
 	}
-	cardContent := larkutils.NewCardContent(
+	cardContent := templates.NewCardContent(
 		ctx,
-		larkutils.TwoColSheetTemplate,
+		templates.TwoColSheetTemplate,
 	).
 		AddVariable("title1", "Type").
 		AddVariable("title2", "Picture").

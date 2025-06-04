@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/cts"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -29,7 +30,7 @@ func GenUUIDStr(str string, length int) string {
 //	@param ctx
 //	@param text
 //	@param msgID
-func ReplyCard(ctx context.Context, cardContent *TemplateCardContent, msgID, suffix string, replyInThread bool) (err error) {
+func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, msgID, suffix string, replyInThread bool) (err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	for k, v := range cardContent.Data.TemplateVariable {
@@ -69,8 +70,8 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 
 	defer span.End()
-	cardContent := NewCardContent(
-		ctx, NormalCardReplyTemplate,
+	cardContent := templates.NewCardContent(
+		ctx, templates.NormalCardReplyTemplate,
 	).
 		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
 		AddVariable("content", text)
@@ -98,6 +99,44 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 	return
 }
 
+// SendCard to be filled
+//
+//	@param ctx context.Context
+//	@param cardContent *templates.TemplateCardContent
+//	@param chatID string
+//	@param suffix string
+//	@return err error
+//	@author kevinmatthe
+//	@update 2025-06-04 18:02:15
+func SendCard(ctx context.Context, cardContent *templates.TemplateCardContent, chatID, suffix string) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("chatID").String(chatID))
+	span.SetAttributes(attribute.Key("suffix").String(suffix))
+	span.SetAttributes(attribute.Key("cardContent").String(cardContent.String()))
+	defer span.End()
+
+	resp, err := LarkClient.Im.V1.Message.Create(
+		ctx, larkim.NewCreateMessageReqBuilder().ReceiveIdType(larkim.ReceiveIdTypeChatId).
+			Body(
+				larkim.NewCreateMessageReqBodyBuilder().
+					ReceiveId(chatID).
+					MsgType(larkim.MsgTypeInteractive).
+					Content(cardContent.String()).
+					Uuid(GenUUIDStr(chatID+suffix, 50)).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		return
+	}
+	if !resp.Success() {
+		return errors.New(resp.Error())
+	}
+	RecordMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
+	return
+}
+
 // SendCardText to be filled
 //
 //	@param ctx context.Context
@@ -108,13 +147,13 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 //	@return err error
 //	@author kevinmatthe
 //	@update 2025-06-04 16:25:42
-func SendCardText(ctx context.Context, text string, chatID, suffix string, replyInThread bool) (err error) {
+func SendCardText(ctx context.Context, text string, chatID, suffix string) (err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("chatID").String(chatID))
 
 	defer span.End()
-	cardContent := NewCardContent(
-		ctx, NormalCardReplyTemplate,
+	cardContent := templates.NewCardContent(
+		ctx, templates.NormalCardReplyTemplate,
 	).
 		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
 		AddVariable("content", text)
@@ -151,8 +190,8 @@ func ReplyCardTextGraph[X cts.ValidType, Y cts.Numeric](ctx context.Context, tex
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 
 	defer span.End()
-	cardContent := NewCardContent(
-		ctx, NormalCardGraphReplyTemplate,
+	cardContent := templates.NewCardContent(
+		ctx, templates.NormalCardGraphReplyTemplate,
 	).
 		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
 		AddVariable("content", text).
@@ -197,8 +236,8 @@ func PatchCardTextGraph(ctx context.Context, text string, graph any, msgID strin
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 
 	defer span.End()
-	cardContent := NewCardContent(
-		ctx, NormalCardGraphReplyTemplate,
+	cardContent := templates.NewCardContent(
+		ctx, templates.NormalCardGraphReplyTemplate,
 	).
 		AddVariable("content", text).
 		AddVariable("graph", graph)

@@ -9,6 +9,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi/neteaselark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -30,7 +31,7 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 
 	keywords := []string{input}
 
-	var cardContent *larkutils.TemplateCardContent
+	var cardContent *templates.TemplateCardContent
 	if searchType == "album" {
 		albumList, err := neteaseapi.NetEaseGCtx.SearchAlbumByKeyWord(ctx, keywords...)
 		if err != nil {

@@ -10,6 +10,8 @@ import (
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -68,10 +70,10 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 					imgKey := contentMap["file_key"]
 					res, _ := database.FindByCacheFunc(database.StickerMapping{StickerKey: imgKey}, func(r database.StickerMapping) string { return r.StickerKey })
 					if len(res) == 0 {
-						if stickerFile, err := larkutils.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["file_key"], "image"); err != nil {
+						if stickerFile, err := larkimg.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["file_key"], "image"); err != nil {
 							log.Zlog.Error("repeatMessage", zaplog.Error(err))
 						} else {
-							newImgKey := larkutils.UploadPicture2LarkReader(ctx, stickerFile)
+							newImgKey := larkimg.UploadPicture2LarkReader(ctx, stickerFile)
 							database.GetDbConnection().Clauses(clause.OnConflict{UpdateAll: true}).Create(&database.StickerMapping{
 								StickerKey: imgKey,
 								ImageKey:   newImgKey,
@@ -80,11 +82,11 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 					}
 					reply = imgKey
 				} else if *parentMsgItem.MsgType == larkim.MsgTypeImage {
-					imageFile, err := larkutils.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["image_key"], "image")
+					imageFile, err := larkimg.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["image_key"], "image")
 					if err != nil {
 						return err
 					}
-					reply = larkutils.UploadPicture2LarkReader(ctx, imageFile)
+					reply = larkimg.UploadPicture2LarkReader(ctx, imageFile)
 				} else {
 					return errors.New("reply_type **img** must reply to a image message")
 				}
@@ -165,9 +167,9 @@ func ReplyGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 			"title4": string(res.MatchType),
 		})
 	}
-	cardContent := larkutils.NewCardContent(
+	cardContent := templates.NewCardContent(
 		ctx,
-		larkutils.FourColSheetTemplate,
+		templates.FourColSheetTemplate,
 	).
 		AddVariable("title1", "Scope").
 		AddVariable("title2", "Keyword").

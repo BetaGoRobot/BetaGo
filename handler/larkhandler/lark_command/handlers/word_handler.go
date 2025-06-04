@@ -9,6 +9,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -94,9 +95,9 @@ func WordGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaDa
 			"title3": strconv.Itoa(res.Rate),
 		})
 	}
-	cardContent := larkutils.NewCardContent(
+	cardContent := templates.NewCardContent(
 		ctx,
-		larkutils.ThreeColSheetTemplate,
+		templates.ThreeColSheetTemplate,
 	).
 		AddVariable("title1", "Scope").
 		AddVariable("title2", "Keyword").

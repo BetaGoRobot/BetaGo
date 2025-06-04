@@ -9,12 +9,12 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName(GetCardMusicByPage)     // from handler/larkhandler/webhook_handler.go:66
-	reflecting.GetFunctionName(HandleFullLyrics)       // from handler/larkhandler/webhook_handler.go:210
-	reflecting.GetFunctionName(HandleRefreshMusic)     // from handler/larkhandler/webhook_handler.go:251
+	reflecting.GetFunctionName(GetCardMusicByPage)     // from handler/larkhandler/webhook_handler.go:68
+	reflecting.GetFunctionName(HandleFullLyrics)       // from handler/larkhandler/webhook_handler.go:212
+	reflecting.GetFunctionName(HandleRefreshMusic)     // from handler/larkhandler/webhook_handler.go:253
 	reflecting.GetFunctionName(MessageReactionHandler) // from handler/larkhandler/message_handler.go:58
 	reflecting.GetFunctionName(MessageV2Handler)       // from handler/larkhandler/message_handler.go:34
-	reflecting.GetFunctionName(SendAlbumCard)          // from handler/larkhandler/webhook_handler.go:180
-	reflecting.GetFunctionName(SendMusicCard)          // from handler/larkhandler/webhook_handler.go:168
-	reflecting.GetFunctionName(WebHookHandler)         // from handler/larkhandler/webhook_handler.go:27
+	reflecting.GetFunctionName(SendAlbumCard)          // from handler/larkhandler/webhook_handler.go:182
+	reflecting.GetFunctionName(SendMusicCard)          // from handler/larkhandler/webhook_handler.go:170
+	reflecting.GetFunctionName(WebHookHandler)         // from handler/larkhandler/webhook_handler.go:29
 }

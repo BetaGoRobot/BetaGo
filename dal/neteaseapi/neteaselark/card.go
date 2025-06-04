@@ -7,7 +7,8 @@ import (
 	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -26,11 +27,11 @@ func MusicItemTransAlbum(album *neteaseapi.Album) *neteaseapi.SearchMusicItem {
 		Name:       "[" + album.Type + "] " + album.Name,
 		PicURL:     album.PicURL,
 		ArtistName: album.Artist.Name,
-		ImageKey:   larkutils.UploadPicture2Lark(context.Background(), album.PicURL),
+		ImageKey:   larkimg.UploadPicture2Lark(context.Background(), album.PicURL),
 	}
 }
 
-func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType, keywords ...string) (content *larkutils.TemplateCardContent, err error) {
+func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musicItemTransFunc[T], resourceType neteaseapi.CommentType, keywords ...string) (content *templates.TemplateCardContent, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
@@ -97,9 +98,9 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 		idx := line["idx"].(int)
 		lines[idx] = line
 	}
-	content = larkutils.NewCardContent(
+	content = templates.NewCardContent(
 		ctx,
-		larkutils.AlbumListTemplate,
+		templates.AlbumListTemplate,
 	).
 		AddVariable("object_list_1", lines).
 		AddVariable("query", fmt.Sprintf("[%s]", strings.Join(keywords, " ")))

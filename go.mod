@@ -34,7 +34,6 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/lonelyevil/kook v0.0.33
 	github.com/lonelyevil/kook/log_adapter/plog v0.0.34
-	github.com/mdaverde/jsonpath v0.2.1
 	github.com/minio/minio-go/v7 v7.0.92
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/opensearch-project/opensearch-go v1.1.0
@@ -49,6 +48,7 @@ require (
 	github.com/valyala/fasthttp v1.62.0
 	github.com/volcengine/volcengine-go-sdk v1.1.11
 	github.com/wcharczuk/go-chart/v2 v2.1.2
+	github.com/yanyiwu/gojieba v1.4.5
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.36.0
 	go.opentelemetry.io/otel/sdk v1.36.0

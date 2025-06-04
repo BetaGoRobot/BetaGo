@@ -9,6 +9,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	larkcardkit "github.com/larksuite/oapi-sdk-go/v3/service/cardkit/v1"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -17,7 +18,7 @@ import (
 func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*doubao.ModelStreamRespReasoning]) error {
 	// create Card
 	// 创建卡片实体
-	template := larkutils.GetTemplate(larkutils.StreamingReasonTemplate)
+	template := templates.GetTemplate(templates.StreamingReasonTemplate)
 	cardSrc := template.TemplateSrc
 	// 首先Create卡片实体
 	cardEntiReq := larkcardkit.NewCreateCardReqBuilder().Body(

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
@@ -220,20 +219,6 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 	}
 	RecordReplyMessage2Opensearch(ctx, resp, content)
 	return
-}
-
-func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io.Reader, err error) {
-	req := larkim.NewGetMessageResourceReqBuilder().MessageId(msgID).FileKey(fileKey).Type(fileType).Build()
-	resp, err := LarkClient.Im.MessageResource.Get(ctx, req)
-	if err != nil {
-		log.Zlog.Error("GetMsgImages", zaplog.Error(err))
-		return nil, err
-	}
-	if !resp.Success() {
-		log.Zlog.Error("GetMsgImages", zaplog.String("Error", resp.Error()))
-		return nil, errors.New(resp.Error())
-	}
-	return resp.File, nil
 }
 
 // ReplyMsgText ReplyMsgText 注意：不要传入已经Build过的文本

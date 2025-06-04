@@ -1,4 +1,4 @@
-package larkutils
+package templates
 
 import (
 	"context"

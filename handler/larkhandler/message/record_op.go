@@ -4,7 +4,7 @@ import (
 	"context"
 
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -47,13 +47,13 @@ func (r *RecordMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
-	imgSeq, err := larkutils.GetAllImageFromMsgEvent(ctx, event.Event.Message)
+	imgSeq, err := larkimg.GetAllImageFromMsgEvent(ctx, event.Event.Message)
 	if err != nil {
 		return
 	}
 	if imgSeq != nil {
 		for imageKey := range imgSeq {
-			err = larkutils.DownImgFromMsgAsync(
+			err = larkimg.DownImgFromMsgAsync(
 				ctx,
 				*event.Event.Message.MessageId,
 				larkim.MsgTypeImage,

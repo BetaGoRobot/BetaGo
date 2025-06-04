@@ -12,6 +12,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/message"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -62,7 +64,7 @@ func WebHookHandler(ctx context.Context, cardAction *callback.CardActionTriggerE
 	return nil, nil
 }
 
-func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutils.TemplateCardContent {
+func GetCardMusicByPage(ctx context.Context, musicID string, page int) *templates.TemplateCardContent {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
@@ -79,7 +81,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutil
 
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]
 	picURL := songDetail.Al.PicURL
-	imageKey, ossURL, err := larkutils.UploadPicAllinOne(ctx, picURL, musicID, true)
+	imageKey, ossURL, err := larkimg.UploadPicAllinOne(ctx, picURL, musicID, true)
 	if err != nil {
 		log.Zlog.Error(err.Error())
 		return nil
@@ -151,9 +153,9 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *larkutil
 
 	lyrics = strings.Join(newList, "\n")
 
-	return larkutils.NewCardContent(
+	return templates.NewCardContent(
 		ctx,
-		larkutils.SingleSongDetailTemplate,
+		templates.SingleSongDetailTemplate,
 	).
 		AddVariable("lyrics", lyrics).
 		AddVariable("title", songDetail.Name).
@@ -212,16 +214,16 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 	defer span.End()
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]
 
-	imgKey, _, err := larkutils.UploadPicAllinOne(ctx, songDetail.Al.PicURL, musicID, true)
+	imgKey, _, err := larkimg.UploadPicAllinOne(ctx, songDetail.Al.PicURL, musicID, true)
 	lyric, _ := neteaseapi.NetEaseGCtx.GetLyrics(ctx, musicID)
 	lyric = larkutils.TrimLyrics(lyric)
 	sp := strings.Split(lyric, "\n")
 	left := strings.Join(sp[:len(sp)/2], "\n")
 	right := strings.Join(sp[len(sp)/2+1:], "\n")
 
-	cardContent := larkutils.NewCardContent(
+	cardContent := templates.NewCardContent(
 		ctx,
-		larkutils.FullLyricsTemplate,
+		templates.FullLyricsTemplate,
 	).
 		AddVariable("left_lyrics", left).
 		AddVariable("right_lyrics", right).

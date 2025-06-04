@@ -1,4 +1,4 @@
-package larkutils
+package larkimg
 
 import (
 	"bytes"
@@ -8,11 +8,17 @@ import (
 	"io"
 	"iter"
 	"path/filepath"
+	"strconv"
+	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
+	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/database"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/BetaGo/utility/requests"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	"github.com/kevinmatthe/zaplog"
@@ -46,7 +52,7 @@ func DownImgFromMsgSync(ctx context.Context, msgID, fileType, fileKey string) (u
 		Type("image").
 		Build()
 	// 发起请求
-	resp, err := LarkClient.Im.V1.MessageResource.Get(ctx, req)
+	resp, err := larkutils.LarkClient.Im.V1.MessageResource.Get(ctx, req)
 	// 处理错误
 	if err != nil {
 		return
@@ -113,7 +119,7 @@ func DownImgFromMsgAsync(ctx context.Context, msgID, fileType, fileKey string) (
 		Type(fileType).
 		Build()
 	// 发起请求
-	resp, err := LarkClient.Im.V1.MessageResource.Get(ctx, req)
+	resp, err := larkutils.LarkClient.Im.V1.MessageResource.Get(ctx, req)
 	// 处理错误
 	if err != nil {
 		fmt.Println(err)
@@ -321,7 +327,7 @@ func jsonTrans[T any](s string) (*T, error) {
 }
 
 func GetAllImgURLFromMsg(ctx context.Context, msgID string) (iter.Seq[string], error) {
-	resp := GetMsgFullByID(ctx, msgID)
+	resp := larkutils.GetMsgFullByID(ctx, msgID)
 	msg := resp.Data.Items[0]
 	if msg == nil {
 		return nil, errors.New("No message found")
@@ -352,7 +358,7 @@ func GetAllImgURLFromMsg(ctx context.Context, msgID string) (iter.Seq[string], e
 func GetAllImgURLFromParent(ctx context.Context, data *larkim.P2MessageReceiveV1) (iter.Seq[string], error) {
 	if data.Event.Message.ThreadId != nil {
 		// 话题模式 找图片
-		resp, err := LarkClient.Im.Message.List(ctx,
+		resp, err := larkutils.LarkClient.Im.Message.List(ctx,
 			larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
 		if err != nil {
 			return nil, err
@@ -394,4 +400,208 @@ func GetAllImgURLFromParent(ctx context.Context, data *larkim.P2MessageReceiveV1
 		}, nil
 	}
 	return nil, nil
+}
+
+func GetAndResizePicFromURL(ctx context.Context, imageURL string) (res []byte, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
+	defer span.End()
+
+	picResp, err := requests.Req().SetDoNotParseResponse(true).Get(imageURL)
+	if err != nil {
+		log.Zlog.Error("get pic from url error", zaplog.Error(err))
+		return
+	}
+
+	res = utility.ResizeIMGFromReader(ctx, picResp.RawBody())
+	return
+}
+
+func checkDBCache(ctx context.Context, musicID string) (imgKey string, err error) {
+	larkImgs := make([]*database.LarkImg, 0)
+
+	err = database.GetDbConnection().
+		Table("betago.lark_imgs").
+		Find(&database.LarkImg{SongID: musicID}).
+		First(&larkImgs).Error
+	if err != nil {
+		log.Zlog.Error("get lark img from db error", zaplog.Error(err))
+		return
+	}
+	return larkImgs[0].ImgKey, err
+}
+
+func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS bool) (key string, ossURL string, err error) { // also minio
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("imgURL").String(imageURL))
+	defer span.End()
+
+	imgKey, err := checkDBCache(ctx, musicID)
+	if err != nil {
+		log.Zlog.Warn("get lark img from db error", zaplog.Error(err))
+		// db 缓存未找到，准备resize上传
+		var picData []byte
+		picData, err = GetAndResizePicFromURL(ctx, imageURL)
+		if err != nil {
+			log.Zlog.Error("resize pic from url error", zaplog.Error(err))
+			return
+		}
+
+		imgKey, err = Upload2Lark(ctx, musicID, io.NopCloser(bytes.NewReader(picData)))
+		if err != nil {
+			log.Zlog.Error("upload pic to lark error", zaplog.Error(err))
+			return
+		}
+		if uploadOSS {
+			u, err := miniohelper.Client().
+				SetContext(ctx).
+				SetBucketName("cloudmusic").
+				SetFileFromReader(io.NopCloser(bytes.NewReader(picData))).
+				SetObjName("picture/" + musicID + filepath.Ext(imageURL)).
+				SetContentType(ct.ContentTypeImgJPEG).
+				Upload()
+			if err != nil {
+				log.Zlog.Warn("upload pic to minio error", zaplog.String("imageURL", imageURL), zaplog.String("imageKey", imgKey))
+				err = nil
+			}
+			if u != nil {
+				ossURL = u.String()
+			}
+		}
+	}
+	u, err := miniohelper.MinioTryGetFile(ctx, "cloudmusic", "picture/"+musicID+filepath.Ext(imageURL), true)
+	if err != nil {
+		log.Zlog.Warn("get pic from minio error", zaplog.Error(err))
+		err = nil
+	}
+	if u != nil {
+		ossURL = u.String()
+	}
+	return imgKey, ossURL, err
+}
+
+func Upload2Lark(ctx context.Context, musicID string, bodyReader io.ReadCloser) (imgKey string, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	req := larkim.NewCreateImageReqBuilder().
+		Body(
+			larkim.NewCreateImageReqBodyBuilder().
+				ImageType(larkim.ImageTypeMessage).
+				Image(bodyReader).
+				Build(),
+		).
+		Build()
+	resp, err := larkutils.LarkClient.Im.Image.Create(ctx, req)
+	if err != nil {
+		log.Zlog.Error(err.Error())
+		return "", nil
+	}
+	if !resp.Success() {
+		return "", errors.New("error with code" + strconv.Itoa(resp.Code))
+	}
+	imgKey = *resp.Data.ImageKey
+	err = database.GetDbConnection().
+		Table("betago.lark_imgs").
+		Find(&database.LarkImg{SongID: musicID}).
+		FirstOrCreate(&database.LarkImg{SongID: musicID, ImgKey: imgKey}).Error
+	if err != nil {
+		log.Zlog.Warn("create lark img in db error", zaplog.Error(err))
+		return imgKey, nil
+	}
+
+	return
+}
+
+func UploadPicture2LarkReader(ctx context.Context, picture io.Reader) (imgKey string) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	req := larkim.NewCreateImageReqBuilder().
+		Body(
+			larkim.NewCreateImageReqBodyBuilder().
+				ImageType(larkim.ImageTypeMessage).
+				Image(picture).
+				Build(),
+		).
+		Build()
+
+	resp, err := larkutils.LarkClient.Im.Image.Create(ctx, req)
+	if err != nil {
+		log.Zlog.Error(err.Error())
+		return
+	}
+	if !resp.Success() {
+		log.Zlog.Error("error with code" + strconv.Itoa(resp.Code))
+		return
+	}
+	imgKey = *resp.Data.ImageKey
+	return imgKey
+}
+
+func UploadPicture2Lark(ctx context.Context, URL string) (imgKey string) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	picData, err := GetAndResizePicFromURL(ctx, URL)
+	if err != nil {
+		log.Zlog.Error("resize pic from url error", zaplog.Error(err))
+	}
+
+	req := larkim.NewCreateImageReqBuilder().
+		Body(
+			larkim.NewCreateImageReqBodyBuilder().
+				ImageType(larkim.ImageTypeMessage).
+				Image(bytes.NewReader(picData)).
+				Build(),
+		).
+		Build()
+
+	resp, err := larkutils.LarkClient.Im.Image.Create(ctx, req)
+	if err != nil {
+		log.Zlog.Error(err.Error())
+		return
+	}
+	if !resp.Success() {
+		log.Zlog.Error("error with code" + strconv.Itoa(resp.Code))
+		return
+	}
+	imgKey = *resp.Data.ImageKey
+	return imgKey
+}
+
+func UploadPicBatch(ctx context.Context, sourceURLIDs map[string]int) chan [2]string {
+	var (
+		c  = make(chan [2]string)
+		wg = &sync.WaitGroup{}
+	)
+	defer close(c)
+	defer wg.Wait()
+
+	for url, musicID := range sourceURLIDs {
+		go func(url string, musicID int) {
+			_, _, err := UploadPicAllinOne(ctx, url, strconv.Itoa(musicID), true)
+			if err != nil {
+				log.Zlog.Error("upload pic to lark error", zaplog.Error(err))
+				return
+			}
+			c <- [2]string{url, strconv.Itoa(musicID)}
+		}(url, musicID)
+	}
+
+	return c
+}
+
+func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io.Reader, err error) {
+	req := larkim.NewGetMessageResourceReqBuilder().MessageId(msgID).FileKey(fileKey).Type(fileType).Build()
+	resp, err := larkutils.LarkClient.Im.MessageResource.Get(ctx, req)
+	if err != nil {
+		log.Zlog.Error("GetMsgImages", zaplog.Error(err))
+		return nil, err
+	}
+	if !resp.Success() {
+		log.Zlog.Error("GetMsgImages", zaplog.String("Error", resp.Error()))
+		return nil, errors.New(resp.Error())
+	}
+	return resp.File, nil
 }

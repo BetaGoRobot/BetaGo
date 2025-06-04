@@ -4,6 +4,7 @@ import (
 	"context"
 	"runtime/debug"
 
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
@@ -138,7 +139,11 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 	}
 	stack := string(debug.Stack())
 	log.Zlog.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("msg_id", msgID))
-	err = ReplyCardText(ctx, "```go\n"+stack+"\n```", msgID, "", true)
+	card := cardutil.NewCardBuildHelper().
+		SetTitle("Panic Detected!").
+		SetSubTitle("Please check the log for more information.").
+		SetContent("```go\n" + stack + "\n```").Build(ctx)
+	err = ReplyCard(ctx, card, msgID, "", true)
 	if err != nil {
 		log.Zlog.Error("send error", zaplog.Any("error", err))
 	}
@@ -152,7 +157,7 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 //	@param userID string
 //	@author kevinmatthe
 //	@update 2025-06-04 16:30:33
-func SendRecoveredMsgUserID(ctx context.Context, err any, chatID, userID string) {
+func SendRecoveredMsgUserID(ctx context.Context, err any, chatID string) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, "RecoverMsg")
 	defer span.End()
 
@@ -163,7 +168,11 @@ func SendRecoveredMsgUserID(ctx context.Context, err any, chatID, userID string)
 	stack := string(debug.Stack())
 
 	log.Zlog.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("chat_id", chatID))
-	err = SendCardText(ctx, "```go\n"+stack+"\n```", chatID, "", true)
+	card := cardutil.NewCardBuildHelper().
+		SetTitle("Panic Detected!").
+		SetSubTitle("Please check the log for more information.").
+		SetContent("```go\n" + stack + "\n```").Build(ctx)
+	err = SendCard(ctx, card, chatID, "")
 	if err != nil {
 		log.Zlog.Error("send error", zaplog.Any("error", err))
 	}

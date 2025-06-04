@@ -16,6 +16,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/message"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/redis"
@@ -56,7 +57,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 	} else if ext != 0 {
 		return nil // Do nothing
 	}
-	urlSeq, err := larkutils.GetAllImgURLFromMsg(ctx, *event.Event.Message.MessageId)
+	urlSeq, err := larkimg.GetAllImgURLFromMsg(ctx, *event.Event.Message.MessageId)
 	if err != nil {
 		return err
 	}
@@ -66,7 +67,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		}
 	}
 	// 看看有没有quote的消息包含图片
-	urlSeq, err = larkutils.GetAllImgURLFromParent(ctx, event)
+	urlSeq, err = larkimg.GetAllImgURLFromParent(ctx, event)
 	if err != nil {
 		return err
 	}
