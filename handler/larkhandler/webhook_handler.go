@@ -2,8 +2,10 @@ package larkhandler
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
@@ -12,6 +14,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/message"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
@@ -50,7 +53,7 @@ func WebHookHandler(ctx context.Context, cardAction *callback.CardActionTriggerE
 			}
 		case "withdraw":
 			// 撤回消息
-			go HandleWithDraw(ctx, cardAction.Event.Context.OpenMessageID)
+			go HandleWithDraw(ctx, cardAction)
 		case "refresh":
 			if musicID, ok := cardAction.Event.Action.Value["id"]; ok {
 				go HandleRefreshMusic(ctx, musicID.(string), cardAction.Event.Context.OpenMessageID)
@@ -236,17 +239,28 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 	}
 }
 
-func HandleWithDraw(ctx context.Context, msgID string) {
-	// 撤回消息
-	resp, err := larkutils.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(msgID).Build())
-	if err != nil {
-		log.Zlog.Error(err.Error())
-		return
+func HandleWithDraw(ctx context.Context, cardAction *callback.CardActionTriggerEvent) {
+	// 伪撤回
+	userID := cardAction.Event.Operator.OpenID
+	msgID := cardAction.Event.Context.OpenMessageID
+	if consts.WITHDRAW_REPLACE {
+		cardContent := cardutil.NewCardBuildHelper().
+			SetContent(fmt.Sprintf("这条消息被%s撤回啦！", larkutils.AtUserString(userID))).Build(ctx)
+		err := larkutils.PatchCard(ctx, cardContent, msgID)
+		if err != nil {
+			log.Zlog.Error(err.Error())
+		}
+	} else {
+		// 撤回消息
+		resp, err := larkutils.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(msgID).Build())
+		if err != nil {
+			log.Zlog.Error(err.Error())
+			return
+		}
+		if !resp.Success() {
+			log.Zlog.Error("delete message error", zaplog.String("error", resp.Error()))
+		}
 	}
-	if !resp.Success() {
-		log.Zlog.Error("delete message error", zaplog.String("error", resp.Error()))
-	}
-	return
 }
 
 func HandleRefreshMusic(ctx context.Context, musicID, msgID string) {

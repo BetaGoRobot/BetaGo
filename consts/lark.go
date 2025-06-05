@@ -1,5 +1,7 @@
 package consts
 
+import "os"
+
 type LarkFunctionEnum string
 
 const (
@@ -29,3 +31,5 @@ const (
 	MODEL_TYPE_REASON = "reason"
 	MODEL_TYPE_NORMAL = "normal"
 )
+
+var WITHDRAW_REPLACE = os.Getenv("WITHDRAW_REPLACE") != ""

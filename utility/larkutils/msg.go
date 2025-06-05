@@ -98,6 +98,9 @@ func GetMsgByID(ctx context.Context, msgID string) string {
 	if err != nil {
 		log.Zlog.Error("GetMsgByID", zaplog.Error(err))
 	}
+	if !resp.Success() {
+		log.Zlog.Error("GetMsgByID", zaplog.String("error", resp.Error()))
+	}
 	return *resp.Data.Items[0].Body.Content
 }
 
@@ -105,6 +108,9 @@ func GetMsgFullByID(ctx context.Context, msgID string) *larkim.GetMessageResp {
 	resp, err := LarkClient.Im.V1.Message.Get(ctx, larkim.NewGetMessageReqBuilder().MessageId(msgID).Build())
 	if err != nil {
 		log.Zlog.Error("GetMsgByID", zaplog.Error(err))
+	}
+	if !resp.Success() {
+		log.Zlog.Error("GetMsgByID", zaplog.String("error", resp.Error()))
 	}
 	return resp
 }
@@ -464,5 +470,36 @@ func RemoveReaction(ctx context.Context, reactionID, msgID string) (err error) {
 		return errors.New(resp.Error())
 	}
 	AddReaction2DB(ctx, msgID)
+	return
+}
+
+// UpdateMessageTextRaw textMsg必须是序列化后的JSON
+//
+//	@param ctx context.Context
+//	@param msgID string
+//	@param textMsg string
+//	@return err error
+//	@author kevinmatthe
+//	@update 2025-06-05 17:06:39
+func UpdateMessageTextRaw(ctx context.Context, msgID, textMsg string) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID))
+	defer span.End()
+
+	resp, err := LarkClient.Im.V1.Message.Update(
+		ctx,
+		larkim.NewUpdateMessageReqBuilder().MessageId(msgID).
+			Body(
+				larkim.NewUpdateMessageReqBodyBuilder().MsgType("text").Content(textMsg).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		return
+	}
+	if !resp.Success() {
+		return fmt.Errorf(resp.Error())
+	}
 	return
 }

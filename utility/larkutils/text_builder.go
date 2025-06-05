@@ -1,6 +1,7 @@
 package larkutils
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/bytedance/sonic"
@@ -28,6 +29,10 @@ func (t *TextBuilder) AtUser(userId, name string) *TextBuilder {
 	t.builder.WriteString(name)
 	t.builder.WriteString("</at>")
 	return t
+}
+
+func AtUserString(userID string) string {
+	return fmt.Sprintf("<at id=%s>某个用户</at>", userID)
 }
 
 func (t *TextBuilder) Build() string {
