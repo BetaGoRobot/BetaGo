@@ -2,7 +2,6 @@ package message
 
 import (
 	"context"
-	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
@@ -14,7 +13,6 @@ import (
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
-	"github.com/kevinmatthe/gojieba"
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
@@ -70,24 +68,24 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		if err != nil {
 			log.Zlog.Error("EmbeddingText error", zaplog.Error(err))
 		}
-		jieba := gojieba.NewJieba()
-		defer jieba.Free()
-		ws := jieba.Cut(content, true)
+		// jieba := gojieba.NewJieba()
+		// defer jieba.Free()
+		// ws := jieba.Cut(content, true)
 
 		err = opensearchdal.InsertData(
 			ctx, consts.LarkMsgIndex, *event.Event.Message.MessageId,
 			&handlertypes.MessageIndex{
-				MessageLog:      msgLog,
-				ChatName:        larkutils.GetChatName(ctx, chatID),
-				RawMessage:      content,
-				RawMessageJieba: strings.Join(ws, " "),
-				CreateTime:      utility.EpoMil2DateStr(*event.Event.Message.CreateTime),
-				Message:         embedded,
-				UserID:          *event.Event.Sender.SenderId.OpenId,
-				UserName:        userName,
-				TokenUsage:      usage,
-				IsCommand:       metaData.IsCommand,
-				MainCommand:     metaData.MainCommand,
+				MessageLog: msgLog,
+				ChatName:   larkutils.GetChatName(ctx, chatID),
+				RawMessage: content,
+				// RawMessageJieba: strings.Join(ws, " "),
+				CreateTime:  utility.EpoMil2DateStr(*event.Event.Message.CreateTime),
+				Message:     embedded,
+				UserID:      *event.Event.Sender.SenderId.OpenId,
+				UserName:    userName,
+				TokenUsage:  usage,
+				IsCommand:   metaData.IsCommand,
+				MainCommand: metaData.MainCommand,
 			},
 		)
 		if err != nil {
