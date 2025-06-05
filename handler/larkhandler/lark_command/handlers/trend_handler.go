@@ -7,8 +7,10 @@ import (
 	"time"
 
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -43,9 +45,6 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData
 			days = 30
 		}
 	}
-	if inputInterval, ok := argMap["interval"]; ok {
-		interval = inputInterval
-	}
 	trend, err := history.New(ctx).
 		Query(
 			osquery.Bool().
@@ -63,38 +62,58 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData
 	if err != nil {
 		return err
 	}
-	graph := vadvisor.NewMultiSeriesLineGraph[string, int64]()
+	if _, ok := argMap["play"]; !ok {
+		if inputInterval, ok := argMap["interval"]; ok {
+			interval = inputInterval
+		}
+		graph := vadvisor.NewMultiSeriesLineGraph[string, int64]()
+		var min, max *int64
+		for _, item := range trend {
+			if item.Key == "你" {
+				item.Key = "机器人"
+			}
+			graph.AddData(item.Time, item.Value, item.Key)
 
-	var min, max *int64
-	for _, item := range trend {
-		if item.Key == "你" {
-			item.Key = "机器人"
-		}
-		graph.AddData(item.Time, item.Value, item.Key)
+			if min == nil || max == nil {
+				min, max = new(int64), new(int64)
+				*min, *max = item.Value, item.Value
+			}
 
-		if min == nil || max == nil {
-			min, max = new(int64), new(int64)
-			*min, *max = item.Value, item.Value
+			if item.Value < *min {
+				*min = item.Value
+			}
+			if item.Value > *max {
+				*max = item.Value
+			}
 		}
-
-		if item.Value < *min {
-			*min = item.Value
+		title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days)
+		graph.
+			SetRange(float64(*min), float64(*max))
+		cardContent := cardutil.NewCardBuildGraphHelper(graph).
+			SetTitle(title).Build(ctx)
+		err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "", false)
+	} else {
+		graph := vadvisor.NewPieChartsGraph[string, int64]()
+		for _, item := range trend {
+			t, err := time.ParseInLocation(time.DateTime, item.Time, utility.UTCPlus8Loc())
+			if err != nil {
+				return err
+			}
+			if item.Key == "你" {
+				item.Key = "机器人"
+			}
+			graph.AddData(&vadvisor.PieChartValueUnit[string, int64]{
+				XAxis:       t.Format(time.DateOnly),
+				SeriesField: item.Key,
+				Value:       item.Value,
+			})
 		}
-		if item.Value > *max {
-			*max = item.Value
-		}
+		graph.BuildPlayer(ctx)
+		title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days)
+		cardContent := cardutil.NewCardBuildGraphHelper(graph).
+			SetTitle(title).Build(ctx)
+		err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "", false)
 	}
-	title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days)
-	graph.
-		SetTitle(title).
-		SetRange(float64(*min), float64(*max))
-	err = larkutils.ReplyCardTextGraph(
-		ctx,
-		"",
-		graph,
-		*data.Event.Message.MessageId,
-		"_getID",
-		false,
-	)
+
 	return
 }
