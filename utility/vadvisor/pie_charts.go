@@ -165,6 +165,9 @@ func (h *PieChartsGraph[X, Y]) BuildPlayer(ctx context.Context) *PieChartsGraph[
 	// Merge Data
 	datas := make([]*PieChartSpecs[X, Y], 0)
 	for _, v := range h.valueMap {
+		slices.SortFunc(v.Values, func(l, r *PieChartValueUnit[X, Y]) int {
+			return cmp.Compare(l.SeriesField, r.SeriesField)
+		})
 		datas = append(datas, &PieChartSpecs[X, Y]{Data: v})
 	}
 	slices.SortFunc(datas, func(i, j *PieChartSpecs[X, Y]) int {
