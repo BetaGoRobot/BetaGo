@@ -82,12 +82,19 @@ func init() {
 			newCmd("mute", handlers.MuteHandler).AddArgs("t", "cancel"),
 		).
 		AddSubCommand(
-			newCmd("stock", larkCommandNilFunc).AddSubCommand(
-				newCmd("gold", handlers.StockHandler("gold")).
-					AddArgs(
-						"r", "h",
-					),
-			),
+			newCmd("stock", larkCommandNilFunc).
+				AddSubCommand(
+					newCmd("gold", handlers.StockHandler("gold")).
+						AddArgs(
+							"r", "h",
+						),
+				).
+				AddSubCommand(
+					newCmd("zh_a", handlers.StockHandler("a")).
+						AddArgs(
+							"code", "days",
+						),
+				),
 		).
 		AddSubCommand(
 			newCmd("talkrate", handlers.TrendHandler).

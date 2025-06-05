@@ -9,11 +9,13 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/cts"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 func GenUUIDStr(str string, length int) string {
@@ -37,6 +39,12 @@ func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 		span.SetAttributes(attribute.Key(k).String(fmt.Sprintf("%v", v)))
 	}
 	defer span.End()
+	log.Zlog.Info("reply card",
+		zap.String("msgID", msgID),
+		zap.String("suffix", suffix),
+		zap.String("replyInThread", strconv.FormatBool(replyInThread)),
+		zap.String("cardContent", cardContent.String()),
+	)
 	resp, err := LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).
@@ -242,6 +250,40 @@ func PatchCardTextGraph(ctx context.Context, text string, graph any, msgID strin
 		AddVariable("content", text).
 		AddVariable("graph", graph)
 	fmt.Println(cardContent.String())
+	resp, err := LarkClient.Im.V1.Message.Patch(
+		ctx, larkim.NewPatchMessageReqBuilder().
+			MessageId(msgID).
+			Body(
+				larkim.NewPatchMessageReqBodyBuilder().
+					Content(cardContent.String()).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		return
+	}
+	if !resp.Success() {
+		return errors.New(resp.Error())
+	}
+	return
+}
+
+// PatchCard to be filled PatchCard
+//
+//	@param ctx context.Context
+//	@param cardContent *templates.TemplateCardContent
+//	@param msgID string
+//	@return err error
+//	@author kevinmatthe
+//	@update 2025-06-05 13:23:46
+func PatchCard(ctx context.Context, cardContent *templates.TemplateCardContent, msgID string) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID))
+	for k, v := range cardContent.Data.TemplateVariable {
+		span.SetAttributes(attribute.Key(k).String(fmt.Sprintf("%v", v)))
+	}
+	defer span.End()
 	resp, err := LarkClient.Im.V1.Message.Patch(
 		ctx, larkim.NewPatchMessageReqBuilder().
 			MessageId(msgID).

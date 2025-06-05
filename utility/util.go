@@ -457,3 +457,11 @@ func UnmarshallStringPre[T any](s string, val *T) error {
 	}
 	return nil
 }
+
+func Must2Float(s string) float64 {
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return 0
+	}
+	return f
+}

@@ -8,30 +8,32 @@ import (
 )
 
 type MultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric] struct {
-	Type  string `json:"type"`
-	Title struct {
-		Text string `json:"text"`
-	} `json:"title"`
-	Point       *PointConf        `json:"point"`
-	Line        *LineConf         `json:"line"`
-	Legends     *LegentConf       `json:"legends"`
+	Type        string            `json:"type"`
+	Title       *TitleConf        `json:"title,omitempty"`
+	Point       *PointConf        `json:"point,omitempty"`
+	Line        *LineConf         `json:"line,omitempty"`
+	Legends     *LegentConf       `json:"legends,omitempty"`
 	Data        *DataStruct[X, Y] `json:"data"`
 	XField      string            `json:"xField"`
 	YField      string            `json:"yField"`
 	SeriesField string            `json:"seriesField"`
 	InvalidType string            `json:"invalidType"`
-	Axes        []*AxesStruct     `json:"axes"`
+	Axes        []*AxesStruct     `json:"axes,omitempty"`
 	Stack       bool              `json:"stack"`
 }
+
+type TitleConf struct {
+	Text string `json:"text"`
+}
 type LineConf struct {
-	Style *LineStyle `json:"style"`
+	Style *LineStyle `json:"style,omitempty"`
 }
 
 type LineStyle struct {
 	CurveType string `json:"curveType"`
 }
 type PointConf struct {
-	Style *PointStyle `json:"style"`
+	Style *PointStyle `json:"style,omitempty"`
 }
 type PointStyle struct {
 	Size int `json:"size"`
@@ -42,14 +44,21 @@ type LegentConf struct {
 	Orient  string `json:"orient"`
 }
 type AxesStruct struct {
-	Orient    string `json:"orient"`
-	AliasName string `json:"_alias_name"`
-	Range     struct {
-		Min float64 `json:"min"`
-		Max float64 `json:"max"`
-	} `json:"range"`
+	Orient    string    `json:"orient"`
+	AliasName string    `json:"_alias_name,omitempty"`
+	Range     *AxeRange `json:"range,omitempty"`
+	Label     *AxeLabel `json:"label,omitempty"`
 }
 
+type AxeRange struct {
+	Min float64 `json:"min"`
+	Max float64 `json:"max"`
+}
+type AxeLabel struct {
+	AutoHide   bool `json:"autoHide"`
+	AutoRotate bool `json:"autoRotate"`
+	AutoLimit  bool `json:"autoLimit"`
+}
 type PagerStruct struct {
 	Type string `json:"type"`
 }
@@ -72,10 +81,8 @@ const (
 
 func NewMultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric]() *MultiSeriesLineGraph[X, Y] {
 	return &MultiSeriesLineGraph[X, Y]{
-		Type: "line",
-		Title: struct {
-			Text string `json:"text"`
-		}{},
+		Type:  "line",
+		Title: &TitleConf{},
 		Point: &PointConf{
 			&PointStyle{
 				Size: 0,
@@ -98,7 +105,17 @@ func NewMultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric]() *MultiSeriesLineG
 		YField:      YField,
 		SeriesField: SeriesField,
 		InvalidType: "link",
-		Axes:        make([]*AxesStruct, 0),
+		Axes: []*AxesStruct{
+			{
+				Orient:    "bottom",
+				AliasName: "yAxis",
+				Label: &AxeLabel{
+					AutoHide:   true,
+					AutoRotate: false,
+					AutoLimit:  true,
+				},
+			},
+		},
 	}
 }
 
@@ -119,13 +136,15 @@ func (g *MultiSeriesLineGraph[X, Y]) SetTitle(title string) *MultiSeriesLineGrap
 func (g *MultiSeriesLineGraph[X, Y]) SetRange(min, max float64) *MultiSeriesLineGraph[X, Y] {
 	g.Axes = append(g.Axes, &AxesStruct{
 		Orient:    "left",
-		AliasName: "yAxis",
-		Range: struct {
-			Min float64 `json:"min"`
-			Max float64 `json:"max"`
-		}{
+		AliasName: "xAxis",
+		Range: &AxeRange{
 			Min: min,
 			Max: max,
+		},
+		Label: &AxeLabel{
+			AutoHide:   true,
+			AutoRotate: false,
+			AutoLimit:  true,
 		},
 	})
 	return g

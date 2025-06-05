@@ -11,6 +11,8 @@ import (
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -23,6 +25,8 @@ func StockHandler(stockType string) commandBase.CommandFunc[*larkim.P2MessageRec
 	switch stockType {
 	case "gold":
 		return GoldHandler
+	case "a":
+		return ZhAStockHandler
 	}
 	return nil
 }
@@ -34,23 +38,26 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 
 	argMap, _ := parseArgs(args...)
 
-	var graph *vadvisor.MultiSeriesLineGraph[string, float64]
+	var (
+		cardContent *templates.TemplateCardContent
+		days        int
+	)
 	if hours, ok := argMap["r"]; ok {
 		hoursInt, e := strconv.Atoi(hours)
 		if e != nil || hoursInt <= 0 {
 			hoursInt = 1
 		}
-		graph, err = GetRealtimeGoldPriceGraph(ctx, hoursInt)
+		cardContent, err = GetRealtimeGoldPriceGraph(ctx, hoursInt)
 		if err != nil {
 			return err
 		}
 	} else if daysStr, ok := argMap["h"]; ok {
-		days, err := strconv.Atoi(daysStr)
+		days, err = strconv.Atoi(daysStr)
 		if err != nil || days <= 0 {
 			days = 30
 		}
 
-		graph, err = GetHistoryGoldGraph(ctx, days)
+		cardContent, err = GetHistoryGoldGraph(ctx, days)
 		if err != nil {
 			return err
 		}
@@ -59,34 +66,91 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 	}
 
 	if metaData != nil && metaData.Refresh {
-		err = larkutils.PatchCardTextGraph(
-			ctx,
-			"",
-			graph,
-			*data.Event.Message.MessageId,
-		)
+		err = larkutils.PatchCard(ctx,
+			cardContent,
+			*data.Event.Message.MessageId)
 	} else {
-		err = larkutils.ReplyCardTextGraph(
-			ctx,
-			"",
-			graph,
-			*data.Event.Message.MessageId,
-			"_getID",
-			false,
-		)
+		err = larkutils.ReplyCard(ctx,
+			cardContent,
+			*data.Event.Message.MessageId, "", false)
 	}
 
 	return
 }
 
-func GetHistoryGoldGraph(ctx context.Context, days int) (*vadvisor.MultiSeriesLineGraph[string, float64], error) {
+func ZhAStockHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
+	defer span.End()
+	argMap, _ := parseArgs(args...)
+	if stockCode, ok := argMap["code"]; !ok {
+		return fmt.Errorf("stock code is required")
+	} else {
+		days := 1
+		if daysStr, ok := argMap["days"]; ok {
+			days, err = strconv.Atoi(daysStr)
+			if err != nil || days <= 0 {
+				days = 1
+			}
+		}
+		graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
+		stockPrice, err := aktool.GetStockPriceRT(ctx, stockCode)
+		if err != nil {
+			return err
+		}
+		stockName, err := aktool.GetStockSymbolInfo(ctx, stockCode)
+		if err != nil {
+			return err
+		}
+		graph.AddPointSeries(
+			func(yield func(vadvisor.XYSUnit[string, float64]) bool) {
+				for _, price := range stockPrice {
+					t, err := time.ParseInLocation(time.DateTime, price.DateTime, utility.UTCPlus8Loc())
+					if err != nil {
+						return
+					}
+					if t.Before(time.Now().AddDate(0, 0, -1*days)) {
+						continue
+					}
+
+					if !yield(vadvisor.XYSUnit[string, float64]{XField: t.Format(time.DateTime), YField: utility.Must2Float(price.Open), SeriesField: "开盘"}) {
+						return
+					}
+					if !yield(vadvisor.XYSUnit[string, float64]{XField: t.Format(time.DateTime), YField: utility.Must2Float(price.Close), SeriesField: "收盘"}) {
+						return
+					}
+					if !yield(vadvisor.XYSUnit[string, float64]{XField: t.Format(time.DateTime), YField: utility.Must2Float(price.High), SeriesField: "最高"}) {
+						return
+					}
+					if !yield(vadvisor.XYSUnit[string, float64]{XField: t.Format(time.DateTime), YField: utility.Must2Float(price.Low), SeriesField: "最低"}) {
+						return
+					}
+				}
+			},
+		)
+		cardContent := cardutil.NewCardBuildGraphHelper(graph).
+			SetTitle(fmt.Sprintf("沪A-[%s]%s-近<%d>天", stockCode, stockName, days)).
+			Build(ctx)
+		if metaData != nil && metaData.Refresh {
+			err = larkutils.PatchCard(ctx,
+				cardContent,
+				*data.Event.Message.MessageId)
+		} else {
+			err = larkutils.ReplyCard(ctx,
+				cardContent,
+				*data.Event.Message.MessageId, "", false)
+		}
+	}
+	return
+}
+
+func GetHistoryGoldGraph(ctx context.Context, days int) (*templates.TemplateCardContent, error) {
 	graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
 	goldPrices, err := aktool.GetHistoryGoldPrice(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	return graph.
+	graph.
 		AddPointSeries(
 			func(yield func(vadvisor.XYSUnit[string, float64]) bool) {
 				for _, price := range goldPrices {
@@ -106,18 +170,20 @@ func GetHistoryGoldGraph(ctx context.Context, days int) (*vadvisor.MultiSeriesLi
 					}
 				}
 			},
-		).
-		SetTitle(fmt.Sprintf("上交所黄金价格- *[T-%d]* (day)", days)), nil
+		)
+	card := cardutil.NewCardBuildGraphHelper(graph).
+		SetTitle(fmt.Sprintf("沪金所-近<%d>天", days)).
+		Build(ctx)
+	return card, nil
 }
 
-func GetRealtimeGoldPriceGraph(ctx context.Context, hoursInt int) (*vadvisor.MultiSeriesLineGraph[string, float64], error) {
+func GetRealtimeGoldPriceGraph(ctx context.Context, hoursInt int) (*templates.TemplateCardContent, error) {
 	graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
 	goldPrice, err := aktool.GetRealtimeGoldPrice(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	return graph.
+	graph.
 		AddPointSeries(
 			func(yield func(vadvisor.XYSUnit[string, float64]) bool) {
 				for _, price := range goldPrice {
@@ -134,6 +200,9 @@ func GetRealtimeGoldPriceGraph(ctx context.Context, hoursInt int) (*vadvisor.Mul
 					}
 				}
 			},
-		).
-		SetTitle(fmt.Sprintf("上交所黄金价格- *[T-%d]* (hour)", hoursInt)), nil
+		)
+	card := cardutil.NewCardBuildGraphHelper(graph).
+		SetTitle(fmt.Sprintf("沪金所-近<%d>小时", hoursInt)).
+		Build(ctx)
+	return card, nil
 }

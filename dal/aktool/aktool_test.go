@@ -10,5 +10,5 @@ func TestGetRealtimeGoldPrice(t *testing.T) {
 }
 
 func TestGetStockPrice(t *testing.T) {
-	GetStockPrice(context.TODO(), "600988")
+	GetStockPriceRT(context.TODO(), "600988")
 }
