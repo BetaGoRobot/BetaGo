@@ -29,6 +29,7 @@ require (
 	github.com/h2non/bimg v1.1.9
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
+	github.com/kevinmatthe/gojieba v1.0.1
 	github.com/kevinmatthe/zaplog v0.1.6
 	github.com/larksuite/oapi-sdk-go/v3 v3.4.18
 	github.com/lib/pq v1.10.9
@@ -48,7 +49,6 @@ require (
 	github.com/valyala/fasthttp v1.62.0
 	github.com/volcengine/volcengine-go-sdk v1.1.11
 	github.com/wcharczuk/go-chart/v2 v2.1.2
-	github.com/yanyiwu/gojieba v1.4.5
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.36.0
 	go.opentelemetry.io/otel/sdk v1.36.0

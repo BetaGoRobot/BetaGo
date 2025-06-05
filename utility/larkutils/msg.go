@@ -18,6 +18,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
 	"github.com/dlclark/regexp2"
+	"github.com/kevinmatthe/gojieba"
 	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	"github.com/larksuite/oapi-sdk-go/v3/event/dispatcher/callback"
@@ -260,21 +261,21 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 	if err != nil {
 		log.Zlog.Error("EmbeddingText error", zaplog.Error(err))
 	}
-	// jieba := gojieba.NewJieba()
-	// defer jieba.Free()
-	// ws := jieba.Cut(content, true)
+	jieba := gojieba.NewJieba()
+	defer jieba.Free()
+	ws := jieba.Cut(content, true)
 	err = opensearchdal.InsertData(ctx, consts.LarkMsgIndex,
 		utility.AddressORNil(resp.Data.MessageId),
 		&handlertypes.MessageIndex{
-			MessageLog: msgLog,
-			ChatName:   GetChatName(ctx, utility.AddressORNil(resp.Data.ChatId)),
-			RawMessage: content,
-			// RawMessageJieba: strings.Join(ws, " "),
-			CreateTime: utility.EpoMil2DateStr(*resp.Data.CreateTime),
-			Message:    embedded,
-			UserID:     "你",
-			UserName:   "你",
-			TokenUsage: usage,
+			MessageLog:      msgLog,
+			ChatName:        GetChatName(ctx, utility.AddressORNil(resp.Data.ChatId)),
+			RawMessage:      content,
+			RawMessageJieba: strings.Join(ws, " "),
+			CreateTime:      utility.EpoMil2DateStr(*resp.Data.CreateTime),
+			Message:         embedded,
+			UserID:          "你",
+			UserName:        "你",
+			TokenUsage:      usage,
 		},
 	)
 	if err != nil {
@@ -341,21 +342,21 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 	if err != nil {
 		log.Zlog.Error("EmbeddingText error", zaplog.Error(err))
 	}
-	// jieba := gojieba.NewJieba()
-	// defer jieba.Free()
-	// ws := jieba.Cut(content, true)
+	jieba := gojieba.NewJieba()
+	defer jieba.Free()
+	ws := jieba.Cut(content, true)
 
 	err = opensearchdal.InsertData(ctx, consts.LarkMsgIndex, utility.AddressORNil(resp.Data.MessageId),
 		&handlertypes.MessageIndex{
-			MessageLog: msgLog,
-			ChatName:   GetChatName(ctx, utility.AddressORNil(resp.Data.ChatId)),
-			RawMessage: content,
-			// RawMessageJieba: strings.Join(ws, " "),
-			CreateTime: utility.EpoMil2DateStr(*resp.Data.CreateTime),
-			Message:    embedded,
-			UserID:     "你",
-			UserName:   "你",
-			TokenUsage: usage,
+			MessageLog:      msgLog,
+			ChatName:        GetChatName(ctx, utility.AddressORNil(resp.Data.ChatId)),
+			RawMessage:      content,
+			RawMessageJieba: strings.Join(ws, " "),
+			CreateTime:      utility.EpoMil2DateStr(*resp.Data.CreateTime),
+			Message:         embedded,
+			UserID:          "你",
+			UserName:        "你",
+			TokenUsage:      usage,
 		},
 	)
 	if err != nil {
