@@ -60,7 +60,7 @@ func WebHookHandler(ctx context.Context, cardAction *callback.CardActionTriggerE
 			}
 		case "refresh_obj":
 			// 通用的卡片刷新结构，重点是记录触发的command重新触发？
-			go HandleRefreshObj(ctx, cardAction.Event.Action.Value["command"].(string), cardAction.Event.Context.OpenMessageID)
+			go HandleRefreshObj(ctx, cardAction)
 		}
 	}
 	// 无返回值示例
@@ -289,11 +289,16 @@ func HandleRefreshMusic(ctx context.Context, musicID, msgID string) {
 	return
 }
 
-func HandleRefreshObj(ctx context.Context, srcCmd, msgID string) {
+func HandleRefreshObj(ctx context.Context, cardAction *callback.CardActionTriggerEvent) {
+	srcCmd := cardAction.Event.Action.Value["command"].(string)
+	msgID := cardAction.Event.Context.OpenMessageID
+
 	data := new(larkim.P2MessageReceiveV1)
 	data.Event = new(larkim.P2MessageReceiveV1Data)
 	data.Event.Message = new(larkim.EventMessage)
 	data.Event.Message.MessageId = utility.StrPointer(msgID)
+	data.Event.Message.ChatId = new(string)
+	*data.Event.Message.ChatId = cardAction.Event.Context.OpenChatID
 
 	err := message.ExecuteFromRawCommand(
 		ctx,

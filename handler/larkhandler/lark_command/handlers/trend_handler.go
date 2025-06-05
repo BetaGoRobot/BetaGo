@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"strconv"
@@ -62,7 +63,8 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData
 	if err != nil {
 		return err
 	}
-	if _, ok := argMap["play"]; !ok {
+
+	if playType, ok := argMap["play"]; !ok {
 		if inputInterval, ok := argMap["interval"]; ok {
 			interval = inputInterval
 		}
@@ -91,29 +93,84 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData
 			SetRange(float64(*min), float64(*max))
 		cardContent := cardutil.NewCardBuildGraphHelper(graph).
 			SetTitle(title).Build(ctx)
-		err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "", false)
-	} else {
-		graph := vadvisor.NewPieChartsGraph[string, int64]()
-		for _, item := range trend {
-			t, err := time.ParseInLocation(time.DateTime, item.Time, utility.UTCPlus8Loc())
-			if err != nil {
-				return err
-			}
-			if item.Key == "你" {
-				item.Key = "机器人"
-			}
-			graph.AddData(&vadvisor.PieChartValueUnit[string, int64]{
-				XAxis:       t.Format(time.DateOnly),
-				SeriesField: item.Key,
-				Value:       item.Value,
-			})
+		if metaData.Refresh {
+			err = larkutils.PatchCard(ctx, cardContent, *data.Event.Message.MessageId)
+		} else {
+			err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "", false)
 		}
-		graph.BuildPlayer(ctx)
-		title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days)
-		cardContent := cardutil.NewCardBuildGraphHelper(graph).
-			SetTitle(title).Build(ctx)
-		err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "", false)
+	} else {
+		switch playType {
+		case "pie":
+			err = DrawTrendPie(ctx, trend, data, days, !metaData.Refresh)
+		case "bar":
+			err = DrawTrendBar(ctx, trend, data, days, !metaData.Refresh)
+		default:
+			err = DrawTrendPie(ctx, trend, data, days, !metaData.Refresh)
+		}
 	}
 
 	return
+}
+
+func DrawTrendPie(ctx context.Context, trend history.TrendSeries, data *larkim.P2MessageReceiveV1, days int, reply bool) (err error) {
+	graph := vadvisor.NewPieChartsGraphWithPlayer[string, int64]()
+	for _, item := range trend {
+		t, err := time.ParseInLocation(time.DateTime, item.Time, utility.UTCPlus8Loc())
+		if err != nil {
+			return err
+		}
+		if item.Key == "你" {
+			item.Key = "机器人"
+		}
+		graph.AddData(
+			t.Format(time.DateOnly),
+			&vadvisor.ValueUnit[string, int64]{
+				XField:      t.Format(time.DateOnly),
+				SeriesField: item.Key,
+				YField:      item.Value,
+			})
+
+	}
+	graph.BuildPlayer(ctx)
+	title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days)
+	cardContent := cardutil.NewCardBuildGraphHelper(graph).
+		SetTitle(title).Build(ctx)
+	if reply {
+		return larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "", false)
+	}
+	return larkutils.PatchCard(ctx, cardContent, *data.Event.Message.MessageId)
+}
+
+func DrawTrendBar(ctx context.Context, trend history.TrendSeries, data *larkim.P2MessageReceiveV1, days int, reply bool) (err error) {
+	graph := vadvisor.NewBarChartsGraphWithPlayer[string, int64]()
+	for _, item := range trend {
+		t, err := time.ParseInLocation(time.DateTime, item.Time, utility.UTCPlus8Loc())
+		if err != nil {
+			return err
+		}
+		if item.Key == "你" {
+			item.Key = "机器人"
+		}
+		graph.AddData(
+			t.Format(time.DateOnly),
+			&vadvisor.ValueUnit[string, int64]{
+				XField:      item.Key,
+				SeriesField: item.Key,
+				YField:      item.Value,
+			},
+		)
+
+	}
+	graph.SetDirection("horizontal").ReverseAxis()
+	graph.SetSortFunc(func(a, b *vadvisor.ValueUnit[string, int64]) int {
+		return cmp.Compare(b.YField, a.YField)
+	})
+	graph.BuildPlayer(ctx)
+	title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days)
+	cardContent := cardutil.NewCardBuildGraphHelper(graph).
+		SetTitle(title).Build(ctx)
+	if reply {
+		return larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "", false)
+	}
+	return larkutils.PatchCard(ctx, cardContent, *data.Event.Message.MessageId)
 }
