@@ -114,7 +114,7 @@ func NewMultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric]() *MultiSeriesLineG
 		Axes: []*AxesStruct{
 			{
 				Orient:    "bottom",
-				AliasName: "yAxis",
+				AliasName: "xAxis",
 				Label: &AxeLabel{
 					AutoHide:   true,
 					AutoRotate: false,
@@ -142,7 +142,7 @@ func (g *MultiSeriesLineGraph[X, Y]) SetTitle(title string) *MultiSeriesLineGrap
 func (g *MultiSeriesLineGraph[X, Y]) SetRange(min, max float64) *MultiSeriesLineGraph[X, Y] {
 	g.Axes = append(g.Axes, &AxesStruct{
 		Orient:    "left",
-		AliasName: "xAxis",
+		AliasName: "yAxis",
 		Range: &AxeRange{
 			Min: min,
 			Max: max,
