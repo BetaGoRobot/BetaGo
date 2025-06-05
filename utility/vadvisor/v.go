@@ -13,6 +13,7 @@ type MultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric] struct {
 	Point       *PointConf        `json:"point,omitempty"`
 	Line        *LineConf         `json:"line,omitempty"`
 	Legends     *LegentConf       `json:"legends,omitempty"`
+	DataZoom    *ZoomConf         `json:"dataZoom,omitempty"`
 	Data        *DataStruct[X, Y] `json:"data"`
 	XField      string            `json:"xField"`
 	YField      string            `json:"yField"`
@@ -21,7 +22,9 @@ type MultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric] struct {
 	Axes        []*AxesStruct     `json:"axes,omitempty"`
 	Stack       bool              `json:"stack"`
 }
-
+type ZoomConf struct {
+	Orient string `json:"orient"`
+}
 type TitleConf struct {
 	Text string `json:"text"`
 }
@@ -100,6 +103,9 @@ func NewMultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric]() *MultiSeriesLineG
 		},
 		Data: &DataStruct[X, Y]{
 			make([]*DataValue[X, Y], 0),
+		},
+		DataZoom: &ZoomConf{
+			Orient: "bottom",
 		},
 		XField:      XField,
 		YField:      YField,
