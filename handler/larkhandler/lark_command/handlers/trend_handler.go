@@ -40,7 +40,7 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData
 
 	argMap, _ := parseArgs(args...)
 	if daysStr, ok := argMap["days"]; ok {
-		days, err := strconv.Atoi(daysStr)
+		days, err = strconv.Atoi(daysStr)
 		if err != nil || days <= 0 {
 			days = 30
 		}
