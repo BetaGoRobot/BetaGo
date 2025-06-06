@@ -8,8 +8,8 @@ RUN apk add vips-dev g++
 
 RUN unzip betago.zip
 
-RUN cd cmd/larkrobot && go build -ldflags="-w -s" -o betaGo-source ./*.go && \
-    upx -9 -o betaGo betaGo-source
+RUN cd cmd/larkrobot && go build -ldflags="-w -s" -o larkrobot-source ./*.go && \
+    upx -9 -o larkrobot larkrobot-source
 
 
 # FROM ghcr.io/betagorobot/betago-chrome:master as runner
@@ -17,7 +17,7 @@ FROM kevinmatt/libvips as runner
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-COPY --from=builder  /data/cmd/larkrobot/betaGo /betaGo
+COPY --from=builder  /data/cmd/larkrobot/larkrobot /larkrobot
 
 COPY --from=builder ./data/fonts /data/fonts
 
@@ -27,4 +27,4 @@ COPY --from=builder  /usr/share/zoneinfo/ /usr/share/zoneinfo
 
 WORKDIR /
 
-CMD ["./betaGo"]
+CMD ["./larkrobot"]
