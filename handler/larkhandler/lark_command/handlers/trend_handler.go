@@ -37,60 +37,74 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData
 	var (
 		days     = 7
 		interval = "1d"
+		st, et   time.Time
 	)
 
 	argMap, _ := parseArgs(args...)
+	if inputInterval, ok := argMap["interval"]; ok {
+		interval = inputInterval
+	}
 	if daysStr, ok := argMap["days"]; ok {
 		days, err = strconv.Atoi(daysStr)
 		if err != nil || days <= 0 {
 			days = 30
 		}
 	}
-	trend, err := history.New(ctx).
-		Query(
-			osquery.Bool().
-				Must(
-					osquery.Term("chat_id", *data.Event.Message.ChatId),
-					osquery.Range("create_time").
-						Gte(time.Now().AddDate(0, 0, -1*days).Format(time.DateTime)).
-						Lte(time.Now().Format(time.DateTime)),
-				),
-		).
-		GetTrend(
-			interval,
-			"user_name",
-		)
+
+	st, et = GetBackDays(days)
+	// 如果有st，et的配置，用st，et的配置来覆盖
+	if stStr, ok := argMap["st"]; ok {
+		if etStr, ok := argMap["et"]; ok {
+			st, err = time.ParseInLocation(time.DateTime, stStr, utility.UTCPlus8Loc())
+			if err != nil {
+				return err
+			}
+			et, err = time.ParseInLocation(time.DateTime, etStr, utility.UTCPlus8Loc())
+			if err != nil {
+				return err
+			}
+		}
+	}
+	helper := &trendInternalHelper{
+		days:     days,
+		st:       st,
+		et:       et,
+		msgID:    *data.Event.Message.MessageId,
+		chatID:   *data.Event.Message.ChatId,
+		interval: interval,
+	}
+
+	trend, err := helper.TrendByUser(ctx)
 	if err != nil {
 		return err
 	}
 
-	if playType, ok := argMap["play"]; !ok {
-		if inputInterval, ok := argMap["interval"]; ok {
-			interval = inputInterval
+	if playType, ok := argMap["play"]; ok {
+		switch playType {
+		case "bar":
+			err = helper.DrawTrendBar(ctx, trend, !metaData.Refresh)
+		default:
+			err = helper.DrawTrendPie(ctx, trend, !metaData.Refresh)
 		}
+	} else {
 		graph := vadvisor.NewMultiSeriesLineGraph[string, int64]()
-		var min, max *int64
-		for _, item := range trend {
-			if item.Key == "你" {
-				item.Key = "机器人"
-			}
-			graph.AddData(item.Time, item.Value, item.Key)
-
-			if min == nil || max == nil {
-				min, max = new(int64), new(int64)
-				*min, *max = item.Value, item.Value
-			}
-
-			if item.Value < *min {
-				*min = item.Value
-			}
-			if item.Value > *max {
-				*max = item.Value
-			}
-		}
+		graph.AddPointSeries(
+			func(yield func(vadvisor.XYSUnit[string, int64]) bool) {
+				for _, item := range trend {
+					if item.Key == "你" {
+						item.Key = "机器人"
+					}
+					if !yield(vadvisor.XYSUnit[string, int64]{
+						X: item.Time,
+						Y: item.Value,
+						S: item.Key,
+					}) {
+						return
+					}
+				}
+			},
+		)
 		title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days)
-		graph.
-			SetRange(float64(*min), float64(*max))
 		cardContent := cardutil.NewCardBuildGraphHelper(graph).
 			SetTitle(title).Build(ctx)
 		if metaData.Refresh {
@@ -98,21 +112,22 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData
 		} else {
 			err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "", false)
 		}
-	} else {
-		switch playType {
-		case "pie":
-			err = DrawTrendPie(ctx, trend, data, days, !metaData.Refresh)
-		case "bar":
-			err = DrawTrendBar(ctx, trend, data, days, !metaData.Refresh)
-		default:
-			err = DrawTrendPie(ctx, trend, data, days, !metaData.Refresh)
-		}
 	}
 
 	return
 }
 
-func DrawTrendPie(ctx context.Context, trend history.TrendSeries, data *larkim.P2MessageReceiveV1, days int, reply bool) (err error) {
+type trendInternalHelper struct {
+	days          int
+	st, et        time.Time
+	msgID, chatID string
+	interval      string
+}
+
+func (h *trendInternalHelper) DrawTrendPie(ctx context.Context, trend history.TrendSeries, reply bool) (err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	graph := vadvisor.NewPieChartsGraphWithPlayer[string, int64]()
 	for _, item := range trend {
 		t, err := time.ParseInLocation(time.DateTime, item.Time, utility.UTCPlus8Loc())
@@ -132,16 +147,21 @@ func DrawTrendPie(ctx context.Context, trend history.TrendSeries, data *larkim.P
 
 	}
 	graph.BuildPlayer(ctx)
-	title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days)
+	title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, h.chatID), h.days)
 	cardContent := cardutil.NewCardBuildGraphHelper(graph).
+		SetStartTime(h.st).
+		SetEndTime(h.et).
 		SetTitle(title).Build(ctx)
 	if reply {
-		return larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "", false)
+		return larkutils.ReplyCard(ctx, cardContent, h.msgID, "", false)
 	}
-	return larkutils.PatchCard(ctx, cardContent, *data.Event.Message.MessageId)
+	return larkutils.PatchCard(ctx, cardContent, h.msgID)
 }
 
-func DrawTrendBar(ctx context.Context, trend history.TrendSeries, data *larkim.P2MessageReceiveV1, days int, reply bool) (err error) {
+func (h *trendInternalHelper) DrawTrendBar(ctx context.Context, trend history.TrendSeries, reply bool) (err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	graph := vadvisor.NewBarChartsGraphWithPlayer[string, int64]()
 	for _, item := range trend {
 		t, err := time.ParseInLocation(time.DateTime, item.Time, utility.UTCPlus8Loc())
@@ -159,18 +179,45 @@ func DrawTrendBar(ctx context.Context, trend history.TrendSeries, data *larkim.P
 				YField:      item.Value,
 			},
 		)
-
 	}
 	graph.SetDirection("horizontal").ReverseAxis()
 	graph.SetSortFunc(func(a, b *vadvisor.ValueUnit[string, int64]) int {
 		return cmp.Compare(b.YField, a.YField)
 	})
 	graph.BuildPlayer(ctx)
-	title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, *data.Event.Message.ChatId), days)
+	title := fmt.Sprintf("[%s]水群频率表-%ddays", larkutils.GetChatName(ctx, h.chatID), h.days)
 	cardContent := cardutil.NewCardBuildGraphHelper(graph).
+		SetStartTime(h.st).
+		SetEndTime(h.et).
 		SetTitle(title).Build(ctx)
 	if reply {
-		return larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "", false)
+		return larkutils.ReplyCard(ctx, cardContent, h.msgID, "", false)
 	}
-	return larkutils.PatchCard(ctx, cardContent, *data.Event.Message.MessageId)
+	return larkutils.PatchCard(ctx, cardContent, h.msgID)
+}
+
+func (h *trendInternalHelper) TrendByUser(ctx context.Context) (trend history.TrendSeries, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	trend, err = history.New(ctx).
+		Query(
+			osquery.Bool().
+				Must(
+					osquery.Term("chat_id", h.chatID),
+					osquery.Range("create_time").
+						Gte(h.st.Format(time.DateTime)).
+						Lte(h.et.Format(time.DateTime)),
+				),
+		).
+		GetTrend(
+			h.interval,
+			"user_name",
+		)
+	return
+}
+
+func GetBackDays(days int) (st, et time.Time) {
+	st, et = time.Now().AddDate(0, 0, -1*days), time.Now()
+	return
 }

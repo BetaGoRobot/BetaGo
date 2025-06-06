@@ -41,28 +41,54 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 	var (
 		cardContent *templates.TemplateCardContent
 		days        int
+		hoursInt    int
+		defaultDays           = 30
+		st, et      time.Time = time.Now().AddDate(0, 0, -1*defaultDays), time.Now()
 	)
-	if hours, ok := argMap["r"]; ok {
-		hoursInt, e := strconv.Atoi(hours)
-		if e != nil || hoursInt <= 0 {
-			hoursInt = 1
+
+	// 如果有st，et的配置，用st，et的配置来覆盖
+	if stStr, ok := argMap["st"]; ok {
+		if etStr, ok := argMap["et"]; ok {
+			st, err = time.ParseInLocation(time.DateTime, stStr, utility.UTCPlus8Loc())
+			if err != nil {
+				return err
+			}
+			et, err = time.ParseInLocation(time.DateTime, etStr, utility.UTCPlus8Loc())
+			if err != nil {
+				return err
+			}
 		}
-		cardContent, err = GetRealtimeGoldPriceGraph(ctx, hoursInt)
+	}
+
+	if hours, ok := argMap["r"]; ok {
+		if st.IsZero() || et.IsZero() {
+			hoursInt, err = strconv.Atoi(hours)
+			if err != nil || hoursInt <= 0 {
+				hoursInt = 1
+			}
+			st = time.Now().Add(time.Duration(-1*hoursInt) * time.Hour)
+			et = time.Now()
+		}
+
+		cardContent, err = GetRealtimeGoldPriceGraph(ctx, st, et)
 		if err != nil {
 			return err
 		}
 	} else if daysStr, ok := argMap["h"]; ok {
-		days, err = strconv.Atoi(daysStr)
-		if err != nil || days <= 0 {
-			days = 30
+		if st.IsZero() || et.IsZero() {
+			days, err = strconv.Atoi(daysStr)
+			if err != nil || days <= 0 {
+				days = defaultDays
+			}
+			st = time.Now().AddDate(0, 0, -1*days)
+			et = time.Now()
 		}
 
-		cardContent, err = GetHistoryGoldGraph(ctx, days)
+		cardContent, err = GetHistoryGoldGraph(ctx, st, et)
 		if err != nil {
 			return err
 		}
-	} else {
-		return
+
 	}
 
 	if metaData != nil && metaData.Refresh {
@@ -82,69 +108,95 @@ func ZhAStockHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+
+	var (
+		days                  = 1
+		defaultDays           = 1
+		st, et      time.Time = time.Now().AddDate(0, 0, -1*defaultDays), time.Now()
+		stockCode   string
+	)
+
 	argMap, _ := parseArgs(args...)
-	if stockCode, ok := argMap["code"]; !ok {
+
+	stockCode, ok := argMap["code"]
+	if !ok {
 		return fmt.Errorf("stock code is required")
-	} else {
-		days := 1
-		if daysStr, ok := argMap["days"]; ok {
-			days, err = strconv.Atoi(daysStr)
-			if err != nil || days <= 0 {
-				days = 1
+	}
+
+	if daysStr, ok := argMap["days"]; ok {
+		days, err = strconv.Atoi(daysStr)
+		if err != nil || days <= 0 {
+			days = defaultDays
+		}
+		st, et = time.Now().AddDate(0, 0, -1*days), time.Now()
+	}
+
+	// 如果有st，et的配置，用st，et的配置来覆盖
+	if stStr, ok := argMap["st"]; ok {
+		if etStr, ok := argMap["et"]; ok {
+			st, err = time.ParseInLocation(time.DateTime, stStr, utility.UTCPlus8Loc())
+			if err != nil {
+				return err
+			}
+			et, err = time.ParseInLocation(time.DateTime, etStr, utility.UTCPlus8Loc())
+			if err != nil {
+				return err
 			}
 		}
-		graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
-		stockPrice, err := aktool.GetStockPriceRT(ctx, stockCode)
-		if err != nil {
-			return err
-		}
-		stockName, err := aktool.GetStockSymbolInfo(ctx, stockCode)
-		if err != nil {
-			return err
-		}
-		graph.AddPointSeries(
-			func(yield func(vadvisor.XYSUnit[string, float64]) bool) {
-				for _, price := range stockPrice {
-					t, err := time.ParseInLocation(time.DateTime, price.DateTime, utility.UTCPlus8Loc())
-					if err != nil {
-						return
-					}
-					if t.Before(time.Now().AddDate(0, 0, -1*days)) {
-						continue
-					}
-
-					if !yield(vadvisor.XYSUnit[string, float64]{XField: t.Format(time.DateTime), YField: utility.Must2Float(price.Open), SeriesField: "开盘"}) {
-						return
-					}
-					if !yield(vadvisor.XYSUnit[string, float64]{XField: t.Format(time.DateTime), YField: utility.Must2Float(price.Close), SeriesField: "收盘"}) {
-						return
-					}
-					if !yield(vadvisor.XYSUnit[string, float64]{XField: t.Format(time.DateTime), YField: utility.Must2Float(price.High), SeriesField: "最高"}) {
-						return
-					}
-					if !yield(vadvisor.XYSUnit[string, float64]{XField: t.Format(time.DateTime), YField: utility.Must2Float(price.Low), SeriesField: "最低"}) {
-						return
-					}
+	}
+	graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
+	stockPrice, err := aktool.GetStockPriceRT(ctx, stockCode)
+	if err != nil {
+		return err
+	}
+	stockName, err := aktool.GetStockSymbolInfo(ctx, stockCode)
+	if err != nil {
+		return err
+	}
+	graph.AddPointSeries(
+		func(yield func(vadvisor.XYSUnit[string, float64]) bool) {
+			for _, price := range stockPrice {
+				t, err := time.ParseInLocation(time.DateTime, price.DateTime, utility.UTCPlus8Loc())
+				if err != nil {
+					return
 				}
-			},
-		)
-		cardContent := cardutil.NewCardBuildGraphHelper(graph).
-			SetTitle(fmt.Sprintf("沪A-[%s]%s-近<%d>天", stockCode, stockName, days)).
-			Build(ctx)
-		if metaData != nil && metaData.Refresh {
-			err = larkutils.PatchCard(ctx,
-				cardContent,
-				*data.Event.Message.MessageId)
-		} else {
-			err = larkutils.ReplyCard(ctx,
-				cardContent,
-				*data.Event.Message.MessageId, "", false)
-		}
+				if t.Before(st) || t.After(et) {
+					continue
+				}
+
+				if !yield(vadvisor.XYSUnit[string, float64]{X: t.Format(time.DateTime), Y: utility.Must2Float(price.Open), S: "开盘"}) {
+					return
+				}
+				if !yield(vadvisor.XYSUnit[string, float64]{X: t.Format(time.DateTime), Y: utility.Must2Float(price.Close), S: "收盘"}) {
+					return
+				}
+				if !yield(vadvisor.XYSUnit[string, float64]{X: t.Format(time.DateTime), Y: utility.Must2Float(price.High), S: "最高"}) {
+					return
+				}
+				if !yield(vadvisor.XYSUnit[string, float64]{X: t.Format(time.DateTime), Y: utility.Must2Float(price.Low), S: "最低"}) {
+					return
+				}
+			}
+		},
+	)
+	cardContent := cardutil.NewCardBuildGraphHelper(graph).
+		SetTitle(fmt.Sprintf("沪A-[%s]%s-近<%d>天", stockCode, stockName, days)).
+		SetStartTime(st).
+		SetEndTime(et).
+		Build(ctx)
+	if metaData != nil && metaData.Refresh {
+		err = larkutils.PatchCard(ctx,
+			cardContent,
+			*data.Event.Message.MessageId)
+	} else {
+		err = larkutils.ReplyCard(ctx,
+			cardContent,
+			*data.Event.Message.MessageId, "", false)
 	}
 	return
 }
 
-func GetHistoryGoldGraph(ctx context.Context, days int) (*templates.TemplateCardContent, error) {
+func GetHistoryGoldGraph(ctx context.Context, st, et time.Time) (*templates.TemplateCardContent, error) {
 	graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
 	goldPrices, err := aktool.GetHistoryGoldPrice(ctx)
 	if err != nil {
@@ -158,26 +210,28 @@ func GetHistoryGoldGraph(ctx context.Context, days int) (*templates.TemplateCard
 					if err != nil {
 						return
 					}
-					if t.Before(time.Now().AddDate(0, 0, -1*days)) {
+					if t.Before(st) || t.After(et) {
 						continue
 					}
 					d := t.Format(time.DateOnly)
-					if !yield(vadvisor.XYSUnit[string, float64]{XField: d, YField: price.Close, SeriesField: "收盘价"}) ||
-						!yield(vadvisor.XYSUnit[string, float64]{XField: d, YField: price.Open, SeriesField: "开盘价"}) ||
-						!yield(vadvisor.XYSUnit[string, float64]{XField: d, YField: price.High, SeriesField: "最高价"}) ||
-						!yield(vadvisor.XYSUnit[string, float64]{XField: d, YField: price.Low, SeriesField: "最低价"}) {
+					if !yield(vadvisor.XYSUnit[string, float64]{X: d, Y: price.Close, S: "收盘价"}) ||
+						!yield(vadvisor.XYSUnit[string, float64]{X: d, Y: price.Open, S: "开盘价"}) ||
+						!yield(vadvisor.XYSUnit[string, float64]{X: d, Y: price.High, S: "最高价"}) ||
+						!yield(vadvisor.XYSUnit[string, float64]{X: d, Y: price.Low, S: "最低价"}) {
 						return
 					}
 				}
 			},
 		)
 	card := cardutil.NewCardBuildGraphHelper(graph).
-		SetTitle(fmt.Sprintf("沪金所-近<%d>天", days)).
+		SetTitle("沪金所价格数据").
+		SetStartTime(st).
+		SetEndTime(et).
 		Build(ctx)
 	return card, nil
 }
 
-func GetRealtimeGoldPriceGraph(ctx context.Context, hoursInt int) (*templates.TemplateCardContent, error) {
+func GetRealtimeGoldPriceGraph(ctx context.Context, st, et time.Time) (*templates.TemplateCardContent, error) {
 	graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
 	goldPrice, err := aktool.GetRealtimeGoldPrice(ctx)
 	if err != nil {
@@ -192,17 +246,19 @@ func GetRealtimeGoldPriceGraph(ctx context.Context, hoursInt int) (*templates.Te
 					if err != nil {
 						return
 					}
-					if t.Before(time.Now().Add(-1 * time.Hour * time.Duration(hoursInt))) {
+					if t.Before(st) || t.After(et) {
 						continue
 					}
-					if !yield(vadvisor.XYSUnit[string, float64]{XField: t.Format(time.TimeOnly), YField: price.Price, SeriesField: price.Kind}) {
+					if !yield(vadvisor.XYSUnit[string, float64]{X: t.Format(time.TimeOnly), Y: price.Price, S: price.Kind}) {
 						return
 					}
 				}
 			},
 		)
 	card := cardutil.NewCardBuildGraphHelper(graph).
-		SetTitle(fmt.Sprintf("沪金所-近<%d>小时", hoursInt)).
+		SetTitle("沪金所价格数据").
+		SetStartTime(st).
+		SetEndTime(et).
 		Build(ctx)
 	return card, nil
 }

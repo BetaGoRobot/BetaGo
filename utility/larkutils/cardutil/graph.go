@@ -2,6 +2,7 @@ package cardutil
 
 import (
 	"context"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -10,7 +11,8 @@ import (
 
 type CardBuilderGraph struct {
 	*CardBuilderBase
-	graph any
+	graph  any
+	st, et time.Time
 }
 
 // func  NewCardBuildGraphHelper
@@ -38,10 +40,25 @@ func (h *CardBuilderGraph) SetContent(text string) *CardBuilderGraph {
 	return h
 }
 
+func (h *CardBuilderGraph) SetStartTime(t time.Time) *CardBuilderGraph {
+	h.st = t
+	return h
+}
+
+func (h *CardBuilderGraph) SetEndTime(t time.Time) *CardBuilderGraph {
+	h.et = t
+	return h
+}
+
 func (h *CardBuilderGraph) Build(ctx context.Context) *templates.TemplateCardContent {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	cardContent := templates.NewCardContent(ctx, templates.NormalCardGraphReplyTemplate)
+	if !h.st.IsZero() && !h.et.IsZero() {
+		cardContent.
+			AddVariable("start_time", h.st.Format("2006-01-02 15:04")).
+			AddVariable("end_time", h.et.Format("2006-01-02 15:04"))
+	}
 	return cardContent.
 		AddVariable(
 			"title", h.Title,

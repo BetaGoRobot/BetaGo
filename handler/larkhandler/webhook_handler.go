@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
@@ -36,7 +37,9 @@ func WebHookHandler(ctx context.Context, cardAction *callback.CardActionTriggerE
 
 	// 记录一下操作记录
 	defer larkutils.RecordCardAction2Opensearch(ctx, cardAction)
-	if buttonType, ok := cardAction.Event.Action.Value["type"]; ok {
+	if len(cardAction.Event.Action.FormValue) > 0 {
+		go HandleSubmit(ctx, cardAction)
+	} else if buttonType, ok := cardAction.Event.Action.Value["type"]; ok {
 		switch buttonType {
 		case "song":
 			if musicID, ok := cardAction.Event.Action.Value["id"]; ok {
@@ -301,6 +304,42 @@ func HandleRefreshObj(ctx context.Context, cardAction *callback.CardActionTrigge
 	*data.Event.Message.ChatId = cardAction.Event.Context.OpenChatID
 
 	err := message.ExecuteFromRawCommand(
+		ctx,
+		data,
+		&handlerbase.BaseMetaData{
+			Refresh: true,
+		},
+		srcCmd,
+	)
+	if err != nil {
+		log.Zlog.Error("refresh obj error", zaplog.Error(err))
+	}
+}
+
+func HandleSubmit(ctx context.Context, cardAction *callback.CardActionTriggerEvent) {
+	srcCmd := cardAction.Event.Action.Value["command"].(string)
+	stStr, _ := cardAction.Event.Action.FormValue["start_time_picker"].(string)
+	etStr, _ := cardAction.Event.Action.FormValue["end_time_picker"].(string)
+	st, err := time.ParseInLocation("2006-01-02 15:04 -0700", stStr, utility.UTCPlus8Loc())
+	if err != nil {
+		log.Zlog.Error(err.Error())
+	}
+	et, err := time.ParseInLocation("2006-01-02 15:04 -0700", etStr, utility.UTCPlus8Loc())
+	if err != nil {
+		log.Zlog.Error(err.Error())
+	}
+
+	srcCmd += fmt.Sprintf(" --st=\"%s\" --et=\"%s\"", st.Format(time.DateTime), et.Format(time.DateTime))
+	msgID := cardAction.Event.Context.OpenMessageID
+
+	data := new(larkim.P2MessageReceiveV1)
+	data.Event = new(larkim.P2MessageReceiveV1Data)
+	data.Event.Message = new(larkim.EventMessage)
+	data.Event.Message.MessageId = utility.StrPointer(msgID)
+	data.Event.Message.ChatId = new(string)
+	*data.Event.Message.ChatId = cardAction.Event.Context.OpenChatID
+
+	err = message.ExecuteFromRawCommand(
 		ctx,
 		data,
 		&handlerbase.BaseMetaData{

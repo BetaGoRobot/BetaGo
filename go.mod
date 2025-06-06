@@ -29,7 +29,6 @@ require (
 	github.com/h2non/bimg v1.1.9
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
-	github.com/kevinmatthe/gojieba v1.0.1
 	github.com/kevinmatthe/zaplog v0.1.6
 	github.com/larksuite/oapi-sdk-go/v3 v3.4.18
 	github.com/lib/pq v1.10.9

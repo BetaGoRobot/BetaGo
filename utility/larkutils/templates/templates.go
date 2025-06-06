@@ -81,6 +81,7 @@ func NewCardContent(ctx context.Context, template database.TemplateVersion) *Tem
 	t.AddVariable("withdraw_confirm", "你确定要撤回这条消息吗？")
 	t.AddVariable("withdraw_object", map[string]string{"type": "withdraw"})
 	if srcCmd := ctx.Value(consts.ContextVarSrcCmd); srcCmd != nil {
+		t.AddVariable("raw_cmd", srcCmd.(string))
 		t.AddVariable("refresh_obj", map[string]string{"type": "refresh_obj", "command": srcCmd.(string)})
 	}
 	t.AddVariable("refresh_time", time.Now().UTC().Add(time.Hour*8).Format(time.DateTime))

@@ -168,9 +168,9 @@ func (g *MultiSeriesLineGraph[X, Y]) String() string {
 
 type (
 	XYSUnit[X, Y cts.ValidType] struct {
-		XField      X
-		YField      Y
-		SeriesField string
+		X X      // X轴
+		Y Y      // Y轴
+		S string // 序列数据、分组
 	}
 )
 
@@ -181,15 +181,15 @@ func (g *MultiSeriesLineGraph[X, Y]) AddPointSeries(
 	for v := range pFunc {
 		if min == nil || max == nil {
 			min, max = new(Y), new(Y)
-			*min, *max = v.YField, v.YField
+			*min, *max = v.Y, v.Y
 		}
-		if *min > v.YField {
-			*min = v.YField
+		if *min > v.Y {
+			*min = v.Y
 		}
-		if *max < v.YField {
-			*max = v.YField
+		if *max < v.Y {
+			*max = v.Y
 		}
-		g.AddData(v.XField, v.YField, v.SeriesField)
+		g.AddData(v.X, v.Y, v.S)
 	}
 	if min == nil || max == nil {
 		return g
