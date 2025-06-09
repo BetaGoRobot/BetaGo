@@ -15,6 +15,8 @@ RUN cd cmd/larkrobot && go build -ldflags="-w -s" -o larkrobot-source ./*.go && 
 # FROM ghcr.io/betagorobot/betago-chrome:master as runner
 FROM kevinmatt/libvips as runner
 
+COPY --from=builder /go/pkg/mod/github.com/yanyiwu/gojieba@v1.4.6/deps/cppjieba/dict /go/pkg/mod/github.com/yanyiwu/gojieba@v1.4.6/deps/cppjieba
+
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder  /data/cmd/larkrobot/larkrobot /larkrobot
