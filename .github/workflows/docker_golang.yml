@@ -67,6 +67,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: kevinmatt
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
       - name: Extract Docker metadata
@@ -83,7 +89,9 @@ jobs:
         with:
           context: "{{defaultContext}}:scripts/golang_docker"
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            kevinmatt/${{ env.IMAGE_NAME }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
