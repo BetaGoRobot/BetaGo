@@ -48,6 +48,7 @@ require (
 	github.com/valyala/fasthttp v1.62.0
 	github.com/volcengine/volcengine-go-sdk v1.1.14
 	github.com/wcharczuk/go-chart/v2 v2.1.2
+	github.com/yanyiwu/gojieba v1.4.6
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.36.0
 	go.opentelemetry.io/otel/sdk v1.36.0
