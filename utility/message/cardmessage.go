@@ -11,11 +11,16 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkcardkit "github.com/larksuite/oapi-sdk-go/v3/service/cardkit/v1"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
 func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*doubao.ModelStreamRespReasoning]) error {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	// create Card
 	// 创建卡片实体
 	template := templates.GetTemplate(templates.StreamingReasonTemplate)
@@ -78,7 +83,13 @@ func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, m
 }
 
 func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespReasoning], cardID string) (err error, lastIdx int) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	sendFunc := func(req *larkcardkit.ContentCardElementReq) {
+		ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+		defer span.End()
+
 		resp, err := larkutils.LarkClient.Cardkit.V1.CardElement.Content(ctx, req)
 		if err != nil {
 			log.Zlog.Error("patch message failed with error msg: " + resp.Msg)
@@ -86,6 +97,9 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 		}
 	}
 	writeFunc := func(idx int, data *doubao.ModelStreamRespReasoning) error {
+		_, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+		defer span.End()
+
 		bodyBuilder := larkcardkit.
 			NewContentCardElementReqBodyBuilder().
 			Sequence(idx)

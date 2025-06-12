@@ -327,6 +327,9 @@ func jsonTrans[T any](s string) (*T, error) {
 }
 
 func GetAllImgURLFromMsg(ctx context.Context, msgID string) (iter.Seq[string], error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	resp := larkutils.GetMsgFullByID(ctx, msgID)
 	msg := resp.Data.Items[0]
 	if msg == nil {
@@ -343,6 +346,9 @@ func GetAllImgURLFromMsg(ctx context.Context, msgID string) (iter.Seq[string], e
 		return nil, err
 	}
 	return func(yield func(string) bool) {
+		ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+		defer span.End()
+
 		for imageKey := range seq {
 			url, err := DownImgFromMsgSync(ctx, *msg.MessageId, *msg.MsgType, imageKey)
 			if err != nil {
