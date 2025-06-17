@@ -34,7 +34,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/lonelyevil/kook v0.0.33
 	github.com/lonelyevil/kook/log_adapter/plog v0.0.34
-	github.com/minio/minio-go/v7 v7.0.93
+	github.com/minio/minio-go/v7 v7.0.94
 	github.com/oliveagle/jsonpath v0.0.0-20180606110733-2e52cf6e6852
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v4 v4.5.0
