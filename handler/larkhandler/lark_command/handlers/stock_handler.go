@@ -42,8 +42,8 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 		cardContent *templates.TemplateCardContent
 		days        int
 		hoursInt    int
-		defaultDays           = 30
-		st, et      time.Time = time.Now().AddDate(0, 0, -1*defaultDays), time.Now()
+		defaultDays = 30
+		st, et      time.Time
 	)
 
 	// 如果有st，et的配置，用st，et的配置来覆盖

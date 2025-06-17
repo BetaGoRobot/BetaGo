@@ -317,7 +317,9 @@ func HandleRefreshObj(ctx context.Context, cardAction *callback.CardActionTrigge
 }
 
 func HandleSubmit(ctx context.Context, cardAction *callback.CardActionTriggerEvent) {
+	// 移除 --st=xxx --et=xxx这样的参数
 	srcCmd := cardAction.Event.Action.Value["command"].(string)
+	srcCmd = utility.RemoveArgFromStr(srcCmd, "st", "et")
 	stStr, _ := cardAction.Event.Action.FormValue["start_time_picker"].(string)
 	etStr, _ := cardAction.Event.Action.FormValue["end_time_picker"].(string)
 	st, err := time.ParseInLocation("2006-01-02 15:04 -0700", stStr, utility.UTCPlus8Loc())

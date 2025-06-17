@@ -3,6 +3,7 @@ package message
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
@@ -67,6 +68,8 @@ func ExecuteFromRawCommand(ctx context.Context, event *larkim.P2MessageReceiveV1
 	defer span.End()
 	defer span.RecordError(err)
 
+	rawCommand = strings.ReplaceAll(rawCommand, "<b>", " ")
+	rawCommand = strings.ReplaceAll(rawCommand, "</b>", " ")
 	ctx = context.WithValue(ctx, consts.ContextVarSrcCmd, rawCommand)
 	commands := larkutils.GetCommand(ctx, rawCommand)
 	if len(commands) > 0 {
