@@ -53,6 +53,8 @@ github.com/cloudwego/gopkg v0.1.4 h1:EoQiCG4sTonTPHxOGE0VlQs+sQR+Hsi2uN0qqwu8O50
 github.com/cloudwego/gopkg v0.1.4/go.mod h1:FQuXsRWRsSqJLsMVd5SYzp8/Z1y5gXKnVvRrWUOsCMI=
 github.com/cloudwego/hertz v0.10.0 h1:V0vmBaLdQPlgL6w2TA6PZL1g6SGgQznFx6vqxWdCcKw=
 github.com/cloudwego/hertz v0.10.0/go.mod h1:lRBohmcDkGx5TLK6QKFGdzJ6n3IXqGueHsOiXcYgXA4=
+github.com/cloudwego/hertz v0.10.1 h1:gTM2JIGO7vmRoaDz71GctyoUE19pXGuznFX55HjGs1g=
+github.com/cloudwego/hertz v0.10.1/go.mod h1:0sofikwk5YcHCerClgCzcaoamY61JiRwR5G0mAUo+Y0=
 github.com/cloudwego/iasm v0.2.0/go.mod h1:8rXZaNYT2n95jn+zTI1sDr+IgcD2GVs0nlbbQPiEFhY=
 github.com/cloudwego/netpoll v0.7.0 h1:bDrxQaNfijRI1zyGgXHQoE/nYegL0nr+ijO1Norelc4=
 github.com/cloudwego/netpoll v0.7.0/go.mod h1:PI+YrmyS7cIr0+SD4seJz3Eo3ckkXdu2ZVKBLhURLNU=
@@ -379,6 +381,10 @@ github.com/volcengine/volcengine-go-sdk v1.1.17 h1:Izrcx/FERzGvpY3ufPjt4GR7Ak6y9
 github.com/volcengine/volcengine-go-sdk v1.1.17/go.mod h1:EyKoi6t6eZxoPNGr2GdFCZti2Skd7MO3eUzx7TtSvNo=
 github.com/volcengine/volcengine-go-sdk v1.1.18 h1:tVcp1m6R8fgwZFb/MaltrpZY7b2+vYNbmO1MHlDSXIs=
 github.com/volcengine/volcengine-go-sdk v1.1.18/go.mod h1:EyKoi6t6eZxoPNGr2GdFCZti2Skd7MO3eUzx7TtSvNo=
+github.com/volcengine/volcengine-go-sdk v1.1.19 h1:+jLVMqDtdtiAt8QGBk6AMiEg22Br5SZGu2FSHUrIcU0=
+github.com/volcengine/volcengine-go-sdk v1.1.19/go.mod h1:EyKoi6t6eZxoPNGr2GdFCZti2Skd7MO3eUzx7TtSvNo=
+github.com/volcengine/volcengine-go-sdk v1.1.21 h1:HxEaSsT+SRx0J5z5hDi+MVeYK6VRljdTjSjUnBg2Aso=
+github.com/volcengine/volcengine-go-sdk v1.1.21/go.mod h1:EyKoi6t6eZxoPNGr2GdFCZti2Skd7MO3eUzx7TtSvNo=
 github.com/wI2L/jsondiff v0.6.1 h1:ISZb9oNWbP64LHnu4AUhsMF5W0FIj5Ok3Krip9Shqpw=
 github.com/wI2L/jsondiff v0.6.1/go.mod h1:KAEIojdQq66oJiHhDyQez2x+sRit0vIzC9KeK0yizxM=
 github.com/wI2L/jsondiff v0.7.0 h1:1lH1G37GhBPqCfp/lrs91rf/2j3DktX6qYAKZkLuCQQ=

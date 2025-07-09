@@ -15,7 +15,7 @@ require (
 	github.com/BetaGoRobot/go_utils v0.0.2
 	github.com/bytedance/sonic v1.13.3
 	github.com/carlmjohnson/requests v0.24.3
-	github.com/cloudwego/hertz v0.10.0
+	github.com/cloudwego/hertz v0.10.1
 	github.com/defensestation/osquery v1.0.0
 	github.com/dgraph-io/ristretto/v2 v2.2.0
 	github.com/dlclark/regexp2 v1.11.5
@@ -46,7 +46,7 @@ require (
 	github.com/spyzhov/ajson v0.9.6
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.66
 	github.com/valyala/fasthttp v1.63.0
-	github.com/volcengine/volcengine-go-sdk v1.1.18
+	github.com/volcengine/volcengine-go-sdk v1.1.21
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 	github.com/yanyiwu/gojieba v1.4.6
 	go.opentelemetry.io/otel v1.37.0
