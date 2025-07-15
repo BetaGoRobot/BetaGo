@@ -45,7 +45,7 @@ require (
 	github.com/redis/go-redis/v9 v9.10.0
 	github.com/spyzhov/ajson v0.9.6
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.66
-	github.com/valyala/fasthttp v1.63.0
+	github.com/valyala/fasthttp v1.64.0
 	github.com/volcengine/volcengine-go-sdk v1.1.21
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 	github.com/yanyiwu/gojieba v1.4.6
@@ -141,12 +141,12 @@ require (
 	go.uber.org/mock v0.4.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.39.0 // indirect
+	golang.org/x/crypto v0.40.0 // indirect
 	golang.org/x/image v0.18.0 // indirect
-	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sync v0.15.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.26.0 // indirect
+	golang.org/x/net v0.42.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/text v0.27.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
