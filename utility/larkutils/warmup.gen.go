@@ -26,7 +26,7 @@ func init() {
 	reflecting.GetFunctionName(RemoveReaction)                // from utility/larkutils/msg.go:454
 	reflecting.GetFunctionName(ReplyCard)                     // from utility/larkutils/reply.go:34
 	reflecting.GetFunctionName(ReplyCardText)                 // from utility/larkutils/reply.go:69
-	reflecting.GetFunctionName(ReplyMsgRawContentType)        // from utility/larkutils/msg.go:196
+	reflecting.GetFunctionName(ReplyMsgRawAsText)             // from utility/larkutils/msg.go:196
 	reflecting.GetFunctionName(ReplyMsgText)                  // from utility/larkutils/msg.go:231
 	reflecting.GetFunctionName(SendCard)                      // from utility/larkutils/reply.go:112
 	reflecting.GetFunctionName(SendCardText)                  // from utility/larkutils/reply.go:151

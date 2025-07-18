@@ -198,7 +198,7 @@ func AddReaction2DB(ctx context.Context, msgID string) {
 	}
 }
 
-func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix string, replyInThread bool) (resp *larkim.ReplyMessageResp, err error) {
+func ReplyMsgRawAsText(ctx context.Context, msgID, msgType, content, suffix string, replyInThread bool) (resp *larkim.ReplyMessageResp, err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("msgType").String(msgType), attribute.Key("content").String(content))
 	defer span.End()
@@ -228,6 +228,36 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 	return
 }
 
+func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix string, replyInThread bool) (resp *larkim.ReplyMessageResp, err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("msgType").String(msgType), attribute.Key("content").String(content))
+	defer span.End()
+	uuid := (msgID + suffix)
+	if len(uuid) > 50 {
+		uuid = uuid[:50]
+	}
+
+	req := larkim.NewReplyMessageReqBuilder().Body(
+		larkim.NewReplyMessageReqBodyBuilder().
+			MsgType(msgType).
+			Content(content).
+			ReplyInThread(replyInThread).
+			Uuid(GenUUIDStr(uuid, 50)).Build(),
+	).MessageId(msgID).Build()
+
+	resp, err = LarkClient.Im.V1.Message.Reply(ctx, req)
+	if err != nil {
+		log.Zlog.Error("ReplyMessage", zaplog.Error(err))
+		return nil, err
+	}
+	if !resp.Success() {
+		log.Zlog.Error("ReplyMessage", zaplog.String("Error", larkcore.Prettify(resp.CodeError.Err)))
+		return nil, errors.New(resp.Error())
+	}
+	RecordReplyMessage2Opensearch(ctx, resp, content)
+	return
+}
+
 // ReplyMsgText ReplyMsgText 注意：不要传入已经Build过的文本
 //
 //	@param ctx
@@ -237,18 +267,30 @@ func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(text))
 	defer span.End()
-	return ReplyMsgRawContentType(ctx, msgID, larkim.MsgTypeText, text, suffix, replyInThread)
+	return ReplyMsgRawAsText(ctx, msgID, larkim.MsgTypeText, text, suffix, replyInThread)
 }
 
 func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageResp, contents ...string) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+
 	var content string
 	if len(contents) > 0 {
 		content = strings.Join(contents, "\n")
 	} else {
 		content = getContentFromTextMsg(utility.AddressORNil(resp.Data.Body.Content))
 	}
+
+	config, _ := database.FindByCacheFunc(
+		database.PrivateMode{ChatID: utility.AddressORNil(resp.Data.ChatId)},
+		func(d database.PrivateMode) string { return d.ChatID },
+	)
+	if len(config) > 0 && config[0].Enable {
+		// 隐私模式，不存了
+		log.Zlog.Info("ChatID hit private config, will not record data...", zaplog.String("chat_id", utility.AddressORNil(resp.Data.ChatId)))
+		return
+	}
+
 	msgLog := &handlertypes.MessageLog{
 		MessageID:   utility.AddressORNil(resp.Data.MessageId),
 		RootID:      utility.AddressORNil(resp.Data.RootId),
@@ -270,6 +312,7 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 	jieba := gojieba.NewJieba()
 	defer jieba.Free()
 	ws := jieba.Cut(content, true)
+
 	err = opensearchdal.InsertData(ctx, consts.LarkMsgIndex,
 		utility.AddressORNil(resp.Data.MessageId),
 		&handlertypes.MessageIndex{

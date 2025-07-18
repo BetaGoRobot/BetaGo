@@ -11,6 +11,7 @@ const (
 type ReplyType string
 
 const (
-	ReplyTypeText ReplyType = "text"
-	ReplyTypeImg  ReplyType = "img"
+	ReplyTypeText    ReplyType = "text"
+	ReplyTypeImg     ReplyType = "img"
+	ReplyTypeSticker ReplyType = "sticker"
 )
