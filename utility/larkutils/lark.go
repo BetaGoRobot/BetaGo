@@ -25,7 +25,7 @@ func GetUserMapFromChatID(ctx context.Context, chatID string) (memberMap map[str
 			NewGetChatMembersReqBuilder().
 			MemberIdType(`open_id`).
 			ChatId(chatID).
-			PageSize(20)
+			PageSize(100)
 		if pageToken != "" {
 			builder.PageToken(pageToken)
 		}

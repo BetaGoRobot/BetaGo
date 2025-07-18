@@ -224,7 +224,10 @@ type CardActionRecordLog struct {
 	UserName string `json:"user_name"`
 	EventSrc string `json:"event_src"`
 }
-
+type PrivateMode struct {
+	ChatID string `json:"chat_id" gorm:"primaryKey"`
+	Enable bool   `json:"enable"`
+}
 type CronCmdTask struct {
 	TaskName string `json:"task_name" gorm:"primaryKey"`
 	TaskCron string `json:"task_cron"`
@@ -246,6 +249,7 @@ func init() {
 	// migrate
 	db := GetDbConnection()
 	err := db.AutoMigrate(
+		&PrivateMode{},
 		&CronCmdTask{},
 		&CardActionRecordLog{},
 		&Administrator{},
