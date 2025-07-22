@@ -39,10 +39,16 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 		if !ok {
 			return errors.New("arg word is required")
 		}
+
 		matchType, ok := argMap["type"]
 		if !ok {
+			return errors.New("arg type(substr, full) is required") // 临时下掉regex
 			return errors.New("arg type(substr, regex, full) is required")
 		}
+		if word == "" {
+			return errors.New("arg word is empty, please change your key word")
+		}
+
 		if matchType != string(consts.MatchTypeSubStr) && matchType != string(consts.MatchTypeRegex) && matchType != string(consts.MatchTypeFull) {
 			return errors.New("type must be substr, regex or full")
 		}
@@ -66,7 +72,8 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 					log.Zlog.Error("repeatMessage", zaplog.Error(err))
 					return err
 				}
-				if *parentMsgItem.MsgType == larkim.MsgTypeSticker {
+				switch *parentMsgItem.MsgType {
+				case larkim.MsgTypeSticker:
 					imgKey := contentMap["file_key"]
 					res, _ := database.FindByCacheFunc(database.StickerMapping{StickerKey: imgKey}, func(r database.StickerMapping) string { return r.StickerKey })
 					if len(res) == 0 {
@@ -81,13 +88,13 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 						}
 					}
 					reply = imgKey
-				} else if *parentMsgItem.MsgType == larkim.MsgTypeImage {
+				case larkim.MsgTypeImage:
 					imageFile, err := larkimg.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["image_key"], "image")
 					if err != nil {
 						return err
 					}
 					reply = larkimg.UploadPicture2LarkReader(ctx, imageFile)
-				} else {
+				default:
 					return errors.New("reply_type **img** must reply to a image message")
 				}
 			}
