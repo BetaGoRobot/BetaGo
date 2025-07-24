@@ -184,6 +184,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, f
 					},
 				},
 			},
+			Thinking: &model.Thinking{model.ThinkingTypeAuto},
 		}
 	} else {
 		req = model.CreateChatCompletionRequest{
