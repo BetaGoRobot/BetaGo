@@ -64,7 +64,7 @@ func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 	if !resp.Success() {
 		return errors.New(resp.Error())
 	}
-	RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
+	go RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
 	return
 }
 
@@ -103,7 +103,7 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 	if !resp.Success() {
 		return errors.New(resp.Error())
 	}
-	RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
+	go RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
 	return
 }
 
@@ -141,7 +141,7 @@ func SendCard(ctx context.Context, cardContent *templates.TemplateCardContent, c
 	if !resp.Success() {
 		return errors.New(resp.Error())
 	}
-	RecordMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
+	go RecordMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
 	return
 }
 
@@ -184,7 +184,7 @@ func SendCardText(ctx context.Context, text string, chatID, suffix string) (err 
 	if !resp.Success() {
 		return errors.New(resp.Error())
 	}
-	RecordMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
+	go RecordMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
 	return
 }
 
@@ -224,7 +224,7 @@ func ReplyCardTextGraph[X cts.ValidType, Y cts.Numeric](ctx context.Context, tex
 	if !resp.Success() {
 		return errors.New(resp.Error())
 	}
-	RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
+	go RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
 	return
 }
 
