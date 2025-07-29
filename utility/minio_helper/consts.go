@@ -3,32 +3,46 @@ package miniohelper
 import (
 	"os"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 var (
-	endPoint        string
-	useSSL          bool
-	accessKeyID     = os.Getenv("MINIO_ACCESS_KEY_ID")
-	secretAccessKey = os.Getenv("MINIO_SECRET_ACCESS_KEY")
-	minioClient     *minio.Client
+	endPointInternal, endPointExternal string
+	useSSLInternal, useSSLExternal     bool
+	accessKeyID                        = os.Getenv("MINIO_ACCESS_KEY_ID")
+	secretAccessKey                    = os.Getenv("MINIO_SECRET_ACCESS_KEY")
+	minioClientInternal                *minio.Client
+	minioClientExternal                *minio.Client
 )
 
 func init() {
 	var err error
-	// if betagovar.IsTest {
-	// 	endPoint = "192.168.31.74:29000"
-	// 	useSSL = false
-	// } else {
-	// endPoint = "minioapi.kmhomelab.cn"
-	endPoint = "minioapi.kmhomelab.online:19828"
-	useSSL = true
-	// }
-	minioClient, err = minio.New(endPoint, &minio.Options{
+
+	if consts.IsTest {
+		useSSLInternal = false
+		useSSLExternal = true
+		endPointInternal = "localhost:19000"
+		endPointExternal = "minioapi.kmhomelab.cn"
+	} else {
+		useSSLInternal = false
+		useSSLExternal = true
+		endPointInternal = "minio:9000"
+		endPointExternal = "minioapi.kmhomelab.cn"
+	}
+	minioClientInternal, err = minio.New(endPointInternal, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: useSSL,
+		Secure: useSSLInternal,
+	})
+	if err != nil {
+		log.Zlog.Panic(err.Error())
+	}
+
+	minioClientExternal, err = minio.New(endPointExternal, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: useSSLExternal,
 	})
 	if err != nil {
 		log.Zlog.Panic(err.Error())
