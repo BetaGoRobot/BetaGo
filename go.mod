@@ -17,7 +17,7 @@ require (
 	github.com/carlmjohnson/requests v0.24.3
 	github.com/cloudwego/hertz v0.10.2
 	github.com/defensestation/osquery v1.0.0
-	github.com/dgraph-io/ristretto/v2 v2.2.0
+	github.com/dgraph-io/ristretto/v2 v2.3.0
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/eko/gocache/lib/v4 v4.2.0
 	github.com/eko/gocache/store/go_cache/v4 v4.2.2
