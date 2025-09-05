@@ -1,6 +1,6 @@
 module github.com/BetaGoRobot/BetaGo
 
-go 1.24.2
+go 1.25
 
 replace (
 	github.com/BetaGoRobot/BetaGo/betagovar => ./consts
@@ -19,7 +19,7 @@ require (
 	github.com/defensestation/osquery v1.0.0
 	github.com/dgraph-io/ristretto/v2 v2.3.0
 	github.com/dlclark/regexp2 v1.11.5
-	github.com/eko/gocache/lib/v4 v4.2.0
+	github.com/eko/gocache/lib/v4 v4.2.1
 	github.com/eko/gocache/store/go_cache/v4 v4.2.2
 	github.com/enescakir/emoji v1.0.0
 	github.com/fasthttp/router v1.5.4
