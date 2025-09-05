@@ -39,7 +39,7 @@ require (
 	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/opensearch-project/opensearch-go/v4 v4.5.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/phuslu/log v1.0.119
+	github.com/phuslu/log v1.0.120
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.23.0
 	github.com/redis/go-redis/v9 v9.10.0
