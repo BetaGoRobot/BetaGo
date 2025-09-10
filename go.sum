@@ -47,6 +47,8 @@ github.com/bytedance/sonic/loader v0.3.0 h1:dskwH8edlzNMctoruo8FPTJDF3vLtDT0sXZw
 github.com/bytedance/sonic/loader v0.3.0/go.mod h1:N8A3vUdtUebEY2/VQC0MyhYeKUFosQU6FxH2JmUe6VI=
 github.com/carlmjohnson/requests v0.24.3 h1:LYcM/jVIVPkioigMjEAnBACXl2vb42TVqiC8EYNoaXQ=
 github.com/carlmjohnson/requests v0.24.3/go.mod h1:duYA/jDnyZ6f3xbcF5PpZ9N8clgopubP2nK5i6MVMhU=
+github.com/carlmjohnson/requests v0.25.1 h1:17zNRLecxtAjhtdEIV+F+wrYfe+AGZUjWJtpndcOUYA=
+github.com/carlmjohnson/requests v0.25.1/go.mod h1:z3UEf8IE4sZxZ78spW6/tLdqBkfCu1Fn4RaYMnZ8SRM=
 github.com/cenkalti/backoff/v5 v5.0.2 h1:rIfFVxEf1QsI7E1ZHfp/B4DF/6QBAUhmgkxc0H7Zss8=
 github.com/cenkalti/backoff/v5 v5.0.2/go.mod h1:rkhZdG3JZukswDf7f0cwqPNk4K0sa+F97BxZthm/crw=
 github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=
