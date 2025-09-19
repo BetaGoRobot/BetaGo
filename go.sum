@@ -273,6 +273,8 @@ github.com/larksuite/oapi-sdk-go/v3 v3.4.22 h1:57daKuslQPX9X3hC2idc5bu8bl2krfsBG
 github.com/larksuite/oapi-sdk-go/v3 v3.4.22/go.mod h1:ZEplY+kwuIrj/nqw5uSCINNATcH3KdxSN7y+UxYY5fI=
 github.com/larksuite/oapi-sdk-go/v3 v3.4.24 h1:vCeDmH2FZ3Rt5PYg5DG+N3/mry7uw/sXmNKJsd450q8=
 github.com/larksuite/oapi-sdk-go/v3 v3.4.24/go.mod h1:ZEplY+kwuIrj/nqw5uSCINNATcH3KdxSN7y+UxYY5fI=
+github.com/larksuite/oapi-sdk-go/v3 v3.4.25 h1:Hf4FBpTwYwjiAkdIaf2+TixQ7/iuQMnaw6/K0PxIhm0=
+github.com/larksuite/oapi-sdk-go/v3 v3.4.25/go.mod h1:ZEplY+kwuIrj/nqw5uSCINNATcH3KdxSN7y+UxYY5fI=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/lonelyevil/kook v0.0.29/go.mod h1:WjHC7AmbmNjInT/U/etBVOmAw7T6EqdCwApceRGs1sk=
