@@ -166,6 +166,8 @@ func (m *Management[M]) OnMerge(ctx context.Context, chunk []M, buildLine func(M
 	if err != nil {
 		return
 	}
+	res = strings.Trim(res, "```")
+	res = strings.TrimLeft(res, "json")
 	log.SLog.Infof(
 		"OnMerge chunk processed by LLM:\n records: %s\nres: %s\n", chunkStr, res,
 	)
@@ -208,7 +210,7 @@ func (m *Management[M]) StartBackgroundCleaner(ctx context.Context, buildLine fu
 
 	// Start the ticker for scanning Redis
 	go func() {
-		ticker := time.NewTicker(1 * time.Minute)
+		ticker := time.NewTicker(INACTIVITY_TIMEOUT / 10)
 		defer ticker.Stop()
 		for {
 			select {
