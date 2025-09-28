@@ -2,18 +2,24 @@ package message
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/chunking"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/sonic"
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/yanyiwu/gojieba"
@@ -93,14 +99,19 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		if err != nil {
 			log.Zlog.Error("InsertData error", zaplog.Error(err))
 		}
-		return
 	}()
 }
 
 func init() {
+	m := chunking.NewManagement(getGroupID, getTimestampFunc)
+	m.StartBackgroundCleaner(context.Background(), buildLine)
 	Handler = Handler.
+		MessageManagement(m).
 		OnPanic(larkDeferFunc).
 		WithDefer(CollectMessage).
+		WithDefer(func(ctx context.Context, pmrv *larkim.P2MessageReceiveV1, bmd *handlerbase.BaseMetaData) {
+			m.SubmitMessage(ctx, *pmrv)
+		}).
 		AddParallelStages(&RecordMsgOperator{}).
 		AddParallelStages(&RepeatMsgOperator{}).
 		AddParallelStages(&ReactMsgOperator{}).
@@ -108,4 +119,69 @@ func init() {
 		AddParallelStages(&ReplyChatOperator{}).
 		AddParallelStages(&CommandOperator{}).
 		AddParallelStages(&ChatMsgOperator{})
+}
+
+func buildLine(event larkim.P2MessageReceiveV1) string {
+	mentions := event.Event.Message.Mentions
+
+	tmpList := make([]string, 0)
+	for msgItem := range larkmsgutils.
+		GetContentItemsSeq(
+			&larkim.EventMessage{
+				Content:     event.Event.Message.Content,
+				MessageType: event.Event.Message.MessageType,
+			},
+		) {
+		switch msgItem.Tag {
+		case "at", "text":
+			if msgItem.Tag == "text" {
+				m := map[string]string{}
+				if err := sonic.UnmarshalString(msgItem.Content, &m); err == nil {
+					msgItem.Content = m["text"]
+				}
+			}
+			if len(mentions) > 0 {
+				for _, mention := range mentions {
+					if mention.Key != nil {
+						if *mention.Name == "不太正经的网易云音乐机器人" {
+							*mention.Name = "你"
+						}
+						msgItem.Content = strings.ReplaceAll(msgItem.Content, *mention.Key, fmt.Sprintf("@%s", *mention.Name))
+					}
+				}
+			}
+			fallthrough
+		default:
+			content := strings.ReplaceAll(msgItem.Content, "\n", "<换行>")
+			if strings.TrimSpace(content) != "" {
+				tmpList = append(tmpList, content)
+			}
+		}
+	}
+	member, err := larkutils.GetUserMemberFromChat(context.Background(), *event.Event.Message.ChatId, *event.Event.Sender.SenderId.OpenId)
+	if err != nil {
+		log.Zlog.Error("got error openID", zaplog.String("openID", *event.Event.Sender.SenderId.OpenId))
+	}
+	userName := ""
+	if member == nil {
+		userName = "NULL"
+	} else {
+		userName = *member.Name
+	}
+	ctInt, _ := strconv.ParseInt(*event.Event.Message.CreateTime, 10, 64)
+	createTime := time.UnixMilli(ctInt).Local().Format(time.DateTime)
+	return fmt.Sprintf("[%s] <%s>: %s", createTime, userName, strings.Join(tmpList, ";"))
+}
+
+func getGroupID(event larkim.P2MessageReceiveV1) string {
+	return *event.Event.Message.ChatId
+}
+
+func getTimestampFunc(event larkim.P2MessageReceiveV1) int64 {
+	t, err := strconv.ParseInt(*event.Event.Message.CreateTime, 10, 64)
+	if err != nil {
+		zaplog.Logger.Error("getTimestampFunc error", zaplog.Error(err))
+		return time.Now().UnixMilli()
+	}
+	return t
 }

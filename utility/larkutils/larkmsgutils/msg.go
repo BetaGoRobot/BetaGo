@@ -52,19 +52,20 @@ func trans2Item(msgType, content string) (itemList iter.Seq[*Item]) {
 			res := utility.MustUnmarshallString[postMsg](content)
 			for _, ele := range res.Content {
 				for _, ele2 := range ele {
-					if ele2.Tag == "at" {
+					switch ele2.Tag {
+					case "at":
 						if !yield(&Item{Tag: "at", Content: ele2.UserID}) {
 							return
 						}
-					} else if ele2.Tag == "text" {
+					case "text":
 						if !yield(&Item{Tag: "text", Content: ele2.Text}) {
 							return
 						}
-					} else if ele2.Tag == "image" {
+					case "image":
 						if !yield(&Item{Tag: "image", Content: ele2.ImageKey}) {
 							return
 						}
-					} else if ele2.Tag == "sticker" {
+					case "sticker":
 						if !yield(&Item{Tag: "sticker", Content: ele2.FileKey}) {
 							return
 						}

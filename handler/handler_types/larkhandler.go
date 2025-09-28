@@ -24,7 +24,44 @@ type MessageLog struct {
 	TraceID   string `json:"trace_id"`
 	CreatedAt time.Time
 }
-
+type MessageChunkLog struct {
+	Summary          string `json:"summary"`
+	Intent           string `json:"intent"`
+	SentimentAndTone struct {
+		Sentiment string   `json:"sentiment"`
+		Tone      []string `json:"tone"`
+	} `json:"sentiment_and_tone"`
+	Entities struct {
+		ProjectsAndTopics     []string `json:"projects_and_topics"`
+		TechnicalKeywords     []string `json:"technical_keywords"`
+		OrganizationsAndTeams []string `json:"organizations_and_teams"`
+		Resources             []struct {
+			Name string `json:"name"`
+			Type string `json:"type"`
+		} `json:"resources"`
+	} `json:"entities"`
+	InteractionAnalysis struct {
+		Participants []struct {
+			Name string `json:"name"`
+			Role string `json:"role"`
+		} `json:"participants"`
+		IsQuestionPresent   bool     `json:"is_question_present"`
+		UnresolvedQuestions []string `json:"unresolved_questions"`
+	} `json:"interaction_analysis"`
+	Outcomes struct {
+		DecisionsMade []string `json:"decisions_made"`
+		ActionItems   []struct {
+			Task      string   `json:"task"`
+			Assignees []string `json:"assignees"`
+			DueDate   struct {
+				RawText        string `json:"raw_text"`
+				NormalizedDate string `json:"normalized_date"`
+			} `json:"due_date"`
+		} `json:"action_items"`
+	} `json:"outcomes"`
+	ConversationEmbedding []float32 `json:"conversation_embedding"`
+	Timestamp             string    `json:"timestamp"`
+}
 type MessageIndex struct {
 	*MessageLog
 	ChatName        string      `json:"chat_name"`
