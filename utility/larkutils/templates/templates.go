@@ -3,6 +3,7 @@ package templates
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 	"time"
 
@@ -29,6 +30,7 @@ var (
 	StreamingReasonTemplate      = database.TemplateVersion{TemplateID: "ONLY_SRC_STERAMING_CARD"}
 	NormalCardReplyTemplate      = database.TemplateVersion{TemplateID: "AAqRQtNPSJbsZ"}
 	NormalCardGraphReplyTemplate = database.TemplateVersion{TemplateID: "AAqdmx3wt8mit"}
+	ChunkMetaTemplate            = database.TemplateVersionV2[ChunkMetaData]{TemplateVersion: database.TemplateVersion{TemplateID: "AAqxfVYYV3Zcr"}}
 )
 
 func GetTemplate(template database.TemplateVersion) database.TemplateVersion {
@@ -37,6 +39,17 @@ func GetTemplate(template database.TemplateVersion) database.TemplateVersion {
 	})
 	if len(templates) > 0 {
 		return templates[0]
+	}
+	return template
+}
+
+func GetTemplateV2[T any](template database.TemplateVersionV2[T]) database.TemplateVersionV2[T] {
+	templates, _ := database.FindByCacheFunc(template.TemplateVersion, func(tpl database.TemplateVersion) string {
+		return tpl.TemplateID
+	})
+	if len(templates) > 0 {
+		template.TemplateVersion = templates[0]
+		return template
 	}
 	return template
 }
@@ -85,6 +98,46 @@ func NewCardContent(ctx context.Context, template database.TemplateVersion) *Tem
 		t.AddVariable("refresh_obj", map[string]string{"type": "refresh_obj", "command": srcCmd.(string)})
 	}
 	t.AddVariable("refresh_time", time.Now().UTC().Add(time.Hour*8).Format(time.DateTime))
+	return t
+}
+
+func NewCardContentV2[T any](ctx context.Context, template database.TemplateVersionV2[T]) *TemplateCardContent {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	traceID := span.SpanContext().TraceID().String()
+	templateVersion := GetTemplateV2(template)
+	var t *TemplateCardContent
+	// 纯template
+	t = &TemplateCardContent{
+		Type: "template",
+		Data: CardData{
+			TemplateID:          templateVersion.TemplateID,
+			TemplateVersionName: templateVersion.TemplateVersion.TemplateVersion,
+			TemplateVariable:    make(map[string]interface{}),
+		},
+	}
+	if templateVersion.TemplateSrc != "" {
+		t.Data.TemplateSrc = templateVersion.TemplateSrc
+	}
+
+	// default参数
+	t.AddJaegerTraceInfo(traceID)
+	t.AddVariable("withdraw_info", "撤回卡片")
+	t.AddVariable("withdraw_title", "撤回本条消息")
+	t.AddVariable("withdraw_confirm", "你确定要撤回这条消息吗？")
+	t.AddVariable("withdraw_object", map[string]string{"type": "withdraw"})
+	if srcCmd := ctx.Value(consts.ContextVarSrcCmd); srcCmd != nil {
+		t.AddVariable("raw_cmd", srcCmd.(string))
+		t.AddVariable("refresh_obj", map[string]string{"type": "refresh_obj", "command": srcCmd.(string)})
+	}
+	t.AddVariable("refresh_time", time.Now().UTC().Add(time.Hour*8).Format(time.DateTime))
+
+	// 合并
+	variables, _ := sonic.Marshal(template.Variables)
+	var sourceMap map[string]any
+	sonic.Unmarshal(variables, &sourceMap)
+	maps.Copy(t.Data.TemplateVariable, sourceMap)
 	return t
 }
 

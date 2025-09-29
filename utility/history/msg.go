@@ -12,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	commonutils "github.com/BetaGoRobot/go_utils/common_utils"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	"github.com/defensestation/osquery"
@@ -128,6 +129,36 @@ func (h *Helper) GetMsg() (messageList []string, err error) {
 	}
 	messageList = FilterMessage(resp.Hits.Hits)
 	return
+}
+
+func (h *Helper) GetAll() (messageList []*handlertypes.MessageIndex, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
+	defer span.End()
+	span.SetAttributes(
+		attribute.Key("index").String(h.index),
+		attribute.Key("query").String(utility.MustMashal(h.query)),
+		attribute.Key("source").StringSlice(h.source),
+		attribute.Key("size").Int64(int64(h.size)),
+	)
+
+	resp, err := opensearchdal.
+		SearchData(
+			ctx,
+			consts.LarkMsgIndex,
+			h.req,
+		)
+	if err != nil {
+		return
+	}
+
+	return commonutils.TransSlice(resp.Hits.Hits, func(hit opensearchapi.SearchHit) *handlertypes.MessageIndex {
+		messageIndex := &handlertypes.MessageIndex{}
+		err := sonic.Unmarshal(hit.Source, messageIndex)
+		if err != nil {
+			return nil
+		}
+		return messageIndex
+	}), nil
 }
 
 type (

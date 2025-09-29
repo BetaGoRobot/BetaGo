@@ -195,6 +195,16 @@ type TemplateVersion struct {
 	TemplateSrc     string `json:"template_src"`
 }
 
+type TemplateVersionV2[T any] struct {
+	TemplateVersion
+	Variables *T
+}
+
+func (t *TemplateVersionV2[T]) WithData(data *T) TemplateVersionV2[T] {
+	t.Variables = data
+	return *t
+}
+
 // ChannelLogExt  is the struct of channel log
 type ChannelLogExt struct {
 	UserID      string `json:"user_id" gorm:"primaryKey"`

@@ -10,8 +10,10 @@ import (
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
+	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/message"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
@@ -23,7 +25,6 @@ import (
 	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
-	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -351,33 +352,99 @@ func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceive
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 
-	resp, err := opensearchdal.SearchData(ctx, consts.LarkChunkIndex, map[string]any{
-		"query": map[string]any{
-			"bool": map[string]any{
-				"must": map[string]any{
-					"term": map[string]any{
-						"msg_ids": data.Event.Message.MessageId,
-					},
-				},
-			},
-		},
-	})
+	msgs, err := larkutils.GetAllParentMsg(ctx, data)
 	if err != nil {
 		return err
 	}
-	chunkLogs := commonutils.TransSlice(resp.Hits.Hits, func(hit opensearchapi.SearchHit) *handlertypes.MessageChunkLog {
+
+	resp, err := opensearchdal.SearchData(ctx, consts.LarkChunkIndex,
+		map[string]any{
+			"query": map[string]any{
+				"bool": map[string]any{
+					"must": map[string]any{
+						"terms": map[string]any{
+							"msg_ids": commonutils.TransSlice(msgs, func(msg *larkim.Message) string { return *msg.MessageId }),
+						},
+					},
+				},
+			},
+			"sort": map[string]any{
+				"timestamp": map[string]any{
+					"order": "desc",
+				},
+			},
+		})
+	if err != nil {
+		return err
+	}
+	for _, hit := range resp.Hits.Hits {
 		chunkLog := &handlertypes.MessageChunkLog{}
 		err = sonic.Unmarshal(hit.Source, chunkLog)
 		if err != nil {
 			return nil
 		}
-		return chunkLog
-	})
-	s, err := sonic.MarshalIndent(&chunkLogs, "", "  ")
-	if err != nil {
-		return err
+
+		msgList, err := history.New(ctx).Query(
+			osquery.Bool().Must(
+				osquery.Terms("message_id", commonutils.TransSlice(chunkLog.MsgIDs, func(s string) any { return s })...),
+			),
+		).
+			Source("raw_message", "mentions", "message_str", "create_time", "user_id", "chat_id", "user_name", "message_type").GetAll()
+		if err != nil {
+			return err
+		}
+		tpl := templates.GetTemplateV2(templates.ChunkMetaTemplate) // make sure template is loaded
+		tpl.WithData(&templates.ChunkMetaData{
+			Summary: chunkLog.Summary,
+
+			Intent: chunkLog.Intent,
+			Participants: Dedup(
+				commonutils.TransSlice(msgList, func(m *handlertypes.MessageIndex) *templates.User { return &templates.User{ID: m.UserID} }),
+				func(u *templates.User) string { return u.ID },
+			),
+
+			Sentiment: chunkLog.SentimentAndTone.Sentiment,
+			Tones:     commonutils.TransSlice(chunkLog.SentimentAndTone.Tone, func(tone string) *templates.ToneData { return &templates.ToneData{Tone: tone} }),
+			Questions: commonutils.TransSlice(chunkLog.InteractionAnalysis.UnresolvedQuestions, func(question string) *templates.Questions { return &templates.Questions{Question: question} }),
+
+			MsgList: commonutils.TransSlice(msgList, func(msg *handlertypes.MessageIndex) *templates.MsgLine {
+				return &templates.MsgLine{
+					Time:    msg.CreateTime,
+					User:    &templates.User{ID: msg.UserID},
+					Content: msg.RawMessage,
+				}
+			}),
+
+			Timestamp: chunkLog.Timestamp,
+			MsgID:     *data.Event.Message.MessageId,
+		})
+		cardContent := templates.NewCardContentV2(ctx, tpl)
+		err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)
+		if err != nil {
+			return err
+		}
 	}
 
-	_, err = larkutils.ReplyMsgText(ctx, "```json\n"+string(s)+"\n```", *data.Event.Message.MessageId, "_conversation", true)
 	return err
+}
+
+func Map[T any, U any](slice []T, f func(int, T) U) []U {
+	result := make([]U, 0, len(slice))
+	for idx, v := range slice {
+		result = append(result, f(idx, v))
+	}
+	return result
+}
+
+func Dedup[T, K comparable](slice []T, keyFunc func(T) K) []T {
+	seen := make(map[K]struct{})
+	result := make([]T, 0, len(slice))
+	for _, v := range slice {
+		key := keyFunc(v)
+		if _, ok := seen[key]; !ok {
+			seen[key] = struct{}{}
+			result = append(result, v)
+		}
+	}
+	return result
 }

@@ -42,8 +42,9 @@ type MessageChunkLog struct {
 	} `json:"entities"`
 	InteractionAnalysis struct {
 		Participants []struct {
-			Name string `json:"name"`
-			Role string `json:"role"`
+			Name   string `json:"name"`
+			UserID string `json:"user_id"`
+			Role   string `json:"role"`
 		} `json:"participants"`
 		IsQuestionPresent   bool     `json:"is_question_present"`
 		UnresolvedQuestions []string `json:"unresolved_questions"`
@@ -62,6 +63,7 @@ type MessageChunkLog struct {
 	ConversationEmbedding []float32 `json:"conversation_embedding"`
 
 	MsgList   []string `json:"msg_list"`
+	UserIDs   []string `json:"user_ids"`
 	GroupID   string   `json:"group_id"`
 	Timestamp string   `json:"timestamp"`
 	MsgIDs    []string `json:"msg_ids"`
