@@ -7,6 +7,7 @@ import (
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -56,7 +57,7 @@ func (r *RecordReactionOperator) Run(ctx context.Context, event *larkim.P2Messag
 	if *event.Event.OperatorType != "user" {
 		return nil
 	}
-	member, err := larkutils.GetUserMemberFromChat(ctx, chatID, *event.Event.UserId.OpenId)
+	member, err := grouputil.GetUserMemberFromChat(ctx, chatID, *event.Event.UserId.OpenId)
 	if err != nil {
 		return err
 	}

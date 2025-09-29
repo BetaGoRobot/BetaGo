@@ -9,6 +9,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/BetaGo/consts/env"
+	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi/neteaselark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
@@ -255,7 +256,7 @@ func HandleWithDraw(ctx context.Context, cardAction *callback.CardActionTriggerE
 		}
 	} else {
 		// 撤回消息
-		resp, err := larkutils.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(msgID).Build())
+		resp, err := lark.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(msgID).Build())
 		if err != nil {
 			log.Zlog.Error(err.Error())
 			return
@@ -272,7 +273,7 @@ func HandleRefreshMusic(ctx context.Context, musicID, msgID string) {
 	defer span.End()
 
 	card := GetCardMusicByPage(ctx, musicID, 1)
-	resp, err := larkutils.LarkClient.Im.V1.Message.Patch(
+	resp, err := lark.LarkClient.Im.V1.Message.Patch(
 		ctx, larkim.NewPatchMessageReqBuilder().
 			MessageId(msgID).
 			Body(

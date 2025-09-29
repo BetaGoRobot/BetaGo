@@ -24,7 +24,7 @@ type MessageLog struct {
 	TraceID   string `json:"trace_id"`
 	CreatedAt time.Time
 }
-type MessageChunkLog struct {
+type MessageChunkLogLegacy struct {
 	Summary          string `json:"summary"`
 	Intent           string `json:"intent"`
 	SentimentAndTone struct {
@@ -67,6 +67,30 @@ type MessageChunkLog struct {
 	GroupID   string   `json:"group_id"`
 	Timestamp string   `json:"timestamp"`
 	MsgIDs    []string `json:"msg_ids"`
+}
+
+type MessageChunkLog struct {
+	*MessageChunkLogLegacy
+	Outcomes struct {
+		DecisionsMade []string     `json:"decisions_made"`
+		ActionItems   []ActionItem `json:"action_items"`
+	} `json:"outcomes"`
+}
+
+type ActionItem struct {
+	Task      string      `json:"task"`
+	Assignees []Assignee  `json:"assignees"`
+	DueDate   DueDateType `json:"due_date,omitempty"`
+}
+
+type Assignee struct {
+	UserID string `json:"user_id"`
+	Name   string `json:"name"`
+}
+
+type DueDateType struct {
+	RawText        string `json:"raw_text,omitempty"`
+	NormalizedDate string `json:"normalized_date,omitempty"`
 }
 type MessageIndex struct {
 	*MessageLog

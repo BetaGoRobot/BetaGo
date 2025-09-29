@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
@@ -36,7 +37,7 @@ func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, m
 			Data(cardContent.DataString()).
 			Build(),
 	).Build()
-	createEntiResp, err := larkutils.LarkClient.Cardkit.V1.Card.Create(ctx, cardEntiReq)
+	createEntiResp, err := lark.LarkClient.Cardkit.V1.Card.Create(ctx, cardEntiReq)
 	if err != nil {
 		return err
 	}
@@ -56,7 +57,7 @@ func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, m
 				Build(),
 		).
 		Build()
-	resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, req)
+	resp, err := lark.LarkClient.Im.V1.Message.Create(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -78,7 +79,7 @@ func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, m
 			Build()).
 		Build()
 	// 发起请求
-	settingUpdateResp, err := larkutils.LarkClient.Cardkit.V1.Card.
+	settingUpdateResp, err := lark.LarkClient.Cardkit.V1.Card.
 		Settings(ctx, settingUpdateReq)
 	if err != nil {
 		return err
@@ -106,7 +107,7 @@ func SendAndReplyStreamingCard(ctx context.Context, msg *larkim.EventMessage, ms
 			Data(cardContent.DataString()).
 			Build(),
 	).Build()
-	createEntiResp, err := larkutils.LarkClient.Cardkit.V1.Card.Create(ctx, cardEntiReq)
+	createEntiResp, err := lark.LarkClient.Cardkit.V1.Card.Create(ctx, cardEntiReq)
 	if err != nil {
 		return err
 	}
@@ -125,7 +126,7 @@ func SendAndReplyStreamingCard(ctx context.Context, msg *larkim.EventMessage, ms
 				Build(),
 		).
 		Build()
-	resp, err := larkutils.LarkClient.Im.V1.Message.Reply(ctx, req)
+	resp, err := lark.LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -147,7 +148,7 @@ func SendAndReplyStreamingCard(ctx context.Context, msg *larkim.EventMessage, ms
 			Build()).
 		Build()
 	// 发起请求
-	settingUpdateResp, err := larkutils.LarkClient.Cardkit.V1.Card.
+	settingUpdateResp, err := lark.LarkClient.Cardkit.V1.Card.
 		Settings(ctx, settingUpdateReq)
 	if err != nil {
 		return err
@@ -165,7 +166,7 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 		ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer span.End()
 
-		resp, err := larkutils.LarkClient.Cardkit.V1.CardElement.Content(ctx, req)
+		resp, err := lark.LarkClient.Cardkit.V1.CardElement.Content(ctx, req)
 		if err != nil {
 			log.Zlog.Error("patch message failed with error msg: " + resp.Msg)
 			return

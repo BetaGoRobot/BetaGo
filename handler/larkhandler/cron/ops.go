@@ -38,7 +38,7 @@ func (r *CronTaskRunReactionOperator) Run(ctx context.Context, event *CronTaskEv
 	// if *event.Event.OperatorType != "user" {
 	// 	return nil
 	// }
-	// member, err := larkutils.GetUserMemberFromChat(ctx, chatID, *event.Event.UserId.OpenId)
+	// member, err := grouputil.GetUserMemberFromChat(ctx, chatID, *event.Event.UserId.OpenId)
 	// if err != nil {
 	// 	return err
 	// }

@@ -11,6 +11,7 @@ import (
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -70,7 +71,7 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaDa
 		span.SetAttributes(attribute.String("res", res))
 		res = strings.Trim(res, "\n")
 		userName := ""
-		name, _ := larkutils.GetUserMemberFromChat(ctx, *data.Event.Message.ChatId, *data.Event.Message.Mentions[0].Id.OpenId)
+		name, _ := grouputil.GetUserMemberFromChat(ctx, *data.Event.Message.ChatId, *data.Event.Message.Mentions[0].Id.OpenId)
 		if name != nil {
 			userName = *name.Name
 		}

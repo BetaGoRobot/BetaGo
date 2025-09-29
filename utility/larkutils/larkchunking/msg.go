@@ -1,0 +1,89 @@
+package larkchunking
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
+	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/bytedance/sonic"
+	"github.com/kevinmatthe/zaplog"
+	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+)
+
+type LarkMessageEvent struct {
+	*larkim.P2MessageReceiveV1
+}
+
+func (m *LarkMessageEvent) GroupID() (res string) {
+	return *m.Event.Message.ChatId
+}
+
+func (m *LarkMessageEvent) MsgID() (res string) {
+	return *m.Event.Message.MessageId
+}
+
+func (m *LarkMessageEvent) TimeStamp() (res int64) {
+	t, err := strconv.ParseInt(*m.Event.Message.CreateTime, 10, 64)
+	if err != nil {
+		zaplog.Logger.Error("getTimestampFunc error", zaplog.Error(err))
+		return time.Now().UnixMilli()
+	}
+	return t
+}
+
+func (m *LarkMessageEvent) BuildLine() (line string) {
+	mentions := m.Event.Message.Mentions
+
+	tmpList := make([]string, 0)
+	for msgItem := range larkmsgutils.
+		GetContentItemsSeq(
+			&larkim.EventMessage{
+				Content:     m.Event.Message.Content,
+				MessageType: m.Event.Message.MessageType,
+			},
+		) {
+		switch msgItem.Tag {
+		case "at", "text":
+			if msgItem.Tag == "text" {
+				m := map[string]string{}
+				if err := sonic.UnmarshalString(msgItem.Content, &m); err == nil {
+					msgItem.Content = m["text"]
+				}
+			}
+			if len(mentions) > 0 {
+				for _, mention := range mentions {
+					if mention.Key != nil {
+						if *mention.Name == "不太正经的网易云音乐机器人" {
+							*mention.Name = "你"
+						}
+						msgItem.Content = strings.ReplaceAll(msgItem.Content, *mention.Key, fmt.Sprintf("@%s", *mention.Name))
+					}
+				}
+			}
+			fallthrough
+		default:
+			content := strings.ReplaceAll(msgItem.Content, "\n", "<换行>")
+			if strings.TrimSpace(content) != "" {
+				tmpList = append(tmpList, content)
+			}
+		}
+	}
+	member, err := grouputil.GetUserMemberFromChat(context.Background(), *m.Event.Message.ChatId, *m.Event.Sender.SenderId.OpenId)
+	if err != nil {
+		log.Zlog.Error("got error openID", zaplog.String("openID", *m.Event.Sender.SenderId.OpenId))
+	}
+	userName := ""
+	if member == nil {
+		userName = "NULL"
+	} else {
+		userName = *member.Name
+	}
+
+	createTime := time.UnixMilli(m.TimeStamp()).Local().Format(time.DateTime)
+	return fmt.Sprintf("[%s](%s) <%s>: %s", createTime, userName, *m.Event.Sender.SenderId.OpenId, strings.Join(tmpList, ";"))
+}

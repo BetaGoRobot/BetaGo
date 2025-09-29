@@ -6,6 +6,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logging"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
@@ -192,6 +193,7 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			defer p.Defer()
 			var err error
 			defer func() {
+				logging.Logger.Error().Stack().Err(err)
 				errorChan <- err
 				wg.Done()
 			}()

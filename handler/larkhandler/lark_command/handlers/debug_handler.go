@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
@@ -171,7 +172,7 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 	)
 	if data.Event.Message.ThreadId != nil { // 话题模式，找到所有的traceID
 		replyInThread = true
-		resp, err := larkutils.LarkClient.Im.Message.List(ctx,
+		resp, err := lark.LarkClient.Im.Message.List(ctx,
 			larkim.NewListMessageReqBuilder().
 				ContainerId(*data.Event.Message.ThreadId).
 				ContainerIdType("thread").
@@ -230,13 +231,13 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 	defer span.End()
 
 	if data.Event.Message.ThreadId != nil { // 话题模式，找到所有的traceID
-		resp, err := larkutils.LarkClient.Im.Message.List(ctx, larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
+		resp, err := lark.LarkClient.Im.Message.List(ctx, larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
 		if err != nil {
 			return err
 		}
 		for _, msg := range resp.Data.Items {
 			if *msg.Sender.Id == larkutils.BotAppID {
-				resp, err := larkutils.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(*msg.MessageId).Build())
+				resp, err := lark.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(*msg.MessageId).Build())
 				if err != nil {
 					return err
 				}
@@ -254,7 +255,7 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 		if msg.Sender.Id == nil || *msg.Sender.Id != larkutils.BotAppID {
 			return errors.New("Parent message is not sent by bot")
 		}
-		resp, err := larkutils.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(*data.Event.Message.ParentId).Build())
+		resp, err := lark.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(*data.Event.Message.ParentId).Build())
 		if err != nil {
 			return err
 		}
@@ -293,7 +294,7 @@ func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 			).
 			ReceiveIdType(larkim.ReceiveIdTypeChatId).
 			Build()
-		resp, err := larkutils.LarkClient.Im.V1.Message.Create(ctx, repeatReq)
+		resp, err := lark.LarkClient.Im.V1.Message.Create(ctx, repeatReq)
 		if err != nil {
 			return err
 		}
@@ -378,10 +379,20 @@ func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceive
 		return err
 	}
 	for _, hit := range resp.Hits.Hits {
-		chunkLog := &handlertypes.MessageChunkLog{}
+		var (
+			chunkLog       = &handlertypes.MessageChunkLog{}
+			chunkLogLegacy = &handlertypes.MessageChunkLogLegacy{}
+			isLegacy       bool
+		)
 		err = sonic.Unmarshal(hit.Source, chunkLog)
 		if err != nil {
-			return nil
+			// 用legacy试试
+			err = sonic.Unmarshal(hit.Source, chunkLogLegacy)
+			if err != nil {
+				return err
+			}
+			chunkLog.MessageChunkLogLegacy = chunkLogLegacy
+			isLegacy = true
 		}
 
 		msgList, err := history.New(ctx).Query(
@@ -394,7 +405,7 @@ func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceive
 			return err
 		}
 		tpl := templates.GetTemplateV2(templates.ChunkMetaTemplate) // make sure template is loaded
-		tpl.WithData(&templates.ChunkMetaData{
+		metaData := &templates.ChunkMetaData{
 			Summary: chunkLog.Summary,
 
 			Intent: chunkLog.Intent,
@@ -415,9 +426,28 @@ func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceive
 				}
 			}),
 
+			ProjectsAndTopics: commonutils.TransSlice(chunkLog.Entities.ProjectsAndTopics, func(p string) *templates.ProjectsAndTopic { return &templates.ProjectsAndTopic{ProjectsAndTopic: p} }),
+			TechnicalKeywords: commonutils.TransSlice(chunkLog.Entities.TechnicalKeywords, func(t string) *templates.TechnicalKeyword { return &templates.TechnicalKeyword{TechnicalKeyword: t} }),
+			OrganizationsAndTeams: commonutils.TransSlice(chunkLog.Entities.OrganizationsAndTeams, func(o string) *templates.OrganizationsAndTeam {
+				return &templates.OrganizationsAndTeam{OrganizationsAndTeam: o}
+			}),
+
 			Timestamp: chunkLog.Timestamp,
 			MsgID:     *data.Event.Message.MessageId,
-		})
+		}
+		if !isLegacy { // TODO: legacy数据逐渐下掉
+			metaData.ActionItems = commonutils.TransSlice(chunkLog.Outcomes.ActionItems, func(item handlertypes.ActionItem) *templates.ActionItem {
+				return &templates.ActionItem{
+					Task:      item.Task,
+					Assignees: commonutils.TransSlice(item.Assignees, func(a handlertypes.Assignee) *templates.User { return &templates.User{ID: a.UserID} }),
+					DueDate: &handlertypes.DueDateType{
+						RawText:        item.DueDate.RawText,
+						NormalizedDate: item.DueDate.NormalizedDate,
+					},
+				}
+			})
+		}
+		tpl.WithData(metaData)
 		cardContent := templates.NewCardContentV2(ctx, tpl)
 		err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)
 		if err != nil {

@@ -7,10 +7,13 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkchunking"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -95,7 +98,7 @@ func IsMentioned(mentions []*larkim.MentionEvent) bool {
 }
 
 func GetMsgByID(ctx context.Context, msgID string) string {
-	resp, err := LarkClient.Im.V1.Message.Get(ctx, larkim.NewGetMessageReqBuilder().MessageId(msgID).Build())
+	resp, err := lark.LarkClient.Im.V1.Message.Get(ctx, larkim.NewGetMessageReqBuilder().MessageId(msgID).Build())
 	if err != nil {
 		log.Zlog.Error("GetMsgByID", zaplog.Error(err))
 	}
@@ -106,7 +109,7 @@ func GetMsgByID(ctx context.Context, msgID string) string {
 }
 
 func GetMsgFullByID(ctx context.Context, msgID string) *larkim.GetMessageResp {
-	resp, err := LarkClient.Im.V1.Message.Get(ctx, larkim.NewGetMessageReqBuilder().MessageId(msgID).Build())
+	resp, err := lark.LarkClient.Im.V1.Message.Get(ctx, larkim.NewGetMessageReqBuilder().MessageId(msgID).Build())
 	if err != nil {
 		log.Zlog.Error("GetMsgByID", zaplog.Error(err))
 	}
@@ -215,7 +218,7 @@ func ReplyMsgRawAsText(ctx context.Context, msgID, msgType, content, suffix stri
 			Uuid(GenUUIDStr(uuid, 50)).Build(),
 	).MessageId(msgID).Build()
 
-	resp, err = LarkClient.Im.V1.Message.Reply(ctx, req)
+	resp, err = lark.LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
 		log.Zlog.Error("ReplyMessage", zaplog.Error(err))
 		return nil, err
@@ -245,7 +248,7 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 			Uuid(GenUUIDStr(uuid, 50)).Build(),
 	).MessageId(msgID).Build()
 
-	resp, err = LarkClient.Im.V1.Message.Reply(ctx, req)
+	resp, err = lark.LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
 		log.Zlog.Error("ReplyMessage", zaplog.Error(err))
 		return nil, err
@@ -273,6 +276,8 @@ func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread
 func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageResp, contents ...string) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+
+	defer larkchunking.M.SubmitMessage(ctx, &larkchunking.LarkMessageRespCreate{resp})
 
 	var content string
 	if len(contents) > 0 {
@@ -339,7 +344,7 @@ func RecordCardAction2Opensearch(ctx context.Context, cardAction *callback.CardA
 
 	chatID := cardAction.Event.Context.OpenChatID
 	userID := cardAction.Event.Operator.OpenID
-	member, err := GetUserMemberFromChat(ctx, chatID, userID)
+	member, err := grouputil.GetUserMemberFromChat(ctx, chatID, userID)
 	if err != nil {
 		return
 	}
@@ -366,6 +371,8 @@ func RecordCardAction2Opensearch(ctx context.Context, cardAction *callback.CardA
 func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessageResp, contents ...string) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+
+	defer larkchunking.M.SubmitMessage(ctx, &larkchunking.LarkMessageRespReply{resp})
 	var content string
 	if len(contents) > 0 {
 		content = strings.Join(contents, "\n")
@@ -434,7 +441,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 	if len(uuid) > 50 {
 		uuid = uuid[:50]
 	}
-	resp, err := LarkClient.Im.Message.Create(ctx,
+	resp, err := lark.LarkClient.Im.Message.Create(ctx,
 		larkim.NewCreateMessageReqBuilder().
 			ReceiveIdType(larkim.ReceiveIdTypeChatId).
 			Body(
@@ -465,7 +472,7 @@ func AddReaction(ctx context.Context, reactionType, msgID string) (reactionID st
 	defer span.End()
 
 	req := larkim.NewCreateMessageReactionReqBuilder().Body(larkim.NewCreateMessageReactionReqBodyBuilder().ReactionType(larkim.NewEmojiBuilder().EmojiType(reactionType).Build()).Build()).MessageId(msgID).Build()
-	resp, err := LarkClient.Im.V1.MessageReaction.Create(ctx, req)
+	resp, err := lark.LarkClient.Im.V1.MessageReaction.Create(ctx, req)
 	if err != nil {
 		log.Zlog.Error("AddReaction", zaplog.Error(err))
 		return "", err
@@ -485,7 +492,7 @@ func AddReactionAsync(ctx context.Context, reactionType, msgID string) (err erro
 
 	req := larkim.NewCreateMessageReactionReqBuilder().Body(larkim.NewCreateMessageReactionReqBodyBuilder().ReactionType(larkim.NewEmojiBuilder().EmojiType(reactionType).Build()).Build()).MessageId(msgID).Build()
 	go func() {
-		resp, err := LarkClient.Im.V1.MessageReaction.Create(ctx, req)
+		resp, err := lark.LarkClient.Im.V1.MessageReaction.Create(ctx, req)
 		if err != nil {
 			log.Zlog.Error("AddReaction", zaplog.Error(err))
 			return
@@ -504,7 +511,7 @@ func RemoveReaction(ctx context.Context, reactionID, msgID string) (err error) {
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	defer span.End()
 	req := larkim.NewDeleteMessageReactionReqBuilder().MessageId(msgID).ReactionId(reactionID).Build()
-	resp, err := LarkClient.Im.V1.MessageReaction.Delete(ctx, req)
+	resp, err := lark.LarkClient.Im.V1.MessageReaction.Delete(ctx, req)
 	if err != nil {
 		log.Zlog.Error("RemoveReaction", zaplog.Error(err))
 		return err
@@ -530,7 +537,7 @@ func UpdateMessageTextRaw(ctx context.Context, msgID, textMsg string) (err error
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	defer span.End()
 
-	resp, err := LarkClient.Im.V1.Message.Update(
+	resp, err := lark.LarkClient.Im.V1.Message.Update(
 		ctx,
 		larkim.NewUpdateMessageReqBuilder().MessageId(msgID).
 			Body(

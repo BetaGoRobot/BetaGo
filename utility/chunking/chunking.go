@@ -43,20 +43,52 @@ const (
 )
 
 // SessionBuffer 代表在Redis中存储的会话缓冲区
-type SessionBuffer[M GenericMsg] struct {
-	Messages     []M   `json:"messages"`
-	LastActiveTs int64 `json:"last_active_ts"`
+type SessionBuffer struct {
+	Messages     []StandardMsg `json:"messages"`
+	LastActiveTs int64         `json:"last_active_ts"`
 }
 
-type Chunk[M any] struct {
+type StandardMsg struct {
+	_GroupID   string `json:"group_id"`
+	_MsgID     string `json:"msg_id"`
+	_TimeStamp int64  `json:"timestamp"`
+	_BuildLine string `json:"line"`
+}
+
+func (m *StandardMsg) BuildLine() string {
+	return m._BuildLine
+}
+
+func (m *StandardMsg) TimeStamp() int64 {
+	return m._TimeStamp
+}
+
+func (m *StandardMsg) GroupID() string {
+	return m._GroupID
+}
+
+func (m *StandardMsg) MsgID() string {
+	return m._MsgID
+}
+
+func BuildStdMsg(msg GenericMsg) StandardMsg {
+	return StandardMsg{
+		_GroupID:   msg.GroupID(),
+		_MsgID:     msg.MsgID(),
+		_TimeStamp: msg.TimeStamp(),
+		_BuildLine: msg.BuildLine(),
+	}
+}
+
+type Chunk struct {
 	GroupID  string
-	Messages []M
+	Messages []StandardMsg
 }
 
 // Management is the main struct for managing message chunking.
-type Management[M GenericMsg] struct {
+type Management struct {
 	redisClient     *redis.Client
-	processingQueue chan *Chunk[M]
+	processingQueue chan *Chunk
 }
 
 type GenericMsg interface {
@@ -76,17 +108,17 @@ type (
 // NewManagement creates a new Management instance.
 // getGroupIDFunc: A function to extract the group/chat ID from a message.
 // getTimestampFunc: A function to extract the Unix timestamp from a message.
-func NewManagement[M GenericMsg]() *Management[M] {
-	return &Management[M]{
+func NewManagement() *Management {
+	return &Management{
 		redisClient:     redis_client.GetRedisClient(),
-		processingQueue: make(chan *Chunk[M], 100), // Buffered channel for processing chunks
+		processingQueue: make(chan *Chunk, 100), // Buffered channel for processing chunks
 	}
 }
 
 // SubmitMessage 处理新的传入消息。它将消息添加到Redis中相应的会话缓冲区。
 // 如果缓冲区达到MAX_CHUNK_SIZE，它会触发立即合并。否则，它会更新会话的
 // 最后活动时间戳，以用于基于超时的机制。
-func (m *Management[M]) SubmitMessage(ctx context.Context, msg M) (err error) {
+func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err error) {
 	groupID := msg.GroupID()
 	newTimestamp := msg.TimeStamp()
 	if groupID == "" {
@@ -102,17 +134,18 @@ func (m *Management[M]) SubmitMessage(ctx context.Context, msg M) (err error) {
 		return err
 	}
 
-	var buffer SessionBuffer[M]
+	var buffer SessionBuffer
 	// 如果会话存在，则反序列化它。否则，将使用一个新的空缓冲区。
 	if err == nil || errors.Is(err, redis.Nil) {
 		if err := json.Unmarshal([]byte(val), &buffer); err != nil {
-			log.Zlog.Warn("Failed to unmarshal session buffer, starting a new one", zaplog.String("groupID", groupID), zaplog.Error(err))
+			log.Zlog.Warn("Failed to unmarshal session buffer, starting a new one", zaplog.String("data", val), zaplog.String("groupID", groupID), zaplog.Error(err))
 			// 数据可能已损坏，从一个新缓冲区开始
-			buffer = SessionBuffer[M]{}
+			m.redisClient.Del(ctx, sessionKey)
+			buffer = SessionBuffer{}
 		}
 	}
 	// 2. 附加新消息并更新时间戳
-	buffer.Messages = append(buffer.Messages, msg)
+	buffer.Messages = append(buffer.Messages, BuildStdMsg(msg))
 	buffer.LastActiveTs = newTimestamp
 
 	// 3. 检查缓冲区大小是否超过限制
@@ -123,7 +156,7 @@ func (m *Management[M]) SubmitMessage(ctx context.Context, msg M) (err error) {
 		)
 
 		// 将完整的块发送到处理队列
-		m.processingQueue <- &Chunk[M]{
+		m.processingQueue <- &Chunk{
 			GroupID:  groupID,
 			Messages: buffer.Messages,
 		}
@@ -163,15 +196,9 @@ func (m *Management[M]) SubmitMessage(ctx context.Context, msg M) (err error) {
 	return nil
 }
 
-// RetriveChunk is not implemented as it doesn't fit the event-driven, timeout-based merging strategy.
-// Chunks are automatically processed when they are considered complete.
-func (m *Management[M]) RetriveChunk(cnt int) ([][]*M, error) {
-	return nil, fmt.Errorf("RetriveChunk is not applicable in this automated, timeout-based design")
-}
-
 // OnMerge is called when a chunk is ready to be processed.
 // It builds a single string from the chunk and sends it to an LLM.
-func (m *Management[M]) OnMerge(ctx context.Context, chunk *Chunk[M]) (err error) {
+func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 	if chunk == nil || len(chunk.Messages) == 0 {
 		return nil
 	}
@@ -212,10 +239,12 @@ func (m *Management[M]) OnMerge(ctx context.Context, chunk *Chunk[M]) (err error
 	)
 
 	chunkLog := &handlertypes.MessageChunkLog{
-		Timestamp: utility.UTCPlus8Time().Format(time.DateTime),
-		GroupID:   chunk.GroupID,
-		MsgIDs:    msgIDs,
-		MsgList:   chunkLines,
+		MessageChunkLogLegacy: &handlertypes.MessageChunkLogLegacy{
+			Timestamp: utility.UTCPlus8Time().Format(time.DateTime),
+			GroupID:   chunk.GroupID,
+			MsgIDs:    msgIDs,
+			MsgList:   chunkLines,
+		},
 	}
 	err = sonic.UnmarshalString(res, &chunkLog)
 	if err != nil {
@@ -235,7 +264,7 @@ func (m *Management[M]) OnMerge(ctx context.Context, chunk *Chunk[M]) (err error
 }
 
 // StartBackgroundCleaner starts a goroutine to periodically scan for and process timed-out sessions.
-func (m *Management[M]) StartBackgroundCleaner(ctx context.Context) {
+func (m *Management) StartBackgroundCleaner(ctx context.Context) {
 	log.Zlog.Info("Starting background cleaner for timed-out sessions...")
 	// Start the consumer goroutine
 	go func() {
@@ -244,7 +273,7 @@ func (m *Management[M]) StartBackgroundCleaner(ctx context.Context) {
 				continue
 			}
 			// Each chunk is processed in its own goroutine to avoid blocking the queue consumer
-			go func(c *Chunk[M]) {
+			go func(c *Chunk) {
 				log.Zlog.Info("Processing a merged chunk", zaplog.Int("message_count", len(c.Messages)))
 				if err := m.OnMerge(ctx, c); err != nil {
 					log.Zlog.Error("Error during OnMerge", zaplog.Error(err))
@@ -270,7 +299,7 @@ func (m *Management[M]) StartBackgroundCleaner(ctx context.Context) {
 }
 
 // scanAndProcessTimeouts is the internal logic for the background cleaner.
-func (m *Management[M]) scanAndProcessTimeouts(ctx context.Context) {
+func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
 	log.Zlog.Debug("Scanning for timed-out sessions...")
 	// Calculate the timestamp threshold for timeout. Sessions older than this will be processed.
 	timeoutThreshold := time.Now().Add(-INACTIVITY_TIMEOUT).UnixMilli()
@@ -309,7 +338,7 @@ func (m *Management[M]) scanAndProcessTimeouts(ctx context.Context) {
 		// At this point, the session key is deleted from Redis. Now we clean up the sorted set.
 		m.redisClient.ZRem(ctx, redisActiveSessionsKey, groupID)
 
-		var buffer SessionBuffer[M]
+		var buffer SessionBuffer
 		if err := json.Unmarshal([]byte(val), &buffer); err != nil {
 			log.Zlog.Error("Failed to unmarshal timed-out session buffer", zaplog.String("groupID", groupID), zaplog.Error(err))
 			continue
@@ -317,7 +346,7 @@ func (m *Management[M]) scanAndProcessTimeouts(ctx context.Context) {
 
 		// Send the collected messages to the processing queue
 		if len(buffer.Messages) > 0 {
-			m.processingQueue <- &Chunk[M]{
+			m.processingQueue <- &Chunk{
 				GroupID:  groupID,
 				Messages: buffer.Messages,
 			}

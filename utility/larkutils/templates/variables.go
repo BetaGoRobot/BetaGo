@@ -1,5 +1,7 @@
 package templates
 
+import handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
+
 type JaegerBase struct {
 	RefreshTime     string `json:"refresh_time"`
 	JaegerTraceInfo string `json:"jaeger_trace_info"`
@@ -29,7 +31,27 @@ type MsgLine struct {
 	User    *User  `json:"user,omitempty"`
 	Content string `json:"content"`
 }
+type ProjectsAndTopic struct {
+	ProjectsAndTopic string `json:"projects_and_topic,omitempty"`
+}
 
+type TechnicalKeyword struct {
+	TechnicalKeyword string `json:"technical_keyword,omitempty"`
+}
+
+type OrganizationsAndTeam struct {
+	OrganizationsAndTeam string `json:"organizations_and_team,omitempty"`
+}
+
+type Decision struct {
+	Decision string `json:"decision,omitempty"`
+}
+
+type ActionItem struct {
+	Task      string                    `json:"task,omitempty"`
+	Assignees []*User                   `json:"assignees,omitempty"`
+	DueDate   *handlertypes.DueDateType `json:"due_date,omitempty"`
+}
 type ChunkMetaData struct {
 	Summary string `json:"summary"`
 
@@ -41,6 +63,13 @@ type ChunkMetaData struct {
 	Questions []*Questions `json:"questions,omitempty"`
 
 	MsgList []*MsgLine `json:"msg_list,omitempty"`
+
+	ProjectsAndTopics     []*ProjectsAndTopic     `json:"projects_and_topics,omitempty"`
+	TechnicalKeywords     []*TechnicalKeyword     `json:"technical_keywords,omitempty"`
+	OrganizationsAndTeams []*OrganizationsAndTeam `json:"organizations_and_teams,omitempty"`
+
+	DecisionsMade []*Decision   `json:"decisions_made,omitempty"`
+	ActionItems   []*ActionItem `json:"action_items,omitempty"`
 
 	Timestamp string `json:"timestamp"`
 	MsgID     string `json:"msg_id"`

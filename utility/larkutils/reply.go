@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/cts"
+	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -45,7 +46,7 @@ func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 		zap.String("replyInThread", strconv.FormatBool(replyInThread)),
 		zap.String("cardContent", cardContent.String()),
 	)
-	resp, err := LarkClient.Im.V1.Message.Reply(
+	resp, err := lark.LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).
 			Body(
@@ -84,7 +85,7 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
 		AddVariable("content", text)
 	fmt.Println(cardContent.String())
-	resp, err := LarkClient.Im.V1.Message.Reply(
+	resp, err := lark.LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).
 			Body(
@@ -123,7 +124,7 @@ func SendCard(ctx context.Context, cardContent *templates.TemplateCardContent, c
 	span.SetAttributes(attribute.Key("cardContent").String(cardContent.String()))
 	defer span.End()
 
-	resp, err := LarkClient.Im.V1.Message.Create(
+	resp, err := lark.LarkClient.Im.V1.Message.Create(
 		ctx, larkim.NewCreateMessageReqBuilder().ReceiveIdType(larkim.ReceiveIdTypeChatId).
 			Body(
 				larkim.NewCreateMessageReqBodyBuilder().
@@ -166,7 +167,7 @@ func SendCardText(ctx context.Context, text string, chatID, suffix string) (err 
 		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
 		AddVariable("content", text)
 	fmt.Println(cardContent.String())
-	resp, err := LarkClient.Im.V1.Message.Create(
+	resp, err := lark.LarkClient.Im.V1.Message.Create(
 		ctx, larkim.NewCreateMessageReqBuilder().ReceiveIdType(larkim.ReceiveIdTypeChatId).
 			Body(
 				larkim.NewCreateMessageReqBodyBuilder().
@@ -205,7 +206,7 @@ func ReplyCardTextGraph[X cts.ValidType, Y cts.Numeric](ctx context.Context, tex
 		AddVariable("content", text).
 		AddVariable("graph", graph)
 	fmt.Println(cardContent.String())
-	resp, err := LarkClient.Im.V1.Message.Reply(
+	resp, err := lark.LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).
 			Body(
@@ -250,7 +251,7 @@ func PatchCardTextGraph(ctx context.Context, text string, graph any, msgID strin
 		AddVariable("content", text).
 		AddVariable("graph", graph)
 	fmt.Println(cardContent.String())
-	resp, err := LarkClient.Im.V1.Message.Patch(
+	resp, err := lark.LarkClient.Im.V1.Message.Patch(
 		ctx, larkim.NewPatchMessageReqBuilder().
 			MessageId(msgID).
 			Body(
@@ -284,7 +285,7 @@ func PatchCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 		span.SetAttributes(attribute.Key(k).String(fmt.Sprintf("%v", v)))
 	}
 	defer span.End()
-	resp, err := LarkClient.Im.V1.Message.Patch(
+	resp, err := lark.LarkClient.Im.V1.Message.Patch(
 		ctx, larkim.NewPatchMessageReqBuilder().
 			MessageId(msgID).
 			Body(

@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
+	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -52,7 +53,7 @@ func DownImgFromMsgSync(ctx context.Context, msgID, fileType, fileKey string) (u
 		Type("image").
 		Build()
 	// 发起请求
-	resp, err := larkutils.LarkClient.Im.V1.MessageResource.Get(ctx, req)
+	resp, err := lark.LarkClient.Im.V1.MessageResource.Get(ctx, req)
 	// 处理错误
 	if err != nil {
 		return
@@ -119,7 +120,7 @@ func DownImgFromMsgAsync(ctx context.Context, msgID, fileType, fileKey string) (
 		Type(fileType).
 		Build()
 	// 发起请求
-	resp, err := larkutils.LarkClient.Im.V1.MessageResource.Get(ctx, req)
+	resp, err := lark.LarkClient.Im.V1.MessageResource.Get(ctx, req)
 	// 处理错误
 	if err != nil {
 		fmt.Println(err)
@@ -364,7 +365,7 @@ func GetAllImgURLFromMsg(ctx context.Context, msgID string) (iter.Seq[string], e
 func GetAllImgURLFromParent(ctx context.Context, data *larkim.P2MessageReceiveV1) (iter.Seq[string], error) {
 	if data.Event.Message.ThreadId != nil {
 		// 话题模式 找图片
-		resp, err := larkutils.LarkClient.Im.Message.List(ctx,
+		resp, err := lark.LarkClient.Im.Message.List(ctx,
 			larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
 		if err != nil {
 			return nil, err
@@ -498,7 +499,7 @@ func Upload2Lark(ctx context.Context, musicID string, bodyReader io.ReadCloser) 
 				Build(),
 		).
 		Build()
-	resp, err := larkutils.LarkClient.Im.Image.Create(ctx, req)
+	resp, err := lark.LarkClient.Im.Image.Create(ctx, req)
 	if err != nil {
 		log.Zlog.Error(err.Error())
 		return "", nil
@@ -532,7 +533,7 @@ func UploadPicture2LarkReader(ctx context.Context, picture io.Reader) (imgKey st
 		).
 		Build()
 
-	resp, err := larkutils.LarkClient.Im.Image.Create(ctx, req)
+	resp, err := lark.LarkClient.Im.Image.Create(ctx, req)
 	if err != nil {
 		log.Zlog.Error(err.Error())
 		return
@@ -563,7 +564,7 @@ func UploadPicture2Lark(ctx context.Context, URL string) (imgKey string) {
 		).
 		Build()
 
-	resp, err := larkutils.LarkClient.Im.Image.Create(ctx, req)
+	resp, err := lark.LarkClient.Im.Image.Create(ctx, req)
 	if err != nil {
 		log.Zlog.Error(err.Error())
 		return
@@ -600,7 +601,7 @@ func UploadPicBatch(ctx context.Context, sourceURLIDs map[string]int) chan [2]st
 
 func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io.Reader, err error) {
 	req := larkim.NewGetMessageResourceReqBuilder().MessageId(msgID).FileKey(fileKey).Type(fileType).Build()
-	resp, err := larkutils.LarkClient.Im.MessageResource.Get(ctx, req)
+	resp, err := lark.LarkClient.Im.MessageResource.Get(ctx, req)
 	if err != nil {
 		log.Zlog.Error("GetMsgImages", zaplog.Error(err))
 		return nil, err
