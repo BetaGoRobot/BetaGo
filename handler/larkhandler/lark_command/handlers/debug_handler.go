@@ -16,12 +16,14 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/message"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	commonutils "github.com/BetaGoRobot/go_utils/common_utils"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	"github.com/defensestation/osquery"
 	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -342,4 +344,40 @@ func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 		return err
 	}
 	return nil
+}
+
+func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
+	defer span.End()
+
+	resp, err := opensearchdal.SearchData(ctx, consts.LarkChunkIndex, map[string]any{
+		"query": map[string]any{
+			"bool": map[string]any{
+				"must": map[string]any{
+					"term": map[string]any{
+						"msg_ids": data.Event.Message.MessageId,
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+	chunkLogs := commonutils.TransSlice(resp.Hits.Hits, func(hit opensearchapi.SearchHit) *handlertypes.MessageChunkLog {
+		chunkLog := &handlertypes.MessageChunkLog{}
+		err = sonic.Unmarshal(hit.Source, chunkLog)
+		if err != nil {
+			return nil
+		}
+		return chunkLog
+	})
+	s, err := sonic.MarshalIndent(&chunkLogs, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	_, err = larkutils.ReplyMsgText(ctx, "```json\n"+string(s)+"\n```", *data.Event.Message.MessageId, "_conversation", true)
+	return err
 }

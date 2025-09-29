@@ -151,6 +151,6 @@ func (fc *FlowControlType) Top() (err error) {
 
 const (
 	LarkMsgIndex        = "lark_msg_index_jieba"
-	LarkChunkIndex      = "llm_enriched_conversations_chunk"
+	LarkChunkIndex      = "llm_enriched_conversations"
 	LarkCardActionIndex = "lark_card_action_index"
 )

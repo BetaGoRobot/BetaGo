@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility/chunking"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/kevinmatthe/zaplog"
 	"github.com/pkg/errors"
@@ -38,7 +37,6 @@ type (
 	Processor[T, K any]     struct {
 		context.Context
 
-		chunkManagement *chunking.Management[T]
 		needBreak       bool
 		data            *T
 		metaData        *K
@@ -63,11 +61,6 @@ func (op *OperatorBase[T, K]) PostRun(context.Context, *T, *K) error {
 
 func (op *OperatorBase[T, K]) MetaInit() *K {
 	return new(K)
-}
-
-func (op *Processor[T, K]) MessageManagement(m *chunking.Management[T]) *Processor[T, K] {
-	op.chunkManagement = m
-	return op
 }
 
 func (p *Processor[T, K]) WithCtx(ctx context.Context) *Processor[T, K] {

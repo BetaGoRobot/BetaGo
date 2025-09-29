@@ -28,6 +28,79 @@ import (
 // Handler  消息处理器
 var Handler = &handlerbase.Processor[larkim.P2MessageReceiveV1, handlerbase.BaseMetaData]{}
 
+type LarkMessageEvent struct {
+	*larkim.P2MessageReceiveV1
+}
+
+func (m *LarkMessageEvent) GroupID() (res string) {
+	return *m.Event.Message.ChatId
+}
+
+func (m *LarkMessageEvent) MsgID() (res string) {
+	return *m.Event.Message.MessageId
+}
+
+func (m *LarkMessageEvent) TimeStamp() (res int64) {
+	t, err := strconv.ParseInt(*m.Event.Message.CreateTime, 10, 64)
+	if err != nil {
+		zaplog.Logger.Error("getTimestampFunc error", zaplog.Error(err))
+		return time.Now().UnixMilli()
+	}
+	return t
+}
+
+func (m *LarkMessageEvent) BuildLine() (res string) {
+	mentions := m.Event.Message.Mentions
+
+	tmpList := make([]string, 0)
+	for msgItem := range larkmsgutils.
+		GetContentItemsSeq(
+			&larkim.EventMessage{
+				Content:     m.Event.Message.Content,
+				MessageType: m.Event.Message.MessageType,
+			},
+		) {
+		switch msgItem.Tag {
+		case "at", "text":
+			if msgItem.Tag == "text" {
+				m := map[string]string{}
+				if err := sonic.UnmarshalString(msgItem.Content, &m); err == nil {
+					msgItem.Content = m["text"]
+				}
+			}
+			if len(mentions) > 0 {
+				for _, mention := range mentions {
+					if mention.Key != nil {
+						if *mention.Name == "不太正经的网易云音乐机器人" {
+							*mention.Name = "你"
+						}
+						msgItem.Content = strings.ReplaceAll(msgItem.Content, *mention.Key, fmt.Sprintf("@%s", *mention.Name))
+					}
+				}
+			}
+			fallthrough
+		default:
+			content := strings.ReplaceAll(msgItem.Content, "\n", "<换行>")
+			if strings.TrimSpace(content) != "" {
+				tmpList = append(tmpList, content)
+			}
+		}
+	}
+	member, err := larkutils.GetUserMemberFromChat(context.Background(), *m.Event.Message.ChatId, *m.Event.Sender.SenderId.OpenId)
+	if err != nil {
+		log.Zlog.Error("got error openID", zaplog.String("openID", *m.Event.Sender.SenderId.OpenId))
+	}
+	userName := ""
+	if member == nil {
+		userName = "NULL"
+	} else {
+		userName = *member.Name
+	}
+
+	createTime := time.UnixMilli(m.TimeStamp()).Local().Format(time.DateTime)
+	return fmt.Sprintf("[%s] <%s>: %s", createTime, userName, strings.Join(tmpList, ";"))
+}
+
 type (
 	OpBase = handlerbase.OperatorBase[larkim.P2MessageReceiveV1, handlerbase.BaseMetaData]
 	Op     = handlerbase.Operator[larkim.P2MessageReceiveV1, handlerbase.BaseMetaData]
@@ -103,14 +176,13 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 }
 
 func init() {
-	m := chunking.NewManagement(getGroupID, getTimestampFunc)
-	m.StartBackgroundCleaner(context.Background(), buildLine)
+	m := chunking.NewManagement[*LarkMessageEvent]()
+	m.StartBackgroundCleaner(context.Background())
 	Handler = Handler.
-		MessageManagement(m).
 		OnPanic(larkDeferFunc).
 		WithDefer(CollectMessage).
-		WithDefer(func(ctx context.Context, pmrv *larkim.P2MessageReceiveV1, bmd *handlerbase.BaseMetaData) {
-			m.SubmitMessage(ctx, *pmrv)
+		WithDefer(func(ctx context.Context, event *larkim.P2MessageReceiveV1, _ *handlerbase.BaseMetaData) {
+			m.SubmitMessage(ctx, &LarkMessageEvent{event})
 		}).
 		AddParallelStages(&RecordMsgOperator{}).
 		AddParallelStages(&RepeatMsgOperator{}).
@@ -119,69 +191,4 @@ func init() {
 		AddParallelStages(&ReplyChatOperator{}).
 		AddParallelStages(&CommandOperator{}).
 		AddParallelStages(&ChatMsgOperator{})
-}
-
-func buildLine(event larkim.P2MessageReceiveV1) string {
-	mentions := event.Event.Message.Mentions
-
-	tmpList := make([]string, 0)
-	for msgItem := range larkmsgutils.
-		GetContentItemsSeq(
-			&larkim.EventMessage{
-				Content:     event.Event.Message.Content,
-				MessageType: event.Event.Message.MessageType,
-			},
-		) {
-		switch msgItem.Tag {
-		case "at", "text":
-			if msgItem.Tag == "text" {
-				m := map[string]string{}
-				if err := sonic.UnmarshalString(msgItem.Content, &m); err == nil {
-					msgItem.Content = m["text"]
-				}
-			}
-			if len(mentions) > 0 {
-				for _, mention := range mentions {
-					if mention.Key != nil {
-						if *mention.Name == "不太正经的网易云音乐机器人" {
-							*mention.Name = "你"
-						}
-						msgItem.Content = strings.ReplaceAll(msgItem.Content, *mention.Key, fmt.Sprintf("@%s", *mention.Name))
-					}
-				}
-			}
-			fallthrough
-		default:
-			content := strings.ReplaceAll(msgItem.Content, "\n", "<换行>")
-			if strings.TrimSpace(content) != "" {
-				tmpList = append(tmpList, content)
-			}
-		}
-	}
-	member, err := larkutils.GetUserMemberFromChat(context.Background(), *event.Event.Message.ChatId, *event.Event.Sender.SenderId.OpenId)
-	if err != nil {
-		log.Zlog.Error("got error openID", zaplog.String("openID", *event.Event.Sender.SenderId.OpenId))
-	}
-	userName := ""
-	if member == nil {
-		userName = "NULL"
-	} else {
-		userName = *member.Name
-	}
-	ctInt, _ := strconv.ParseInt(*event.Event.Message.CreateTime, 10, 64)
-	createTime := time.UnixMilli(ctInt).Local().Format(time.DateTime)
-	return fmt.Sprintf("[%s] <%s>: %s", createTime, userName, strings.Join(tmpList, ";"))
-}
-
-func getGroupID(event larkim.P2MessageReceiveV1) string {
-	return *event.Event.Message.ChatId
-}
-
-func getTimestampFunc(event larkim.P2MessageReceiveV1) int64 {
-	t, err := strconv.ParseInt(*event.Event.Message.CreateTime, 10, 64)
-	if err != nil {
-		zaplog.Logger.Error("getTimestampFunc error", zaplog.Error(err))
-		return time.Now().UnixMilli()
-	}
-	return t
 }

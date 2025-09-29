@@ -60,7 +60,11 @@ type MessageChunkLog struct {
 		} `json:"action_items"`
 	} `json:"outcomes"`
 	ConversationEmbedding []float32 `json:"conversation_embedding"`
-	Timestamp             string    `json:"timestamp"`
+
+	MsgList   []string `json:"msg_list"`
+	GroupID   string   `json:"group_id"`
+	Timestamp string   `json:"timestamp"`
+	MsgIDs    []string `json:"msg_ids"`
 }
 type MessageIndex struct {
 	*MessageLog

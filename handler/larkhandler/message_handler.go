@@ -10,6 +10,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/reaction"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logging"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -42,7 +43,7 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 	if *event.Event.Sender.SenderId.OpenId == consts.BotOpenID {
 		return nil
 	}
-
+	logging.Logger.Info().Ctx(ctx).Str("event", larkcore.Prettify(event)).Msg("Inside the child span for complex handler")
 	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).Run()
 
 	log.Zlog.Info(larkcore.Prettify(event))

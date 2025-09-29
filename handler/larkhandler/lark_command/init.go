@@ -36,6 +36,9 @@ func init() {
 				).
 				AddSubCommand(
 					newCmd("image", handlers.DebugImageHandler),
+				).
+				AddSubCommand(
+					newCmd("conver", handlers.DebugConversationHandler),
 				),
 		).
 		AddSubCommand(
