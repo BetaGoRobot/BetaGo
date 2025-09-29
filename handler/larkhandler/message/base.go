@@ -49,7 +49,7 @@ func (m *LarkMessageEvent) TimeStamp() (res int64) {
 	return t
 }
 
-func (m *LarkMessageEvent) BuildLine() (res string) {
+func (m *LarkMessageEvent) BuildLine() (line string) {
 	mentions := m.Event.Message.Mentions
 
 	tmpList := make([]string, 0)
@@ -98,7 +98,7 @@ func (m *LarkMessageEvent) BuildLine() (res string) {
 	}
 
 	createTime := time.UnixMilli(m.TimeStamp()).Local().Format(time.DateTime)
-	return fmt.Sprintf("[%s] <%s>: %s", createTime, userName, strings.Join(tmpList, ";"))
+	return fmt.Sprintf("[%s](%s) <%s>: %s", createTime, userName, *m.Event.Sender.SenderId.OpenId, strings.Join(tmpList, ";"))
 }
 
 type (

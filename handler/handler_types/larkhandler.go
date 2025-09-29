@@ -55,8 +55,8 @@ type MessageChunkLog struct {
 			Task      string   `json:"task"`
 			Assignees []string `json:"assignees"`
 			DueDate   struct {
-				RawText        string `json:"raw_text"`
-				NormalizedDate string `json:"normalized_date"`
+				RawText        string `json:"raw_text,omitempty"`
+				NormalizedDate string `json:"normalized_date,omitempty"`
 			} `json:"due_date"`
 		} `json:"action_items"`
 	} `json:"outcomes"`
