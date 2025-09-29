@@ -321,7 +321,7 @@ func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 	}
 	urls := make([]string, 0)
 	for url := range seq {
-		url = strings.ReplaceAll(url, "kmhomelab.cn", "kevinmatt.top")
+		// url = strings.ReplaceAll(url, "kmhomelab.cn", "kevinmatt.top")
 		urls = append(urls, url)
 	}
 	var inputPrompt string
@@ -339,7 +339,7 @@ func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 	if err != nil {
 		return err
 	}
-	err = message.SendAndUpdateStreamingCard(ctx, data.Event.Message, dataSeq)
+	err = message.SendAndReplyStreamingCard(ctx, data.Event.Message, dataSeq, true)
 	if err != nil {
 		return err
 	}

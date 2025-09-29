@@ -105,10 +105,6 @@ func (c *TemplateCardContent) UpdateVariables(m map[string]interface{}) *Templat
 	return c
 }
 
-func (c *TemplateCardContent) BuildTemplate() string {
-	return ""
-}
-
 func (c *TemplateCardContent) GetVariables() []string {
 	s := make([]string, 0, len(c.Data.TemplateVariable))
 	for _, v := range c.Data.TemplateVariable {
@@ -123,6 +119,31 @@ func (c *TemplateCardContent) String() string {
 	}
 	if c.Data.TemplateSrc == "" {
 		res, err := sonic.MarshalString(c)
+		if err != nil {
+			return ""
+		}
+		return res
+	}
+	replacedSrc := c.Data.TemplateSrc
+	for k, v := range c.Data.TemplateVariable {
+		s, _ := sonic.MarshalString(v)
+		s = strings.Trim(s, "\"")
+		switch v.(type) {
+		case string:
+			replacedSrc = strings.ReplaceAll(replacedSrc, "${"+k+"}", s)
+		default:
+			replacedSrc = strings.ReplaceAll(replacedSrc, "\"${"+k+"}\"", s)
+		}
+	}
+	return replacedSrc
+}
+
+func (c *TemplateCardContent) DataString() string {
+	if c == nil {
+		return ""
+	}
+	if c.Data.TemplateSrc == "" {
+		res, err := sonic.MarshalString(c.Data)
 		if err != nil {
 			return ""
 		}
