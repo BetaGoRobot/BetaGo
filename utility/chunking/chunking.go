@@ -49,34 +49,34 @@ type SessionBuffer struct {
 }
 
 type StandardMsg struct {
-	_GroupID   string `json:"group_id"`
-	_MsgID     string `json:"msg_id"`
-	_TimeStamp int64  `json:"timestamp"`
-	_BuildLine string `json:"line"`
+	GroupID_   string `json:"group_id"`
+	MsgID_     string `json:"msg_id"`
+	TimeStamp_ int64  `json:"timestamp"`
+	BuildLine_ string `json:"line"`
 }
 
 func (m *StandardMsg) BuildLine() string {
-	return m._BuildLine
+	return m.BuildLine_
 }
 
 func (m *StandardMsg) TimeStamp() int64 {
-	return m._TimeStamp
+	return m.TimeStamp_
 }
 
 func (m *StandardMsg) GroupID() string {
-	return m._GroupID
+	return m.GroupID_
 }
 
 func (m *StandardMsg) MsgID() string {
-	return m._MsgID
+	return m.MsgID_
 }
 
 func BuildStdMsg(msg GenericMsg) StandardMsg {
 	return StandardMsg{
-		_GroupID:   msg.GroupID(),
-		_MsgID:     msg.MsgID(),
-		_TimeStamp: msg.TimeStamp(),
-		_BuildLine: msg.BuildLine(),
+		GroupID_:   msg.GroupID(),
+		MsgID_:     msg.MsgID(),
+		TimeStamp_: msg.TimeStamp(),
+		BuildLine_: msg.BuildLine(),
 	}
 }
 
@@ -315,6 +315,7 @@ func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
 	}
 
 	if len(timedOutGroupIDs) == 0 {
+		log.Zlog.Info("not session is timed out, will do nothing...")
 		return // Nothing to do
 	}
 	log.Zlog.Info("Found timed-out sessions", zaplog.Int("count", len(timedOutGroupIDs)), zaplog.Strings("group_ids", timedOutGroupIDs))
