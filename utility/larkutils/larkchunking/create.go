@@ -85,5 +85,5 @@ func (m *LarkMessageRespCreate) BuildLine() (line string) {
 	}
 
 	createTime := time.UnixMilli(m.TimeStamp()).Local().Format(time.DateTime)
-	return fmt.Sprintf("[%s](%s) <%s>: %s", createTime, userName, *m.Data.Sender.Id, strings.Join(tmpList, ";"))
+	return fmt.Sprintf("[%s](%s) <%s>: %s", createTime, *m.Data.Sender.Id, userName, strings.Join(tmpList, ";"))
 }
