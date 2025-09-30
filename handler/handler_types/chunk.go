@@ -1,6 +1,7 @@
 package handlertypes
 
 type MessageChunkLogV3 struct {
+	ID               string `json:"id"`
 	Summary          string `json:"summary"`
 	Intent           string `json:"intent"`
 	SentimentAndTone struct {

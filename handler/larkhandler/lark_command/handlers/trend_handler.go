@@ -206,8 +206,8 @@ func (h *trendInternalHelper) TrendByUser(ctx context.Context) (trend history.Tr
 				Must(
 					osquery.Term("chat_id", h.chatID),
 					osquery.Range("create_time").
-						Gte(h.st.Format(time.DateTime)).
-						Lte(h.et.Format(time.DateTime)),
+						Gte(h.st.In(utility.UTCPlus8Loc()).Format(time.DateTime)).
+						Lte(h.et.In(utility.UTCPlus8Loc()).Format(time.DateTime)),
 				),
 		).
 		GetTrend(

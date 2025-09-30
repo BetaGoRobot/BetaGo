@@ -224,7 +224,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 		return
 	}
 	sysPrompt := &strings.Builder{}
-	err = tp.Execute(sysPrompt, map[string]string{"CurrentTimeStamp": time.Now().Format(time.DateTime)})
+	err = tp.Execute(sysPrompt, map[string]string{"CurrentTimeStamp": time.Now().In(utility.UTCPlus8Loc()).Format(time.DateTime)})
 	if err != nil {
 		return
 	}
@@ -240,6 +240,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 	)
 
 	chunkLog := &handlertypes.MessageChunkLogV3{
+		ID:        uuid.NewV1().String(),
 		Timestamp: utility.UTCPlus8Time().Format(time.DateTime),
 		GroupID:   chunk.GroupID,
 		MsgIDs:    msgIDs,

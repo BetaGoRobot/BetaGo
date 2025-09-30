@@ -164,16 +164,16 @@ func ZhAStockHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 					continue
 				}
 
-				if !yield(vadvisor.XYSUnit[string, float64]{X: t.Format(time.DateTime), Y: utility.Must2Float(price.Open), S: "开盘"}) {
+				if !yield(vadvisor.XYSUnit[string, float64]{X: t.In(utility.UTCPlus8Loc()).Format(time.DateTime), Y: utility.Must2Float(price.Open), S: "开盘"}) {
 					return
 				}
-				if !yield(vadvisor.XYSUnit[string, float64]{X: t.Format(time.DateTime), Y: utility.Must2Float(price.Close), S: "收盘"}) {
+				if !yield(vadvisor.XYSUnit[string, float64]{X: t.In(utility.UTCPlus8Loc()).Format(time.DateTime), Y: utility.Must2Float(price.Close), S: "收盘"}) {
 					return
 				}
-				if !yield(vadvisor.XYSUnit[string, float64]{X: t.Format(time.DateTime), Y: utility.Must2Float(price.High), S: "最高"}) {
+				if !yield(vadvisor.XYSUnit[string, float64]{X: t.In(utility.UTCPlus8Loc()).Format(time.DateTime), Y: utility.Must2Float(price.High), S: "最高"}) {
 					return
 				}
-				if !yield(vadvisor.XYSUnit[string, float64]{X: t.Format(time.DateTime), Y: utility.Must2Float(price.Low), S: "最低"}) {
+				if !yield(vadvisor.XYSUnit[string, float64]{X: t.In(utility.UTCPlus8Loc()).Format(time.DateTime), Y: utility.Must2Float(price.Low), S: "最低"}) {
 					return
 				}
 			}

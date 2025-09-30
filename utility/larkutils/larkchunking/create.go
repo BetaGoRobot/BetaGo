@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkconsts"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
@@ -89,6 +90,6 @@ func (m *LarkMessageRespCreate) BuildLine() (line string) {
 		}
 	}
 
-	createTime := time.UnixMilli(m.TimeStamp()).Local().Format(time.DateTime)
+	createTime := time.UnixMilli(m.TimeStamp()).In(utility.UTCPlus8Loc()).Format(time.DateTime)
 	return fmt.Sprintf("[%s](%s) <%s>: %s", createTime, *m.Data.Sender.Id, userName, strings.Join(tmpList, ";"))
 }

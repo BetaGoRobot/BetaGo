@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -97,7 +98,7 @@ func NewCardContent(ctx context.Context, template database.TemplateVersion) *Tem
 		t.AddVariable("raw_cmd", srcCmd.(string))
 		t.AddVariable("refresh_obj", map[string]string{"type": "refresh_obj", "command": srcCmd.(string)})
 	}
-	t.AddVariable("refresh_time", time.Now().UTC().Add(time.Hour*8).Format(time.DateTime))
+	t.AddVariable("refresh_time", time.Now().In(utility.UTCPlus8Loc()).Format(time.DateTime))
 	return t
 }
 
@@ -131,7 +132,7 @@ func NewCardContentV2[T any](ctx context.Context, template database.TemplateVers
 		t.AddVariable("raw_cmd", srcCmd.(string))
 		t.AddVariable("refresh_obj", map[string]string{"type": "refresh_obj", "command": srcCmd.(string)})
 	}
-	t.AddVariable("refresh_time", time.Now().UTC().Add(time.Hour*8).Format(time.DateTime))
+	t.AddVariable("refresh_time", time.Now().In(utility.UTCPlus8Loc()).Format(time.DateTime))
 
 	// 合并
 	variables, _ := sonic.Marshal(template.Variables)

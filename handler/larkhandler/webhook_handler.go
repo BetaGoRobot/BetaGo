@@ -332,7 +332,7 @@ func HandleSubmit(ctx context.Context, cardAction *callback.CardActionTriggerEve
 		log.Zlog.Error(err.Error())
 	}
 
-	srcCmd += fmt.Sprintf(" --st=\"%s\" --et=\"%s\"", st.Format(time.DateTime), et.Format(time.DateTime))
+	srcCmd += fmt.Sprintf(" --st=\"%s\" --et=\"%s\"", st.In(utility.UTCPlus8Loc()).Format(time.DateTime), et.In(utility.UTCPlus8Loc()).Format(time.DateTime))
 	msgID := cardAction.Event.Context.OpenMessageID
 
 	data := new(larkim.P2MessageReceiveV1)
