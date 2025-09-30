@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkconsts"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/bytedance/sonic"
@@ -73,15 +74,19 @@ func (m *LarkMessageRespReply) BuildLine() (line string) {
 			}
 		}
 	}
-	member, err := grouputil.GetUserMemberFromChat(context.Background(), *m.Data.ChatId, *m.Data.Sender.Id)
-	if err != nil {
-		log.Zlog.Error("got error openID", zaplog.String("openID", *m.Data.Sender.Id))
-	}
 	userName := ""
-	if member == nil {
-		userName = "NULL"
+	if *m.Data.Sender.Id == larkconsts.BotAppID {
+		userName = "机器人"
 	} else {
-		userName = *member.Name
+		member, err := grouputil.GetUserMemberFromChat(context.Background(), *m.Data.ChatId, *m.Data.Sender.Id)
+		if err != nil {
+			log.Zlog.Error("got error openID", zaplog.String("openID", *m.Data.Sender.Id))
+		}
+		if member == nil {
+			userName = "NULL"
+		} else {
+			userName = *member.Name
+		}
 	}
 
 	createTime := time.UnixMilli(m.TimeStamp()).Local().Format(time.DateTime)

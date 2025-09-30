@@ -26,22 +26,22 @@ func GetContentItemsSeq[T MsgConstraints](msg T) iter.Seq[*Item] {
 	switch m := any(msg).(type) {
 	case *larkim.EventMessage:
 		// 处理事件消息
-		return trans2Item(*m.MessageType, *m.Content)
+		return Trans2Item(*m.MessageType, *m.Content)
 	case *larkim.Message:
 		// 处理普通消息
-		return trans2Item(*m.MsgType, *m.Body.Content)
+		return Trans2Item(*m.MsgType, *m.Body.Content)
 	}
 	return nil
 }
 
-// trans2Item to be filled
+// Trans2Item to be filled
 //
 //	@param msgType string
 //	@param content string
 //	@return itemList []*Item
 //	@author kevinmatthe
 //	@update 2025-04-30 14:04:48
-func trans2Item(msgType, content string) (itemList iter.Seq[*Item]) {
+func Trans2Item(msgType, content string) (itemList iter.Seq[*Item]) {
 	return func(yield func(*Item) bool) {
 		switch msgType {
 		case "text": // text是处理过的，直接返回

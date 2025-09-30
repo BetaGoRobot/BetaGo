@@ -1,4 +1,4 @@
-package larkutils
+package larkconsts
 
 var (
 	BotOpenID = "ou_8817f540f718affd21718f415b81597f"

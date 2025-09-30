@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"iter"
 	"strings"
 
@@ -13,7 +14,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkconsts"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/message"
@@ -236,7 +239,7 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 			return err
 		}
 		for _, msg := range resp.Data.Items {
-			if *msg.Sender.Id == larkutils.BotAppID {
+			if *msg.Sender.Id == larkconsts.BotAppID {
 				resp, err := lark.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(*msg.MessageId).Build())
 				if err != nil {
 					return err
@@ -252,7 +255,7 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 		if msg == nil {
 			return errors.New("No parent message found")
 		}
-		if msg.Sender.Id == nil || *msg.Sender.Id != larkutils.BotAppID {
+		if msg.Sender.Id == nil || *msg.Sender.Id != larkconsts.BotAppID {
 			return errors.New("Parent message is not sent by bot")
 		}
 		resp, err := lark.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(*data.Event.Message.ParentId).Build())
@@ -380,13 +383,13 @@ func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceive
 	}
 	for _, hit := range resp.Hits.Hits {
 		var (
-			chunkLog       = &handlertypes.MessageChunkLog{}
-			chunkLogLegacy = &handlertypes.MessageChunkLogLegacy{}
-			isLegacy       bool
+			chunkLog = &handlertypes.MessageChunkLog{}
+			isLegacy bool
 		)
 		err = sonic.Unmarshal(hit.Source, chunkLog)
 		if err != nil {
 			// 用legacy试试
+			chunkLogLegacy := &handlertypes.MessageChunkLogLegacy{}
 			err = sonic.Unmarshal(hit.Source, chunkLogLegacy)
 			if err != nil {
 				return err
@@ -419,10 +422,19 @@ func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceive
 			Questions: commonutils.TransSlice(chunkLog.InteractionAnalysis.UnresolvedQuestions, func(question string) *templates.Questions { return &templates.Questions{Question: question} }),
 
 			MsgList: commonutils.TransSlice(msgList, func(msg *handlertypes.MessageIndex) *templates.MsgLine {
+				msgTrunc := make([]string, 0)
+				for item := range larkmsgutils.Trans2Item(msg.MessageType, msg.RawMessage) {
+					switch item.Tag {
+					case "image", "sticker":
+						msgTrunc = append(msgTrunc, fmt.Sprintf("![something](%s)", item.Content))
+					case "text":
+						msgTrunc = append(msgTrunc, item.Content)
+					}
+				}
 				return &templates.MsgLine{
 					Time:    msg.CreateTime,
 					User:    &templates.User{ID: msg.UserID},
-					Content: msg.RawMessage,
+					Content: strings.Join(msgTrunc, " "),
 				}
 			}),
 

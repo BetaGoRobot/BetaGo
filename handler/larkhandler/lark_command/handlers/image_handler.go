@@ -10,6 +10,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/copywriting"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkconsts"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
@@ -65,7 +66,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 			return err
 		}
 		for _, msg := range resp.Data.Items {
-			if *msg.Sender.Id != larkutils.BotAppID {
+			if *msg.Sender.Id != larkconsts.BotAppID {
 				if imgKey := getImageKey(msg); imgKey != "" {
 					err := createImage(ctx, *msg.MessageId, *msg.ChatId, imgKey, *msg.MsgType)
 					if err != nil {
@@ -194,7 +195,7 @@ func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 		parentMsgResp := larkutils.GetMsgFullByID(ctx, *data.Event.Message.ParentId)
 		if len(parentMsgResp.Data.Items) != 0 {
 			msg := parentMsgResp.Data.Items[0]
-			if *msg.Sender.Id == larkutils.BotAppID {
+			if *msg.Sender.Id == larkconsts.BotAppID {
 				if imgKey := getImageKey(msg); imgKey != "" {
 					err := deleteImage(ctx, *msg.MessageId, *msg.ChatId, imgKey, *msg.MsgType)
 					if err != nil {
