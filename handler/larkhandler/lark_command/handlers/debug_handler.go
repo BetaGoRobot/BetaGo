@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"iter"
+	"slices"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
+	"github.com/BetaGoRobot/BetaGo/utility/chunking"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -382,20 +384,10 @@ func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceive
 		return err
 	}
 	for _, hit := range resp.Hits.Hits {
-		var (
-			chunkLog = &handlertypes.MessageChunkLog{}
-			isLegacy bool
-		)
+		chunkLog := &handlertypes.MessageChunkLogV3{}
 		err = sonic.Unmarshal(hit.Source, chunkLog)
 		if err != nil {
-			// 用legacy试试
-			chunkLogLegacy := &handlertypes.MessageChunkLogLegacy{}
-			err = sonic.Unmarshal(hit.Source, chunkLogLegacy)
-			if err != nil {
-				return err
-			}
-			chunkLog.MessageChunkLogLegacy = chunkLogLegacy
-			isLegacy = true
+			return err
 		}
 
 		msgList, err := history.New(ctx).Query(
@@ -408,57 +400,54 @@ func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceive
 			return err
 		}
 		tpl := templates.GetTemplateV2(templates.ChunkMetaTemplate) // make sure template is loaded
+		msgLines := commonutils.TransSlice(msgList, func(msg *handlertypes.MessageIndex) *templates.MsgLine {
+			msgTrunc := make([]string, 0)
+			for item := range larkmsgutils.Trans2Item(msg.MessageType, msg.RawMessage) {
+				switch item.Tag {
+				case "image", "sticker":
+					msgTrunc = append(msgTrunc, fmt.Sprintf("![something](%s)", item.Content))
+				case "text":
+					msgTrunc = append(msgTrunc, item.Content)
+				}
+			}
+			return &templates.MsgLine{
+				Time:    msg.CreateTime,
+				User:    &templates.User{ID: msg.UserID},
+				Content: strings.Join(msgTrunc, " "),
+			}
+		})
+		slices.SortFunc(msgLines, func(a, b *templates.MsgLine) int {
+			return strings.Compare(a.Time, b.Time)
+		})
 		metaData := &templates.ChunkMetaData{
 			Summary: chunkLog.Summary,
 
-			Intent: chunkLog.Intent,
+			Intent: chunking.Translate(chunkLog.Intent),
 			Participants: Dedup(
 				commonutils.TransSlice(msgList, func(m *handlertypes.MessageIndex) *templates.User { return &templates.User{ID: m.UserID} }),
 				func(u *templates.User) string { return u.ID },
 			),
 
-			Sentiment: chunkLog.SentimentAndTone.Sentiment,
-			Tones:     commonutils.TransSlice(chunkLog.SentimentAndTone.Tone, func(tone string) *templates.ToneData { return &templates.ToneData{Tone: tone} }),
+			Sentiment: chunking.Translate(chunkLog.SentimentAndTone.Sentiment),
+			Tones:     commonutils.TransSlice(chunkLog.SentimentAndTone.Tones, func(tone string) *templates.ToneData { return &templates.ToneData{Tone: chunking.Translate(tone)} }),
 			Questions: commonutils.TransSlice(chunkLog.InteractionAnalysis.UnresolvedQuestions, func(question string) *templates.Questions { return &templates.Questions{Question: question} }),
 
-			MsgList: commonutils.TransSlice(msgList, func(msg *handlertypes.MessageIndex) *templates.MsgLine {
-				msgTrunc := make([]string, 0)
-				for item := range larkmsgutils.Trans2Item(msg.MessageType, msg.RawMessage) {
-					switch item.Tag {
-					case "image", "sticker":
-						msgTrunc = append(msgTrunc, fmt.Sprintf("![something](%s)", item.Content))
-					case "text":
-						msgTrunc = append(msgTrunc, item.Content)
-					}
-				}
-				return &templates.MsgLine{
-					Time:    msg.CreateTime,
-					User:    &templates.User{ID: msg.UserID},
-					Content: strings.Join(msgTrunc, " "),
-				}
-			}),
+			MsgList: msgLines,
 
-			ProjectsAndTopics: commonutils.TransSlice(chunkLog.Entities.ProjectsAndTopics, func(p string) *templates.ProjectsAndTopic { return &templates.ProjectsAndTopic{ProjectsAndTopic: p} }),
-			TechnicalKeywords: commonutils.TransSlice(chunkLog.Entities.TechnicalKeywords, func(t string) *templates.TechnicalKeyword { return &templates.TechnicalKeyword{TechnicalKeyword: t} }),
-			OrganizationsAndTeams: commonutils.TransSlice(chunkLog.Entities.OrganizationsAndTeams, func(o string) *templates.OrganizationsAndTeam {
-				return &templates.OrganizationsAndTeam{OrganizationsAndTeam: o}
+			// PlansAndSuggestion: ,
+			MainTopicsOrActivities:         commonutils.TransSlice(chunkLog.Entities.MainTopicsOrActivities, templates.ToObjTextArray),
+			KeyConceptsAndNouns:            commonutils.TransSlice(chunkLog.Entities.KeyConceptsAndNouns, templates.ToObjTextArray),
+			MentionedGroupsOrOrganizations: commonutils.TransSlice(chunkLog.Entities.MentionedGroupsOrOrganizations, templates.ToObjTextArray),
+			MentionedPeople:                commonutils.TransSlice(chunkLog.Entities.MentionedPeople, templates.ToObjTextArray),
+			LocationsAndVenues:             commonutils.TransSlice(chunkLog.Entities.LocationsAndVenues, templates.ToObjTextArray),
+			MediaAndWorks: commonutils.TransSlice(chunkLog.Entities.MediaAndWorks, func(m *handlertypes.MediaAndWork) *templates.MediaAndWork {
+				return &templates.MediaAndWork{m.Title, m.Type}
 			}),
 
 			Timestamp: chunkLog.Timestamp,
 			MsgID:     *data.Event.Message.MessageId,
 		}
-		if !isLegacy { // TODO: legacy数据逐渐下掉
-			metaData.ActionItems = commonutils.TransSlice(chunkLog.Outcomes.ActionItems, func(item handlertypes.ActionItem) *templates.ActionItem {
-				return &templates.ActionItem{
-					Task:      item.Task,
-					Assignees: commonutils.TransSlice(item.Assignees, func(a handlertypes.Assignee) *templates.User { return &templates.User{ID: a.UserID} }),
-					DueDate: &handlertypes.DueDateType{
-						RawText:        item.DueDate.RawText,
-						NormalizedDate: item.DueDate.NormalizedDate,
-					},
-				}
-			})
-		}
+
 		tpl.WithData(metaData)
 		cardContent := templates.NewCardContentV2(ctx, tpl)
 		err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)

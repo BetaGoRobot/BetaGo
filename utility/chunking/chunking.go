@@ -238,13 +238,11 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 		"OnMerge chunk processed by LLM:\n records: %s\nres: %s\n", chunkStr, res,
 	)
 
-	chunkLog := &handlertypes.MessageChunkLog{
-		MessageChunkLogLegacy: &handlertypes.MessageChunkLogLegacy{
-			Timestamp: utility.UTCPlus8Time().Format(time.DateTime),
-			GroupID:   chunk.GroupID,
-			MsgIDs:    msgIDs,
-			MsgList:   chunkLines,
-		},
+	chunkLog := &handlertypes.MessageChunkLogV3{
+		Timestamp: utility.UTCPlus8Time().Format(time.DateTime),
+		GroupID:   chunk.GroupID,
+		MsgIDs:    msgIDs,
+		MsgList:   chunkLines,
 	}
 	err = sonic.UnmarshalString(res, &chunkLog)
 	if err != nil {
@@ -387,37 +385,83 @@ func Normalize(vec []float32) []float32 {
 	return normalizedVec
 }
 
-// BuildEmbeddingInput 函数接收一个对话文档，然后构建一个高质量的字符串用于生成embedding。
-func BuildEmbeddingInput(doc *handlertypes.MessageChunkLog) string {
-	// 使用 strings.Builder 来高效地拼接字符串，性能远优于简单的 '+' 拼接。
+// BuildEmbeddingInput 函数接收一个更新后的对话文档，然后构建一个高质量的字符串用于生成embedding。
+func BuildEmbeddingInput(doc *handlertypes.MessageChunkLogV3) string {
+	// 使用 strings.Builder 来高效地拼接字符串
 	var builder strings.Builder
 
-	// 1. 添加核心摘要
-	// 我们在每个部分前添加一个简单的标签（如“摘要：”），可以帮助模型更好地理解不同部分的上下文。
+	// 1. 核心摘要和主要意图：这是对话最高级别的概括。
 	if doc.Summary != "" {
 		builder.WriteString("核心摘要: ")
 		builder.WriteString(doc.Summary)
-		builder.WriteString("\n") // 使用换行符分隔不同部分
+		builder.WriteString("\n")
 	}
-
-	// 2. 添加涉及的项目和议题
-	if len(doc.Entities.ProjectsAndTopics) > 0 {
-		builder.WriteString("涉及项目: ")
-		builder.WriteString(strings.Join(doc.Entities.ProjectsAndTopics, ", "))
+	if doc.Intent != "" {
+		builder.WriteString("主要意图: ")
+		builder.WriteString(doc.Intent)
 		builder.WriteString("\n")
 	}
 
-	// 3. 添加技术关键词
-	if len(doc.Entities.TechnicalKeywords) > 0 {
-		builder.WriteString("技术关键词: ")
-		builder.WriteString(strings.Join(doc.Entities.TechnicalKeywords, ", "))
+	// 2. 实体 - 对话的具体内容和主体。
+	// 将所有关键实体信息组合在一起，形成对“聊了什么”的全面描述。
+	if len(doc.Entities.MainTopicsOrActivities) > 0 {
+		builder.WriteString("核心议题与活动: ")
+		builder.WriteString(strings.Join(doc.Entities.MainTopicsOrActivities, ", "))
+		builder.WriteString("\n")
+	}
+	if len(doc.Entities.KeyConceptsAndNouns) > 0 {
+		builder.WriteString("关键概念: ")
+		builder.WriteString(strings.Join(doc.Entities.KeyConceptsAndNouns, ", "))
+		builder.WriteString("\n")
+	}
+	if len(doc.Entities.MentionedPeople) > 0 {
+		builder.WriteString("提及人物: ")
+		builder.WriteString(strings.Join(doc.Entities.MentionedPeople, ", "))
+		builder.WriteString("\n")
+	}
+	if len(doc.Entities.LocationsAndVenues) > 0 {
+		builder.WriteString("涉及地点: ")
+		builder.WriteString(strings.Join(doc.Entities.LocationsAndVenues, ", "))
+		builder.WriteString("\n")
+	}
+	if len(doc.Entities.MediaAndWorks) > 0 {
+		var works []string
+		for _, w := range doc.Entities.MediaAndWorks {
+			works = append(works, fmt.Sprintf("%s (%s)", w.Title, w.Type))
+		}
+		builder.WriteString("提及作品: ")
+		builder.WriteString(strings.Join(works, ", "))
 		builder.WriteString("\n")
 	}
 
-	// 4. 添加关键决策
-	if len(doc.Outcomes.DecisionsMade) > 0 {
-		builder.WriteString("关键决策: ")
-		builder.WriteString(strings.Join(doc.Outcomes.DecisionsMade, "; "))
+	// 3. 结果 - 对话产生了什么结论和计划。
+	if len(doc.Outcomes.ConclusionsOrAgreements) > 0 {
+		builder.WriteString("共识与结论: ")
+		builder.WriteString(strings.Join(doc.Outcomes.ConclusionsOrAgreements, "; "))
+		builder.WriteString("\n")
+	}
+	if len(doc.Outcomes.PlansAndSuggestions) > 0 {
+		var plans []string
+		for _, p := range doc.Outcomes.PlansAndSuggestions {
+			plans = append(plans, p.ActivityOrSuggestion)
+		}
+		builder.WriteString("计划与提议: ")
+		builder.WriteString(strings.Join(plans, "; "))
+		builder.WriteString("\n")
+	}
+	if len(doc.Outcomes.OpenThreadsOrPendingPoints) > 0 {
+		builder.WriteString("待定事项: ")
+		builder.WriteString(strings.Join(doc.Outcomes.OpenThreadsOrPendingPoints, "; "))
+		builder.WriteString("\n")
+	}
+
+	// 4. 情感与氛围：为对话添加情感色彩的上下文。
+	if doc.SentimentAndTone.Sentiment != "" {
+		builder.WriteString("整体情绪: ")
+		builder.WriteString(doc.SentimentAndTone.Sentiment)
+		if len(doc.SentimentAndTone.Tones) > 0 {
+			builder.WriteString(fmt.Sprintf(" (主要语气: %s)", strings.Join(doc.SentimentAndTone.Tones, ", ")))
+		}
 		builder.WriteString("\n")
 	}
 

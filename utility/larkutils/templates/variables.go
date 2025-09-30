@@ -31,26 +31,28 @@ type MsgLine struct {
 	User    *User  `json:"user,omitempty"`
 	Content string `json:"content"`
 }
-type ProjectsAndTopic struct {
-	ProjectsAndTopic string `json:"projects_and_topic,omitempty"`
+type MainTopicOrActivity struct {
+	MainTopicOrActivity string `json:"main_topic_or_activity,omitempty"`
 }
 
-type TechnicalKeyword struct {
-	TechnicalKeyword string `json:"technical_keyword,omitempty"`
+type KeyConceptAndNoun struct {
+	KeyConceptAndNoun string `json:"key_concept_and_noun,omitempty"`
+}
+type MentionedGroupOrOrganization struct {
+	MentionedGroupOrOrganization string `json:"mentioned_group_or_organization,omitempty"`
 }
 
-type OrganizationsAndTeam struct {
-	OrganizationsAndTeam string `json:"organizations_and_team,omitempty"`
+type MentionedPeopleUnit struct {
+	MentionedPeople string `json:"mentioned_people,omitempty"`
 }
 
-type Decision struct {
-	Decision string `json:"decision,omitempty"`
+type LocationAndVenue struct {
+	LocationAndVenue string `json:"locations_and_venue,omitempty"`
 }
 
-type ActionItem struct {
-	Task      string                    `json:"task,omitempty"`
-	Assignees []*User                   `json:"assignees,omitempty"`
-	DueDate   *handlertypes.DueDateType `json:"due_date,omitempty"`
+type MediaAndWork struct {
+	Title string `json:"title,omitempty"`
+	Type  string `json:"type,omitempty"`
 }
 type ChunkMetaData struct {
 	Summary string `json:"summary"`
@@ -62,14 +64,15 @@ type ChunkMetaData struct {
 	Tones     []*ToneData  `json:"tones,omitempty"`
 	Questions []*Questions `json:"questions,omitempty"`
 
-	MsgList []*MsgLine `json:"msg_list,omitempty"`
+	MsgList            []*MsgLine                         `json:"msg_list,omitempty"`
+	PlansAndSuggestion []*handlertypes.PlansAndSuggestion `json:"plans_and_suggestions,omitempty"`
 
-	ProjectsAndTopics     []*ProjectsAndTopic     `json:"projects_and_topics,omitempty"`
-	TechnicalKeywords     []*TechnicalKeyword     `json:"technical_keywords,omitempty"`
-	OrganizationsAndTeams []*OrganizationsAndTeam `json:"organizations_and_teams,omitempty"`
-
-	DecisionsMade []*Decision   `json:"decisions_made,omitempty"`
-	ActionItems   []*ActionItem `json:"action_items,omitempty"`
+	MainTopicsOrActivities         []*ObjTextArray `json:"main_topics_or_activities,omitempty"`
+	KeyConceptsAndNouns            []*ObjTextArray `json:"key_concepts_and_nouns,omitempty"`
+	MentionedGroupsOrOrganizations []*ObjTextArray `json:"mentioned_groups_or_organizations,omitempty"`
+	MentionedPeople                []*ObjTextArray `json:"mentioned_people,omitempty"`
+	LocationsAndVenues             []*ObjTextArray `json:"locations_and_venues,omitempty"`
+	MediaAndWorks                  []*MediaAndWork `json:"media_and_works,omitempty"`
 
 	Timestamp string `json:"timestamp"`
 	MsgID     string `json:"msg_id"`
@@ -77,6 +80,10 @@ type ChunkMetaData struct {
 	*JaegerBase
 }
 
-func (c *ChunkMetaData) WithJaegerBase(jaegerBase *JaegerBase) {
-	c.JaegerBase = jaegerBase
+type ObjTextArray struct {
+	Text string `json:"text,omitempty"`
+}
+
+func ToObjTextArray(s string) *ObjTextArray {
+	return &ObjTextArray{s}
 }

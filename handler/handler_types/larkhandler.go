@@ -24,74 +24,7 @@ type MessageLog struct {
 	TraceID   string `json:"trace_id"`
 	CreatedAt time.Time
 }
-type MessageChunkLogLegacy struct {
-	Summary          string `json:"summary"`
-	Intent           string `json:"intent"`
-	SentimentAndTone struct {
-		Sentiment string   `json:"sentiment"`
-		Tone      []string `json:"tone"`
-	} `json:"sentiment_and_tone"`
-	Entities struct {
-		ProjectsAndTopics     []string `json:"projects_and_topics"`
-		TechnicalKeywords     []string `json:"technical_keywords"`
-		OrganizationsAndTeams []string `json:"organizations_and_teams"`
-		Resources             []struct {
-			Name string `json:"name"`
-			Type string `json:"type"`
-		} `json:"resources"`
-	} `json:"entities"`
-	InteractionAnalysis struct {
-		Participants []struct {
-			Name   string `json:"name"`
-			UserID string `json:"user_id"`
-			Role   string `json:"role"`
-		} `json:"participants"`
-		IsQuestionPresent   bool     `json:"is_question_present"`
-		UnresolvedQuestions []string `json:"unresolved_questions"`
-	} `json:"interaction_analysis"`
-	Outcomes struct {
-		DecisionsMade []string `json:"decisions_made"`
-		ActionItems   []struct {
-			Task      string   `json:"task"`
-			Assignees []string `json:"assignees"`
-			DueDate   struct {
-				RawText        string `json:"raw_text,omitempty"`
-				NormalizedDate string `json:"normalized_date,omitempty"`
-			} `json:"due_date"`
-		} `json:"action_items"`
-	} `json:"outcomes"`
-	ConversationEmbedding []float32 `json:"conversation_embedding"`
 
-	MsgList   []string `json:"msg_list"`
-	UserIDs   []string `json:"user_ids"`
-	GroupID   string   `json:"group_id"`
-	Timestamp string   `json:"timestamp"`
-	MsgIDs    []string `json:"msg_ids"`
-}
-
-type MessageChunkLog struct {
-	*MessageChunkLogLegacy
-	Outcomes struct {
-		DecisionsMade []string     `json:"decisions_made"`
-		ActionItems   []ActionItem `json:"action_items"`
-	} `json:"outcomes"`
-}
-
-type ActionItem struct {
-	Task      string      `json:"task"`
-	Assignees []Assignee  `json:"assignees"`
-	DueDate   DueDateType `json:"due_date,omitempty"`
-}
-
-type Assignee struct {
-	UserID string `json:"user_id"`
-	Name   string `json:"name"`
-}
-
-type DueDateType struct {
-	RawText        string `json:"raw_text,omitempty"`
-	NormalizedDate string `json:"normalized_date,omitempty"`
-}
 type MessageIndex struct {
 	*MessageLog
 	ChatName        string      `json:"chat_name"`
