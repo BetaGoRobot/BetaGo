@@ -45,7 +45,13 @@ func ReBuildArgs(argName, argValue string) string {
 func PreGetTextMsg(ctx context.Context, event *larkim.P2MessageReceiveV1) string {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
-	return getContentFromTextMsg(*event.Event.Message.Content)
+	rawContent := getContentFromTextMsg(*event.Event.Message.Content)
+	if len(event.Event.Message.Mentions) > 0 {
+		for _, mention := range event.Event.Message.Mentions {
+			rawContent = strings.ReplaceAll(rawContent, *mention.Key, fmt.Sprintf("@%s", *mention.Name))
+		}
+	}
+	return rawContent
 }
 
 func getContentFromTextMsg(s string) string {

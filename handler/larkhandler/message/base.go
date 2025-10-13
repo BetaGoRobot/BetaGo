@@ -66,7 +66,6 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 			Content:     utility.AddressORNil(event.Event.Message.Content),
 			TraceID:     span.SpanContext().TraceID().String(),
 		}
-
 		content := larkutils.PreGetTextMsg(ctx, event)
 		embedded, usage, err := doubao.EmbeddingText(ctx, content)
 		if err != nil {
@@ -74,8 +73,16 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		}
 		jieba := gojieba.NewJieba()
 		defer jieba.Free()
+		for _, mention := range event.Event.Message.Mentions {
+			jieba.AddWord("@" + *mention.Name)
+		}
 		ws := jieba.Cut(content, true)
-
+		wts := jieba.Tag(content)
+		wsTags := []*handlertypes.WordWithTag{}
+		for _, tag := range wts {
+			sp := strings.Split(tag, "/")
+			wsTags = append(wsTags, &handlertypes.WordWithTag{Word: sp[0], Tag: sp[1]})
+		}
 		err = opensearchdal.InsertData(
 			ctx, consts.LarkMsgIndex, *event.Event.Message.MessageId,
 			&handlertypes.MessageIndex{
@@ -84,6 +91,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 				RawMessage:           content,
 				RawMessageJieba:      strings.Join(ws, " "),
 				RawMessageJiebaArray: ws,
+				RawMessageJiebaTag:   wsTags,
 				CreateTime:           utility.EpoMil2DateStr(*event.Event.Message.CreateTime),
 				Message:              embedded,
 				UserID:               *event.Event.Sender.SenderId.OpenId,
@@ -105,7 +113,7 @@ func init() {
 		WithDefer(CollectMessage).
 		WithDefer(func(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) {
 			if !meta.IsCommand { // 过滤Command
-				larkchunking.M.SubmitMessage(ctx, &larkchunking.LarkMessageEvent{event})
+				larkchunking.M.SubmitMessage(ctx, &larkchunking.LarkMessageEvent{P2MessageReceiveV1: event})
 			}
 		}).
 		AddParallelStages(&RecordMsgOperator{}).
