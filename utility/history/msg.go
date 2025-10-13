@@ -295,7 +295,7 @@ func FilterMessage(hits []opensearchapi.SearchHit) (msgList []string) {
 		if len(tmpList) == 0 {
 			continue
 		}
-		if r := fmt.Sprintf("[%s] <%s>: %s", res.CreateTime, res.UserName, strings.Join(tmpList, ";")); r != "" {
+		if r := fmt.Sprintf("[%s](%s) <%s>: %s", res.CreateTime, res.UserID, res.UserName, strings.Join(tmpList, ";")); r != "" {
 			msgList = append(msgList, r)
 		}
 	}

@@ -43,6 +43,7 @@ type PromptTemplateArgs struct {
 	TemplateStr    string   `json:"template_str"`
 	Task           string   `json:"task"`
 	HistoryRecords []string `json:"history_records" gorm:"-"`
+	Context        []string `json:"context" gorm:"-"`
 	Constraints    string   `json:"constraints"`
 	UserInput      []string `json:"user_input" gorm:"-"`
 }

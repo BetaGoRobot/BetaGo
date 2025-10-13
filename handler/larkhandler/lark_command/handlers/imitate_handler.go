@@ -178,7 +178,7 @@ func FilterMessage(hits []opensearchapi.SearchHit, size int) (msgList []string) 
 		r := replaceMention(res.RawMessage, mentions)
 
 		r = strings.ReplaceAll(r, "\n", "\\n")
-		r = fmt.Sprintf("[%s] <%s>: %s", res.CreateTime, res.UserName, r)
+		r = fmt.Sprintf("[%s](%s) <%s>: %s", res.CreateTime, res.UserID, res.UserName, r)
 		if r != "" {
 			msgList = append(msgList, r)
 		}

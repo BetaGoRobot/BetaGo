@@ -16,7 +16,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkchunking"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
+	"github.com/BetaGoRobot/BetaGo/utility/retriver"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/tmc/langchaingo/schema"
 	"github.com/yanyiwu/gojieba"
 
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -342,6 +344,18 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 		log.Zlog.Error("InsertData", zaplog.Error(err))
 		return
 	}
+	err = retriver.Cli.AddDocuments(ctx, utility.AddressORNil(resp.Data.ChatId),
+		[]schema.Document{{
+			PageContent: content,
+			Metadata: map[string]any{
+				"chat_id": utility.AddressORNil(resp.Data.ChatId),
+				"user_id": utility.AddressORNil(resp.Data.Sender.Id),
+			},
+		}},
+	)
+	if err != nil {
+		log.Zlog.Error("AddDocuments error", zaplog.Error(err))
+	}
 }
 
 func RecordCardAction2Opensearch(ctx context.Context, cardAction *callback.CardActionTriggerEvent) {
@@ -424,6 +438,18 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 	if err != nil {
 		log.Zlog.Error("InsertData", zaplog.Error(err))
 		return
+	}
+	err = retriver.Cli.AddDocuments(ctx, utility.AddressORNil(resp.Data.ChatId),
+		[]schema.Document{{
+			PageContent: content,
+			Metadata: map[string]any{
+				"chat_id": utility.AddressORNil(resp.Data.ChatId),
+				"user_id": utility.AddressORNil(resp.Data.Sender.Id),
+			},
+		}},
+	)
+	if err != nil {
+		log.Zlog.Error("AddDocuments error", zaplog.Error(err))
 	}
 }
 

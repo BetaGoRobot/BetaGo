@@ -15,9 +15,11 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/BetaGo/utility/retriver"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"github.com/tmc/langchaingo/schema"
 	"github.com/yanyiwu/gojieba"
 )
 
@@ -103,6 +105,17 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		)
 		if err != nil {
 			log.Zlog.Error("InsertData error", zaplog.Error(err))
+		}
+		err = retriver.Cli.AddDocuments(ctx, utility.AddressORNil(event.Event.Message.ChatId),
+			[]schema.Document{{
+				PageContent: content,
+				Metadata: map[string]any{
+					"chat_id": utility.AddressORNil(event.Event.Message.ChatId),
+					"user_id": utility.AddressORNil(event.Event.Sender.SenderId.OpenId),
+				},
+			}})
+		if err != nil {
+			log.Zlog.Error("AddDocuments error", zaplog.Error(err))
 		}
 	}()
 }

@@ -18,13 +18,16 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
+	"github.com/BetaGoRobot/BetaGo/utility/logging"
 	"github.com/BetaGoRobot/BetaGo/utility/message"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/redis"
+	"github.com/BetaGoRobot/BetaGo/utility/retriver"
 	commonutils "github.com/BetaGoRobot/go_utils/common_utils"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/defensestation/osquery"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"github.com/tmc/langchaingo/schema"
 )
 
 func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
@@ -94,6 +97,10 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		lastData := &doubao.ModelStreamRespReasoning{}
 		for data := range res {
 			lastData = data
+			eot := "<EoT>"
+			if idx := strings.Index(lastData.Content, eot); idx != -1 {
+				lastData.Content = strings.TrimSpace(lastData.Content[idx+len(eot):])
+			}
 		}
 		resp, err := larkutils.ReplyMsgText(
 			ctx, lastData.Content, *event.Event.Message.MessageId, "_chat_random", false,
@@ -154,11 +161,18 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 
 	promptTemplate.UserInput = commonutils.TransSliceWithSkip(input, func(s string) (string, bool) {
 		if strings.TrimSpace(s) != "" {
-			return fmt.Sprintf("[%s] <%s>: %s", utility.EpoMil2DateStr(*event.Event.Message.CreateTime), userName, strings.ReplaceAll(s, "\n", "\\n")), false
+			createTime := utility.EpoMil2DateStr(*event.Event.Message.CreateTime)
+			return fmt.Sprintf("[%s](%s) <%s>: %s", createTime, *event.Event.Sender.SenderId.OpenId, userName, larkutils.PreGetTextMsg(ctx, event)), false
 		}
 		return "", true
 	})
 	promptTemplate.HistoryRecords = messageList
+	docs, err := retriver.Cli.RecallDocs(ctx, chatID, *event.Event.Message.Content, 10)
+	if err != nil {
+		logging.Logger.Err(err)
+	}
+	promptTemplate.Context = commonutils.TransSlice(docs, func(doc schema.Document) string { return doc.PageContent })
+
 	b := &strings.Builder{}
 	err = tp.Execute(b, promptTemplate)
 	if err != nil {
