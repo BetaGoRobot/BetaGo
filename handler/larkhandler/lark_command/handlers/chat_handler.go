@@ -175,7 +175,13 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 		logging.Logger.Err(err)
 	}
 	promptTemplate.Context = commonutils.TransSlice(docs, func(doc schema.Document) string {
-		return fmt.Sprintf("[%s](%s) <%s>: %s", doc.Metadata["create_time"].(string), doc.Metadata["user_id"].(string), doc.Metadata["user_name"].(string), doc.PageContent)
+		if doc.Metadata == nil {
+			doc.Metadata = map[string]any{}
+		}
+		createTime, _ := doc.Metadata["create_time"].(string)
+		userID, _ := doc.Metadata["user_id"].(string)
+		userName, _ := doc.Metadata["user_name"].(string)
+		return fmt.Sprintf("[%s](%s) <%s>: %s", createTime, userID, userName, doc.PageContent)
 	})
 
 	b := &strings.Builder{}
