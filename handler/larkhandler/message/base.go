@@ -110,8 +110,11 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 			[]schema.Document{{
 				PageContent: content,
 				Metadata: map[string]any{
-					"chat_id": utility.AddressORNil(event.Event.Message.ChatId),
-					"user_id": utility.AddressORNil(event.Event.Sender.SenderId.OpenId),
+					"chat_id":     utility.AddressORNil(event.Event.Message.ChatId),
+					"user_id":     utility.AddressORNil(event.Event.Sender.SenderId.OpenId),
+					"msg_id":      utility.AddressORNil(event.Event.Message.MessageId),
+					"create_time": utility.EpoMil2DateStr(*event.Event.Message.CreateTime),
+					"user_name":   userName,
 				},
 			}})
 		if err != nil {

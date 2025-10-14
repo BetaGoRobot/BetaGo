@@ -348,8 +348,11 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 		[]schema.Document{{
 			PageContent: content,
 			Metadata: map[string]any{
-				"chat_id": utility.AddressORNil(resp.Data.ChatId),
-				"user_id": utility.AddressORNil(resp.Data.Sender.Id),
+				"chat_id":     utility.AddressORNil(resp.Data.ChatId),
+				"user_id":     utility.AddressORNil(resp.Data.Sender.Id),
+				"msg_id":      utility.AddressORNil(resp.Data.MessageId),
+				"create_time": utility.EpoMil2DateStr(*resp.Data.CreateTime),
+				"user_name":   "你",
 			},
 		}},
 	)
@@ -443,8 +446,11 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 		[]schema.Document{{
 			PageContent: content,
 			Metadata: map[string]any{
-				"chat_id": utility.AddressORNil(resp.Data.ChatId),
-				"user_id": utility.AddressORNil(resp.Data.Sender.Id),
+				"chat_id":     utility.AddressORNil(resp.Data.ChatId),
+				"user_id":     utility.AddressORNil(resp.Data.Sender.Id),
+				"msg_id":      utility.AddressORNil(resp.Data.MessageId),
+				"create_time": utility.EpoMil2DateStr(*resp.Data.CreateTime),
+				"user_name":   "你",
 			},
 		}},
 	)
