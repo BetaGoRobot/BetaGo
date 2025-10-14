@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -63,6 +64,19 @@ func SearchData(ctx context.Context, index string, data any) (*opensearchapi.Sea
 	req := &opensearchapi.SearchReq{
 		Indices: []string{index},
 		Body:    opensearchutil.NewJSONReader(data),
+	}
+	resp, err := OpenSearchClient().Search(ctx, req)
+
+	return resp, err
+}
+
+func SearchDataStr(ctx context.Context, index string, data string) (*opensearchapi.SearchResp, error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	req := &opensearchapi.SearchReq{
+		Indices: []string{index},
+		Body:    strings.NewReader(data),
 	}
 	resp, err := OpenSearchClient().Search(ctx, req)
 

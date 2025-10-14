@@ -103,9 +103,9 @@ type (
 		// 1. 用户排行榜、消息/互动频率
 		UserList []*UserListItem `json:"user_list"`
 		// 2. 词云
-		WordCloud   any                               `json:"word_cloud"`
-		ChunkTitles []*handlertypes.MessageChunkLogV3 `json:"chunk_titles"`
-		TimeStamp   string                            `json:"time_stamp"`
+		WordCloud any          `json:"word_cloud"`
+		Chunks    []*ChunkData `json:"chunks"`
+		TimeStamp string       `json:"time_stamp"`
 	}
 	UserListItem struct {
 		Number    int         `json:"number"`
@@ -115,5 +115,14 @@ type (
 	}
 	UserUnit struct {
 		ID string `json:"id"` // OpenID
+	}
+
+	ChunkData struct {
+		*handlertypes.MessageChunkLogV3
+
+		Sentiment           string      `json:"sentiment"`
+		Tones               string      `json:"tones"`
+		UserIDs4Lark        []*UserUnit `json:"user_ids_4_lark"`
+		UnresolvedQuestions string      `json:"unresolved_questions"`
 	}
 )

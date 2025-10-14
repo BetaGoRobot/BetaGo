@@ -1,6 +1,7 @@
 package larkmsgutils
 
 import (
+	"fmt"
 	"iter"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -84,4 +85,8 @@ func Trans2Item(msgType, content string) (itemList iter.Seq[*Item]) {
 			}
 		}
 	}
+}
+
+func TagText(text string, color string) string {
+	return fmt.Sprintf("<text_tag color='%s'>%s</text_tag>", color, text)
 }

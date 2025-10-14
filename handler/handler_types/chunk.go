@@ -1,13 +1,10 @@
 package handlertypes
 
 type MessageChunkLogV3 struct {
-	ID               string `json:"id"`
-	Summary          string `json:"summary"`
-	Intent           string `json:"intent"`
-	SentimentAndTone struct {
-		Sentiment string   `json:"sentiment"`
-		Tones     []string `json:"tones"`
-	} `json:"sentiment_and_tone"`
+	ID                  string               `json:"id"`
+	Summary             string               `json:"summary"`
+	Intent              string               `json:"intent"`
+	SentimentAndTone    *SentimentAndTone    `json:"sentiment_and_tone"`
 	Entities            *Entities            `json:"entities"`
 	InteractionAnalysis *InteractionAnalysis `json:"interaction_analysis"`
 	Outcomes            *Outcome             `json:"outcomes"`
@@ -15,12 +12,16 @@ type MessageChunkLogV3 struct {
 	ConversationEmbedding []float32 `json:"conversation_embedding"`
 
 	MsgList   []string `json:"msg_list"`
-	UserIDs   []string `json:"user_ids"`
+	UserIDs   []string `json:"user_ids,omitempty"`
 	GroupID   string   `json:"group_id"`
 	Timestamp string   `json:"timestamp"`
 	MsgIDs    []string `json:"msg_ids"`
 }
 
+type SentimentAndTone struct {
+	Sentiment string   `json:"sentiment"`
+	Tones     []string `json:"tones"`
+}
 type PlansAndSuggestion struct {
 	ActivityOrSuggestion string  `json:"activity_or_suggestion"`
 	Proposer             *User   `json:"proposer"`

@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
@@ -12,6 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -38,7 +40,7 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		st, et   time.Time
 	)
 	chatID := *data.Event.Message.ChatId
-	top := 15
+	top := 10
 	argMap, _ := parseArgs(args...)
 	if inputInterval, ok := argMap["interval"]; ok {
 		interval = inputInterval
@@ -88,7 +90,7 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		return
 	}
 
-	chunkTitles, err := getChunks(ctx, chatID, st, et)
+	chunks, err := getChunks(ctx, chatID, st, et)
 	if err != nil {
 		return
 	}
@@ -105,9 +107,9 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 
 	tpl := templates.GetTemplateV2(templates.WordCountTemplate)
 	cardVar := &templates.WordCountCardVars{
-		UserList:    userList,
-		WordCloud:   wordCloud,
-		ChunkTitles: chunkTitles,
+		UserList:  userList,
+		WordCloud: wordCloud,
+		Chunks:    chunks,
 	}
 	tpl.WithData(cardVar)
 	cardContent := templates.NewCardContentV2(ctx, tpl)
@@ -135,30 +137,118 @@ type WordCountType struct {
 	} `json:"dimension"`
 }
 
-func getChunks(ctx context.Context, chatID string, st, et time.Time) (chunks []*handlertypes.MessageChunkLogV3, err error) {
-	chunks = make([]*handlertypes.MessageChunkLogV3, 0)
+// Style 定义了每个意图的展示风格，包括短语和颜色。
+type Style struct {
+	Phrase string
+	Color  string
+}
+
+// IntentStyleMap 存储了意图与其对应风格的映射。
+var IntentStyleMap = map[string]*Style{
+	"SOCIAL_COORDINATION": {
+		Phrase: "共商议事",
+		Color:  "blue",
+	},
+	"INFORMATION_SHARING": {
+		Phrase: "见闻共飨",
+		Color:  "neutral",
+	},
+	"SEEKING_HELP_OR_ADVICE": {
+		Phrase: "求教问策",
+		Color:  "green",
+	},
+	"DEBATE_OR_DISCUSSION": {
+		Phrase: "明辨事理",
+		Color:  "indigo",
+	},
+	"EMOTIONAL_SHARING_OR_SUPPORT": {
+		Phrase: "悲欢与共",
+		Color:  "violet",
+	},
+	"REQUESTING_RECOMMENDATION": {
+		Phrase: "求珍问宝",
+		Color:  "orange",
+	},
+	"CASUAL_CHITCHAT": {
+		Phrase: "谈天说地",
+		Color:  "yellow",
+	},
+}
+
+// GetIntentPhraseWithFallback 是一个更简洁的转换函数。
+// 它接受一个意图 key，如果找到则返回对应的中文短语。
+// 如果未找到，它会返回原始的 key 作为备用值，这样调用方总能获得一个可显示的字符串。
+func GetIntentPhraseWithFallback(intentKey string) (phrase string, color string) {
+	if phrase, ok := IntentStyleMap[intentKey]; ok {
+		return phrase.Phrase, phrase.Color
+	}
+	// 返回原始 key 作为备用
+	return intentKey, "neutral"
+}
+
+// ToneStyleMap 存储了语气与其对应风格的映射。
+var ToneStyleMap = map[string]*Style{
+	"HUMOROUS":      {Phrase: "妙语连珠", Color: "lime"},
+	"SUPPORTIVE":    {Phrase: "暖心慰藉", Color: "turquoise"},
+	"CURIOUS":       {Phrase: "寻根究底", Color: "purple"},
+	"EXCITED":       {Phrase: "兴高采烈", Color: "carmine"},
+	"URGENT":        {Phrase: "迫在眉睫", Color: "red"},
+	"FORMAL":        {Phrase: "严谨庄重", Color: "indigo"},
+	"INFORMAL":      {Phrase: "随心而谈", Color: "wathet"},
+	"SARCASTIC":     {Phrase: "反语相讥", Color: "yellow"},
+	"ARGUMENTATIVE": {Phrase: "唇枪舌剑", Color: "orange"},
+	"NOSTALGIC":     {Phrase: "追忆往昔", Color: "violet"},
+}
+
+// GetToneStyle 函数用于安全地获取语气的风格。
+func GetToneStyle(key string) (phrase string, color string) {
+	if phrase, ok := ToneStyleMap[key]; ok {
+		return phrase.Phrase, phrase.Color
+	}
+	// 返回原始 key 作为备用
+	return key, "neutral"
+}
+
+func getChunks(ctx context.Context, chatID string, st, et time.Time) (chunks []*templates.ChunkData, err error) {
+	chunks = make([]*templates.ChunkData, 0)
 	queryReq := NewSearchRequest().
-		FetchSourceIncludeExclude(
-			nil, []string{"conversation_embedding", "msg_ids", "msg_list"},
-		).
 		Query(NewBoolQuery().Must(
 			NewTermQuery("group_id", chatID),
-			NewRangeQuery("create_time").Gte(st).Lte(et),
-		)).SortBy(
-		NewScriptSort(
-			NewScript("script").Script("doc['msg_ids'].size()").Lang("painless"), "number",
+			NewRangeQuery("timestamp").Gte(st).Lte(et),
+		)).
+		FetchSourceIncludeExclude(
+			[]string{}, []string{"conversation_embedding", "msg_ids", "msg_list"},
 		).
-			Order(false),
-	)
-	resp, err := opensearchdal.SearchData(ctx, consts.LarkChunkIndex, queryReq)
+		SortBy(
+			NewScriptSort(
+				NewScript("script").Script("doc['msg_ids'].size()").Lang("painless"), "number",
+			).Order(false)).Size(3)
+
+	data, err := queryReq.Body()
+	if err != nil {
+		return
+	}
+	resp, err := opensearchdal.SearchDataStr(ctx, consts.LarkChunkIndex, data)
 	if err != nil {
 		return
 	}
 
-	return commonutils.TransSlice(resp.Hits.Hits, func(hit opensearchapi.SearchHit) (target *handlertypes.MessageChunkLogV3) {
+	return commonutils.TransSlice(resp.Hits.Hits, func(hit opensearchapi.SearchHit) (target *templates.ChunkData) {
 		chunkLog := &handlertypes.MessageChunkLogV3{}
-		err = sonic.Unmarshal(hit.Source, chunkLog)
-		return chunkLog
+		sonic.Unmarshal(hit.Source, chunkLog)
+		chunkData := &templates.ChunkData{
+			MessageChunkLogV3: chunkLog,
+		}
+		chunkData.Intent = larkmsgutils.TagText(GetIntentPhraseWithFallback(chunkLog.Intent))
+		chunkData.Sentiment = larkmsgutils.TagText(SentimentColor(chunkData.SentimentAndTone.Sentiment))
+		chunkData.Tones = strings.Join(commonutils.TransSlice(chunkData.SentimentAndTone.Tones, func(s string) string { return larkmsgutils.TagText(GetToneStyle(s)) }), "")
+		chunkData.SentimentAndTone = nil
+
+		chunkData.UserIDs4Lark = commonutils.TransSlice(chunkLog.InteractionAnalysis.Participants, func(p *handlertypes.Participant) *templates.UserUnit { return &templates.UserUnit{ID: p.UserID} })
+		chunkData.UserIDs = nil
+
+		chunkData.UnresolvedQuestions = strings.Join(commonutils.TransSlice(chunkLog.InteractionAnalysis.UnresolvedQuestions, func(q string) string { return larkmsgutils.TagText(q, "red") }), "")
+		return chunkData
 	}), err
 }
 
@@ -266,4 +356,20 @@ func genWordCount(ctx context.Context, chatID string, st, et time.Time) (wc Word
 		return
 	}
 	return
+}
+
+func SentimentColor(sentiment string) (string, string) {
+	// `POSITIVE`, `NEGATIVE`, `NEUTRAL`, `MIXED`
+	switch sentiment {
+	case "POSITIVE":
+		return "正向", "green"
+	case "NEGATIVE":
+		return "负向", "red"
+	case "NEUTRAL":
+		return "中性", "blue"
+	case "MIXED":
+		return "混合", "yellow"
+	default:
+		return sentiment, "lime"
+	}
 }
