@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"strconv"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -16,13 +16,15 @@ import (
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
+	commonutils "github.com/BetaGoRobot/go_utils/common_utils"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	"github.com/defensestation/osquery"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	. "github.com/olivere/elastic/v7"
+	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"go.opentelemetry.io/otel/attribute"
-	"gorm.io/gorm"
 )
 
 func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
@@ -42,9 +44,9 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		interval = inputInterval
 	}
 	if daysStr, ok := argMap["days"]; ok {
-		days, err = strconv.Atoi(daysStr)
-		if err != nil || days <= 0 {
-			days = 30
+		newDays, err := strconv.Atoi(daysStr)
+		if err == nil && newDays > 0 {
+			days = newDays
 		}
 	}
 	if chatIDInput, ok := argMap["chat_id"]; ok {
@@ -73,17 +75,96 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 	}
 
 	helper := &trendInternalHelper{
-		days:     days,
-		st:       st,
-		et:       et,
-		msgID:    *data.Event.Message.MessageId,
-		chatID:   chatID,
-		interval: interval,
+		days: days, st: st, et: et, msgID: *data.Event.Message.MessageId, chatID: chatID, interval: interval,
 	}
 
+	userList, err := genHotRate(ctx, helper, top)
+	if err != nil {
+		return
+	}
+
+	wc, err := genWordCount(ctx, chatID, st, et)
+	if err != nil {
+		return
+	}
+
+	chunkTitles, err := getChunks(ctx, chatID, st, et)
+	if err != nil {
+		return
+	}
+	wordCloud := vadvisor.NewWordCloudChartsGraphWithPlayer[string, int]()
+	for _, bucket := range wc.Dimension.Dimension.Dimension.Buckets {
+		wordCloud.AddData("user_name",
+			&vadvisor.ValueUnit[string, int]{
+				XField:      bucket.Key,
+				YField:      bucket.DocCount,
+				SeriesField: strconv.Itoa(bucket.DocCount),
+			})
+	}
+	wordCloud.Build(ctx)
+
+	tpl := templates.GetTemplateV2(templates.WordCountTemplate)
+	cardVar := &templates.WordCountCardVars{
+		UserList:    userList,
+		WordCloud:   wordCloud,
+		ChunkTitles: chunkTitles,
+	}
+	tpl.WithData(cardVar)
+	cardContent := templates.NewCardContentV2(ctx, tpl)
+	err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)
+	if err != nil {
+		return err
+	}
+	return
+}
+
+type WordCountType struct {
+	Dimension struct {
+		DocCount  int `json:"doc_count"`
+		Dimension struct {
+			DocCount  int `json:"doc_count"`
+			Dimension struct {
+				DocCountErrorUpperBound int `json:"doc_count_error_upper_bound"`
+				SumOtherDocCount        int `json:"sum_other_doc_count"`
+				Buckets                 []struct {
+					Key      string `json:"key"`
+					DocCount int    `json:"doc_count"`
+				} `json:"buckets"`
+			} `json:"dimension"`
+		} `json:"dimension"`
+	} `json:"dimension"`
+}
+
+func getChunks(ctx context.Context, chatID string, st, et time.Time) (chunks []*handlertypes.MessageChunkLogV3, err error) {
+	chunks = make([]*handlertypes.MessageChunkLogV3, 0)
+	queryReq := NewSearchRequest().
+		FetchSourceIncludeExclude(
+			nil, []string{"conversation_embedding", "msg_ids", "msg_list"},
+		).
+		Query(NewBoolQuery().Must(
+			NewTermQuery("group_id", chatID),
+			NewRangeQuery("create_time").Gte(st).Lte(et),
+		)).SortBy(
+		NewScriptSort(
+			NewScript("script").Script("doc['msg_ids'].size()").Lang("painless"), "number",
+		).
+			Order(false),
+	)
+	resp, err := opensearchdal.SearchData(ctx, consts.LarkChunkIndex, queryReq)
+	if err != nil {
+		return
+	}
+
+	return commonutils.TransSlice(resp.Hits.Hits, func(hit opensearchapi.SearchHit) (target *handlertypes.MessageChunkLogV3) {
+		chunkLog := &handlertypes.MessageChunkLogV3{}
+		err = sonic.Unmarshal(hit.Source, chunkLog)
+		return chunkLog
+	}), err
+}
+
+func genHotRate(ctx context.Context, helper *trendInternalHelper, top int) (userList []*templates.UserListItem, err error) {
 	// 统计用户发送的消息数量
 	trendMap := make(map[string]*templates.UserListItem)
-
 	msgTrend, err := helper.TrendRate(ctx, consts.LarkMsgIndex, "user_id")
 	for _, bucket := range msgTrend.Dimension.Buckets {
 		trendMap[bucket.Key] = &templates.UserListItem{Number: -1, User: []*templates.UserUnit{{ID: bucket.Key}}, MsgCnt: bucket.DocCount}
@@ -95,9 +176,8 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 	actionRes := []*UserCountResult{}
 	ins := database.GetDbConnection().Model(&database.InteractionStats{}).
 		Select("open_id, count(*) as total").
-		Where("guild_id = ? and created_at > ? and created_at < ?", chatID, st, et).
+		Where("guild_id = ? and created_at > ? and created_at < ?", helper.chatID, helper.st, helper.et).
 		Group("open_id")
-	fmt.Println(ins.ToSQL(func(tx *gorm.DB) *gorm.DB { return tx }))
 	if err = ins.Find(&actionRes).Error; err != nil {
 		return
 	}
@@ -110,7 +190,7 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		}
 	}
 
-	userList := make([]*templates.UserListItem, 0, len(trendMap))
+	userList = make([]*templates.UserListItem, 0, len(trendMap))
 	for _, item := range trendMap {
 		userList = append(userList, item)
 	}
@@ -124,7 +204,10 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 	if len(userList) > top {
 		userList = userList[:top]
 	}
+	return
+}
 
+func genWordCount(ctx context.Context, chatID string, st, et time.Time) (wc WordCountType, err error) {
 	// 统计用户发送的
 	tagsToInclude := []interface{}{
 		"n", "nr", "ns", "nt", "nz",
@@ -177,50 +260,10 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		return
 	}
 
-	wc := WordCountType{}
+	wc = WordCountType{}
 	err = sonic.Unmarshal(resp.Aggregations, &wc)
 	if err != nil {
-		return err
-	}
-
-	wordCloud := vadvisor.NewWordCloudChartsGraphWithPlayer[string, int]()
-	for _, bucket := range wc.Dimension.Dimension.Dimension.Buckets {
-		wordCloud.AddData("user_name",
-			&vadvisor.ValueUnit[string, int]{
-				XField:      bucket.Key,
-				YField:      bucket.DocCount,
-				SeriesField: strconv.Itoa(bucket.DocCount),
-			})
-	}
-
-	wordCloud.Build(ctx)
-	tpl := templates.GetTemplateV2(templates.WordCountTemplate)
-	cardVar := &templates.WordCountCardVars{
-		UserList:  userList,
-		WordCloud: wordCloud,
-	}
-	tpl.WithData(cardVar)
-	cardContent := templates.NewCardContentV2(ctx, tpl)
-	err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)
-	if err != nil {
-		return err
+		return
 	}
 	return
-}
-
-type WordCountType struct {
-	Dimension struct {
-		DocCount  int `json:"doc_count"`
-		Dimension struct {
-			DocCount  int `json:"doc_count"`
-			Dimension struct {
-				DocCountErrorUpperBound int `json:"doc_count_error_upper_bound"`
-				SumOtherDocCount        int `json:"sum_other_doc_count"`
-				Buckets                 []struct {
-					Key      string `json:"key"`
-					DocCount int    `json:"doc_count"`
-				} `json:"buckets"`
-			} `json:"dimension"`
-		} `json:"dimension"`
-	} `json:"dimension"`
 }
