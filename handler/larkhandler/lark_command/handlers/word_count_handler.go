@@ -138,10 +138,12 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		"dimension",
 		osquery.Bool().Must(
 			osquery.Terms("raw_message_jieba_tag.tag", tagsToInclude...),
-			osquery.CustomAgg("script", map[string]interface{}{
-				"script": map[string]interface{}{
-					"source": "doc['raw_message_jieba_tag.word'].value.length() > 1",
-					"lang":   "painless",
+			osquery.CustomAgg("script", map[string]any{
+				"script": map[string]any{
+					"script": map[string]any{
+						"source": "doc['raw_message_jieba_tag.word'].value.length() > 1",
+						"lang":   "painless",
+					},
 				},
 			}),
 		),
