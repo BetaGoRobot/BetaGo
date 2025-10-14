@@ -96,9 +96,9 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		}
 		lastData := &doubao.ModelStreamRespReasoning{}
 		for data := range res {
-			lastData = data
-			eot := "<EoT>"
-			if idx := strings.Index(lastData.Content, eot); idx != -1 {
+			eot := "**回复:**"
+			if idx := strings.Index(data.Content, eot); idx != -1 {
+				lastData = data
 				lastData.Content = strings.TrimSpace(lastData.Content[idx+len(eot):])
 			}
 			if strings.Contains(lastData.Content, "[无需回复]") {
