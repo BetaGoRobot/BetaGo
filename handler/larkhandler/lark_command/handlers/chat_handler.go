@@ -28,6 +28,7 @@ import (
 	"github.com/defensestation/osquery"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/tmc/langchaingo/schema"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
@@ -97,6 +98,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		lastData := &doubao.ModelStreamRespReasoning{}
 		for data := range res {
 			eot := "**回复:**"
+			span.SetAttributes(attribute.String("lastData", data.Content))
 			if idx := strings.Index(data.Content, eot); idx != -1 {
 				lastData = data
 				lastData.Content = strings.TrimSpace(lastData.Content[idx+len(eot):])
