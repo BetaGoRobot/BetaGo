@@ -172,11 +172,12 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 	}
 
 	wordCloud := vadvisor.NewWordCloudChartsGraphWithPlayer[string, int]()
-	for _, bucket := range wc.Dimension.Dimension.Dimension.Buckets {
+	for idx, bucket := range wc.Dimension.Dimension.Dimension.Buckets {
 		wordCloud.AddData("user_name",
 			&vadvisor.ValueUnit[string, int]{
-				XField: bucket.Key,
-				YField: bucket.DocCount,
+				XField:      bucket.Key,
+				YField:      bucket.DocCount,
+				SeriesField: strconv.Itoa(idx),
 			})
 	}
 

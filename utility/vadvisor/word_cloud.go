@@ -9,8 +9,9 @@ import (
 type WordCloudChartsWithPlayer[X cts.ValidType, Y cts.Numeric] struct {
 	*BaseChartsGraphWithPlayer[X, Y]
 
-	ValueField string `json:"valueField"`
-	NameField  string `json:"nameField"`
+	ValueField  string `json:"valueField"`
+	NameField   string `json:"nameField"`
+	SeriesField string `json:"seriesField"`
 }
 
 // func  NewWordCloudChartsGraphWithPlayer
@@ -23,6 +24,7 @@ func NewWordCloudChartsGraphWithPlayer[X cts.ValidType, Y cts.Numeric]() *WordCl
 		BaseChartsGraphWithPlayer: base,
 		NameField:                 "xField",
 		ValueField:                "yField",
+		SeriesField:               "seriesField",
 	}
 }
 
