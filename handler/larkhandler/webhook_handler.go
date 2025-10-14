@@ -300,7 +300,7 @@ func HandleRefreshObj(ctx context.Context, cardAction *callback.CardActionTrigge
 	data := new(larkim.P2MessageReceiveV1)
 	data.Event = new(larkim.P2MessageReceiveV1Data)
 	data.Event.Message = new(larkim.EventMessage)
-	data.Event.Message.MessageId = utility.StrPointer(msgID)
+	data.Event.Message.MessageId = utility.Ptr(msgID)
 	data.Event.Message.ChatId = new(string)
 	*data.Event.Message.ChatId = cardAction.Event.Context.OpenChatID
 
@@ -338,7 +338,7 @@ func HandleSubmit(ctx context.Context, cardAction *callback.CardActionTriggerEve
 	data := new(larkim.P2MessageReceiveV1)
 	data.Event = new(larkim.P2MessageReceiveV1Data)
 	data.Event.Message = new(larkim.EventMessage)
-	data.Event.Message.MessageId = utility.StrPointer(msgID)
+	data.Event.Message.MessageId = utility.Ptr(msgID)
 	data.Event.Message.ChatId = new(string)
 	*data.Event.Message.ChatId = cardAction.Event.Context.OpenChatID
 

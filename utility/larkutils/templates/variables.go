@@ -2,18 +2,27 @@ package templates
 
 import handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 
-type JaegerBase struct {
-	RefreshTime     string `json:"refresh_time"`
-	JaegerTraceInfo string `json:"jaeger_trace_info"`
-	JaegerTraceURL  string `json:"jaeger_trace_url"`
-	WithdrawInfo    string `json:"withdraw_info"`
-	WithdrawTitle   string `json:"withdraw_title"`
-	WithdrawConfirm string `json:"withdraw_confirm"`
-	WithdrawObject  struct {
-		Type string `json:"type"`
-	} `json:"withdraw_object"`
+type CardBaseVars struct {
+	RefreshTime     string      `json:"refresh_time"`
+	JaegerTraceInfo string      `json:"jaeger_trace_info"`
+	JaegerTraceURL  string      `json:"jaeger_trace_url"`
+	WithdrawInfo    string      `json:"withdraw_info"`
+	WithdrawTitle   string      `json:"withdraw_title"`
+	WithdrawConfirm string      `json:"withdraw_confirm"`
+	WithdrawObject  WithDrawObj `json:"withdraw_object"`
+
+	RawCmd     *string     `json:"raw_cmd,omitempty"`
+	RefreshObj *RefreshObj `json:"refresh_obj,omitempty"`
 }
 
+type RefreshObj struct {
+	Type    string `json:"type"`
+	Command string `json:"command"`
+}
+
+type WithDrawObj struct {
+	Type string `json:"type"`
+}
 type User struct {
 	ID string `json:"id"`
 }
@@ -77,7 +86,7 @@ type ChunkMetaData struct {
 	Timestamp string `json:"timestamp"`
 	MsgID     string `json:"msg_id"`
 
-	*JaegerBase
+	*CardBaseVars
 }
 
 type ObjTextArray struct {
@@ -87,3 +96,23 @@ type ObjTextArray struct {
 func ToObjTextArray(s string) *ObjTextArray {
 	return &ObjTextArray{s}
 }
+
+type (
+	// 对于wc的卡片，主要涉及几个信息
+	WordCountCardVars struct {
+		// 1. 用户排行榜、消息/互动频率
+		UserList []*UserListItem `json:"user_list"`
+		// 2. 词云
+		WordCloud any `json:"word_cloud"`
+		TimeStamp string
+	}
+	UserListItem struct {
+		Number    int         `json:"number"`
+		User      []*UserUnit `json:"user"`
+		MsgCnt    int         `json:"msg_cnt"`
+		ActionCnt int         `json:"action_cnt"`
+	}
+	UserUnit struct {
+		ID string `json:"id"` // OpenID
+	}
+)

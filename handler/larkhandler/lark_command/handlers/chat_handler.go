@@ -101,6 +101,9 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 			if idx := strings.Index(lastData.Content, eot); idx != -1 {
 				lastData.Content = strings.TrimSpace(lastData.Content[idx+len(eot):])
 			}
+			if strings.Contains(lastData.Content, "[无需回复]") {
+				return
+			}
 		}
 		resp, err := larkutils.ReplyMsgText(
 			ctx, lastData.Content, *event.Event.Message.MessageId, "_chat_random", false,

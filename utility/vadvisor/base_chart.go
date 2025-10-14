@@ -15,10 +15,10 @@ type BaseChartsGraphWithPlayer[X cts.ValidType, Y cts.Numeric] struct {
 	Type        string              `json:"type"`
 	Player      *PlayerConfig[X, Y] `json:"player,omitempty"`
 	Data        *DataUnit[X, Y]     `json:"data"` // ==> 对应specs[0].Data
-	OuterRadius float64             `json:"outerRadius"`
-	InnerRadius float64             `json:"innerRadius"`
+	OuterRadius float64             `json:"outerRadius,omitempty"`
+	InnerRadius float64             `json:"innerRadius,omitempty"`
 	Label       *LabelConfig        `json:"label,omitempty"`
-	Direction   string              `json:"direction"`
+	Direction   string              `json:"direction,omitempty"`
 
 	AnimationUpdate *Animation `json:"animationUpdate,omitempty"`
 	AnimationEnter  *Animation `json:"animationEnter,omitempty"`
@@ -124,7 +124,6 @@ type Value[Y cts.Numeric] struct {
 
 func NewBaseChartsGraph[X cts.ValidType, Y cts.Numeric]() *BaseChartsGraphWithPlayer[X, Y] {
 	return &BaseChartsGraphWithPlayer[X, Y]{
-		Player:      &PlayerConfig[X, Y]{},
 		valueMap:    make(map[string]*DataUnit[X, Y]),
 		playerType:  "continuous",
 		OuterRadius: 0.81,
@@ -198,6 +197,11 @@ func (h *BaseChartsGraphWithPlayer[X, Y]) AddData(groupKey string, values ...*Va
 	return h
 }
 
+func (h *BaseChartsGraphWithPlayer[X, Y]) NoPlayer() *BaseChartsGraphWithPlayer[X, Y] {
+	h.Player = nil
+	return h
+}
+
 func (h *BaseChartsGraphWithPlayer[X, Y]) AddDataSeq(xAxis X, seq iter.Seq[GroupKeyWrap[*ValueUnit[X, Y]]]) *BaseChartsGraphWithPlayer[X, Y] {
 	values := slices.Collect(seq)
 	for _, v := range values {
@@ -220,7 +224,19 @@ func (h *BaseChartsGraphWithPlayer[X, Y]) SetSortFunc(cmp func(a *ValueUnit[X, Y
 	return h
 }
 
-func (h *BaseChartsGraphWithPlayer[X, Y]) BuildPlayer(ctx context.Context) *BaseChartsGraphWithPlayer[X, Y] {
+func (h *BaseChartsGraphWithPlayer[X, Y]) BuildWithPlayer(ctx context.Context) *BaseChartsGraphWithPlayer[X, Y] {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+	return h.BuildInner(ctx, true)
+}
+
+func (h *BaseChartsGraphWithPlayer[X, Y]) Build(ctx context.Context) *BaseChartsGraphWithPlayer[X, Y] {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+	return h.BuildInner(ctx, false)
+}
+
+func (h *BaseChartsGraphWithPlayer[X, Y]) BuildInner(ctx context.Context, player bool) *BaseChartsGraphWithPlayer[X, Y] {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
@@ -243,7 +259,9 @@ func (h *BaseChartsGraphWithPlayer[X, Y]) BuildPlayer(ctx context.Context) *Base
 
 	if len(datas) > 0 {
 		// 构建specs数据
-		h.Player = h.NewPlayer(datas)
+		if player {
+			h.Player = h.NewPlayer(datas)
+		}
 		h.Data = datas[0].Data
 	}
 	return h

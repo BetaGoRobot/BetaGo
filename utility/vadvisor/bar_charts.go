@@ -57,7 +57,7 @@ func (b *BarChartsGraphWithPlayer[X, Y]) AddDataSeq(xAxis X, seq iter.Seq[GroupK
 }
 
 func (b *BarChartsGraphWithPlayer[X, Y]) BuildPlayer(ctx context.Context) *BarChartsGraphWithPlayer[X, Y] {
-	b.BaseChartsGraphWithPlayer.BuildPlayer(ctx)
+	b.BaseChartsGraphWithPlayer.BuildWithPlayer(ctx)
 	return b
 }
 

@@ -12,7 +12,7 @@ replace (
 )
 
 require (
-	github.com/BetaGoRobot/go_utils v0.0.2
+	github.com/BetaGoRobot/go_utils v0.0.3
 	github.com/bytedance/sonic v1.14.1
 	github.com/carlmjohnson/requests v0.25.1
 	github.com/cloudwego/hertz v0.10.2

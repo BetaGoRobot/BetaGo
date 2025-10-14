@@ -83,6 +83,18 @@ func (h *Helper) Query(query osquery.Mappable) *Helper {
 	return h
 }
 
+// Aggs to be filled
+//
+//	@receiver h *HistoryHelper
+//	@param query osquery.Mappable
+//	@return *HistoryHelper
+//	@author kevinmatthe
+//	@update 2025-04-30 13:09:55
+func (h *Helper) Aggs(aggs ...osquery.Aggregation) *Helper {
+	h.req.Aggs(aggs...)
+	return h
+}
+
 // Source to be filled
 //
 //	@receiver h *HistoryHelper
@@ -109,21 +121,10 @@ func (h *Helper) Sort(name string, order osquery.Order) *Helper {
 }
 
 func (h *Helper) GetMsg() (messageList []string, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
+	_, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
 	defer span.End()
-	span.SetAttributes(
-		attribute.Key("index").String(h.index),
-		attribute.Key("query").String(utility.MustMashal(h.query)),
-		attribute.Key("source").StringSlice(h.source),
-		attribute.Key("size").Int64(int64(h.size)),
-	)
 
-	resp, err := opensearchdal.
-		SearchData(
-			ctx,
-			consts.LarkMsgIndex,
-			h.req,
-		)
+	resp, err := h.GetRaw()
 	if err != nil {
 		return
 	}
@@ -131,7 +132,7 @@ func (h *Helper) GetMsg() (messageList []string, err error) {
 	return
 }
 
-func (h *Helper) GetAll() (messageList []*handlertypes.MessageIndex, err error) {
+func (h *Helper) GetRaw() (resp *opensearchapi.SearchResp, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
 	defer span.End()
 	span.SetAttributes(
@@ -141,16 +142,20 @@ func (h *Helper) GetAll() (messageList []*handlertypes.MessageIndex, err error) 
 		attribute.Key("size").Int64(int64(h.size)),
 	)
 
-	resp, err := opensearchdal.
+	resp, err = opensearchdal.
 		SearchData(
 			ctx,
 			consts.LarkMsgIndex,
 			h.req,
 		)
-	if err != nil {
-		return
-	}
+	return
+}
 
+func (h *Helper) GetAll() (messageList []*handlertypes.MessageIndex, err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	resp, err := h.GetRaw()
 	return commonutils.TransSlice(resp.Hits.Hits, func(hit opensearchapi.SearchHit) *handlertypes.MessageIndex {
 		messageIndex := &handlertypes.MessageIndex{}
 		err := sonic.Unmarshal(hit.Source, messageIndex)
@@ -184,6 +189,18 @@ type (
 				} `json:"agg2"`
 			} `json:"buckets"`
 		} `json:"agg1"`
+	}
+	Bucket struct {
+		Key      string `json:"key"`
+		DocCount int    `json:"doc_count"`
+	}
+
+	SingleDimAggregate struct {
+		Dimension struct {
+			DocCountErrorUpperBound int       `json:"doc_count_error_upper_bound"`
+			SumOtherDocCount        int       `json:"sum_other_doc_count"`
+			Buckets                 []*Bucket `json:"buckets"`
+		} `json:"dimension"`
 	}
 )
 

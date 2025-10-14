@@ -5,6 +5,8 @@ github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c h1:udKWzYgxTojEK
 github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/BetaGoRobot/go_utils v0.0.2 h1:huDJfVrYgAVFBCcQbA4DfmSlLZepnSHi7KQqi5JDNAI=
 github.com/BetaGoRobot/go_utils v0.0.2/go.mod h1:ciJq9vWPcBV1rvnjFNJhKv5KuBwIuMqGtK913Z2S7qU=
+github.com/BetaGoRobot/go_utils v0.0.3 h1:k10Vwt4vgBLhfeycnTAOUhNUZ3lTyI+o/+sj+nCeSJM=
+github.com/BetaGoRobot/go_utils v0.0.3/go.mod h1:ciJq9vWPcBV1rvnjFNJhKv5KuBwIuMqGtK913Z2S7qU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Masterminds/goutils v1.1.1 h1:5nUrii3FMTL5diU80unEVvNevw1nH4+ZV4DSLVJLSYI=
 github.com/Masterminds/goutils v1.1.1/go.mod h1:8cTjp+g8YejhMuvIA5y2vz3BpJxksy863GQaJW2MFNU=

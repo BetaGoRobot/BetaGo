@@ -12,9 +12,11 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
+	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/sonic"
 	"github.com/defensestation/osquery"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -214,6 +216,33 @@ func (h *trendInternalHelper) TrendByUser(ctx context.Context) (trend history.Tr
 			h.interval,
 			"user_name",
 		)
+	return
+}
+
+func (h *trendInternalHelper) TrendRate(ctx context.Context, indexName, field string) (singleDimAggs *history.SingleDimAggregate, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	singleDimAggs = &history.SingleDimAggregate{}
+	// 通过Opensearch统计发言数量
+	req := osquery.Search().Query(
+		osquery.Bool().
+			Must(
+				osquery.Term("chat_id", h.chatID),
+				osquery.Range("create_time").
+					Gte(h.st.In(utility.UTCPlus8Loc()).Format(time.DateTime)).
+					Lte(h.et.In(utility.UTCPlus8Loc()).Format(time.DateTime)),
+			),
+	).Size(0).Aggs(osquery.TermsAgg("dimension", field))
+
+	resp, err := opensearchdal.
+		SearchData(
+			ctx,
+			indexName,
+			req,
+		)
+
+	err = sonic.Unmarshal(resp.Aggregations, singleDimAggs)
 	return
 }
 

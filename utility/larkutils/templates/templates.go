@@ -32,6 +32,7 @@ var (
 	NormalCardReplyTemplate      = database.TemplateVersion{TemplateID: "AAqRQtNPSJbsZ"}
 	NormalCardGraphReplyTemplate = database.TemplateVersion{TemplateID: "AAqdmx3wt8mit"}
 	ChunkMetaTemplate            = database.TemplateVersionV2[ChunkMetaData]{TemplateVersion: database.TemplateVersion{TemplateID: "AAqxfVYYV3Zcr"}}
+	WordCountTemplate            = database.TemplateVersionV2[WordCountCardVars]{TemplateVersion: database.TemplateVersion{TemplateID: "AAqx4lG1w3cug"}}
 )
 
 func GetTemplate(template database.TemplateVersion) database.TemplateVersion {
@@ -123,16 +124,20 @@ func NewCardContentV2[T any](ctx context.Context, template database.TemplateVers
 	}
 
 	// default参数
-	t.AddJaegerTraceInfo(traceID)
-	t.AddVariable("withdraw_info", "撤回卡片")
-	t.AddVariable("withdraw_title", "撤回本条消息")
-	t.AddVariable("withdraw_confirm", "你确定要撤回这条消息吗？")
-	t.AddVariable("withdraw_object", map[string]string{"type": "withdraw"})
-	if srcCmd := ctx.Value(consts.ContextVarSrcCmd); srcCmd != nil {
-		t.AddVariable("raw_cmd", srcCmd.(string))
-		t.AddVariable("refresh_obj", map[string]string{"type": "refresh_obj", "command": srcCmd.(string)})
+	v := CardBaseVars{
+		JaegerTraceInfo: "Trace",
+		JaegerTraceURL:  "https://jaeger.kmhomelab.cn/trace/" + traceID,
+		WithdrawInfo:    "撤回卡片",
+		WithdrawTitle:   "撤回本条消息",
+		WithdrawConfirm: "你确定要撤回这条消息吗？",
+		WithdrawObject:  WithDrawObj{Type: "withdraw"},
+		RefreshTime:     time.Now().In(utility.UTCPlus8Loc()).Format(time.DateTime),
 	}
-	t.AddVariable("refresh_time", time.Now().In(utility.UTCPlus8Loc()).Format(time.DateTime))
+	if srcCmd := ctx.Value(consts.ContextVarSrcCmd); srcCmd != nil {
+		v.RawCmd = utility.Ptr(srcCmd.(string))
+		v.RefreshObj = &RefreshObj{Type: "refresh_obj", Command: srcCmd.(string)}
+	}
+	t.AddVariableStruct(v)
 
 	// 合并
 	variables, _ := sonic.Marshal(template.Variables)
@@ -149,6 +154,15 @@ func (c *TemplateCardContent) AddJaegerTraceInfo(traceID string) *TemplateCardCo
 
 func (c *TemplateCardContent) AddVariable(key string, value interface{}) *TemplateCardContent {
 	c.Data.TemplateVariable[key] = value
+	return c
+}
+
+func (c *TemplateCardContent) AddVariableStruct(value any) *TemplateCardContent {
+	// 结构体转换为map
+	variables, _ := sonic.Marshal(value)
+	var sourceMap map[string]any
+	sonic.Unmarshal(variables, &sourceMap)
+	maps.Copy(c.Data.TemplateVariable, sourceMap)
 	return c
 }
 

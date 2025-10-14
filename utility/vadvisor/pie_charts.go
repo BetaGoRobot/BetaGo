@@ -48,7 +48,7 @@ func (b *PieChartsGraphWithPlayer[X, Y]) AddDataSeq(xAxis X, seq iter.Seq[GroupK
 }
 
 func (b *PieChartsGraphWithPlayer[X, Y]) BuildPlayer(ctx context.Context) *PieChartsGraphWithPlayer[X, Y] {
-	b.BaseChartsGraphWithPlayer.BuildPlayer(ctx)
+	b.BaseChartsGraphWithPlayer.BuildWithPlayer(ctx)
 	return b
 }
 

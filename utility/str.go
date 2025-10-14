@@ -1,5 +1,5 @@
 package utility
 
-func StrPointer(s string) *string {
+func Ptr[T any](s T) *T {
 	return &s
 }
