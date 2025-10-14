@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strconv"
 	"time"
@@ -21,6 +22,7 @@ import (
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
+	"gorm.io/gorm"
 )
 
 func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
@@ -91,10 +93,12 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		Total  int64  `gorm:"column:total"`
 	}
 	actionRes := []*UserCountResult{}
-	if err = database.GetDbConnection().Model(&database.InteractionStats{}).
+	ins := database.GetDbConnection().Model(&database.InteractionStats{}).
 		Select("open_id, count(*) as total").
-		Where("guild_id = ? ", chatID).
-		Group("open_id").Find(&actionRes).Error; err != nil {
+		Where("guild_id = ? and created_at > ? and created_at < ?", chatID, st, et).
+		Group("open_id")
+	fmt.Println(ins.ToSQL(func(tx *gorm.DB) *gorm.DB { return tx }))
+	if err = ins.Find(&actionRes).Error; err != nil {
 		return
 	}
 
