@@ -11,6 +11,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
@@ -20,11 +21,13 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/logging"
 	"github.com/BetaGoRobot/BetaGo/utility/message"
+	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/redis"
 	"github.com/BetaGoRobot/BetaGo/utility/retriver"
 	commonutils "github.com/BetaGoRobot/go_utils/common_utils"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/sonic"
 	"github.com/defensestation/osquery"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/tmc/langchaingo/schema"
@@ -185,7 +188,21 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 		userName, _ := doc.Metadata["user_name"].(string)
 		return fmt.Sprintf("[%s](%s) <%s>: %s", createTime, userID, userName, doc.PageContent)
 	})
-
+	promptTemplate.Topics = make([]string, 0)
+	for _, doc := range docs {
+		chatID, ok := doc.Metadata["chat_id"]
+		if ok {
+			resp, err := opensearchdal.SearchData(ctx, consts.LarkChunkIndex, osquery.Search().Sort("timestamp", osquery.OrderDesc).Size(1).Query(
+				osquery.Bool().Must(osquery.Term("group_id", chatID)),
+			))
+			if err != nil {
+				return nil, err
+			}
+			chunk := &handlertypes.MessageChunkLogV3{}
+			sonic.Unmarshal(resp.Hits.Hits[0].Source, &chunk)
+			promptTemplate.Topics = append(promptTemplate.Topics, chunk.Summary)
+		}
+	}
 	b := &strings.Builder{}
 	err = tp.Execute(b, promptTemplate)
 	if err != nil {
