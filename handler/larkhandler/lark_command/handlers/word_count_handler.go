@@ -130,15 +130,16 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 	}
 	// 1. 构建最内层的聚合：统计词频 (word_counts)
 	// 这是一个 terms aggregation
-	wordCountsAgg := osquery.TermsAgg("dimension", "raw_message_jieba_tag.word").
-		Size(50) // 返回前 100 个
+	wordCountsAgg := osquery.TermsAgg("dimension", "raw_message_jieba_tag.word").Size(50) // 返回前 50 个
 
 	// 2. 构建中间层的聚合：根据词性进行过滤 (filtered_tags)
 	// 这是一个 filter aggregation
 	filteredTagsAgg := osquery.FilterAgg(
 		"dimension",
 		osquery.Bool().Must(
-			osquery.Terms("raw_message_jieba_tag.tag", tagsToInclude...)),
+			osquery.Terms("raw_message_jieba_tag.tag", tagsToInclude...),
+			osquery.Script("script").Source("doc['raw_message_jieba_tag.word'].value.length() > 1").Lang("painless"),
+		),
 	).Aggs(wordCountsAgg)
 
 	// 3. 构建最外层的聚合：处理嵌套字段 (word_cloud_tags)
