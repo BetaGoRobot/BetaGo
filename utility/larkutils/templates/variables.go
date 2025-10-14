@@ -106,6 +106,8 @@ type (
 		WordCloud any          `json:"word_cloud"`
 		Chunks    []*ChunkData `json:"chunks"`
 		TimeStamp string       `json:"time_stamp"`
+		StartTime string       `json:"start_time"`
+		EndTime   string       `json:"end_time"`
 	}
 	UserListItem struct {
 		Number    int         `json:"number"`

@@ -110,6 +110,8 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		UserList:  userList,
 		WordCloud: wordCloud,
 		Chunks:    chunks,
+		StartTime: st.Format("2006-01-02 15:04"),
+		EndTime:   et.Format("2006-01-02 15:04"),
 	}
 	tpl.WithData(cardVar)
 	cardContent := templates.NewCardContentV2(ctx, tpl)
