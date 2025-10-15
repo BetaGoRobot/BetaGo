@@ -120,7 +120,7 @@ func (h *Helper) Sort(name string, order osquery.Order) *Helper {
 	return h
 }
 
-func (h *Helper) GetMsg() (messageList []string, err error) {
+func (h *Helper) GetMsg() (messageList OpensearchMsgLogList, err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
 	defer span.End()
 
@@ -269,8 +269,30 @@ func (h *Helper) GetTrend(interval, termField string) (trendList TrendSeries, er
 	return
 }
 
-func FilterMessage(hits []opensearchapi.SearchHit) (msgList []string) {
+type OpensearchMsgLogList []*OpensearchMsgLog
+
+func (o OpensearchMsgLogList) ToLines() (msgList []string) {
 	msgList = make([]string, 0)
+	for _, item := range o {
+		msgList = append(msgList, item.ToLine())
+	}
+	return
+}
+
+type OpensearchMsgLog struct {
+	CreateTime  string            `json:"create_time"`
+	UserID      string            `json:"user_id"`
+	UserName    string            `json:"user_name"`
+	MsgList     []string          `json:"msg_list"`
+	MentionList []*larkim.Mention `json:"mention_list"`
+}
+
+func (o *OpensearchMsgLog) ToLine() (msgList string) {
+	return fmt.Sprintf("[%s](%s) <%s>: %s", o.CreateTime, o.UserID, o.UserName, strings.Join(o.MsgList, ";"))
+}
+
+func FilterMessage(hits []opensearchapi.SearchHit) (msgList []*OpensearchMsgLog) {
+	msgList = make([]*OpensearchMsgLog, 0)
 	for _, hit := range hits {
 		res := &handlertypes.MessageIndex{}
 		b, _ := hit.Source.MarshalJSON()
@@ -312,8 +334,15 @@ func FilterMessage(hits []opensearchapi.SearchHit) (msgList []string) {
 		if len(tmpList) == 0 {
 			continue
 		}
-		if r := fmt.Sprintf("[%s](%s) <%s>: %s", res.CreateTime, res.UserID, res.UserName, strings.Join(tmpList, ";")); r != "" {
-			msgList = append(msgList, r)
+		l := &OpensearchMsgLog{
+			CreateTime:  res.CreateTime,
+			UserID:      res.UserID,
+			UserName:    res.UserName,
+			MsgList:     tmpList,
+			MentionList: mentions,
+		}
+		if r := l.ToLine(); r != "" {
+			msgList = append(msgList, l)
 		}
 	}
 	slices.Reverse(msgList)

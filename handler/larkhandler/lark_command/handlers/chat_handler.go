@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"iter"
+	"regexp"
 	"strconv"
 	"strings"
 	"text/template"
@@ -132,24 +133,23 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 		size = new(int)
 		*size = 20
 	}
+
 	chatID := *event.Event.Message.ChatId
-	messageList, err := history.New(ctx).Query(
-		osquery.Bool().Must(
-			osquery.Term("chat_id", chatID),
-		),
-	).
+	messageList, err := history.New(ctx).
+		Query(osquery.Bool().Must(osquery.Term("chat_id", chatID))).
 		Source("raw_message", "mentions", "create_time", "user_id", "chat_id", "user_name", "message_type").
-		Size(uint64(*size*3)).
-		Sort("create_time", "desc").GetMsg()
+		Size(uint64(*size*3)).Sort("create_time", "desc").GetMsg()
 	if err != nil {
 		return
 	}
+
 	templateRows, _ := database.FindByCacheFunc(database.PromptTemplateArgs{PromptID: 1}, func(d database.PromptTemplateArgs) string {
 		return strconv.Itoa(d.PromptID)
 	})
 	if len(templateRows) == 0 {
 		return nil, errors.New("prompt template not found")
 	}
+
 	promptTemplate := templateRows[0]
 	promptTemplateStr := promptTemplate.TemplateStr
 	tp, err := template.New("prompt").Parse(promptTemplateStr)
@@ -174,7 +174,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 		}
 		return "", true
 	})
-	promptTemplate.HistoryRecords = messageList
+	promptTemplate.HistoryRecords = messageList.ToLines()
 	docs, err := retriver.Cli.RecallDocs(ctx, chatID, *event.Event.Message.Content, 10)
 	if err != nil {
 		logging.Logger.Err(err)
@@ -212,5 +212,72 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	if err != nil {
 		return
 	}
-	return
+	return func(yield func(*doubao.ModelStreamRespReasoning) bool) {
+		mentionMap := make(map[string]string)
+		for _, item := range messageList {
+			mentionMap[item.UserName] = item.UserID
+			for _, mention := range item.MentionList {
+				mentionMap[*mention.Name] = *mention.Id
+			}
+		}
+		for data := range res {
+			data.Content = ReplaceMentionsRawText(data.Content, mentionMap)
+			yield(data)
+		}
+	}, err
+}
+
+// ReplaceMentionsRawText 在文本中查找所有 @xxx 格式的用户名，并根据提供的 map 进行替换。
+// @ 前面必须是文本开头或空格。
+// xxx 必须是一个完整的单词（后面是空格、标点符号或文本结尾）。
+func ReplaceMentionsRawText(text string, replacements map[string]string) string {
+	// 正则表达式: (?:^|\s)@(\w+)\b
+	// (?:^|\s)  - 非捕获组，匹配字符串开头或空格
+	// @         - 匹配'@'符号
+	// (\w+)     - 捕获组，匹配一个或多个单词字符（这是 key）
+	// \b        - 单词边界，确保我们匹配的是一个完整的 "单词"
+	re := regexp.MustCompile(`(?:^|\s)@(\w+)\b`)
+
+	// FindAllStringSubmatchIndex 会返回所有匹配项的索引位置
+	// 每个匹配项是一个数组：[完整匹配开始, 完整匹配结束, 第一个捕获组开始, 第一个捕获组结束]
+	matches := re.FindAllStringSubmatchIndex(text, -1)
+
+	// 如果没有找到匹配项，直接返回原文
+	if len(matches) == 0 {
+		return text
+	}
+
+	var builder strings.Builder
+	lastIndex := 0
+
+	for _, match := range matches {
+		// match[2] 和 match[3] 是捕获组 (\w+) 的开始和结束索引，也就是 'xxx'
+		key := text[match[2]:match[3]]
+
+		// 从 map 中查找替换值
+		value, found := replacements[key]
+
+		// 找到要替换的整个模式 "@xxx" 的起始位置
+		// 注意: 捕获组 'xxx' 的起始位置 (match[2]) 的前一个字符就是 '@'
+		mentionStartIndex := match[2] - 1
+
+		// 1. 先将上一个匹配项到当前匹配项之间的文本追加进来
+		builder.WriteString(text[lastIndex:mentionStartIndex])
+
+		if found {
+			// 2. 如果在 map 中找到了 key，则追加替换后的 value
+			builder.WriteString(value)
+		} else {
+			// 3. 如果没找到，则将原始的 "@xxx" 追加回来
+			builder.WriteString(text[mentionStartIndex:match[3]])
+		}
+
+		// 4. 更新 lastIndex，为下一次循环做准备
+		lastIndex = match[3]
+	}
+
+	// 追加最后一个匹配项到字符串末尾的剩余文本
+	builder.WriteString(text[lastIndex:])
+
+	return builder.String()
 }
