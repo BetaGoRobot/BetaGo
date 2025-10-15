@@ -166,11 +166,11 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	} else {
 		userName = *member.Name
 	}
-
+	createTime := utility.EpoMil2DateStr(*event.Event.Message.CreateTime)
+	promptTemplate.UserInput = []string{fmt.Sprintf("[%s](%s) <%s>: %s", createTime, *event.Event.Sender.SenderId.OpenId, userName, larkutils.PreGetTextMsg(ctx, event))}
 	promptTemplate.UserInput = commonutils.TransSliceWithSkip(input, func(s string) (string, bool) {
 		if strings.TrimSpace(s) != "" {
-			createTime := utility.EpoMil2DateStr(*event.Event.Message.CreateTime)
-			return fmt.Sprintf("[%s](%s) <%s>: %s", createTime, *event.Event.Sender.SenderId.OpenId, userName, larkutils.PreGetTextMsg(ctx, event)), false
+			return s, false
 		}
 		return "", true
 	})
