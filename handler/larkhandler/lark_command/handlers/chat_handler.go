@@ -201,8 +201,10 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 				return nil, err
 			}
 			chunk := &handlertypes.MessageChunkLogV3{}
-			sonic.Unmarshal(resp.Hits.Hits[0].Source, &chunk)
-			promptTemplate.Topics = append(promptTemplate.Topics, chunk.Summary)
+			if len(resp.Hits.Hits) > 0 {
+				sonic.Unmarshal(resp.Hits.Hits[0].Source, &chunk)
+				promptTemplate.Topics = append(promptTemplate.Topics, chunk.Summary)
+			}
 		}
 	}
 	b := &strings.Builder{}
