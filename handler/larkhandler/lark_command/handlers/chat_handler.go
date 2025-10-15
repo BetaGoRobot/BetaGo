@@ -208,21 +208,28 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	if err != nil {
 		return nil, err
 	}
-	res, err = doubao.SingleChatStreamingPrompt(ctx, b.String(), modelID, files...)
+	iter, err := doubao.SingleChatStreamingPrompt(ctx, b.String(), modelID, files...)
 	if err != nil {
 		return
 	}
 	return func(yield func(*doubao.ModelStreamRespReasoning) bool) {
 		mentionMap := make(map[string]string)
 		for _, item := range messageList {
-			mentionMap[item.UserName] = item.UserID
+			mentionMap[item.UserName] = fmt.Sprintf("<at user_id=\"%s\"></at>", item.UserID)
 			for _, mention := range item.MentionList {
-				mentionMap[*mention.Name] = *mention.Id
+				mentionMap[*mention.Name] = fmt.Sprintf("<at user_id=\"%s\"></at>", *mention.Id)
 			}
 		}
-		for data := range res {
-			data.Content = ReplaceMentionsRawText(data.Content, mentionMap)
-			yield(data)
+		lastData := &doubao.ModelStreamRespReasoning{}
+		for data := range iter {
+			lastData = data
+			if !yield(data) {
+				return
+			}
+		}
+		lastData.Content = ReplaceMentionsRawText(lastData.Content, mentionMap)
+		if !yield(lastData) {
+			return
 		}
 	}, err
 }
@@ -236,7 +243,7 @@ func ReplaceMentionsRawText(text string, replacements map[string]string) string 
 	// @         - 匹配'@'符号
 	// (\w+)     - 捕获组，匹配一个或多个单词字符（这是 key）
 	// \b        - 单词边界，确保我们匹配的是一个完整的 "单词"
-	re := regexp.MustCompile(`(?:^|\s)@(\w+)\b`)
+	re := regexp.MustCompile(`@([\p{Han}\w]+)`)
 
 	// FindAllStringSubmatchIndex 会返回所有匹配项的索引位置
 	// 每个匹配项是一个数组：[完整匹配开始, 完整匹配结束, 第一个捕获组开始, 第一个捕获组结束]
