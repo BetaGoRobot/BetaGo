@@ -190,11 +190,13 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	})
 	promptTemplate.Topics = make([]string, 0)
 	for _, doc := range docs {
-		chatID, ok := doc.Metadata["chat_id"]
+		msgID, ok := doc.Metadata["msg_id"]
 		if ok {
-			resp, err := opensearchdal.SearchData(ctx, consts.LarkChunkIndex, osquery.Search().Sort("timestamp", osquery.OrderDesc).Size(1).Query(
-				osquery.Bool().Must(osquery.Term("group_id", chatID)),
-			))
+			resp, err := opensearchdal.SearchData(ctx, consts.LarkChunkIndex, osquery.
+				Search().Sort("timestamp", osquery.OrderDesc).
+				Query(osquery.Bool().Must(osquery.Term("msg_ids", msgID))).
+				Size(1),
+			)
 			if err != nil {
 				return nil, err
 			}
