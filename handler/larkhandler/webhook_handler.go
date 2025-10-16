@@ -16,6 +16,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/message"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
@@ -249,7 +250,7 @@ func HandleWithDraw(ctx context.Context, cardAction *callback.CardActionTriggerE
 	msgID := cardAction.Event.Context.OpenMessageID
 	if consts.WITHDRAW_REPLACE {
 		cardContent := cardutil.NewCardBuildHelper().
-			SetContent(fmt.Sprintf("这条消息被%s撤回啦！", larkmsgutils.AtUserString(userID))).Build(ctx)
+			SetContent(fmt.Sprintf("这条消息被%s撤回啦！", larkutils.AtUserString(userID))).Build(ctx)
 		err := larkutils.PatchCard(ctx, cardContent, msgID)
 		if err != nil {
 			log.Zlog.Error(err.Error())
