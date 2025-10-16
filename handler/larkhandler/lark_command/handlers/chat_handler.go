@@ -219,20 +219,20 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	return func(yield func(*doubao.ModelStreamRespReasoning) bool) {
 		mentionMap := make(map[string]string)
 		for _, item := range messageList {
-			mentionMap[item.UserName] = fmt.Sprintf("<at user_id=\"%s\"></at>", item.UserID)
-			mentionMap[item.UserID] = fmt.Sprintf("<at user_id=\"%s\"></at>", item.UserID)
+			mentionMap[item.UserName] = larkutils.AtUser(item.UserID, item.UserName)
+			mentionMap[item.UserID] = larkutils.AtUser(item.UserID, item.UserName)
 			for _, mention := range item.MentionList {
-				mentionMap[*mention.Name] = fmt.Sprintf("<at user_id=\"%s\"></at>", *mention.Id)
-				mentionMap[*mention.Id] = fmt.Sprintf("<at user_id=\"%s\"></at>", *mention.Id)
+				mentionMap[*mention.Name] = larkutils.AtUser(*mention.Id, *mention.Name)
+				mentionMap[*mention.Id] = larkutils.AtUser(*mention.Id, *mention.Name)
 			}
 		}
 		memberMap, err := grouputil.GetUserMapFromChatIDCache(ctx, chatID)
 		if err != nil {
 			return
 		}
-		for id, member := range memberMap {
-			mentionMap[*member.Name] = fmt.Sprintf("<at user_id=\"%s\"></at>", id)
-			mentionMap[*member.MemberId] = fmt.Sprintf("<at user_id=\"%s\"></at>", *member.MemberId)
+		for _, member := range memberMap {
+			mentionMap[*member.Name] = larkutils.AtUser(*member.MemberId, *member.Name)
+			mentionMap[*member.MemberId] = larkutils.AtUser(*member.MemberId, *member.Name)
 		}
 
 		lastData := &doubao.ModelStreamRespReasoning{}

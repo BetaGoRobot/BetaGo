@@ -12,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkchunking"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
@@ -50,7 +51,7 @@ func PreGetTextMsg(ctx context.Context, event *larkim.P2MessageReceiveV1) string
 	rawContent := getContentFromTextMsg(*event.Event.Message.Content)
 	if len(event.Event.Message.Mentions) > 0 {
 		for _, mention := range event.Event.Message.Mentions {
-			rawContent = strings.ReplaceAll(rawContent, *mention.Key, fmt.Sprintf("@%s", *mention.Name))
+			rawContent = strings.ReplaceAll(rawContent, *mention.Key, larkutils.AtUser(*mention.Id.OpenId, *mention.Name))
 		}
 	}
 	return rawContent
