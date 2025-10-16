@@ -115,9 +115,15 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 	}
 	tpl.WithData(cardVar)
 	cardContent := templates.NewCardContentV2(ctx, tpl)
-	err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)
-	if err != nil {
-		return err
+
+	if metaData != nil && metaData.Refresh {
+		err = larkutils.PatchCard(ctx,
+			cardContent,
+			*data.Event.Message.MessageId)
+	} else {
+		err = larkutils.ReplyCard(ctx,
+			cardContent,
+			*data.Event.Message.MessageId, "", false)
 	}
 	return
 }
@@ -221,13 +227,14 @@ func getChunks(ctx context.Context, chatID string, st, et time.Time) (chunks []*
 		FetchSourceIncludeExclude(
 			[]string{}, []string{"conversation_embedding", "msg_ids", "msg_list"},
 		).
-		// SortBy(
-		// 	NewScriptSort(
-		// 		NewScript("script").Script("doc['msg_ids'].size()").Lang("painless"), "number",
-		// 	).Order(false)).Size(3)
 		SortBy(
-			NewFieldSort("timestamp").Desc(),
-		).Size(5)
+			NewScriptSort(
+				NewScript("script").Script("doc['msg_ids'].size()").Lang("painless"), "number",
+			).Order(false)).
+		// SortBy(
+		// 	NewFieldSort("timestamp").Desc(),
+		// ).
+		Size(5)
 
 	data, err := queryReq.Body()
 	if err != nil {
