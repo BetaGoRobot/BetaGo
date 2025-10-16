@@ -208,6 +208,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 			}
 		}
 	}
+	promptTemplate.Topics = utility.Dedup(promptTemplate.Topics)
 	b := &strings.Builder{}
 	err = tp.Execute(b, promptTemplate)
 	if err != nil {
