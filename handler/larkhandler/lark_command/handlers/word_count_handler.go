@@ -216,15 +216,18 @@ func getChunks(ctx context.Context, chatID string, st, et time.Time) (chunks []*
 	queryReq := NewSearchRequest().
 		Query(NewBoolQuery().Must(
 			NewTermQuery("group_id", chatID),
-			NewRangeQuery("timestamp").Gte(st).Lte(et),
+			NewRangeQuery("timestamp").Gte(st.UnixNano()).Lte(et.UnixNano()),
 		)).
 		FetchSourceIncludeExclude(
 			[]string{}, []string{"conversation_embedding", "msg_ids", "msg_list"},
 		).
+		// SortBy(
+		// 	NewScriptSort(
+		// 		NewScript("script").Script("doc['msg_ids'].size()").Lang("painless"), "number",
+		// 	).Order(false)).Size(3)
 		SortBy(
-			NewScriptSort(
-				NewScript("script").Script("doc['msg_ids'].size()").Lang("painless"), "number",
-			).Order(false)).Size(3)
+			NewFieldSort("timestamp").Desc(),
+		).Size(5)
 
 	data, err := queryReq.Body()
 	if err != nil {
