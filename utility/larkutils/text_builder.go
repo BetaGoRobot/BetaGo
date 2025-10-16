@@ -47,7 +47,3 @@ func (t *TextBuilder) Build() string {
 	}
 	return s
 }
-
-func AtUser(userID, userName string) string {
-	return fmt.Sprintf("<at user_id=\"%s\">%s</at>", userID, userName)
-}

@@ -20,6 +20,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	"github.com/BetaGoRobot/BetaGo/utility/logging"
 	"github.com/BetaGoRobot/BetaGo/utility/message"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
@@ -219,11 +220,11 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	return func(yield func(*doubao.ModelStreamRespReasoning) bool) {
 		mentionMap := make(map[string]string)
 		for _, item := range messageList {
-			mentionMap[item.UserName] = larkutils.AtUser(item.UserID, item.UserName)
-			mentionMap[item.UserID] = larkutils.AtUser(item.UserID, item.UserName)
+			mentionMap[item.UserName] = larkmsgutils.AtUser(item.UserID, item.UserName)
+			mentionMap[item.UserID] = larkmsgutils.AtUser(item.UserID, item.UserName)
 			for _, mention := range item.MentionList {
-				mentionMap[*mention.Name] = larkutils.AtUser(*mention.Id, *mention.Name)
-				mentionMap[*mention.Id] = larkutils.AtUser(*mention.Id, *mention.Name)
+				mentionMap[*mention.Name] = larkmsgutils.AtUser(*mention.Id, *mention.Name)
+				mentionMap[*mention.Id] = larkmsgutils.AtUser(*mention.Id, *mention.Name)
 			}
 		}
 		memberMap, err := grouputil.GetUserMapFromChatIDCache(ctx, chatID)
@@ -231,8 +232,8 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 			return
 		}
 		for _, member := range memberMap {
-			mentionMap[*member.Name] = larkutils.AtUser(*member.MemberId, *member.Name)
-			mentionMap[*member.MemberId] = larkutils.AtUser(*member.MemberId, *member.Name)
+			mentionMap[*member.Name] = larkmsgutils.AtUser(*member.MemberId, *member.Name)
+			mentionMap[*member.MemberId] = larkmsgutils.AtUser(*member.MemberId, *member.Name)
 		}
 
 		lastData := &doubao.ModelStreamRespReasoning{}

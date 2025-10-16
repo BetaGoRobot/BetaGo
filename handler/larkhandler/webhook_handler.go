@@ -249,7 +249,7 @@ func HandleWithDraw(ctx context.Context, cardAction *callback.CardActionTriggerE
 	msgID := cardAction.Event.Context.OpenMessageID
 	if consts.WITHDRAW_REPLACE {
 		cardContent := cardutil.NewCardBuildHelper().
-			SetContent(fmt.Sprintf("这条消息被%s撤回啦！", larkutils.AtUserString(userID))).Build(ctx)
+			SetContent(fmt.Sprintf("这条消息被%s撤回啦！", larkmsgutils.AtUserString(userID))).Build(ctx)
 		err := larkutils.PatchCard(ctx, cardContent, msgID)
 		if err != nil {
 			log.Zlog.Error(err.Error())

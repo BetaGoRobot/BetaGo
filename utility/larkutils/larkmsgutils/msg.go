@@ -90,3 +90,7 @@ func Trans2Item(msgType, content string) (itemList iter.Seq[*Item]) {
 func TagText(text string, color string) string {
 	return fmt.Sprintf("<text_tag color='%s'>%s</text_tag>", color, text)
 }
+
+func AtUser(userID, userName string) string {
+	return fmt.Sprintf("<at user_id=\"%s\">%s</at>", userID, userName)
+}
