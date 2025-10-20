@@ -47,7 +47,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/spyzhov/ajson v0.9.6
-	github.com/tencentyun/cos-go-sdk-v5 v0.7.70
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.71
 	github.com/tmc/langchaingo v0.1.14-pre.4.0.20250917063452-900c1b9498fa
 	github.com/valyala/fasthttp v1.67.0
 	github.com/volcengine/volcengine-go-sdk v1.1.41
