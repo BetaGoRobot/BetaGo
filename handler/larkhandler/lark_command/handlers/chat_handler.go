@@ -101,26 +101,52 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		if err != nil {
 			return err
 		}
-		lastData := &doubao.ModelStreamRespReasoning{}
-		for data := range res {
-			eot := "**回复:**"
-			span.SetAttributes(attribute.String("lastData", data.Content))
-			if idx := strings.Index(data.Content, eot); idx != -1 {
-				lastData = data
-				lastData.Content = strings.TrimSpace(lastData.Content[idx+len(eot):])
-			}
-			if strings.Contains(lastData.Content, "[无需回复]") {
-				return
-			}
-		}
+		// 先reply一条，占位。
 		resp, err := larkutils.ReplyMsgText(
-			ctx, lastData.Content, *event.Event.Message.MessageId, "_chat_random", false,
+			ctx, "我想想应该怎么说...", *event.Event.Message.MessageId, "_chat_random", false,
 		)
 		if err != nil {
 			return err
 		}
 		if !resp.Success() {
 			return errors.New(resp.Error())
+		}
+		lastMsgID := *resp.Data.MessageId
+		idx := 0
+		lastData := &doubao.ModelStreamRespReasoning{}
+		for data := range res {
+			eot := "**回复:**"
+			sor := "\n参考资料："
+			span.SetAttributes(attribute.String("lastData", data.Content))
+			if idx := strings.Index(data.Content, eot); idx != -1 {
+				lastData = data
+				lastData.Content = strings.TrimSpace(lastData.Content[idx+len(eot):])
+				if idx := strings.Index(data.Content, sor); idx != -1 {
+					lastData.Content = strings.TrimSpace(lastData.Content[:idx])
+				}
+			}
+
+			if strings.Contains(lastData.Content, "[无需回复]") {
+				return err
+			}
+			if data.Reply2Show != nil {
+				if data.Reply2Show.Content != "" {
+					idx++
+					resp, err := larkutils.ReplyMsgText(
+						ctx, data.Reply2Show.Content, lastMsgID, strconv.Itoa(idx), true,
+					)
+					if err != nil {
+						return err
+					}
+					if !resp.Success() {
+						return errors.New(resp.Error())
+					}
+				}
+			}
+		}
+		err = larkutils.UpdateMessageText(ctx, lastMsgID, lastData.Content)
+		if err != nil {
+			return err
 		}
 	}
 	return
@@ -171,13 +197,10 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	}
 	createTime := utility.EpoMil2DateStr(*event.Event.Message.CreateTime)
 	promptTemplate.UserInput = []string{fmt.Sprintf("[%s](%s) <%s>: %s", createTime, *event.Event.Sender.SenderId.OpenId, userName, larkutils.PreGetTextMsg(ctx, event))}
-	// promptTemplate.UserInput = append(promptTemplate.UserInput, commonutils.TransSliceWithSkip(input, func(s string) (string, bool) {
-	// 	if strings.TrimSpace(s) != "" {
-	// 		return s, false
-	// 	}
-	// 	return "", true
-	// })...)
 	promptTemplate.HistoryRecords = messageList.ToLines()
+	if len(promptTemplate.HistoryRecords) > *size {
+		promptTemplate.HistoryRecords = promptTemplate.HistoryRecords[:*size]
+	}
 	docs, err := retriver.Cli.RecallDocs(ctx, chatID, *event.Event.Message.Content, 10)
 	if err != nil {
 		logging.Logger.Err(err)

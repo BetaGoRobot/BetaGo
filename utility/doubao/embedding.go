@@ -153,6 +153,7 @@ func SingleChatModel(ctx context.Context, sysPrompt, userPrompt, modelID string)
 type ModelStreamRespReasoning struct {
 	ReasoningContent string
 	Content          string
+	Reply2Show       *ReplyUnit
 }
 
 func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, files ...string) (seq iter.Seq[*ModelStreamRespReasoning], err error) {
@@ -244,14 +245,19 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, f
 					content.WriteString(c)
 				}
 				if !yield(&ModelStreamRespReasoning{
-					reasoningContent.String(),
-					content.String(),
+					ReasoningContent: reasoningContent.String(),
+					Content:          content.String(),
 				}) {
 					return
 				}
 			}
 		}
 	}, nil
+}
+
+type ReplyUnit struct {
+	ID      string
+	Content string
 }
 
 func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...string) (seq iter.Seq[*ModelStreamRespReasoning], err error) {
@@ -308,20 +314,15 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...
 			Tools: []*responses.ResponsesTool{
 				{
 					Union: &responses.ResponsesTool_ToolWebSearch{
-						ToolWebSearch: &responses.ToolWebSearch{},
+						ToolWebSearch: &responses.ToolWebSearch{
+							Type: responses.ToolType_web_search,
+						},
 					},
 				},
 			},
-			// Thinking: &responses.ResponsesThinking{Type: responses.ThinkingType_auto.Enum()},
-			Store:   utility.Ptr(false),
-			Stream:  utility.Ptr(true),
-			Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
-			// Reasoning: &responses.ResponsesReasoning{
-			// ,
-			// Stream: utility.Ptr(true),
-			// Reasoning: &responses.ResponsesReasoning{
-			// 	Effort: responses.ReasoningEffort_medium,
-			// },
+			Store:  utility.Ptr(false),
+			Stream: utility.Ptr(true),
+			// Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
 		}
 	} else {
 		req = &responses.ResponsesRequest{
@@ -337,12 +338,8 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...
 					},
 				},
 			},
-			Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
-			Stream:  utility.Ptr(true),
-			// Reasoning: &responses.ResponsesReasoning{
-			// 	Effort: responses.ReasoningEffort_medium,
-			// },
-			// Thinking: &responses.ResponsesThinking{Type: responses.ThinkingType_auto.Enum()},
+			// Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
+			Stream: utility.Ptr(true),
 		}
 	}
 	resp, err := client.CreateResponsesStream(ctx, req)
@@ -369,30 +366,41 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...
 				log.Zlog.Error("responses error", zap.Error(err))
 				return
 			}
-
+			res := &ModelStreamRespReasoning{}
 			if part := event.GetReasoningText(); part != nil {
 				reasoningContent.WriteString(part.GetDelta())
+				span.SetAttributes(attribute.Key("reasoning_content").String(reasoningContent.String()))
 			}
 			if part := event.GetText(); part != nil {
 				content.WriteString(part.GetDelta())
-			}
-			if part := event.GetResponseWebSearchCallCompleted(); part != nil {
-				span.SetAttributes(attribute.Key("web_search_completed").String(part.String()))
+				span.SetAttributes(attribute.Key("content").String(content.String()))
 			}
 			if part := event.GetResponseWebSearchCallSearching(); part != nil {
-				span.SetAttributes(attribute.Key("web_search_searching").String(part.String()))
+				key := "web_search_searching"
+				span.SetAttributes(attribute.Key(key).String(part.String()))
+				// res.Reply2Show = &ReplyUnit{key, "🔍 开始搜索"}
+			}
+			if event.GetEventType() == responses.EventType_response_output_item_done.String() &&
+				event.GetItem() != nil && event.GetItem().GetItem().GetFunctionWebSearch() != nil {
+				searchKeywords := event.GetItem().Item.GetFunctionWebSearch().GetAction().GetQuery()
+				res.Reply2Show = &ReplyUnit{"query", "✅ 完成搜索, 关键词：" + searchKeywords}
+				span.SetAttributes(attribute.Key("content").String(searchKeywords))
 			}
 			if part := event.GetResponseWebSearchCallInProgress(); part != nil {
 				span.SetAttributes(attribute.Key("web_search_in_progress").String(part.String()))
 			}
 
-			rc := reasoningContent.String()
-			c := content.String()
-			span.SetAttributes(attribute.Key("reasoning_content").String(rc))
-			span.SetAttributes(attribute.Key("content").String(c))
-			if !yield(&ModelStreamRespReasoning{rc, c}) {
+			{
+				rc := reasoningContent.String()
+				c := content.String()
+				res.ReasoningContent = rc
+				res.Content = c
+			}
+
+			if !yield(res) {
 				return
 			}
 		}
+		return
 	}, nil
 }

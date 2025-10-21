@@ -588,7 +588,7 @@ func UpdateMessageTextRaw(ctx context.Context, msgID, textMsg string) (err error
 		ctx,
 		larkim.NewUpdateMessageReqBuilder().MessageId(msgID).
 			Body(
-				larkim.NewUpdateMessageReqBodyBuilder().MsgType("text").Content(textMsg).
+				larkim.NewUpdateMessageReqBodyBuilder().MsgType(larkim.MsgTypeText).Content(textMsg).
 					Build(),
 			).
 			Build(),
@@ -597,7 +597,39 @@ func UpdateMessageTextRaw(ctx context.Context, msgID, textMsg string) (err error
 		return
 	}
 	if !resp.Success() {
-		return fmt.Errorf(resp.Error())
+		return errors.New(resp.Error())
+	}
+	return
+}
+
+// UpdateMessageText 1
+//
+//	@param ctx context.Context
+//	@param msgID string
+//	@param textMsg string
+//	@return err error
+//	@author kevinmatthe
+//	@update 2025-06-05 17:06:39
+func UpdateMessageText(ctx context.Context, msgID, textMsg string) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID))
+	defer span.End()
+	defer func() { span.RecordError(err) }()
+
+	resp, err := lark.LarkClient.Im.V1.Message.Update(
+		ctx,
+		larkim.NewUpdateMessageReqBuilder().MessageId(msgID).
+			Body(
+				larkim.NewUpdateMessageReqBodyBuilder().MsgType(larkim.MsgTypeText).Content(NewTextMsgBuilder().Text(textMsg).Build()).
+					Build(),
+			).
+			Build(),
+	)
+	if err != nil {
+		return
+	}
+	if !resp.Success() {
+		return errors.New(resp.Error())
 	}
 	return
 }
