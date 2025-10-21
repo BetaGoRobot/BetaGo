@@ -128,6 +128,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 				return
 			}
 		}
+		refernce := ""
 		for data := range res {
 			eot := "**回复:**"
 			sor := "\n参考资料:"
@@ -136,7 +137,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 				lastData = data
 				lastData.Content = strings.TrimSpace(lastData.Content[idx+len(eot):])
 				if idx := strings.Index(data.Content, sor); idx != -1 {
-					replyMsg(strings.TrimSpace(data.Content[idx:]))
+					refernce = strings.TrimSpace(data.Content[idx+len(sor):])
 					lastData.Content = strings.TrimSpace(lastData.Content[:idx])
 				}
 			}
@@ -147,6 +148,9 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 			if data.Reply2Show != nil {
 				replyMsg(data.Reply2Show.Content)
 			}
+		}
+		if refernce != "" {
+			replyMsg(refernce)
 		}
 		err = larkutils.UpdateMessageText(ctx, lastMsgID, lastData.Content)
 		if err != nil {
