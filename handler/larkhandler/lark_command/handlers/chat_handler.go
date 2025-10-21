@@ -112,22 +112,22 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 			return errors.New(resp.Error())
 		}
 		lastMsgID := *resp.Data.MessageId
-		idx := 0
 		lastData := &doubao.ModelStreamRespReasoning{}
-		replyMsg := func(content string) {
-			idx++
-			resp, err := larkutils.ReplyMsgText(
-				ctx, content, lastMsgID, strconv.Itoa(idx), true,
-			)
-			if err != nil {
-				logging.Logger.Err(errors.New(err.Error()))
-				return
-			}
-			if !resp.Success() {
-				logging.Logger.Err(errors.New(resp.Error()))
-				return
-			}
-		}
+		// idx := 0
+		// replyMsg := func(content string) {
+		// 	idx++
+		// 	resp, err := larkutils.ReplyMsgText(
+		// 		ctx, content, lastMsgID, strconv.Itoa(idx), true,
+		// 	)
+		// 	if err != nil {
+		// 		logging.Logger.Err(errors.New(err.Error()))
+		// 		return
+		// 	}
+		// 	if !resp.Success() {
+		// 		logging.Logger.Err(errors.New(resp.Error()))
+		// 		return
+		// 	}
+		// }
 		refernce := ""
 		for data := range res {
 			eot := "**回复:**"
@@ -139,6 +139,8 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 				if idx := strings.Index(data.Content, sor); idx != -1 {
 					refernce = strings.TrimSpace(data.Content[idx:])
 					lastData.Content = strings.TrimSpace(lastData.Content[:idx])
+					lastData.Content += "\n> (*包含在线检索内容)"
+					span.SetAttributes(attribute.String("refernce", refernce))
 				}
 			}
 
@@ -146,12 +148,13 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 				return err
 			}
 			if data.Reply2Show != nil {
-				replyMsg(data.Reply2Show.Content)
+				span.SetAttributes(attribute.String("reply2Show"+"."+data.Reply2Show.ID, data.Reply2Show.Content))
+				// replyMsg(data.Reply2Show.Content)
 			}
 		}
-		if refernce != "" {
-			replyMsg(refernce)
-		}
+		// if refernce != "" {
+		// 	replyMsg(refernce)
+		// }
 		err = larkutils.UpdateMessageText(ctx, lastMsgID, lastData.Content)
 		if err != nil {
 			return err
