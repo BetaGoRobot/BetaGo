@@ -8,3 +8,8 @@ func GetEnvWithDefault(envStr, defaultValue string) string {
 	}
 	return defaultValue
 }
+
+// IsDevChan checks if the current environment is a development channel
+func IsDevChan() bool {
+	return os.Getenv("DEV_CHAN") != ""
+}

@@ -2,6 +2,7 @@ package message
 
 import (
 	"context"
+	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
@@ -70,5 +71,5 @@ func (r *ReplyChatOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 	msg := larkutils.PreGetTextMsg(ctx, event)
 	msg = larkutils.TrimAtMsg(ctx, msg)
 
-	return handlers.ChatHandler("chat")(ctx, event, meta, msg)
+	return handlers.ChatHandler("chat")(ctx, event, meta, strings.Split(msg, " ")...)
 }

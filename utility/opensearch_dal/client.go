@@ -46,6 +46,9 @@ func OpenSearchClient() *opensearchapi.Client {
 func InsertData(ctx context.Context, index string, id string, data any) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	if os.Getenv("DEV_CHAN") != "" {
+		return nil
+	}
 
 	req := opensearchapi.IndexReq{
 		Index:      index,

@@ -10,9 +10,7 @@ const (
 	LarkFunctionRandomRepeat LarkFunctionEnum = "random_repeat"
 )
 
-const (
-	BotOpenID = "ou_8817f540f718affd21718f415b81597f"
-)
+var BotOpenID = os.Getenv("BOT_OPEN_ID")
 
 const (
 	LarkResourceTypeImage   string = "image"

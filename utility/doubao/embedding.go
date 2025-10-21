@@ -7,11 +7,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
+	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model/responses"
 	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 )
@@ -241,6 +243,145 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, f
 				}) {
 					return
 				}
+			}
+		}
+	}, nil
+}
+
+func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...string) (iter.Seq[*ModelStreamRespReasoning], error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
+	span.SetAttributes(attribute.Key("model_id").String(modelID))
+	span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))
+
+	var req *responses.ResponsesRequest
+	if len(files) > 0 {
+		span.SetAttributes(attribute.Key("files").String(strings.Join(files, ",")))
+		modelID = ARK_VISION_EPID
+		// responses.ResponsesInput_ListValue
+		listValue := make([]*model.ChatCompletionMessageContentPart, len(files)+1)
+		listValue[0] = &model.ChatCompletionMessageContentPart{
+			Type: model.ChatCompletionMessageContentPartTypeText,
+			Text: sysPrompt,
+		}
+		inputItems := make([]*responses.ContentItem, 0)
+		for _, f := range files {
+			inputItems = append(inputItems, &responses.ContentItem{
+				Union: &responses.ContentItem_Image{
+					Image: &responses.ContentItemImage{
+						Type:     responses.ContentItemType_input_image,
+						ImageUrl: f,
+						Detail:   responses.ContentItemImageDetail_auto.Enum(),
+					},
+				},
+			})
+		}
+		inputItems = append(inputItems, &responses.ContentItem{
+			Union: &responses.ContentItem_Text{
+				Text: &responses.ContentItemText{
+					Type: responses.ContentItemType_input_text,
+					Text: sysPrompt,
+				},
+			},
+		})
+		inputMessage := &responses.ItemInputMessage{
+			Role:    responses.MessageRole_user,
+			Content: inputItems,
+		}
+		req = &responses.ResponsesRequest{
+			Model: modelID,
+			Input: &responses.ResponsesInput{
+				Union: &responses.ResponsesInput_ListValue{
+					ListValue: &responses.InputItemList{ListValue: []*responses.InputItem{{
+						Union: &responses.InputItem_InputMessage{InputMessage: inputMessage},
+					}}},
+				},
+			},
+			Tools: []*responses.ResponsesTool{
+				{
+					Union: &responses.ResponsesTool_ToolWebSearch{
+						ToolWebSearch: &responses.ToolWebSearch{},
+					},
+				},
+			},
+			// Thinking: &responses.ResponsesThinking{Type: responses.ThinkingType_auto.Enum()},
+			Store:  utility.Ptr(false),
+			Stream: utility.Ptr(true),
+			// Reasoning: &responses.ResponsesReasoning{
+			// ,
+			// Stream: utility.Ptr(true),
+			// Reasoning: &responses.ResponsesReasoning{
+			// 	Effort: responses.ReasoningEffort_medium,
+			// },
+		}
+	} else {
+		req = &responses.ResponsesRequest{
+			Model: modelID,
+			Input: &responses.ResponsesInput{Union: &responses.ResponsesInput_StringValue{StringValue: sysPrompt}},
+			Store: utility.Ptr(false),
+			Tools: []*responses.ResponsesTool{
+				{
+					Union: &responses.ResponsesTool_ToolWebSearch{
+						ToolWebSearch: &responses.ToolWebSearch{
+							Type: responses.ToolType_web_search,
+						},
+					},
+				},
+			},
+			// Stream: utility.Ptr(true),
+			// Reasoning: &responses.ResponsesReasoning{
+			// 	Effort: responses.ReasoningEffort_medium,
+			// },
+			// Thinking: &responses.ResponsesThinking{Type: responses.ThinkingType_auto.Enum()},
+		}
+	}
+	resp, err := client.CreateResponsesStream(ctx, req)
+	if err != nil {
+		log.Zlog.Error("responses error", zap.Error(err))
+		return nil, err
+	}
+
+	return func(yield func(s *ModelStreamRespReasoning) bool) {
+		_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+		defer span.End()
+		span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
+		span.SetAttributes(attribute.Key("model_id").String(modelID))
+		span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))
+		content := &strings.Builder{}
+		reasoningContent := &strings.Builder{}
+		for {
+			event, err := resp.Recv()
+			if err == io.EOF {
+				return
+			}
+			if err != nil {
+				log.Zlog.Error("responses error", zap.Error(err))
+				return
+			}
+
+			if part := event.GetReasoningText(); part != nil {
+				reasoningContent.WriteString(part.GetDelta())
+			}
+			if part := event.GetText(); part != nil {
+				content.WriteString(part.GetDelta())
+			}
+			if part := event.GetResponseWebSearchCallCompleted(); part != nil {
+				span.SetAttributes(attribute.Key("web_search_completed").String(part.String()))
+			}
+			if part := event.GetResponseWebSearchCallSearching(); part != nil {
+				span.SetAttributes(attribute.Key("web_search_searching").String(part.String()))
+			}
+			if part := event.GetResponseWebSearchCallInProgress(); part != nil {
+				span.SetAttributes(attribute.Key("web_search_in_progress").String(part.String()))
+			}
+
+			rc := reasoningContent.String()
+			c := content.String()
+			span.SetAttributes(attribute.Key("reasoning_content").String(rc))
+			span.SetAttributes(attribute.Key("content").String(c))
+			if !yield(&ModelStreamRespReasoning{rc, c}) {
+				return
 			}
 		}
 	}, nil

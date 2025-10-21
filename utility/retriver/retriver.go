@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	opensearchgo "github.com/opensearch-project/opensearch-go"
 	"github.com/tmc/langchaingo/embeddings"
@@ -116,6 +117,9 @@ func NewRAGSystem(ctx context.Context, cfg Config) (*RAGSystem, error) {
 // AddDocuments 是我们的第二个“原子能力”：插入文档
 // 它负责创建索引（如果不存在）并将文档添加进去
 func (rs *RAGSystem) AddDocuments(ctx context.Context, suffix string, docs []schema.Document) error {
+	if utility.IsDevChan() {
+		return nil
+	}
 	indexName := IndexNamePrefix + "_" + suffix
 	log.Printf("正在为索引 '%s' 准备...", indexName)
 	// 确保索引存在且维度正确

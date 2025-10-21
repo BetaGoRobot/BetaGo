@@ -5,6 +5,7 @@ import (
 	"errors"
 	"iter"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
@@ -159,38 +160,49 @@ func SendAndReplyStreamingCard(ctx context.Context, msg *larkim.EventMessage, ms
 	return nil
 }
 
+type KV[K comparable, V any] struct {
+	Key K
+	Val V
+}
+
 func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespReasoning], cardID string) (err error, lastIdx int) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
-	sendFunc := func(req *larkcardkit.ContentCardElementReq) {
+	idx := &atomic.Int32{}
+	idx.Store(0)
+
+	defer func() {
+		lastIdx = int(idx.Load())
+	}()
+	sendFunc := func(key, content string) {
 		ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer span.End()
-
+		body := larkcardkit.NewContentCardElementReqBodyBuilder().Content(content).Sequence(int(idx.Add(1))).Build()
+		req := larkcardkit.NewContentCardElementReqBuilder().CardId(cardID).ElementId(key).Body(body).Build()
 		resp, err := lark.LarkClient.Cardkit.V1.CardElement.Content(ctx, req)
 		if err != nil {
-			log.Zlog.Error("patch message failed with error msg: " + resp.Msg)
+			log.Zlog.Error("patch message failed with error msg: " + err.Error())
+			return
+		}
+		if !resp.Success() {
+			log.Zlog.Error("patch message failed with error msg: " + resp.Error())
 			return
 		}
 	}
 	var (
-		msgChan = make(chan *larkcardkit.ContentCardElementReq, 10)
+		msgChan = make(chan KV[string, string], 10)
 		ticker  = time.NewTicker(time.Millisecond * 20)
 	)
 	defer ticker.Stop()
-
 	eg := errgroup.Group{}
+
 	eg.Go(func() error {
 		defer close(msgChan)
-		writeFunc := func(idx int, data *doubao.ModelStreamRespReasoning) error {
+
+		writeFunc := func(data doubao.ModelStreamRespReasoning) error {
 			_, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 			defer span.End()
 
-			bodyBuilder := larkcardkit.
-				NewContentCardElementReqBodyBuilder().
-				Sequence(idx)
-			updateReqBuilder := larkcardkit.
-				NewContentCardElementReqBuilder().
-				CardId(cardID)
 			if data.ReasoningContent != "" {
 				contentSlice := []string{}
 				for _, item := range strings.Split(data.ReasoningContent, "\n") {
@@ -200,35 +212,37 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 			}
 
 			if data.Content != "" {
-				bodyBuilder.Content(data.Content)
-				updateReqBuilder.ElementId("content")
-			} else {
-				bodyBuilder.Content(data.ReasoningContent)
-				updateReqBuilder.ElementId("cot")
+				eot := "**回复:**"
+				if idx := strings.Index(data.Content, eot); idx != -1 {
+					data.Content = strings.TrimSpace(data.Content[idx+len(eot):])
+				}
+				msgChan <- KV[string, string]{"content", data.Content}
 			}
-			updateReqBuilder.Body(bodyBuilder.Build())
-			msgChan <- updateReqBuilder.Build()
+
+			if data.ReasoningContent != "" {
+				msgChan <- KV[string, string]{"cot", data.ReasoningContent}
+			}
 			return nil
 		}
-		lastIdx = 0
-		lastData := &doubao.ModelStreamRespReasoning{}
-		for data := range res {
-			lastIdx++
-			*lastData = *data
 
-			err = writeFunc(lastIdx, data)
+		for data := range res {
+			err = writeFunc(*data)
 			if err != nil {
 				return err
 			}
 		}
-		err = writeFunc(lastIdx, lastData)
-		if err != nil {
-			return err
-		}
 		return nil
 	})
 
-	var lastChunk *larkcardkit.ContentCardElementReq
+	chunkQueue := make(map[string]string)
+	clearQueue := func() {
+		if len(chunkQueue) > 0 {
+			for key, content := range chunkQueue {
+				sendFunc(key, content)
+			}
+			chunkQueue = map[string]string{}
+		}
+	}
 updateChunkLoop:
 	for {
 		select {
@@ -236,16 +250,11 @@ updateChunkLoop:
 			if !ok {
 				break updateChunkLoop
 			}
-			lastChunk = chunk
+			chunkQueue[chunk.Key] = chunk.Val
 		case <-ticker.C:
-			if lastChunk != nil {
-				sendFunc(lastChunk)
-				lastChunk = nil
-			}
+			clearQueue()
 		}
 	}
-	if lastChunk != nil {
-		sendFunc(lastChunk)
-	}
+	clearQueue()
 	return
 }
