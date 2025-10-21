@@ -313,8 +313,9 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...
 				},
 			},
 			// Thinking: &responses.ResponsesThinking{Type: responses.ThinkingType_auto.Enum()},
-			Store:  utility.Ptr(false),
-			Stream: utility.Ptr(true),
+			Store:   utility.Ptr(false),
+			Stream:  utility.Ptr(true),
+			Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
 			// Reasoning: &responses.ResponsesReasoning{
 			// ,
 			// Stream: utility.Ptr(true),
@@ -336,7 +337,8 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...
 					},
 				},
 			},
-			// Stream: utility.Ptr(true),
+			Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
+			Stream:  utility.Ptr(true),
 			// Reasoning: &responses.ResponsesReasoning{
 			// 	Effort: responses.ReasoningEffort_medium,
 			// },
