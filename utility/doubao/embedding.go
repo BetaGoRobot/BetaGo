@@ -401,6 +401,5 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...
 				return
 			}
 		}
-		return
 	}, nil
 }
