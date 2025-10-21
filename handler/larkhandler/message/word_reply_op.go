@@ -40,6 +40,7 @@ type WordReplyMsgOperator struct {
 func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 
 	// 先判断群聊的功能启用情况
@@ -62,6 +63,7 @@ func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2Messa
 func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 
 	msg := larkutils.PreGetTextMsg(ctx, event)

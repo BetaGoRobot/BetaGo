@@ -305,6 +305,7 @@ func (m *MinioManager) UploadFileOverwrite(opts minio.PutObjectOptions) (u *url.
 func (m *MinioManager) TryGetFile() (shareURL *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(m, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	if MinioCheckFileExists(ctx, m.bucketName, m.objName) {
 		return m.PresignURL()
@@ -315,6 +316,7 @@ func (m *MinioManager) TryGetFile() (shareURL *url.URL, err error) {
 func (m *MinioManager) UploadFile(opts minio.PutObjectOptions) (err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(m, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	err = minioUploadReader(ctx, m.bucketName, m.file, m.objName, opts)
 	if err != nil {
@@ -327,6 +329,7 @@ func (m *MinioManager) UploadFile(opts minio.PutObjectOptions) (err error) {
 func (m *MinioManager) PresignURL() (u *url.URL, err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(m, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	u, err = presignObjInner(ctx, m.bucketName, m.objName)
 	if err != nil {

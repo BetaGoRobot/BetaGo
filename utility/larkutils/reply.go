@@ -40,6 +40,7 @@ func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 		span.SetAttributes(attribute.Key(k).String(fmt.Sprintf("%v", v)))
 	}
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	log.Zlog.Info("reply card",
 		zap.String("msgID", msgID),
 		zap.String("suffix", suffix),
@@ -79,6 +80,7 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	cardContent := templates.NewCardContent(
 		ctx, templates.NormalCardReplyTemplate,
 	).
@@ -123,6 +125,7 @@ func SendCard(ctx context.Context, cardContent *templates.TemplateCardContent, c
 	span.SetAttributes(attribute.Key("suffix").String(suffix))
 	span.SetAttributes(attribute.Key("cardContent").String(cardContent.String()))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	resp, err := lark.LarkClient.Im.V1.Message.Create(
 		ctx, larkim.NewCreateMessageReqBuilder().ReceiveIdType(larkim.ReceiveIdTypeChatId).
@@ -161,6 +164,7 @@ func SendCardText(ctx context.Context, text string, chatID, suffix string) (err 
 	span.SetAttributes(attribute.Key("chatID").String(chatID))
 
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	cardContent := templates.NewCardContent(
 		ctx, templates.NormalCardReplyTemplate,
 	).
@@ -199,6 +203,7 @@ func ReplyCardTextGraph[X cts.ValidType, Y cts.Numeric](ctx context.Context, tex
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	cardContent := templates.NewCardContent(
 		ctx, templates.NormalCardGraphReplyTemplate,
 	).
@@ -245,6 +250,7 @@ func PatchCardTextGraph(ctx context.Context, text string, graph any, msgID strin
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	cardContent := templates.NewCardContent(
 		ctx, templates.NormalCardGraphReplyTemplate,
 	).
@@ -285,6 +291,7 @@ func PatchCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 		span.SetAttributes(attribute.Key(k).String(fmt.Sprintf("%v", v)))
 	}
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	resp, err := lark.LarkClient.Im.V1.Message.Patch(
 		ctx, larkim.NewPatchMessageReqBuilder().
 			MessageId(msgID).

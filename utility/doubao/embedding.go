@@ -41,6 +41,7 @@ func EmbeddingText(ctx context.Context, input string) (embedded []float32, token
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("input").String(input))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	req := model.EmbeddingRequestStrings{
 		Input: []string{input},
@@ -60,11 +61,12 @@ func EmbeddingText(ctx context.Context, input string) (embedded []float32, token
 	return
 }
 
-func SingleChat(ctx context.Context, sysPrompt, userPrompt string) (string, error) {
+func SingleChat(ctx context.Context, sysPrompt, userPrompt string) (res string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	span.SetAttributes(attribute.Key("user_prompt").String(userPrompt))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
 		Model: ARK_NORMAL_EPID,
@@ -91,10 +93,11 @@ func SingleChat(ctx context.Context, sysPrompt, userPrompt string) (string, erro
 	return *resp.Choices[0].Message.Content.StringValue, nil
 }
 
-func SingleChatPrompt(ctx context.Context, prompt string) (string, error) {
+func SingleChatPrompt(ctx context.Context, prompt string) (res string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("prompt").String(prompt))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
 		Model: ARK_NORMAL_EPID,
@@ -115,11 +118,12 @@ func SingleChatPrompt(ctx context.Context, prompt string) (string, error) {
 	return *resp.Choices[0].Message.Content.StringValue, nil
 }
 
-func SingleChatModel(ctx context.Context, sysPrompt, userPrompt, modelID string) (string, error) {
+func SingleChatModel(ctx context.Context, sysPrompt, userPrompt, modelID string) (res string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	span.SetAttributes(attribute.Key("user_prompt").String(userPrompt))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
 		Model: ARK_NORMAL_EPID,
@@ -151,9 +155,10 @@ type ModelStreamRespReasoning struct {
 	Content          string
 }
 
-func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, files ...string) (iter.Seq[*ModelStreamRespReasoning], error) {
+func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, files ...string) (seq iter.Seq[*ModelStreamRespReasoning], err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	span.SetAttributes(attribute.Key("model_id").String(modelID))
 	span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))
@@ -212,6 +217,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, f
 		_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 		defer span.End()
+		defer func() { span.RecordError(err) }()
 		content := &strings.Builder{}
 		reasoningContent := &strings.Builder{}
 		defer span.SetAttributes(attribute.
@@ -248,9 +254,10 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, f
 	}, nil
 }
 
-func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...string) (iter.Seq[*ModelStreamRespReasoning], error) {
+func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...string) (seq iter.Seq[*ModelStreamRespReasoning], err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	span.SetAttributes(attribute.Key("model_id").String(modelID))
 	span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))
@@ -345,6 +352,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, files ...
 	return func(yield func(s *ModelStreamRespReasoning) bool) {
 		_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer span.End()
+		defer func() { span.RecordError(err) }()
 		span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 		span.SetAttributes(attribute.Key("model_id").String(modelID))
 		span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))

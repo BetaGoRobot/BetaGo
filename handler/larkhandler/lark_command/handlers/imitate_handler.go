@@ -27,6 +27,7 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaDa
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	quoteList := data.Event.Message.Mentions
 	if len(quoteList) == 1 {

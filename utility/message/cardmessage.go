@@ -21,9 +21,10 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*doubao.ModelStreamRespReasoning]) error {
+func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*doubao.ModelStreamRespReasoning]) (err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	// create Card
 	// 创建卡片实体
@@ -91,9 +92,10 @@ func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, m
 	return nil
 }
 
-func SendAndReplyStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*doubao.ModelStreamRespReasoning], inThread bool) error {
+func SendAndReplyStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*doubao.ModelStreamRespReasoning], inThread bool) (err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	// create Card
 	// 创建卡片实体
@@ -168,6 +170,7 @@ type KV[K comparable, V any] struct {
 func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespReasoning], cardID string) (err error, lastIdx int) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	idx := &atomic.Int32{}
 	idx.Store(0)
 
@@ -177,6 +180,7 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 	sendFunc := func(key, content string) {
 		ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer span.End()
+		defer func() { span.RecordError(err) }()
 		body := larkcardkit.NewContentCardElementReqBodyBuilder().Content(content).Sequence(int(idx.Add(1))).Build()
 		req := larkcardkit.NewContentCardElementReqBuilder().CardId(cardID).ElementId(key).Body(body).Build()
 		resp, err := lark.LarkClient.Cardkit.V1.CardElement.Content(ctx, req)
@@ -202,6 +206,7 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 		writeFunc := func(data doubao.ModelStreamRespReasoning) error {
 			_, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 			defer span.End()
+			defer func() { span.RecordError(err) }()
 
 			if data.ReasoningContent != "" {
 				contentSlice := []string{}

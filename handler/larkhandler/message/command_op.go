@@ -38,6 +38,7 @@ type CommandOperator struct {
 func (r *CommandOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 
 	if !larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
@@ -56,6 +57,7 @@ func (r *CommandOperator) Run(ctx context.Context, event *larkim.P2MessageReceiv
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 	rawCommand := larkutils.PreGetTextMsg(ctx, event)
 
@@ -66,6 +68,7 @@ func ExecuteFromRawCommand(ctx context.Context, event *larkim.P2MessageReceiveV1
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 
 	rawCommand = strings.ReplaceAll(rawCommand, "<b>", " ")

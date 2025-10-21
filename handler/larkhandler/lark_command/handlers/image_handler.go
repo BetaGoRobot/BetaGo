@@ -34,10 +34,11 @@ import (
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:13
-func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	argMap, _ := parseArgs(args...)
 	log.Zlog.Info("wordAddHandler", zaplog.Any("args", argMap))
@@ -116,10 +117,11 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 //	@param data *larkim.P2MessageReceiveV1
 //	@param args ...string
 //	@return error
-func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	argMap, _ := parseArgs(args...)
 	log.Zlog.Info("replyGetHandler", zaplog.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
@@ -143,7 +145,7 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 		AddVariable("title2", "Picture").
 		AddVariable("table_raw_array_1", lines)
 
-	err := larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)
+	err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)
 	if err != nil {
 		return err
 	}
@@ -160,6 +162,7 @@ func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 
 	argMap, _ := parseArgs(args...)

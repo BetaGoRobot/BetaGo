@@ -35,6 +35,7 @@ type ReactMsgOperator struct {
 func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	// 先判断群聊的功能启用情况
 	if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomReact) {
@@ -53,7 +54,8 @@ func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRe
 func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
-	defer span.RecordError(err)
+	defer func() { span.RecordError(err) }()
+	defer func() { span.RecordError(err) }()
 
 	// React
 

@@ -16,7 +16,7 @@ import (
 //
 //	@author heyuhengmatt
 //	@update 2024-07-18 04:43:42
-type CommandFunc[T any] func(ctx context.Context, data T, metaData *handlerbase.BaseMetaData, args ...string) error
+type CommandFunc[T any] func(ctx context.Context, data T, metaData *handlerbase.BaseMetaData, args ...string) (err error)
 
 // Command Repeat
 //

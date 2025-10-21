@@ -213,6 +213,7 @@ func ReplyMsgRawAsText(ctx context.Context, msgID, msgType, content, suffix stri
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("msgType").String(msgType), attribute.Key("content").String(content))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	uuid := (msgID + suffix)
 	if len(uuid) > 50 {
 		uuid = uuid[:50]
@@ -243,6 +244,7 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("msgType").String(msgType), attribute.Key("content").String(content))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	uuid := (msgID + suffix)
 	if len(uuid) > 50 {
 		uuid = uuid[:50]
@@ -278,6 +280,7 @@ func ReplyMsgText(ctx context.Context, text, msgID, suffix string, replyInThread
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(text))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	return ReplyMsgRawAsText(ctx, msgID, larkim.MsgTypeText, text, suffix, replyInThread)
 }
 
@@ -464,6 +467,7 @@ func CreateMsgText(ctx context.Context, content, msgID, chatID string) (err erro
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(content))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	// TODO: Add id saving
 	return CreateMsgTextRaw(ctx, NewTextMsgBuilder().Text(content).Build(), msgID, chatID)
@@ -474,6 +478,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("content").String(content))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	// TODO: Add id saving
 	uuid := (msgID + "_create")
 	if len(uuid) > 50 {
@@ -508,6 +513,7 @@ func AddReaction(ctx context.Context, reactionType, msgID string) (reactionID st
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	req := larkim.NewCreateMessageReactionReqBuilder().Body(larkim.NewCreateMessageReactionReqBodyBuilder().ReactionType(larkim.NewEmojiBuilder().EmojiType(reactionType).Build()).Build()).MessageId(msgID).Build()
 	resp, err := lark.LarkClient.Im.V1.MessageReaction.Create(ctx, req)
@@ -527,6 +533,7 @@ func AddReactionAsync(ctx context.Context, reactionType, msgID string) (err erro
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	req := larkim.NewCreateMessageReactionReqBuilder().Body(larkim.NewCreateMessageReactionReqBodyBuilder().ReactionType(larkim.NewEmojiBuilder().EmojiType(reactionType).Build()).Build()).MessageId(msgID).Build()
 	go func() {
@@ -548,6 +555,7 @@ func RemoveReaction(ctx context.Context, reactionID, msgID string) (err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	req := larkim.NewDeleteMessageReactionReqBuilder().MessageId(msgID).ReactionId(reactionID).Build()
 	resp, err := lark.LarkClient.Im.V1.MessageReaction.Delete(ctx, req)
 	if err != nil {
@@ -574,6 +582,7 @@ func UpdateMessageTextRaw(ctx context.Context, msgID, textMsg string) (err error
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	resp, err := lark.LarkClient.Im.V1.Message.Update(
 		ctx,

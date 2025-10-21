@@ -52,16 +52,17 @@ type traceItem struct {
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:33
-func DebugGetIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func DebugGetIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	if data.Event.Message.ParentId == nil {
 		return errors.New("No parent Msg Quoted")
 	}
 
-	err := larkutils.ReplyCardText(ctx, getIDText+*data.Event.Message.ParentId, *data.Event.Message.MessageId, "_getID", false)
+	err = larkutils.ReplyCardText(ctx, getIDText+*data.Event.Message.ParentId, *data.Event.Message.MessageId, "_getID", false)
 	if err != nil {
 		log.Zlog.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		return err
@@ -77,10 +78,11 @@ func DebugGetIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:29
-func DebugGetGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func DebugGetGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	chatID := data.Event.Message.ChatId
 	if chatID != nil {
 		err := larkutils.ReplyCardText(ctx, getGroupIDText+*chatID, *data.Event.Message.MessageId, "_getGroupID", false)
@@ -101,10 +103,11 @@ func DebugGetGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:25
-func DebugTryPanicHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func DebugTryPanicHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	panic(errors.New("try panic!"))
 }
 
@@ -166,10 +169,11 @@ func GetTraceFromMsgID(ctx context.Context, msgID string) (iter.Seq[*traceItem],
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:23
-func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	var (
 		m             = map[string]struct{}{}
 		traceIDs      = make([]string, 0)
@@ -216,7 +220,7 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 		return errors.New("No traceID found")
 	}
 	traceIDStr := "TraceIDs:\n" + strings.Join(traceIDs, "\n")
-	err := larkutils.ReplyCardText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", replyInThread)
+	err = larkutils.ReplyCardText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", replyInThread)
 	if err != nil {
 		log.Zlog.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
 		return err
@@ -230,10 +234,11 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 //	@param data *larkim.P2MessageReceiveV1
 //	@param args ...string
 //	@return error
-func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	if data.Event.Message.ThreadId != nil { // 话题模式，找到所有的traceID
 		resp, err := lark.LarkClient.Im.Message.List(ctx, larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
@@ -271,10 +276,11 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 	return nil
 }
 
-func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	if data.Event.Message.ThreadId != nil {
 		return nil
@@ -315,10 +321,11 @@ func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 	return nil
 }
 
-func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	seq, err := larkimg.GetAllImgURLFromParent(ctx, data)
 	if err != nil {
 		return err
@@ -353,10 +360,11 @@ func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 	return nil
 }
 
-func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	msgs, err := larkutils.GetAllParentMsg(ctx, data)
 	if err != nil {

@@ -35,6 +35,7 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	var (
 		days     = 7
@@ -129,6 +130,7 @@ type trendInternalHelper struct {
 func (h *trendInternalHelper) DrawTrendPie(ctx context.Context, trend history.TrendSeries, reply bool) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	graph := vadvisor.NewPieChartsGraphWithPlayer[string, int64]()
 	for _, item := range trend {
@@ -163,6 +165,7 @@ func (h *trendInternalHelper) DrawTrendPie(ctx context.Context, trend history.Tr
 func (h *trendInternalHelper) DrawTrendBar(ctx context.Context, trend history.TrendSeries, reply bool) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	graph := vadvisor.NewBarChartsGraphWithPlayer[string, int64]()
 	for _, item := range trend {
@@ -201,6 +204,7 @@ func (h *trendInternalHelper) DrawTrendBar(ctx context.Context, trend history.Tr
 func (h *trendInternalHelper) TrendByUser(ctx context.Context) (trend history.TrendSeries, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	trend, err = history.New(ctx).
 		Query(
@@ -222,6 +226,7 @@ func (h *trendInternalHelper) TrendByUser(ctx context.Context) (trend history.Tr
 func (h *trendInternalHelper) TrendRate(ctx context.Context, indexName, field string) (singleDimAggs *history.SingleDimAggregate, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	singleDimAggs = &history.SingleDimAggregate{}
 	// 通过Opensearch统计发言数量

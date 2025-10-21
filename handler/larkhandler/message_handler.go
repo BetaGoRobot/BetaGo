@@ -31,11 +31,12 @@ func isOutDated(createTime string) bool {
 //	@param ctx
 //	@param event
 //	@return error
-func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) error {
+func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer larkutils.RecoverMsg(ctx, *event.Event.Message.MessageId)
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	if isOutDated(*event.Event.Message.CreateTime) {
 		return nil
@@ -55,10 +56,11 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) err
 //	@param ctx
 //	@param event
 //	@return error
-func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReactionCreatedV1) error {
+func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReactionCreatedV1) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer larkutils.RecoverMsg(ctx, *event.Event.MessageId)
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	go reaction.Handler.Clean().WithCtx(ctx).WithEvent(event).Run()
 	return nil

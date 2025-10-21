@@ -11,13 +11,13 @@ import (
 
 var larkCommandNilFunc CommandFunc[*larkim.P2MessageReceiveV1]
 
-func bar1Handler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func bar1Handler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	_, _ = ctx, data
 	fmt.Println("Executing bar1 with args:", args)
 	return nil
 }
 
-func bar2Handler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func bar2Handler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	_, _ = ctx, data
 	fmt.Println("Executing bar2 with args:", args)
 	return nil

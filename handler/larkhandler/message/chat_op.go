@@ -38,6 +38,7 @@ type ChatMsgOperator struct {
 func (r *ChatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	// 先判断群聊的功能启用情况
 	if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
 		return errors.Wrap(consts.ErrStageSkip, "ImitateMsgOperator: Not enabled")
@@ -59,6 +60,7 @@ func (r *ChatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRec
 func (r *ChatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	// 开始摇骰子, 默认概率10%
 	realRate := utility.MustAtoI(utility.GetEnvWithDefault("IMITATE_DEFAULT_RATE", "10"))

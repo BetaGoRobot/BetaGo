@@ -21,6 +21,7 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	argsMap, input := parseArgs(args...)
 	searchType, ok := argsMap["type"]

@@ -29,6 +29,7 @@ func GetChatName(ctx context.Context, chatID string) (chatName string) {
 func GetChatIDFromMsgID(ctx context.Context, msgID string) (chatID string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	resp := GetMsgFullByID(ctx, msgID)
 	if !resp.Success() {

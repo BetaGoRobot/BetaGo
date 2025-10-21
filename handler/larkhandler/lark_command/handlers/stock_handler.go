@@ -35,6 +35,7 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	argMap, _ := parseArgs(args...)
 
@@ -108,6 +109,7 @@ func ZhAStockHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	var (
 		days                  = 1

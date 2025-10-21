@@ -123,6 +123,7 @@ func (h *Helper) Sort(name string, order osquery.Order) *Helper {
 func (h *Helper) GetMsg() (messageList OpensearchMsgLogList, err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	resp, err := h.GetRaw()
 	if err != nil {
@@ -135,6 +136,7 @@ func (h *Helper) GetMsg() (messageList OpensearchMsgLogList, err error) {
 func (h *Helper) GetRaw() (resp *opensearchapi.SearchResp, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	span.SetAttributes(
 		attribute.Key("index").String(h.index),
 		attribute.Key("query").String(utility.MustMashal(h.query)),
@@ -154,6 +156,7 @@ func (h *Helper) GetRaw() (resp *opensearchapi.SearchResp, err error) {
 func (h *Helper) GetAll() (messageList []*handlertypes.MessageIndex, err error) {
 	_, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	resp, err := h.GetRaw()
 	return commonutils.TransSlice(resp.Hits.Hits, func(hit opensearchapi.SearchHit) *handlertypes.MessageIndex {
@@ -207,6 +210,7 @@ type (
 func (h *Helper) GetTrend(interval, termField string) (trendList TrendSeries, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(h.Context, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	span.SetAttributes(
 		attribute.Key("index").String(h.index),

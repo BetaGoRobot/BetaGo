@@ -42,6 +42,7 @@ type RepeatMsgOperator struct {
 func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	// 先判断群聊的功能启用情况
 	if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
 		return errors.Wrap(consts.ErrStageSkip, "RepeatMsgOperator: Not enabled")
@@ -63,6 +64,8 @@ func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageR
 func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
+	defer func() { span.RecordError(err) }()
 
 	// Repeat
 	msg := larkutils.PreGetTextMsg(ctx, event)

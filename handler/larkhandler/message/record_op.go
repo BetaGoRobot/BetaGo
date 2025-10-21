@@ -37,6 +37,7 @@ type RecordMsgOperator struct {
 func (r *RecordMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	return
 }
@@ -52,6 +53,7 @@ func (r *RecordMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageR
 func (r *RecordMsgOperator) Run(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	imgSeq, err := larkimg.GetAllImageFromMsgEvent(ctx, event.Event.Message)
 	if err != nil {

@@ -56,6 +56,7 @@ func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2Mess
 func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, chatType string, size *int, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	var (
 		res   iter.Seq[*doubao.ModelStreamRespReasoning]
@@ -128,6 +129,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, modelID string, size *int, files []string, input ...string) (res iter.Seq[*doubao.ModelStreamRespReasoning], err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	// 默认获取最近20条消息
 	if size == nil {

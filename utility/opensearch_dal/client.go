@@ -46,6 +46,7 @@ func OpenSearchClient() *opensearchapi.Client {
 func InsertData(ctx context.Context, index string, id string, data any) error {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+
 	if os.Getenv("DEV_CHAN") != "" {
 		return nil
 	}
@@ -60,28 +61,29 @@ func InsertData(ctx context.Context, index string, id string, data any) error {
 	return err
 }
 
-func SearchData(ctx context.Context, index string, data any) (*opensearchapi.SearchResp, error) {
+func SearchData(ctx context.Context, index string, data any) (resp *opensearchapi.SearchResp, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	req := &opensearchapi.SearchReq{
 		Indices: []string{index},
 		Body:    opensearchutil.NewJSONReader(data),
 	}
-	resp, err := OpenSearchClient().Search(ctx, req)
+	resp, err = OpenSearchClient().Search(ctx, req)
 
 	return resp, err
 }
 
-func SearchDataStr(ctx context.Context, index string, data string) (*opensearchapi.SearchResp, error) {
+func SearchDataStr(ctx context.Context, index string, data string) (resp *opensearchapi.SearchResp, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	req := &opensearchapi.SearchReq{
 		Indices: []string{index},
 		Body:    strings.NewReader(data),
 	}
-	resp, err := OpenSearchClient().Search(ctx, req)
-
+	resp, err = OpenSearchClient().Search(ctx, req)
 	return resp, err
 }

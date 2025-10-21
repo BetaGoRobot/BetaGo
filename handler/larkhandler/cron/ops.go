@@ -30,6 +30,7 @@ func (r *CronTaskRunReactionOperator) Run(ctx context.Context, event *CronTaskEv
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 	// chatID, err := larkutils.GetChatIDFromMsgID(ctx, *event.Event.MessageId)
 	// if err != nil {

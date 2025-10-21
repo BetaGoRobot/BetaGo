@@ -31,11 +31,12 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-func WebHookHandler(ctx context.Context, cardAction *callback.CardActionTriggerEvent) (*callback.CardActionTriggerResponse, error) {
+func WebHookHandler(ctx context.Context, cardAction *callback.CardActionTriggerEvent) (resp *callback.CardActionTriggerResponse, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer larkutils.RecoverMsg(ctx, cardAction.Event.Context.OpenMessageID)
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(cardAction)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	// 记录一下操作记录
 	defer larkutils.RecordCardAction2Opensearch(ctx, cardAction)

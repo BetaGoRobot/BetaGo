@@ -14,6 +14,7 @@ import (
 func GetUserMemberFromChat(ctx context.Context, chatID, openID string) (member *larkim.ListMember, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	memberMap, err := GetUserMapFromChatIDCache(ctx, chatID)
 	if err != nil {
@@ -31,6 +32,7 @@ func GetUserMapFromChatIDCache(ctx context.Context, chatID string) (memberMap ma
 func GetUserMapFromChatID(ctx context.Context, chatID string) (memberMap map[string]*larkim.ListMember, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	memberMap = make(map[string]*larkim.ListMember)
 	hasMore := true

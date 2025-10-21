@@ -28,10 +28,11 @@ import (
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:09
-func WordAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func WordAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 
 	if len(args) < 2 {
 		return errors.ErrUnsupported
@@ -66,10 +67,11 @@ func WordAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaDa
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:07
-func WordGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func WordGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	argMap, _ := parseArgs(args...)
 	log.Zlog.Info("wordGetHandler", zaplog.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
@@ -104,7 +106,7 @@ func WordGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaDa
 		AddVariable("title3", "Rate").
 		AddVariable("table_raw_array_1", lines)
 
-	err := larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_wordGet", false)
+	err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_wordGet", false)
 	if err != nil {
 		return err
 	}

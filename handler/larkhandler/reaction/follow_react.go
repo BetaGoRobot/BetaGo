@@ -34,6 +34,7 @@ type FollowReactionOperator struct {
 func (r *FollowReactionOperator) PreRun(ctx context.Context, event *larkim.P2MessageReactionCreatedV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	return
 }
 
@@ -47,7 +48,8 @@ func (r *FollowReactionOperator) Run(ctx context.Context, event *larkim.P2Messag
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
-	defer span.RecordError(err)
+	defer func() { span.RecordError(err) }()
+	defer func() { span.RecordError(err) }()
 	realRate := utility.MustAtoI(utility.GetEnvWithDefault("REACTION_FOLLOW_DEFAULT_RATE", "10"))
 	if utility.Probability(float64(realRate) / 100) {
 		_, err = larkutils.AddReaction(ctx, *event.Event.ReactionType.EmojiType, *event.Event.MessageId)

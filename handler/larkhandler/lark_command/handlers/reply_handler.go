@@ -31,7 +31,7 @@ import (
 //	@return error
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:18
-func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	argMap, _ := parseArgs(args...)
 	log.Zlog.Info("replyHandler", zaplog.Any("args", argMap))
 	if len(argMap) > 0 {
@@ -129,10 +129,11 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 //	@param data *larkim.P2MessageReceiveV1
 //	@param args ...string
 //	@return error
-func ReplyGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) error {
+func ReplyGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	argMap, _ := parseArgs(args...)
 	log.Zlog.Info("replyGetHandler", zaplog.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
@@ -184,7 +185,7 @@ func ReplyGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 		AddVariable("title4", "MatchType").
 		AddVariable("table_raw_array_1", lines)
 
-	err := larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)
+	err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_replyGet", false)
 	if err != nil {
 		return err
 	}

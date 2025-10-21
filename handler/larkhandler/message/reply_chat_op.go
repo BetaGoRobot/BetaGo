@@ -39,6 +39,7 @@ type ReplyChatOperator struct {
 func (r *ReplyChatOperator) PreRun(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	if !larkutils.IsMentioned(event.Event.Message.Mentions) {
 		return errors.Wrap(consts.ErrStageSkip, "MusicMsgOperator: Not Mentioned")
 	}
@@ -58,6 +59,7 @@ func (r *ReplyChatOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 
 	reactionID, err := larkutils.AddReaction(ctx, "OnIt", *event.Event.Message.MessageId)

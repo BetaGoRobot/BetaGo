@@ -62,7 +62,7 @@ type CommandContextFunc func(ctx context.Context, TargetID, MsgID, AuthorID stri
 //	@param guildID
 //	@param args
 //	@return error
-type CommandContextWithGuildIDFunc func(ctx context.Context, targetID, quoteID, authorID string, guildID string, args ...string) error
+type CommandContextWithGuildIDFunc func(ctx context.Context, targetID, quoteID, authorID string, guildID string, args ...string) (err error)
 
 // GetNewCommandCtx  is a function for command.
 //

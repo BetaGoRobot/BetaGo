@@ -37,6 +37,7 @@ type RecordReactionOperator struct {
 func (r *RecordReactionOperator) PreRun(ctx context.Context, event *larkim.P2MessageReactionCreatedV1, meta *handlerbase.BaseMetaData) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	return
 }
 
@@ -50,6 +51,7 @@ func (r *RecordReactionOperator) Run(ctx context.Context, event *larkim.P2Messag
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
 	defer span.End()
+	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 	chatID, err := larkutils.GetChatIDFromMsgID(ctx, *event.Event.MessageId)
 	if err != nil {
