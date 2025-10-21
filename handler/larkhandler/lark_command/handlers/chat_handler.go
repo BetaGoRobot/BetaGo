@@ -101,17 +101,17 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		if err != nil {
 			return err
 		}
-		// 先reply一条，占位。
-		resp, err := larkutils.ReplyMsgText(
-			ctx, "我想想应该怎么说...", *event.Event.Message.MessageId, "_chat_random", false,
-		)
-		if err != nil {
-			return err
-		}
-		if !resp.Success() {
-			return errors.New(resp.Error())
-		}
-		lastMsgID := *resp.Data.MessageId
+		// // 先reply一条，占位。
+		// resp, err := larkutils.ReplyMsgText(
+		// 	ctx, "我想想应该怎么说...", *event.Event.Message.MessageId, "_chat_random", false,
+		// )
+		// if err != nil {
+		// 	return err
+		// }
+		// if !resp.Success() {
+		// 	return errors.New(resp.Error())
+		// }
+		// lastMsgID := *resp.Data.MessageId
 		lastData := &doubao.ModelStreamRespReasoning{}
 		// idx := 0
 		// replyMsg := func(content string) {
@@ -155,9 +155,19 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		// if refernce != "" {
 		// 	replyMsg(refernce)
 		// }
-		err = larkutils.UpdateMessageText(ctx, lastMsgID, lastData.Content)
+		// err = larkutils.UpdateMessageText(ctx, lastMsgID, lastData.Content)
+		// if err != nil {
+		// 	return err
+		// }
+
+		resp, err := larkutils.ReplyMsgText(
+			ctx, lastData.Content, *event.Event.Message.MessageId, "_chat_random", false,
+		)
 		if err != nil {
 			return err
+		}
+		if !resp.Success() {
+			return errors.New(resp.Error())
 		}
 	}
 	return
