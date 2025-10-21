@@ -137,7 +137,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 				lastData = data
 				lastData.Content = strings.TrimSpace(lastData.Content[idx+len(eot):])
 				if idx := strings.Index(data.Content, sor); idx != -1 {
-					refernce = strings.TrimSpace(data.Content[idx+len(sor):])
+					refernce = strings.TrimSpace(data.Content[idx:])
 					lastData.Content = strings.TrimSpace(lastData.Content[:idx])
 				}
 			}
