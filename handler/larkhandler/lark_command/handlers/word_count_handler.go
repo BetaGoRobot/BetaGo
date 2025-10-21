@@ -123,7 +123,7 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 	} else {
 		err = larkutils.ReplyCard(ctx,
 			cardContent,
-			*data.Event.Message.MessageId, "", false)
+			*data.Event.Message.MessageId, "", true)
 	}
 	return
 }
