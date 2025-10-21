@@ -114,14 +114,29 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		lastMsgID := *resp.Data.MessageId
 		idx := 0
 		lastData := &doubao.ModelStreamRespReasoning{}
+		replyMsg := func(content string) {
+			idx++
+			resp, err := larkutils.ReplyMsgText(
+				ctx, content, lastMsgID, strconv.Itoa(idx), true,
+			)
+			if err != nil {
+				logging.Logger.Err(errors.New(err.Error()))
+				return
+			}
+			if !resp.Success() {
+				logging.Logger.Err(errors.New(resp.Error()))
+				return
+			}
+		}
 		for data := range res {
 			eot := "**回复:**"
-			sor := "\n参考资料："
+			sor := "\n参考资料:"
 			span.SetAttributes(attribute.String("lastData", data.Content))
 			if idx := strings.Index(data.Content, eot); idx != -1 {
 				lastData = data
 				lastData.Content = strings.TrimSpace(lastData.Content[idx+len(eot):])
 				if idx := strings.Index(data.Content, sor); idx != -1 {
+					replyMsg(strings.TrimSpace(data.Content[idx:]))
 					lastData.Content = strings.TrimSpace(lastData.Content[:idx])
 				}
 			}
@@ -130,18 +145,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 				return err
 			}
 			if data.Reply2Show != nil {
-				if data.Reply2Show.Content != "" {
-					idx++
-					resp, err := larkutils.ReplyMsgText(
-						ctx, data.Reply2Show.Content, lastMsgID, strconv.Itoa(idx), true,
-					)
-					if err != nil {
-						return err
-					}
-					if !resp.Success() {
-						return errors.New(resp.Error())
-					}
-				}
+				replyMsg(data.Reply2Show.Content)
 			}
 		}
 		err = larkutils.UpdateMessageText(ctx, lastMsgID, lastData.Content)
