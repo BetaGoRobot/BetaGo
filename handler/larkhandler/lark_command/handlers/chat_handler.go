@@ -139,7 +139,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 				if idx := strings.Index(data.Content, sor); idx != -1 {
 					refernce = strings.TrimSpace(data.Content[idx:])
 					lastData.Content = strings.TrimSpace(lastData.Content[:idx])
-					lastData.Content += "\n> (*包含在线检索内容)"
+					lastData.Content += "<i>(*包含在线检索内容)<i>"
 					span.SetAttributes(attribute.String("refernce", refernce))
 				}
 			}
