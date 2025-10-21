@@ -15,7 +15,7 @@ require (
 	github.com/BetaGoRobot/go_utils v0.0.3
 	github.com/bytedance/sonic v1.14.1
 	github.com/carlmjohnson/requests v0.25.1
-	github.com/cloudwego/hertz v0.10.2
+	github.com/cloudwego/hertz v0.10.3
 	github.com/defensestation/osquery v1.0.0
 	github.com/dgraph-io/ristretto/v2 v2.3.0
 	github.com/dlclark/regexp2 v1.11.5
