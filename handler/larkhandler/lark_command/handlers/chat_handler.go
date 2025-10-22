@@ -260,7 +260,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	if err != nil {
 		return nil, err
 	}
-	iter, err := doubao.ResponseStreaming(ctx, b.String(), modelID, files...)
+	iter, err := doubao.ResponseStreaming(ctx, b.String(), modelID, chatID, files...)
 	if err != nil {
 		return
 	}
