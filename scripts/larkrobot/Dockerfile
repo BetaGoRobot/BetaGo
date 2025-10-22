@@ -41,8 +41,8 @@ COPY --from=builder /go/pkg/mod/github.com/yanyiwu/gojieba@v1.4.6/deps/cppjieba/
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/share/zoneinfo/ /usr/share/zoneinfo
 COPY --from=builder /app/larkrobot /larkrobot
-COPY --from=builder /app/data/fonts /data/fonts
-
+COPY --from=builder /app/fonts /data/fonts
+COPY --from=builder /app/assets/images /data/images
 
 WORKDIR /
 
