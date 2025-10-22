@@ -453,6 +453,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				if err != nil {
 					return
 				}
+				span.SetAttributes(attribute.Key("search_res").String(string(utility.MustMashal(searchRes))))
 				message := &responses.ResponsesInput{
 					Union: &responses.ResponsesInput_ListValue{
 						ListValue: &responses.InputItemList{ListValue: []*responses.InputItem{
