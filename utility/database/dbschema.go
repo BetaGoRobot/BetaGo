@@ -246,11 +246,6 @@ type CronCmdTask struct {
 	TaskCmd  string `json:"task_cmd"`
 }
 
-var (
-	isTest    = os.Getenv("IS_TEST")
-	isCluster = os.Getenv("IS_CLUSTER")
-)
-
 func init() {
 	// try get db conn
 	if GetDbConnection() == nil {
