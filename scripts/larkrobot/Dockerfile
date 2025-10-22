@@ -1,6 +1,5 @@
 FROM ghcr.io/betagorobot/betago-golang:master as builder
 
-RUN apk add vips-dev g++
 WORKDIR /app
 COPY go.mod go.sum ./
 
