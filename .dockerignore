@@ -1,0 +1,14 @@
+# 忽略 Git 和 GitHub Action 的配置
+.git
+.github
+
+# 忽略你之前在 zip 命令中排除的目录
+dal/qqmusicapi/qqmusic-api-service
+dal/neteaseapi/netease-api-service
+
+# 忽略其他不需要在镜像中的文件
+README.md
+*.md
+betago.zip
+image_latest.tar.gz
+image_timestamp.tar.gz
