@@ -40,6 +40,29 @@ jobs:
         id: timestamp
         run: echo "timestamp=$(date +%s%3N)" >> $GITHUB_OUTPUT
 
+      # --- 新增：设置 Go ---
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25' # <-- 请根据你的 Dockerfile 中的 Go 版本调整
+          cache: true # <-- 自动启用 Go 模块和构建缓存
+          
+      # --- 新增：获取 Go 缓存路径 ---
+      # 我们需要缓存的
+      # 1. 模块缓存 (GOMODCACHE)
+      # 2. 构建缓存 (GOCACHE)
+      - name: Get Go cache paths
+        id: go-paths
+        run: |
+          echo "mod_cache_path=$(go env GOMODCACHE)" >> $GITHUB_OUTPUT
+          echo "build_cache_path=$(go env GOCACHE)" >> $GITHUB_OUTPUT
+
+      # --- 新增：预热 Go 模块缓存 ---
+      # 这一步是可选的，但推荐。
+      # 它可以确保 GOMODCACHE 目录在挂载前进 Docker 前是最新状态。
+      - name: Download Go modules on runner
+        run: go mod download
+
       - name: Log in to DockerHub
         uses: docker/login-action@v3 # <-- 版本更新
         with:
@@ -59,43 +82,24 @@ jobs:
           registry: ${{ env.TENCENT_HEADER }}
           username: "100016072032"
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-
-      # --- 新增：设置 Buildx 和 QEMU ---
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-      # --- 结束新增 ---
         
-      - name: Zip source code # <-- 拆分：原 Build 步骤中的 zip 命令
+      # --- 修改：Build 步骤 ---
+      - name: Build and Save Docker image
         run: |
           zip -r -9 -q betago.zip . -x ".git/*" -x "dal/qqmusicapi/qqmusic-api-service/*" -x "dal/neteaseapi/netease-api-service/*"
-
-      # --- 新增：使用 build-push-action 并启用缓存 ---
-      - name: Build Docker image with cache
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: scripts/larkrobot/Dockerfile
-          tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:latest-${{ steps.timestamp.outputs.timestamp }}
-          push: false
-          load: true # <-- 关键：将镜像加载到本地 Docker 守护进程
-          cache-from: type=gha # <-- 关键：从 GHA 缓存中读取
-          cache-to: type=gha,mode=max # <-- 关键：写入 GHA 缓存
-      # --- 结束新增 ---
-
-      # --- 新增：拆分出来的 docker save ---
-      - name: Save Docker images
-        run: |
+          
+          # 关键：使用 --mount 将 Runner 上的 Go 缓存目录挂载到 Docker Build 内部
+          # 我们假设 Dockerfile 内部的 Go 默认 GOMODCACHE 是 /go/pkg/mod
+          # 我们假设 Dockerfile 内部的 Go 默认 GOCACHE 是 /root/.cache/go-build (因为构建通常是 root 用户)
+          DOCKER_BUILDKIT=1 docker build . \
+            --file scripts/larkrobot/Dockerfile \
+            --tag $IMAGE_NAME:latest \
+            --tag $IMAGE_NAME:latest-${{ steps.timestamp.outputs.timestamp }} \
+            --mount=type=bind,source=${{ steps.go-paths.outputs.mod_cache_path }},target=/go/pkg/mod \
+            --mount=type=bind,source=${{ steps.go-paths.outputs.build_cache_path }},target=/root/.cache/go-build
+            
           docker save $IMAGE_NAME:latest | gzip > image_latest.tar.gz
           docker save $IMAGE_NAME:latest-${{ steps.timestamp.outputs.timestamp }} | gzip > image_timestamp.tar.gz
-      # --- 结束新增 ---
-
-      # <-- 原 'Build and Save Docker image' 步骤已被上述三个步骤取代 -->
 
       - name: Upload image artifacts
         uses: actions/upload-artifact@v4
@@ -106,6 +110,7 @@ jobs:
             image_timestamp.tar.gz
 
   PushToDockerHub:
+    # ... (后续 Job 保持不变) ...
     needs: Build
     runs-on: ubuntu-latest
     steps:
@@ -119,7 +124,7 @@ jobs:
           gunzip -c image_timestamp.tar.gz | docker load
 
       - name: Log in to DockerHub
-        uses: docker/login-action@v3 # <-- 版本更新
+        uses: docker/login-action@v3
         with:
           username: kevinmatt
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
@@ -130,52 +135,10 @@ jobs:
           docker push $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
 
   # PushToGHCR:
-  #   needs: Build
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         name: docker-images
-  #     - name: Load Docker image
-  #       run: |
-  #         gunzip -c image_latest.tar.gz | docker load
-  #         gunzip -c image_timestamp.tar.gz | docker load
-  #     - name: Log in to GHCR
-  #       uses: docker/login-action@v3 # <-- 版本更新
-  #       with:
-  #         registry: ghcr.io
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     - name: Push to GHCR
-  #       run: |
-  #         docker tag $IMAGE_NAME:latest ghcr.io/${{ github.repository_owner }}/larkbot:latest
-  #         docker tag $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }} ghcr.io/${{ github.repository_owner }}/larkbot:latest-${{ needs.Build.outputs.timestamp }}
-  #         docker push ghcr.io/${{ github.repository_owner }}/larkbot:latest
-  #         docker push ghcr.io/${{ github.repository_owner }}/larkbot:latest-${{ needs.Build.outputs.timestamp }}
+  # ... (保持不变) ...
 
   # PushToTencentCloud:
-  #   needs: Build
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/download-artifact@v4
-  #       with:
-  #         name: docker-images
-  #     - name: Load Docker image
-  #       run: |
-  #         gunzip -c image_latest.tar.gz | docker load
-  #         gunzip -c image_timestamp.tar.gz | docker load
-  #     - name: Log in to Tencent Cloud Registry
-  #       uses: docker/login-action@v3 # <-- 版本更新
-  #       with:
-  #         registry: ${{ env.TENCENT_HEADER }}
-  #         username: "100016072032"
-  #         password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
-  #     - name: Push to Tencent
-  #       run: |
-  #         docker tag $IMAGE_NAME:latest $TENCENT_HEADER/$IMAGE_NAME:latest
-  #         docker tag $IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }} $TENCENT_HEADER/$IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
-  #         docker push $TENCENT_HEADER/$IMAGE_NAME:latest
-  #         docker push $TENCENT_HEADER/$IMAGE_NAME:latest-${{ needs.Build.outputs.timestamp }}
+  # ... (保持不变) ...
 
   Notify:
     if: github.event_name != 'pull_request'

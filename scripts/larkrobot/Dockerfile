@@ -8,8 +8,9 @@ RUN apk add vips-dev g++
 
 RUN unzip betago.zip
 
-RUN cd cmd/larkrobot && go build -ldflags="-w -s" -o larkrobot-source ./*.go && \
-    upx -9 -o larkrobot larkrobot-source
+RUN cd cmd/larkrobot && go build -ldflags="-w -s" -o larkrobot
+# -source ./*.go && \
+#     upx -9 -o larkrobot larkrobot-source
 
 
 # FROM ghcr.io/betagorobot/betago-chrome:master as runner
