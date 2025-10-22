@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -444,12 +445,13 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				if err != nil {
 					return
 				}
-				searchRes, err := HybridSearch(ctx, HybridSearchRequest{
-					QueryText: args.Keywords,
-					TopK:      args.TopK,
-					UserID:    args.UserID,
-					ChatID:    chatID,
-				})
+				searchRes, err := history.HybridSearch(ctx,
+					history.HybridSearchRequest{
+						QueryText: args.Keywords,
+						TopK:      args.TopK,
+						UserID:    args.UserID,
+						ChatID:    chatID,
+					}, EmbeddingText)
 				if err != nil {
 					return
 				}

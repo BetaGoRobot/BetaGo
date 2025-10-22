@@ -1,8 +1,3 @@
-# syntax=docker/dockerfile:1
-
-# -----------------
-# Builder 阶段
-# -----------------
 FROM ghcr.io/betagorobot/betago-golang:master as builder
 
 RUN apk add vips-dev g++

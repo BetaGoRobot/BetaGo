@@ -12,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -88,16 +89,6 @@ func ImitateHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaDa
 	return
 }
 
-type Mention struct {
-	Key string `json:"key"`
-	ID  struct {
-		UserID  string `json:"user_id"`
-		OpenID  string `json:"open_id"`
-		UnionID string `json:"union_id"`
-	} `json:"id"`
-	Name      string `json:"name"`
-	TenantKey string `json:"tenant_key"`
-}
 type MessageDoc struct {
 	UserID     string `json:"user_id"`
 	ChatID     string `json:"chat_id"`
@@ -167,7 +158,7 @@ func FilterMessage(hits []opensearchapi.SearchHit, size int) (msgList []string) 
 		if err != nil {
 			continue
 		}
-		mentions := make([]Mention, 0)
+		mentions := make([]*larkmsgutils.Mention, 0)
 
 		if res.Mentions != "null" {
 			err = sonic.UnmarshalString(res.Mentions, &mentions)
@@ -176,7 +167,7 @@ func FilterMessage(hits []opensearchapi.SearchHit, size int) (msgList []string) 
 			}
 		}
 
-		r := replaceMention(res.RawMessage, mentions)
+		r := larkmsgutils.ReplaceMentionToName(res.RawMessage, mentions)
 
 		r = strings.ReplaceAll(r, "\n", "\\n")
 		r = fmt.Sprintf("[%s](%s) <%s>: %s", res.CreateTime, res.UserID, res.UserName, r)
@@ -189,20 +180,4 @@ func FilterMessage(hits []opensearchapi.SearchHit, size int) (msgList []string) 
 	}
 	slices.Reverse(msgList)
 	return msgList
-}
-
-func replaceMention(input string, mentions []Mention) string {
-	if mentions != nil {
-		for _, mention := range mentions {
-			// input = strings.ReplaceAll(input, mention.Key, fmt.Sprintf("<at user_id=\\\"%s\\\">%s</at>", mention.ID.UserID, mention.Name))
-			input = strings.ReplaceAll(input, mention.Key, "")
-			if len(input) > 0 && string(input[0]) == "/" {
-				if inputs := strings.Split(input, " "); len(inputs) > 0 {
-					input = strings.Join(inputs[1:], " ")
-				}
-			}
-
-		}
-	}
-	return input
 }

@@ -233,7 +233,7 @@ func ReplyMsgRawAsText(ctx context.Context, msgID, msgType, content, suffix stri
 		return nil, err
 	}
 	if !resp.Success() {
-		log.Zlog.Error("ReplyMessage", zaplog.String("Error", larkcore.Prettify(resp.CodeError.Err)))
+		log.Zlog.Error("ReplyMessage", zaplog.String("Error", larkcore.Prettify(resp.CodeError.Err)), zaplog.String("content", content))
 		return nil, errors.New(resp.Error())
 	}
 	RecordReplyMessage2Opensearch(ctx, resp, content)
