@@ -316,13 +316,13 @@ func init() {
 func GetDbConnection() *gorm.DB {
 	dbOnce.Do(
 		func() {
-			var dsn string = " user=postgres password=heyuheng1.22.3 dbname=betago port=%s sslmode=disable TimeZone=Asia/Shanghai application_name=" + consts.RobotName
+			var dsn string = " user=postgres password=%s dbname=betago port=%s sslmode=disable TimeZone=Asia/Shanghai application_name=" + consts.RobotName
 			if consts.IsTest {
-				dsn = consts.DBHostTest + fmt.Sprintf(dsn, "15432")
+				dsn = consts.DBHostTest + fmt.Sprintf(dsn, os.Getenv("DB_PASSWORD"), "15432")
 			} else if consts.IsCluster {
-				dsn = consts.DBHostCluster + fmt.Sprintf(dsn, "5432")
+				dsn = consts.DBHostCluster + fmt.Sprintf(dsn, os.Getenv("DB_PASSWORD"), "5432")
 			} else {
-				dsn = consts.DBHostCompose + fmt.Sprintf(dsn, "5432")
+				dsn = consts.DBHostCompose + fmt.Sprintf(dsn, os.Getenv("DB_PASSWORD"), "5432")
 			}
 			var err error
 			consts.GlobalDBConn, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
