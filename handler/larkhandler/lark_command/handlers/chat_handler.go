@@ -220,7 +220,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	promptTemplate.UserInput = []string{fmt.Sprintf("[%s](%s) <%s>: %s", createTime, *event.Event.Sender.SenderId.OpenId, userName, larkutils.PreGetTextMsg(ctx, event))}
 	promptTemplate.HistoryRecords = messageList.ToLines()
 	if len(promptTemplate.HistoryRecords) > *size {
-		promptTemplate.HistoryRecords = promptTemplate.HistoryRecords[:*size]
+		promptTemplate.HistoryRecords = promptTemplate.HistoryRecords[len(promptTemplate.HistoryRecords)-*size:]
 	}
 	docs, err := retriver.Cli.RecallDocs(ctx, chatID, *event.Event.Message.Content, 10)
 	if err != nil {
