@@ -60,6 +60,20 @@ jobs:
           username: kevinmatt
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Tencent Cloud Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.TENCENT_HEADER }}
+          username: "100016072032"
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
       - name: Build and push to DockerHub
         uses: docker/build-push-action@v5 # 升级 action 版本
         with:
@@ -140,7 +154,7 @@ jobs:
       - name: Gotify Notification
         uses: eikendev/gotify-action@master
         with:
-          gotify_api_base: '${{ secrets.GOTIFY_URL }}'
-          gotify_app_token: '${{ secrets.GOTIFY_APP_TOKEN }}'
-          notification_title: '${{ env.ROBOT_NAME }} Build Complete'
-          notification_message: 'Your build was completed.'
+          gotify_api_base: "${{ secrets.GOTIFY_URL }}"
+          gotify_app_token: "${{ secrets.GOTIFY_APP_TOKEN }}"
+          notification_title: "${{ env.ROBOT_NAME }} Build Complete"
+          notification_message: "Your build was completed."
