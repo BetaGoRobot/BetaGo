@@ -28,6 +28,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/retriver"
 	commonutils "github.com/BetaGoRobot/go_utils/common_utils"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	jsonrepair "github.com/RealAlexandreAI/json-repair"
 	"github.com/bytedance/sonic"
 	"github.com/defensestation/osquery"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -100,67 +101,28 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		if err != nil {
 			return err
 		}
-		// // 先reply一条，占位。
-		// resp, err := larkutils.ReplyMsgText(
-		// 	ctx, "我想想应该怎么说...", *event.Event.Message.MessageId, "_chat_random", false,
-		// )
-		// if err != nil {
-		// 	return err
-		// }
-		// if !resp.Success() {
-		// 	return errors.New(resp.Error())
-		// }
-		// lastMsgID := *resp.Data.MessageId
 		lastData := &doubao.ModelStreamRespReasoning{}
-		// idx := 0
-		// replyMsg := func(content string) {
-		// 	idx++
-		// 	resp, err := larkutils.ReplyMsgText(
-		// 		ctx, content, lastMsgID, strconv.Itoa(idx), true,
-		// 	)
-		// 	if err != nil {
-		// 		logging.Logger.Err(errors.New(err.Error()))
-		// 		return
-		// 	}
-		// 	if !resp.Success() {
-		// 		logging.Logger.Err(errors.New(resp.Error()))
-		// 		return
-		// 	}
-		// }
-		refernce := ""
 		for data := range res {
-			eot := "**回复:**"
-			sor := "\n参考资料:"
+			// eot := "**回复:**"
+			// sor := "\n参考资料:"
 			span.SetAttributes(attribute.String("lastData", data.Content))
-			if idx := strings.Index(data.Content, eot); idx != -1 {
-				lastData = data
-				lastData.Content = strings.TrimSpace(lastData.Content[idx+len(eot):])
-				if idx := strings.Index(data.Content, sor); idx != -1 {
-					refernce = strings.TrimSpace(data.Content[idx:])
-					lastData.Content = strings.TrimSpace(lastData.Content[:idx])
-					lastData.Content += "<i>(*包含在线检索内容)</i>"
-					span.SetAttributes(attribute.String("refernce", refernce))
-				}
-			}
-
-			if strings.Contains(lastData.Content, "[无需回复]") {
-				return err
-			}
-			if data.Reply2Show != nil {
-				span.SetAttributes(attribute.String("reply2Show"+"."+data.Reply2Show.ID, data.Reply2Show.Content))
-				// replyMsg(data.Reply2Show.Content)
+			lastData = data
+			span.SetAttributes(
+				attribute.String("lastData.ReasoningContent", data.ReasoningContent),
+				attribute.String("lastData.Content", data.Content),
+				attribute.String("lastData.ContentStruct.Reply", data.ContentStruct.Reply),
+				attribute.String("lastData.ContentStruct.Decision", data.ContentStruct.Decision),
+				attribute.String("lastData.ContentStruct.Thought", data.ContentStruct.Thought),
+				attribute.String("lastData.ContentStruct.ReferenceFromWeb", data.ContentStruct.ReferenceFromWeb),
+				attribute.String("lastData.ContentStruct.ReferenceFromHistory", data.ContentStruct.ReferenceFromHistory),
+			)
+			if lastData.ContentStruct.Decision == "skip" {
+				return
 			}
 		}
-		// if refernce != "" {
-		// 	replyMsg(refernce)
-		// }
-		// err = larkutils.UpdateMessageText(ctx, lastMsgID, lastData.Content)
-		// if err != nil {
-		// 	return err
-		// }
 
 		resp, err := larkutils.ReplyMsgText(
-			ctx, lastData.Content, *event.Event.Message.MessageId, "_chat_random", false,
+			ctx, lastData.ContentStruct.Reply, *event.Event.Message.MessageId, "_chat_random", false,
 		)
 		if err != nil {
 			return err
@@ -192,7 +154,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 		return
 	}
 
-	templateRows, _ := database.FindByCacheFunc(database.PromptTemplateArgs{PromptID: 1}, func(d database.PromptTemplateArgs) string {
+	templateRows, _ := database.FindByCacheFunc(database.PromptTemplateArgs{PromptID: 4}, func(d database.PromptTemplateArgs) string {
 		return strconv.Itoa(d.PromptID)
 	})
 	if len(templateRows) == 0 {
@@ -290,7 +252,14 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 				return
 			}
 		}
-		lastData.Content = trie.ReplaceMentionsWithTrie(lastData.Content)
+		err = sonic.UnmarshalString(lastData.Content, &lastData.ContentStruct)
+		if err != nil {
+			lastData.Content, err = jsonrepair.RepairJSON(lastData.Content)
+			if err != nil {
+				return
+			}
+		}
+		lastData.ContentStruct.Reply = trie.ReplaceMentionsWithTrie(lastData.ContentStruct.Reply)
 		if !yield(lastData) {
 			return
 		}

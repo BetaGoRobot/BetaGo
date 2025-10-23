@@ -3,10 +3,12 @@ package history
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
+	"github.com/BetaGoRobot/BetaGo/utility/logging"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -43,6 +45,7 @@ func HybridSearch(ctx context.Context, req HybridSearchRequest, embeddingFunc Em
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
+	logging.Logger.Info().Ctx(ctx).Str("query_text", strings.Join(req.QueryText, " ")).Msg("开始混合搜索")
 	if req.TopK <= 0 {
 		req.TopK = 5
 	}
@@ -51,14 +54,10 @@ func HybridSearch(ctx context.Context, req HybridSearchRequest, embeddingFunc Em
 	// 'filter' 用于精确匹配，不影响评分，例如过滤 user_id
 	filters := []map[string]interface{}{}
 	if req.UserID != "" {
-		filters = append(filters, map[string]interface{}{
-			"term": map[string]interface{}{"user_id": req.UserID}, // 你的 mapping 中 user_id 是 keyword
-		})
+		filters = append(filters, map[string]interface{}{"term": map[string]interface{}{"user_id": req.UserID}})
 	}
 	if req.ChatID != "" {
-		filters = append(filters, map[string]interface{}{
-			"term": map[string]interface{}{"chat_id": req.ChatID}, // 你的 mapping 中 chat_id 是 keyword
-		})
+		filters = append(filters, map[string]interface{}{"term": map[string]interface{}{"chat_id": req.ChatID}})
 	}
 
 	queryTerms := make([]string, 0)
@@ -91,14 +90,10 @@ func HybridSearch(ctx context.Context, req HybridSearchRequest, embeddingFunc Em
 		{
 			// 1. 关键词 (BM25) 查询
 			// 我们查询 'message_str' 字段
-			"terms": map[string]interface{}{
-				"raw_message_jieba_array": queryTerms,
-			},
+			"terms": map[string]interface{}{"raw_message_jieba_array": queryTerms},
 		},
 		{
-			"bool": map[string]any{
-				"should": queryVecList,
-			},
+			"bool": map[string]any{"should": queryVecList},
 		},
 	}
 	query := map[string]interface{}{

@@ -16,6 +16,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/sonic"
 	larkcardkit "github.com/larksuite/oapi-sdk-go/v3/service/cardkit/v1"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"golang.org/x/sync/errgroup"
@@ -28,8 +29,7 @@ func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, m
 
 	// create Card
 	// 创建卡片实体
-	// template := templates.GetTemplate(templates.StreamingReasonTemplate)
-	// cardSrc := template.TemplateSrc
+
 	cardContent := templates.NewCardContent(ctx, templates.NormalCardReplyTemplate)
 	// 首先Create卡片实体
 	cardEntiReq := larkcardkit.NewCreateCardReqBuilder().Body(
@@ -217,10 +217,6 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 			}
 
 			if data.Content != "" {
-				eot := "**回复:**"
-				if idx := strings.Index(data.Content, eot); idx != -1 {
-					data.Content = strings.TrimSpace(data.Content[idx+len(eot):])
-				}
 				msgChan <- KV[string, string]{"content", data.Content}
 			}
 
@@ -243,6 +239,16 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 	clearQueue := func() {
 		if len(chunkQueue) > 0 {
 			for key, content := range chunkQueue {
+				if key == "content" {
+					// 尝试修复 JSON 字符串
+					contentStruct := &doubao.ContentStruct{}
+					if !strings.HasSuffix(content, "}") {
+						content += "}"
+					}
+					if sonic.UnmarshalString(content+"}", &contentStruct); contentStruct != nil {
+						content = contentStruct.BuildOutput()
+					}
+				}
 				sendFunc(key, content)
 			}
 			chunkQueue = map[string]string{}

@@ -2,6 +2,7 @@ package doubao
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"iter"
 	"os"
@@ -152,9 +153,38 @@ func SingleChatModel(ctx context.Context, sysPrompt, userPrompt, modelID string)
 	return *resp.Choices[0].Message.Content.StringValue, nil
 }
 
+type ContentStruct struct {
+	Decision             string `json:"decision"`
+	Thought              string `json:"thought"`
+	ReferenceFromWeb     string `json:"reference_from_web"`
+	ReferenceFromHistory string `json:"reference_from_history"`
+	Reply                string `json:"reply"`
+}
+
+func (s *ContentStruct) BuildOutput() string {
+	output := strings.Builder{}
+	if s.Decision != "" {
+		output.WriteString(fmt.Sprintf("- 决策: %s\n", s.Decision))
+	}
+	if s.Thought != "" {
+		output.WriteString(fmt.Sprintf("- 思考: %s\n", s.Thought))
+	}
+	if s.Reply != "" {
+		output.WriteString(fmt.Sprintf("- 回复: %s\n", s.Reply))
+	}
+	if s.ReferenceFromWeb != "" {
+		output.WriteString(fmt.Sprintf("- 参考网络: %s\n", s.ReferenceFromWeb))
+	}
+	if s.ReferenceFromHistory != "" {
+		output.WriteString(fmt.Sprintf("- 参考历史: %s\n", s.ReferenceFromHistory))
+	}
+	return output.String()
+}
+
 type ModelStreamRespReasoning struct {
 	ReasoningContent string
 	Content          string
+	ContentStruct    ContentStruct
 	Reply2Show       *ReplyUnit
 }
 
@@ -326,7 +356,8 @@ func Tools() []*responses.ResponsesTool {
 		{
 			Union: &responses.ResponsesTool_ToolWebSearch{
 				ToolWebSearch: &responses.ToolWebSearch{
-					Type: responses.ToolType_web_search,
+					Type:  responses.ToolType_web_search,
+					Limit: utility.Ptr[int64](10),
 				},
 			},
 		},
@@ -405,6 +436,11 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 			Input: &responses.ResponsesInput{Union: &responses.ResponsesInput_StringValue{StringValue: sysPrompt}},
 			Store: utility.Ptr(true),
 			Tools: Tools(),
+			Text: &responses.ResponsesText{
+				Format: &responses.TextFormat{
+					Type: responses.TextType_json_object,
+				},
+			},
 			// Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
 			Stream: utility.Ptr(true),
 		}
@@ -436,6 +472,11 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 			}
 			if id := event.GetResponse().GetResponse().GetId(); id != "" {
 				lastRespID = id
+			}
+
+			if responseEvent := event.GetResponse(); responseEvent != nil {
+				fmt.Println(event.GetEventType())
+				fmt.Println(utility.MustMashal(responseEvent.GetResponse()))
 			}
 			if fa := event.GetFunctionCallArguments(); fa != nil && fa.GetType() == responses.EventType_response_function_call_arguments_done {
 				log.Zlog.Info("function call arguments", zap.String("arguments", fa.GetArguments()))
