@@ -103,8 +103,6 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		}
 		lastData := &doubao.ModelStreamRespReasoning{}
 		for data := range res {
-			// eot := "**回复:**"
-			// sor := "\n参考资料:"
 			span.SetAttributes(attribute.String("lastData", data.Content))
 			lastData = data
 			span.SetAttributes(
@@ -122,7 +120,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		}
 
 		resp, err := larkutils.ReplyMsgText(
-			ctx, lastData.ContentStruct.Reply, *event.Event.Message.MessageId, "_chat_random", false,
+			ctx, strings.ReplaceAll(lastData.ContentStruct.Reply, "\\n", "\n"), *event.Event.Message.MessageId, "_chat_random", false,
 		)
 		if err != nil {
 			return err
