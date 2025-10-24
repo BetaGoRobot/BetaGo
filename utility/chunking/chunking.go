@@ -31,7 +31,7 @@ import (
 const (
 	// INACTIVITY_TIMEOUT 定义会话非活跃超时时间
 	// INACTIVITY_TIMEOUT = 30 * time.Second
-	INACTIVITY_TIMEOUT = 1 * time.Minute
+	INACTIVITY_TIMEOUT = 3 * time.Minute
 	// MAX_CHUNK_SIZE 定义在强制合并前一个块中的最大消息数
 	MAX_CHUNK_SIZE = 50
 )
