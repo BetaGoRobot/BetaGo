@@ -76,9 +76,6 @@ func init() {
 			newCmd("oneword", handlers.OneWordHandler).AddArgs("type"),
 		).
 		AddSubCommand(
-			newCmd("imitate", handlers.ImitateHandler),
-		).
-		AddSubCommand(
 			newCmd("bb", handlers.ChatHandler("chat")).AddArgs("r", "c"),
 		).
 		AddSubCommand(

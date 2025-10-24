@@ -104,34 +104,13 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 	if utility.Probability(float64(realRate) / 100) {
 		msgType := strings.ToLower(*event.Event.Message.MessageType)
 		if msgType == "text" {
-			// sendMsg
-			textMsgBuilder := larkutils.NewTextMsgBuilder()
-
-			// rebuild at msg
-			subStrings := []string{}
+			text := *event.Event.Message.Content
 			for _, mention := range event.Event.Message.Mentions {
-				subStrings = append(subStrings, *mention.Key)
+				text = strings.ReplaceAll(text, "@"+*mention.Key, larkutils.AtUserString(*mention.Id.OpenId))
 			}
-			subMsgList := RebuildAtMsg(msg, subStrings)
-
-			mentionsMap := make(map[string]*larkim.MentionEvent)
-			for _, mention := range event.Event.Message.Mentions {
-				mentionsMap[*mention.Key] = mention
-			}
-			for index, subMsg := range subMsgList {
-				if mentionEvent, ok := mentionsMap[subMsg]; ok {
-					textMsgBuilder.AtUser(*mentionEvent.Id.UserId, *mentionEvent.Name)
-				} else {
-					textMsgBuilder.Text(subMsg)
-				}
-				if index != len(subMsgList)-1 {
-					textMsgBuilder.Text(" ")
-				}
-			}
-			textMsg := textMsgBuilder.Build()
 			err = larkutils.CreateMsgTextRaw(
 				ctx,
-				textMsg,
+				text,
 				*event.Event.Message.MessageId,
 				*event.Event.Message.ChatId,
 			)

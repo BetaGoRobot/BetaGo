@@ -2,31 +2,38 @@ package doubao
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"iter"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	redisdal "github.com/BetaGoRobot/BetaGo/utility/redis"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
+	"github.com/redis/go-redis/v9"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model/responses"
 	"go.opentelemetry.io/otel/attribute"
+
 	"go.uber.org/zap"
 )
 
 var (
 	DOUBAO_EMBEDDING_EPID = os.Getenv("DOUBAO_EMBEDDING_EPID")
 	DOUBAO_API_KEY        = os.Getenv("DOUBAO_API_KEY")
-	ARK_NORMAL_EPID       = os.Getenv("ARK_NORMAL_EPID")
-	ARK_REASON_EPID       = os.Getenv("ARK_REASON_EPID")
-	ARK_VISION_EPID       = os.Getenv("ARK_VISION_EPID")
+
+	ARK_NORMAL_EPID = os.Getenv("ARK_NORMAL_EPID")
+	ARK_REASON_EPID = os.Getenv("ARK_REASON_EPID")
+	ARK_VISION_EPID = os.Getenv("ARK_VISION_EPID")
+	ARK_CHUNK_EPID  = os.Getenv("ARK_CHUNK_EPID")
 
 	NORMAL_MODEL_BOT_ID = os.Getenv("NORMAL_MODEL_BOT_ID")
 	REASON_MODEL_BOT_ID = os.Getenv("REASON_MODEL_BOT_ID")
@@ -64,93 +71,102 @@ func EmbeddingText(ctx context.Context, input string) (embedded []float32, token
 	return
 }
 
-func SingleChat(ctx context.Context, sysPrompt, userPrompt string) (res string, err error) {
+func ResponseWithCache(ctx context.Context, sysPrompt, userPrompt, modelID string) (res string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 	span.SetAttributes(attribute.Key("user_prompt").String(userPrompt))
 	defer span.End()
 	defer func() { span.RecordError(err) }()
+	key := fmt.Sprintf("ark:response:cache:chunking:%s:%s", modelID, userPrompt)
 
-	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
-		Model: ARK_NORMAL_EPID,
-		Messages: []*model.ChatCompletionMessage{
-			{
-				Role: "system",
-				Content: &model.ChatCompletionMessageContent{
-					StringValue: &sysPrompt,
+	respID, err := redisdal.GetRedisClient().Get(ctx, key).Result()
+	if err != nil && err != redis.Nil {
+		log.Zlog.Error("get cache error", zap.Error(err))
+		return
+	}
+	if respID == "" {
+		exp := time.Now().Add(time.Hour).Unix()
+		req := &responses.ResponsesRequest{
+			Model: modelID,
+			Input: &responses.ResponsesInput{
+				Union: &responses.ResponsesInput_ListValue{
+					ListValue: &responses.InputItemList{
+						ListValue: []*responses.InputItem{
+							{
+								Union: &responses.InputItem_InputMessage{InputMessage: &responses.ItemInputMessage{
+									Role: responses.MessageRole_system,
+									Content: []*responses.ContentItem{
+										{
+											Union: &responses.ContentItem_Text{Text: &responses.ContentItemText{Type: responses.ContentItemType_input_text, Text: sysPrompt}},
+										},
+									},
+								}},
+							},
+						},
+					},
 				},
 			},
-			{
-				Role: "user",
-				Content: &model.ChatCompletionMessageContent{
-					StringValue: &userPrompt,
+			Store: utility.Ptr(true),
+			Caching: &responses.ResponsesCaching{
+				Type: responses.CacheType_enabled.Enum(),
+			},
+			ExpireAt: utility.Ptr(exp),
+		}
+		// 先创建cache
+		resp, err := client.CreateResponses(ctx, req)
+		if err != nil {
+			log.Zlog.Error("responses error", zap.Error(err))
+			return "", err
+		}
+		if err := redisdal.GetRedisClient().Set(ctx, key, resp.Id, 0).Err(); err != nil && err != redis.Nil {
+			log.Zlog.Error("set cache error", zap.Error(err))
+			return "", err
+		}
+		if err := redisdal.GetRedisClient().ExpireAt(ctx, key, time.Unix(exp, 0)).Err(); err != nil && err != redis.Nil {
+			log.Zlog.Error("expire cache error", zap.Error(err))
+			return "", err
+		}
+		respID = resp.Id
+	}
+
+	previousResponseID := respID
+	secondReq := &responses.ResponsesRequest{
+		Model: modelID,
+		Input: &responses.ResponsesInput{
+			Union: &responses.ResponsesInput_ListValue{
+				ListValue: &responses.InputItemList{
+					ListValue: []*responses.InputItem{
+						{
+							Union: &responses.InputItem_InputMessage{InputMessage: &responses.ItemInputMessage{
+								Role: responses.MessageRole_user,
+								Content: []*responses.ContentItem{
+									{
+										Union: &responses.ContentItem_Text{Text: &responses.ContentItemText{Type: responses.ContentItemType_input_text, Text: userPrompt}},
+									},
+								},
+							}},
+						},
+					},
 				},
 			},
 		},
-	})
+		PreviousResponseId: &previousResponseID,
+	}
+
+	resp, err := client.CreateResponses(ctx, secondReq)
 	if err != nil {
-		log.Zlog.Error("chat error", zap.Error(err))
+		log.Zlog.Error("responses error", zap.Error(err))
 		return "", err
 	}
 
-	return *resp.Choices[0].Message.Content.StringValue, nil
-}
-
-func SingleChatPrompt(ctx context.Context, prompt string) (res string, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
-	span.SetAttributes(attribute.Key("prompt").String(prompt))
-	defer span.End()
-	defer func() { span.RecordError(err) }()
-
-	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
-		Model: ARK_NORMAL_EPID,
-		Messages: []*model.ChatCompletionMessage{
-			{
-				Role: "system",
-				Content: &model.ChatCompletionMessageContent{
-					StringValue: &prompt,
-				},
-			},
-		},
-	})
-	if err != nil {
-		log.Zlog.Error("chat error", zap.Error(err))
-		return "", err
+	for _, output := range resp.GetOutput() {
+		if msg := output.GetOutputMessage(); msg != nil {
+			if content := msg.GetContent(); len(content) > 0 {
+				return content[0].GetText().GetText(), nil
+			}
+		}
 	}
-
-	return *resp.Choices[0].Message.Content.StringValue, nil
-}
-
-func SingleChatModel(ctx context.Context, sysPrompt, userPrompt, modelID string) (res string, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
-	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
-	span.SetAttributes(attribute.Key("user_prompt").String(userPrompt))
-	defer span.End()
-	defer func() { span.RecordError(err) }()
-
-	resp, err := client.CreateChatCompletion(ctx, model.ChatCompletionRequest{
-		Model: ARK_NORMAL_EPID,
-		Messages: []*model.ChatCompletionMessage{
-			{
-				Role: "system",
-				Content: &model.ChatCompletionMessageContent{
-					StringValue: &sysPrompt,
-				},
-			},
-			{
-				Role: "user",
-				Content: &model.ChatCompletionMessageContent{
-					StringValue: &userPrompt,
-				},
-			},
-		},
-	})
-	if err != nil {
-		log.Zlog.Error("chat error", zap.Error(err))
-		return "", err
-	}
-
-	return *resp.Choices[0].Message.Content.StringValue, nil
+	return "", errors.New("text is nil")
 }
 
 type ContentStruct struct {

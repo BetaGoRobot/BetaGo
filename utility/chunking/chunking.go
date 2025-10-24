@@ -15,7 +15,7 @@ import (
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
-	"github.com/BetaGoRobot/BetaGo/utility/doubao"
+	ark "github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/bytedance/sonic"
@@ -31,7 +31,7 @@ import (
 const (
 	// INACTIVITY_TIMEOUT 定义会话非活跃超时时间
 	// INACTIVITY_TIMEOUT = 30 * time.Second
-	INACTIVITY_TIMEOUT = 5 * time.Minute
+	INACTIVITY_TIMEOUT = 1 * time.Minute
 	// MAX_CHUNK_SIZE 定义在强制合并前一个块中的最大消息数
 	MAX_CHUNK_SIZE = 50
 )
@@ -229,7 +229,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 		return
 	}
 	chunkStr := strings.Join(chunkLines, "\n")
-	res, err := doubao.SingleChat(ctx, sysPrompt.String(), chunkStr)
+	res, err := ark.ResponseWithCache(ctx, sysPrompt.String(), chunkStr, ark.ARK_CHUNK_EPID)
 	if err != nil {
 		return
 	}
@@ -250,7 +250,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 	if err != nil {
 		return
 	}
-	embedding, _, err := doubao.EmbeddingText(ctx, BuildEmbeddingInput(chunkLog))
+	embedding, _, err := ark.EmbeddingText(ctx, BuildEmbeddingInput(chunkLog))
 	if err != nil {
 		log.Zlog.Info("embedding error")
 		return
