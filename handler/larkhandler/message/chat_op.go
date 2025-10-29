@@ -39,10 +39,10 @@ func (r *ChatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRec
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
-	// 先判断群聊的功能启用情况
-	if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
-		return errors.Wrap(consts.ErrStageSkip, "ImitateMsgOperator: Not enabled")
-	}
+	// // 先判断群聊的功能启用情况
+	// if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
+	// 	return errors.Wrap(consts.ErrStageSkip, "ImitateMsgOperator: Not enabled")
+	// }
 	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
 		return errors.Wrap(consts.ErrStageSkip, "ImitateMsgOperator: Is Command")
 	}
