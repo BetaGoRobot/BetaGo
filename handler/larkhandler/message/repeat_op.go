@@ -14,6 +14,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -104,13 +105,16 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 	if utility.Probability(float64(realRate) / 100) {
 		msgType := strings.ToLower(*event.Event.Message.MessageType)
 		if msgType == "text" {
-			text := *event.Event.Message.Content
+			m, err := utility.JSON2Map(*event.Event.Message.Content)
+			if err != nil {
+				return err
+			}
 			for _, mention := range event.Event.Message.Mentions {
-				text = strings.ReplaceAll(text, "@"+*mention.Key, larkutils.AtUserString(*mention.Id.OpenId))
+				m["text"] = strings.ReplaceAll(m["text"].(string), *mention.Key, larkmsgutils.AtUser(*mention.Id.OpenId, *mention.Name))
 			}
 			err = larkutils.CreateMsgTextRaw(
 				ctx,
-				text,
+				utility.MustMashal(m),
 				*event.Event.Message.MessageId,
 				*event.Event.Message.ChatId,
 			)
