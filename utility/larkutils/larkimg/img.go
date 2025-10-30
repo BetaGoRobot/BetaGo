@@ -264,7 +264,7 @@ func GetAllImgTagFromMsg(ctx context.Context, message *larkim.Message) (imageKey
 			}
 		}, nil
 	}
-	return
+	return nil, nil
 }
 
 // GetAllImageFromMsgEvent 从消息事件中获取所有图片
@@ -333,7 +333,7 @@ func jsonTrans[T any](s string) (*T, error) {
 
 type visitedMsgKey struct{}
 
-func GetAllImgURLFromMsg(ctx context.Context, msgID string) (seq iter.Seq[string], err error) {
+func GetAllImgURLFromMsg(ctx context.Context, msgID string) (resSeq iter.Seq[string], err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
@@ -361,7 +361,7 @@ func GetAllImgURLFromMsg(ctx context.Context, msgID string) (seq iter.Seq[string
 	if msg.Sender.Id == nil {
 		return nil, errors.New("Message is not sent by bot")
 	}
-	seq, err = GetAllImgTagFromMsg(ctx, msg)
+	seq, err := GetAllImgTagFromMsg(ctx, msg)
 	if err != nil {
 		return nil, err
 	}

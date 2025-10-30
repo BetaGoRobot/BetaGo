@@ -415,7 +415,6 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 					Image: &responses.ContentItemImage{
 						Type:     responses.ContentItemType_input_image,
 						ImageUrl: f,
-						Detail:   responses.ContentItemImageDetail_auto.Enum(),
 					},
 				},
 			})
@@ -441,8 +440,8 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 					}}},
 				},
 			},
-			Tools:  Tools(),
-			Store:  utility.Ptr(true),
+			Tools: Tools(),
+			// Store:  utility.Ptr(true),
 			Stream: utility.Ptr(true),
 			// Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
 		}

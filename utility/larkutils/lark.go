@@ -22,7 +22,9 @@ func GetChatName(ctx context.Context, chatID string) (chatName string) {
 		err = errors.New(resp.Error())
 		return
 	}
-	chatName = *resp.Data.Name
+	if resp != nil && resp.Data != nil && resp.Data.Name != nil {
+		chatName = *resp.Data.Name
+	}
 	return
 }
 
