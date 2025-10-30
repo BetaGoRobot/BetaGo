@@ -331,12 +331,29 @@ func jsonTrans[T any](s string) (*T, error) {
 	return t, nil
 }
 
+type visitedMsgKey struct{}
+
 func GetAllImgURLFromMsg(ctx context.Context, msgID string) (seq iter.Seq[string], err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
+	// 获取已访问的消息ID集合
+	visitedMap, ok := ctx.Value(visitedMsgKey{}).(map[string]bool)
+	if !ok {
+		visitedMap = make(map[string]bool)
+		ctx = context.WithValue(ctx, visitedMsgKey{}, visitedMap)
+	}
+	// 检查是否已访问过该消息
+	if visitedMap[msgID] {
+		return nil, nil
+	}
+	visitedMap[msgID] = true
+
 	resp := larkutils.GetMsgFullByID(ctx, msgID)
+	if len(resp.Data.Items) == 0 {
+		return nil, nil
+	}
 	msg := resp.Data.Items[0]
 	if msg == nil {
 		return nil, errors.New("No message found")
@@ -369,6 +386,12 @@ func GetAllImgURLFromMsg(ctx context.Context, msgID string) (seq iter.Seq[string
 }
 
 func GetAllImgURLFromParent(ctx context.Context, data *larkim.P2MessageReceiveV1) (iter.Seq[string], error) {
+	// 获取已访问的消息ID集合
+	visitedMap, ok := ctx.Value(visitedMsgKey{}).(map[string]bool)
+	if !ok {
+		visitedMap = make(map[string]bool)
+		ctx = context.WithValue(ctx, visitedMsgKey{}, visitedMap)
+	}
 	if data.Event.Message.ThreadId != nil {
 		// 话题模式 找图片
 		resp, err := lark.LarkClient.Im.Message.List(ctx,
@@ -384,6 +407,9 @@ func GetAllImgURLFromParent(ctx context.Context, data *larkim.P2MessageReceiveV1
 				if msg.MsgType == nil || (*msg.MsgType != larkim.MsgTypeImage && *msg.MsgType != larkim.MsgTypePost) {
 					continue
 				}
+				if visitedMap[*msg.MessageId] {
+					continue // 跳过已处理的消息
+				}
 				seq, err := GetAllImgURLFromMsg(ctx, *msg.MessageId)
 				if err != nil {
 					return
@@ -398,6 +424,10 @@ func GetAllImgURLFromParent(ctx context.Context, data *larkim.P2MessageReceiveV1
 			}
 		}, nil
 	} else if data.Event.Message.ParentId != nil {
+		// 检查是否已经处理过父消息
+		if visitedMap[*data.Event.Message.ParentId] {
+			return nil, nil // 返回空结果避免递归
+		}
 		return func(yield func(string) bool) {
 			seq, err := GetAllImgURLFromMsg(ctx, *data.Event.Message.ParentId)
 			if err != nil {
