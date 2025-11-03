@@ -11,11 +11,12 @@ type MessageChunkLogV3 struct {
 
 	ConversationEmbedding []float32 `json:"conversation_embedding"`
 
-	MsgList   []string `json:"msg_list"`
-	UserIDs   []string `json:"user_ids,omitempty"`
-	GroupID   string   `json:"group_id"`
-	Timestamp string   `json:"timestamp"`
-	MsgIDs    []string `json:"msg_ids"`
+	MsgList     []string `json:"msg_list"`
+	UserIDs     []string `json:"user_ids,omitempty"`
+	GroupID     string   `json:"group_id"`
+	Timestamp   string   `json:"timestamp"`
+	TimestampV2 string   `json:"timestamp_v2"`
+	MsgIDs      []string `json:"msg_ids"`
 }
 
 type SentimentAndTone struct {

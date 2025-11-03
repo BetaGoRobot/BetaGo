@@ -20,18 +20,18 @@ func MustInt(str string) int64 {
 	return i
 }
 
-func Epo2DateZoneMil(millSecs int64, location *time.Location) string {
-	return Epo2DateZoneStr(millSecs/1000, location)
+func Epo2DateZoneMil(millSecs int64, location *time.Location, fmt string) string {
+	return Epo2DateZoneStr(millSecs/1000, location, fmt)
 }
 
-func Epo2DateZoneSec(secs int64, location *time.Location) string {
-	return Epo2DateZoneStr(secs, location)
+func Epo2DateZoneSec(secs int64, location *time.Location, fmt string) string {
+	return Epo2DateZoneStr(secs, location, fmt)
 }
 
-func Epo2DateZoneMicro(microSecs int64, location *time.Location) string {
-	return Epo2DateZoneStr(microSecs/1000/1000, location)
+func Epo2DateZoneMicro(microSecs int64, location *time.Location, fmt string) string {
+	return Epo2DateZoneStr(microSecs/1000/1000, location, fmt)
 }
 
-func Epo2DateZoneStr(secs int64, location *time.Location) string {
-	return time.Unix(secs, 0).In(location).Format(time.RFC3339)
+func Epo2DateZoneStr(secs int64, location *time.Location, fmt string) string {
+	return time.Unix(secs, 0).In(location).Format(fmt)
 }
