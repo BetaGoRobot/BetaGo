@@ -12,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
@@ -26,7 +27,7 @@ var chatCache = cache.New(time.Minute*30, time.Minute*1)
 func init() {
 	go func() {
 		for {
-			log.Zlog.Info("Syncing chat cache to db...")
+			logs.L.Info().Msg("Syncing chat cache to db...")
 			for authorID, messages := range chatCache.Items() {
 				m, err := json.Marshal(messages.Object.([]Message))
 				if err != nil {

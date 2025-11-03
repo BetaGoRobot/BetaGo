@@ -8,7 +8,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
-	"github.com/BetaGoRobot/BetaGo/utility/logging"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -65,7 +65,7 @@ func (r *RecordReactionOperator) Run(ctx context.Context, event *larkim.P2Messag
 		return err
 	}
 	if member == nil || member.Name == nil {
-		logging.Logger.Error().Ctx(ctx).Msgf("user %s not found in chat %s", *event.Event.UserId.OpenId, chatID)
+		logs.L.Error().Ctx(ctx).Msgf("user %s not found in chat %s", *event.Event.UserId.OpenId, chatID)
 		return
 	}
 	database.GetDbConnection().Create(&database.InteractionStats{

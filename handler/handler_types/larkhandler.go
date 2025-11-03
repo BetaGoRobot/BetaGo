@@ -33,6 +33,7 @@ type MessageIndex struct {
 	*MessageLog
 	ChatName             string         `json:"chat_name"`
 	CreateTime           string         `json:"create_time"`
+	CreateTimeV2         string         `json:"create_time_v2"`
 	Message              []float32      `json:"message"`
 	UserID               string         `json:"user_id"`
 	UserName             string         `json:"user_name"`

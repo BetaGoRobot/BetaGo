@@ -3,6 +3,7 @@ package message
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
@@ -94,7 +95,8 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 				RawMessageJieba:      strings.Join(ws, " "),
 				RawMessageJiebaArray: ws,
 				RawMessageJiebaTag:   wsTags,
-				CreateTime:           utility.EpoMil2DateStr(*event.Event.Message.CreateTime),
+				CreateTime:           utility.Epo2DateZoneMil(utility.MustInt(*event.Event.Message.CreateTime), time.UTC),
+				CreateTimeV2:         utility.Epo2DateZoneSec(utility.MustInt(*event.Event.Message.CreateTime), utility.UTCPlus8Loc()),
 				Message:              embedded,
 				UserID:               *event.Event.Sender.SenderId.OpenId,
 				UserName:             userName,

@@ -17,6 +17,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
@@ -32,7 +33,7 @@ import (
 func (neteaseCtx *NetEaseContext) RefreshLogin(ctx context.Context) error {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
-	log.Zlog.Info("RefreshLogin...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
+	logs.L.Info().Ctx(ctx).Msg("RefreshLogin...")
 
 	resp, err := consts.HttpClient.R().
 		SetCookies(neteaseCtx.cookies).

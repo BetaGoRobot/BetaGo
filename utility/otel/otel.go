@@ -25,6 +25,10 @@ const (
 // otelProvider jaeger provider
 var otelProvider *tracesdk.TracerProvider
 
+func OtelProvider() *tracesdk.TracerProvider {
+	return otelProvider
+}
+
 func init() {
 	if consts.IsTest {
 		otelProvider, _ = tracerProvider("http://jaeger.kmhomelab.cn:4318/v1/traces")

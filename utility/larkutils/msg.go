@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
@@ -336,7 +337,8 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 			ChatName:        GetChatName(ctx, utility.AddressORNil(resp.Data.ChatId)),
 			RawMessage:      content,
 			RawMessageJieba: strings.Join(ws, " "),
-			CreateTime:      utility.EpoMil2DateStr(*resp.Data.CreateTime),
+			CreateTime:      utility.Epo2DateZoneMil(utility.MustInt(*resp.Data.CreateTime), time.UTC),
+			CreateTimeV2:    utility.Epo2DateZoneSec(utility.MustInt(*resp.Data.CreateTime), utility.UTCPlus8Loc()),
 			Message:         embedded,
 			UserID:          "你",
 			UserName:        "你",
@@ -434,7 +436,8 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 			ChatName:        GetChatName(ctx, utility.AddressORNil(resp.Data.ChatId)),
 			RawMessage:      content,
 			RawMessageJieba: strings.Join(ws, " "),
-			CreateTime:      utility.EpoMil2DateStr(*resp.Data.CreateTime),
+			CreateTime:      utility.Epo2DateZoneMil(utility.MustInt(*resp.Data.CreateTime), time.UTC),
+			CreateTimeV2:    utility.Epo2DateZoneSec(utility.MustInt(*resp.Data.CreateTime), utility.UTCPlus8Loc()),
 			Message:         embedded,
 			UserID:          "你",
 			UserName:        "你",

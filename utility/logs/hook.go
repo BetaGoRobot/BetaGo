@@ -1,5 +1,5 @@
 // internal/logging/hook.go
-package logging
+package logs
 
 import (
 	"context"

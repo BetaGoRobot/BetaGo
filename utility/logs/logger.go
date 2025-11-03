@@ -1,5 +1,5 @@
 // internal/logging/logger.go
-package logging
+package logs
 
 import (
 	"os"
@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var Logger = NewLogger()
+var L = NewLogger()
 
 // NewLogger 创建一个配置了 OtelHook 的 zerolog.Logger 实例。
 func NewLogger() zerolog.Logger {
