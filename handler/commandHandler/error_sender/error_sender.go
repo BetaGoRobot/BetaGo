@@ -12,8 +12,6 @@ import (
 	"github.com/lonelyevil/kook"
 )
 
-// var  zapLogger = zaplog.New("errorsender")
-
 // SendErrorInfo 发送错误信息
 //
 //	@param targetID 目标ID

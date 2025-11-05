@@ -16,7 +16,6 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -39,11 +38,11 @@ func (neteaseCtx *NetEaseContext) RefreshLogin(ctx context.Context) error {
 		Post(NetEaseAPIBaseURL + "/login/refresh")
 
 	if err != nil || (resp != nil && resp.StatusCode() != 200) {
-		log.SLog.Errorf("%s\n", string(resp.Body()))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("error in request refresh login")
 		return err
 	}
 	respMap := make(map[string]interface{})
-	err = sonic.Unmarshal(resp.Body(), &resp)
+	err = sonic.Unmarshal(resp.Body(), &respMap)
 	if err != nil {
 		return err
 	}
@@ -264,7 +263,7 @@ func (neteaseCtx *NetEaseContext) CheckIfLogin(ctx context.Context) bool {
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Get(NetEaseAPIBaseURL + "/login/status")
 	if err != nil || resp.StatusCode() != 200 {
-		log.SLog.Errorf("%#v\n", resp)
+		logs.L.Error().Ctx(ctx).Err(err).Msg("error in request login status")
 		return false
 	}
 	data := resp.Body()

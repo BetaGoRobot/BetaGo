@@ -10,7 +10,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 
 	"github.com/enescakir/emoji"
@@ -50,7 +50,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 				fmt.Sprintf("%s Panic-Collected!",
 					emoji.Warning.String()), ctx)
 		}
-		log.SLog.Errorf("=====Panic====== %s", string(debug.Stack()))
+		logs.L.Error().Ctx(ctx).Str("stack", string(debug.Stack())).Msg("=====Panic======")
 	}
 }
 

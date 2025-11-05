@@ -48,36 +48,6 @@ type KuttResp struct {
 	VisitCount  int       `json:"visit_count"`
 }
 
-// func GenAKA(u *url.URL) (newURL *url.URL) { this is deprecated for LYNX
-// 	oldURL := u.String()
-// 	slug := GetRandomString(8)
-// 	r, err := consts.HttpClient.R().
-// 		SetHeader("Authorization", os.Getenv("LYNX_API_KEY")).
-// 		SetCookie(&http.Cookie{
-// 			Name:  "token",
-// 			Value: os.Getenv("LYNX_TOKEN"),
-// 		}).
-// 		SetFormData(
-// 			map[string]string{
-// 				"slug":        slug,
-// 				"destination": oldURL,
-// 			},
-// 		).Post("https://aka.kmhomelab.cn/api/link")
-// 	if err != nil || r.StatusCode() != 200 {
-// 		log.ZapLogger.Error("Post failed", Err(err), Int("status_code", r.StatusCode()))
-// 		return
-// 	}
-// 	newURL, err = url.Parse(slug)
-// 	if err != nil {
-// 		log.ZapLogger.Error("Parse url failed", err).Msg("Error")
-// 		return
-// 	}
-// 	log.ZapLogger.Info("GenAKA with url", Str("new_url", newURL.String()), Str("old_url", oldURL))
-// 	newURL.Host = "aka.kmhomelab.cn"
-// 	newURL.Scheme = "https"
-// 	return
-// }
-
 func GenAKA(ctx context.Context, u *url.URL) (newURL *url.URL) {
 	expires := ExpireTime{
 		Value: 30,

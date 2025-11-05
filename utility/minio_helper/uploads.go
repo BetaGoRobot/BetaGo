@@ -7,7 +7,6 @@ import (
 	"net/url"
 
 	"github.com/BetaGoRobot/BetaGo/consts/env"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/shorter"
@@ -97,6 +96,6 @@ func minioUploadReader(ctx context.Context, bucketName string, file io.ReadClose
 		return
 	}
 	defer span.SetAttributes(attribute.Key("path").String(objName), attribute.Key("size").Int64(info.Size))
-	log.SLog.Infof("Successfully uploaded %s of size %d\n", objName, info.Size)
+	logs.L.Info().Ctx(ctx).Str("path", objName).Int64("size", info.Size).Msg("Successfully uploaded file")
 	return
 }
