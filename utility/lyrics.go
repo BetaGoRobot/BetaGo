@@ -1,13 +1,13 @@
 package utility
 
 import (
+	"context"
 	"strconv"
 	"strings"
 
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
 	"github.com/dlclark/regexp2"
-	"github.com/kevinmatthe/zaplog"
 )
 
 type lyricMap struct {
@@ -31,17 +31,17 @@ func ExtractLyrics(lyric string) (s string, err error) {
 	)
 	for _, lyric := range lyricList {
 		if matched, err := rePattern.MatchString(lyric); err != nil {
-			log.Zlog.Warn("match string error", zaplog.String("lyric", lyric))
+			logs.L.Warn(context.Background(), "match string error", "lyric", lyric)
 			continue
 		} else if matched {
 			m, err := rePattern.FindStringMatch(lyric)
 			if err != nil {
-				log.Zlog.Warn("find string match error", zaplog.String("lyric", lyric))
+				logs.L.Warn(context.Background(), "find string match error", "lyric", lyric)
 				continue
 			}
 			group := m.Groups()
 			if len(group) < 3 {
-				log.Zlog.Warn("group length less than 3", zaplog.String("lyric", lyric))
+				logs.L.Warn(context.Background(), "group length less than 3", "lyric", lyric)
 				continue
 			}
 			minuteStr := group[1].String()
@@ -49,12 +49,12 @@ func ExtractLyrics(lyric string) (s string, err error) {
 			content := group[3].String()
 			minute, err := strconv.Atoi(minuteStr)
 			if err != nil {
-				log.Zlog.Warn("convert minute to int error", zaplog.String("minute", minuteStr))
+				logs.L.Warn(context.Background(), "convert minute to int error", "minute", minuteStr)
 				continue
 			}
 			second, err := strconv.ParseFloat(secondStr, 64)
 			if err != nil {
-				log.Zlog.Warn("convert second to float error", zaplog.String("second", secondStr))
+				logs.L.Warn(context.Background(), "convert second to float error", "second", secondStr)
 				continue
 			}
 
@@ -68,7 +68,7 @@ func ExtractLyrics(lyric string) (s string, err error) {
 	}
 	s, err = sonic.MarshalString(lyricMap{newLyrics})
 	if err != nil {
-		log.Zlog.Error("marshal string error", zaplog.Error(err))
+		logs.L.Error(context.Background(), "marshal string error", "error", err)
 		return
 	}
 	return

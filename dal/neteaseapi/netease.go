@@ -16,7 +16,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
@@ -24,7 +24,6 @@ import (
 	"github.com/bytedance/sonic"
 	"github.com/dlclark/regexp2"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/kevinmatthe/zaplog"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -54,10 +53,10 @@ func init() {
 	go func() {
 		err := NetEaseGCtx.LoginNetEase(startUpCtx)
 		if err != nil {
-			log.Zlog.Info("error in init loginNetease", zaplog.Error(err))
+			logs.L.Info(startUpCtx, "error in init loginNetease", "error", err)
 			err = NetEaseGCtx.LoginNetEaseQR(startUpCtx)
 			if err != nil {
-				log.Zlog.Info("error in init loginNeteaseQR", zaplog.Error(err))
+				logs.L.Info(startUpCtx, "error in init loginNeteaseQR", "error", err)
 			}
 		}
 		for {
@@ -70,7 +69,7 @@ func init() {
 				if NetEaseGCtx.CheckIfLogin(startUpCtx) {
 					NetEaseGCtx.SaveCookie(startUpCtx)
 				} else {
-					log.Zlog.Info("error in refresh login")
+					logs.L.Info(startUpCtx, "error in refresh login", "error", err)
 				}
 			}
 			time.Sleep(time.Second * 300)
@@ -137,7 +136,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByIDs(ctx context.Context, musicIDs
 		ID := strconv.Itoa(music.Data[index].ID)
 		URL := music.Data[index].URL
 		if URL == "" {
-			log.Zlog.Warn("[PreUploadMusic] Get minio url failed...", zaplog.Error(err))
+			logs.L.Warn(ctx, "[PreUploadMusic] Get minio url failed...", "error", err)
 			continue
 		}
 		musicIDURL[ID] = URL
@@ -152,7 +151,7 @@ func uploadMusic(ctx context.Context, URL string, ID string) {
 	defer span.End()
 	parsedURL, err := url.Parse(URL)
 	if err != nil {
-		log.Zlog.Warn("[PreUploadMusic] parsedURL failed...", zaplog.Error(err))
+		logs.L.Warn(ctx, "[PreUploadMusic] parsedURL failed...", "error", err)
 		return
 	}
 	_, err = miniohelper.Client().
@@ -163,7 +162,7 @@ func uploadMusic(ctx context.Context, URL string, ID string) {
 		SetContentType(ct.ContentTypeAudio).
 		Upload()
 	if err != nil {
-		log.Zlog.Warn("[PreUploadMusic] Get minio url failed...", zaplog.Error(err))
+		logs.L.Warn(ctx, "[PreUploadMusic] Get minio url failed...", "error", err)
 	}
 }
 
@@ -206,7 +205,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURLByID(ctx context.Context, musicIDNa
 			SetContentType(ct.ContentTypeAudio).
 			Upload()
 		if err != nil {
-			log.Zlog.Error("Get minio url failed, will use raw url", zaplog.Error(err))
+			logs.L.Error(ctx, "Get minio url failed, will use raw url", "error", err)
 		} else {
 			URL = musicURL.String()
 		}
@@ -246,7 +245,7 @@ func (neteaseCtx *NetEaseContext) GetMusicURL(ctx context.Context, ID string) (u
 		SetContentType(ct.ContentTypeAudio).
 		Upload()
 	if err != nil {
-		log.Zlog.Error("Get minio url failed, will use raw url", zaplog.Error(err))
+		logs.L.Error(ctx, "Get minio url failed, will use raw url", "error", err)
 	} else {
 		URL = u.String()
 	}
@@ -268,12 +267,12 @@ func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, musicID string)
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Post(NetEaseAPIBaseURL + "/song/detail")
 	if err != nil {
-		log.Zlog.Info(err.Error())
+		logs.L.Info(ctx, err.Error())
 	}
 	musicDetail = &MusicDetail{}
 	err = jsoniter.Unmarshal(resp.Body(), musicDetail)
 	if err != nil {
-		log.Zlog.Info(err.Error())
+		logs.L.Info(ctx, err.Error())
 	}
 	if len(musicDetail.Songs) == 0 {
 		return nil
@@ -288,7 +287,7 @@ func (neteaseCtx *NetEaseContext) GetDetail(ctx context.Context, musicID string)
 			SetContentType(ct.ContentTypeImgJPEG).
 			Upload()
 		if err != nil {
-			log.Zlog.Error(err.Error())
+			logs.L.Error(ctx, err.Error())
 		}
 	}
 	return
@@ -309,13 +308,13 @@ func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) 
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Post(NetEaseAPIBaseURL + "/lyric")
 	if err != nil {
-		log.Zlog.Info(err.Error())
+		logs.L.Info(ctx, err.Error())
 	}
 	searchLyrics := &SearchLyrics{}
 	body := string(resp.Body())
 	err = sonic.UnmarshalString(body, searchLyrics)
 	if err != nil {
-		log.Zlog.Info(err.Error())
+		logs.L.Info(ctx, err.Error())
 		return
 	}
 	l, err := miniohelper.Client().
@@ -326,7 +325,7 @@ func (neteaseCtx *NetEaseContext) GetLyrics(ctx context.Context, songID string) 
 		SetContentType(ct.ContentTypePlainText).
 		Upload()
 	if err != nil {
-		log.Zlog.Error("upload lyrics failed", zaplog.Error(err))
+		logs.L.Error(ctx, "upload lyrics failed", "error", err)
 		return
 	}
 	lyricsMerged := mergeLyrics(searchLyrics.Lrc.Lyric, searchLyrics.Tlyric.Lyric)
@@ -420,7 +419,7 @@ func (neteaseCtx *NetEaseContext) SearchMusicByKeyWord(ctx context.Context, keyw
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Post(NetEaseAPIBaseURL + "/cloudsearch")
 	if err != nil {
-		log.Zlog.Info(err.Error())
+		logs.L.Info(ctx, err.Error())
 	}
 
 	searchRes := SearchMusic{}
@@ -464,13 +463,13 @@ func (neteaseCtx *NetEaseContext) SearchAlbumByKeyWord(ctx context.Context, keyw
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Post(NetEaseAPIBaseURL + "/cloudsearch")
 	if err != nil {
-		log.Zlog.Info(err.Error())
+		logs.L.Info(ctx, err.Error())
 	}
 
 	searchRes := searchAlbumResult{}
 	err = sonic.Unmarshal(resp1.Body(), &searchRes)
 	if err != nil {
-		log.Zlog.Info(err.Error())
+		logs.L.Info(ctx, err.Error())
 	}
 	result = searchRes.Result.Albums
 	return
@@ -498,13 +497,13 @@ func (neteaseCtx *NetEaseContext) GetAlbumDetail(ctx context.Context, albumID st
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Post(NetEaseAPIBaseURL + "/album")
 	if err != nil {
-		log.Zlog.Info(err.Error())
+		logs.L.Info(ctx, err.Error())
 	}
 
 	searchRes := AlbumDetail{}
 	err = sonic.Unmarshal(resp1.Body(), &searchRes)
 	if err != nil {
-		log.Zlog.Info(err.Error())
+		logs.L.Info(ctx, err.Error())
 	}
 
 	return &searchRes, err
@@ -537,7 +536,7 @@ func uploadPicWorker(ctx context.Context, wg *sync.WaitGroup, url string, musicI
 	defer wg.Done()
 	imgKey, _, err := larkimg.UploadPicAllinOne(ctx, url, strconv.Itoa(musicID), true)
 	if err != nil {
-		log.Zlog.Error("upload pic to lark error", zaplog.Error(err))
+		logs.L.Error(ctx, "upload pic to lark error", "error", err)
 		return true
 	}
 	c <- [2]string{imgKey, strconv.Itoa(musicID)}
@@ -592,7 +591,7 @@ func (neteaseCtx *NetEaseContext) GetComment(ctx context.Context, commentType Co
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Post(NetEaseAPIBaseURL + "/comment/new/")
 	if err != nil {
-		log.Zlog.Info(err.Error())
+		logs.L.Info(ctx, err.Error())
 	}
 	res = &CommentResult{}
 	err = sonic.Unmarshal(resp.Body(), res)

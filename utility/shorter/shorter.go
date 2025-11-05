@@ -1,6 +1,7 @@
 package shorter
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"net/url"
@@ -8,9 +9,8 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
-	"github.com/kevinmatthe/zaplog"
 )
 
 type TimeUnit string
@@ -91,7 +91,7 @@ func GenAKA(u *url.URL) (newURL *url.URL) {
 	}
 	reqBody, err := sonic.Marshal(req)
 	if err != nil {
-		log.Zlog.Error("Marshal failed", zaplog.Error(err))
+		logs.L.Error(context.Background(), "marshal failed", "error", err)
 		return
 	}
 	r, err := consts.HttpClient.R().
@@ -100,21 +100,21 @@ func GenAKA(u *url.URL) (newURL *url.URL) {
 		SetBody(reqBody).
 		Post("https://kutt.kmhomelab.cn/api/links")
 	if err != nil || (r.StatusCode() != 200 && r.StatusCode() != 201) {
-		log.Zlog.Error("Post failed", zaplog.Error(err), zaplog.Int("status_code", r.StatusCode()))
+		logs.L.Error(context.Background(), "post failed", "error", err, "status_code", r.StatusCode())
 		return
 	}
 	resp := &KuttResp{}
 	err = sonic.Unmarshal(r.Body(), resp)
 	if err != nil {
-		log.Zlog.Error("Unmarshal failed", zaplog.Error(err))
+		logs.L.Error(context.Background(), "unmarshal failed", "error", err)
 		return
 	}
 	newURL, err = url.Parse(resp.Link)
 	if err != nil {
-		log.Zlog.Error("Parse url failed", zaplog.Error(err))
+		logs.L.Error(context.Background(), "parse url failed", "error", err)
 		return
 	}
-	log.Zlog.Info("GenAKA with url", zaplog.String("new_url", newURL.String()), zaplog.String("old_url", oldURL))
+	logs.L.Info(context.Background(), "GenAKA with url", "new_url", newURL.String(), "old_url", oldURL)
 	return
 }
 
@@ -127,7 +127,7 @@ func GenAKAKutt(u *url.URL, expires ExpireTime) (newURL *url.URL) {
 	}
 	reqBody, err := sonic.Marshal(req)
 	if err != nil {
-		log.Zlog.Error("Marshal failed", zaplog.Error(err))
+		logs.L.Error(context.Background(), "marshal failed", "error", err)
 		return
 	}
 	r, err := consts.HttpClient.R().
@@ -136,21 +136,21 @@ func GenAKAKutt(u *url.URL, expires ExpireTime) (newURL *url.URL) {
 		SetBody(reqBody).
 		Post("https://kutt.kmhomelab.cn/api/links")
 	if err != nil || (r.StatusCode() != 200 && r.StatusCode() != 201) {
-		log.Zlog.Error("Post failed", zaplog.Error(err), zaplog.Int("status_code", r.StatusCode()))
+		logs.L.Error(context.Background(), "post failed", "error", err, "status_code", r.StatusCode())
 		return
 	}
 	resp := &KuttResp{}
 	err = sonic.Unmarshal(r.Body(), resp)
 	if err != nil {
-		log.Zlog.Error("Unmarshal failed", zaplog.Error(err))
+		logs.L.Error(context.Background(), "unmarshal failed", "error", err)
 		return
 	}
 	newURL, err = url.Parse(resp.Link)
 	if err != nil {
-		log.Zlog.Error("Parse url failed", zaplog.Error(err))
+		logs.L.Error(context.Background(), "parse url failed", "error", err)
 		return
 	}
-	log.Zlog.Info("GenAKA with url", zaplog.String("new_url", newURL.String()), zaplog.String("old_url", oldURL))
+	logs.L.Info(context.Background(), "GenAKA with url", "new_url", newURL.String(), "old_url", oldURL)
 	return
 }
 

@@ -4,10 +4,9 @@ import (
 	"context"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/enescakir/emoji"
-	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 )
 
@@ -34,7 +33,7 @@ func SendMessageTempAndDelete(targetID, QuoteID, authorID, newMsg string) {
 			},
 		})
 	if err != nil {
-		log.Zlog.Error("发送消息错误: ", zaplog.Error(err))
+		logs.L.Error(context.Background(), "发送消息错误", "error", err)
 		return
 	}
 	_, err = consts.GlobalSession.MessageCreate(
@@ -84,7 +83,7 @@ func SendMessageTemp(targetID, QuoteID, authorID, newMsg string) {
 		},
 	}.BuildMessage()
 	if err != nil {
-		log.Zlog.Error("发送消息错误: ", zaplog.Error(err))
+		logs.L.Error(context.Background(), "发送消息错误", "error", err)
 		return
 	}
 	consts.GlobalSession.MessageCreate(
@@ -127,7 +126,7 @@ func SendMessage(targetID, QuoteID, authorID string, message string) {
 		},
 	}.BuildMessage()
 	if err != nil {
-		log.Zlog.Error("发送消息错误: ", zaplog.Error(err))
+		logs.L.Error(context.Background(), "发送消息错误", "error", err)
 		return
 	}
 	consts.GlobalSession.MessageCreate(
@@ -164,7 +163,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		},
 	}.BuildMessage()
 	if err != nil {
-		log.Zlog.Error("发送消息错误: ", zaplog.Error(err))
+		logs.L.Error(ctx, "发送消息错误", "error", err)
 		return
 	}
 	resp, err := consts.GlobalSession.MessageCreate(
@@ -178,7 +177,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		},
 	)
 	if err != nil {
-		log.Zlog.Error("Send msg failed", zaplog.Error(err))
+		logs.L.Error(ctx, "send msg failed", "error", err)
 	}
 	return resp.MsgID
 }
@@ -210,7 +209,7 @@ func SendErrorMessageWithTitle(targetID, QuoteID, authorID, message, title strin
 		},
 	}.BuildMessage()
 	if err != nil {
-		log.Zlog.Error("发送消息错误: ", zaplog.Error(err))
+		logs.L.Error(ctx, "发送消息错误", "error", err)
 		return
 	}
 	consts.GlobalSession.MessageCreate(

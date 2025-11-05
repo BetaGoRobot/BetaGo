@@ -12,11 +12,10 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
-	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
@@ -33,7 +32,7 @@ import (
 //	@update 2024-08-06 08:27:18
 func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	argMap, _ := parseArgs(args...)
-	log.Zlog.Info("replyHandler", zaplog.Any("args", argMap))
+	logs.L.Info(ctx, "reply handler", "args", argMap)
 	if len(argMap) > 0 {
 		word, ok := argMap["word"]
 		if !ok {
@@ -69,7 +68,7 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 				contentMap := make(map[string]string)
 				err := sonic.UnmarshalString(*parentMsgItem.Body.Content, &contentMap)
 				if err != nil {
-					log.Zlog.Error("repeatMessage", zaplog.Error(err))
+					logs.L.Error(ctx, "repeat message error", "error", err)
 					return err
 				}
 				switch *parentMsgItem.MsgType {
@@ -78,7 +77,7 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 					res, _ := database.FindByCacheFunc(database.StickerMapping{StickerKey: imgKey}, func(r database.StickerMapping) string { return r.StickerKey })
 					if len(res) == 0 {
 						if stickerFile, err := larkimg.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["file_key"], "image"); err != nil {
-							log.Zlog.Error("repeatMessage", zaplog.Error(err))
+							logs.L.Error(ctx, "repeat message error", "error", err)
 						} else {
 							newImgKey := larkimg.UploadPicture2LarkReader(ctx, stickerFile)
 							database.GetDbConnection().Clauses(clause.OnConflict{UpdateAll: true}).Create(&database.StickerMapping{
@@ -135,7 +134,7 @@ func ReplyGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	argMap, _ := parseArgs(args...)
-	log.Zlog.Info("replyGetHandler", zaplog.Any("args", argMap))
+	logs.L.Info(ctx, "replyGetHandler", "args", argMap)
 	ChatID := *data.Event.Message.ChatId
 
 	lines := make([]map[string]string, 0)

@@ -9,11 +9,10 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
-	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
@@ -77,10 +76,10 @@ func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 			Build()
 		resp, err := lark.LarkClient.Im.V1.MessageReaction.Create(ctx, req)
 		if err != nil {
-			log.Zlog.Error("reactMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+			logs.L.Error(ctx, "react message error", "error", err, "traceID", span.SpanContext().TraceID().String())
 			return err
 		}
-		log.Zlog.Info("reactMessage", zaplog.Any("resp", resp), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+		logs.L.Info(ctx, "react message success", "resp", resp, "traceID", span.SpanContext().TraceID().String())
 	} else {
 		if utility.Probability(float64(realRate) / 100) {
 			res, hitCache := database.FindByCacheFunc(database.ReactImageMeterial{

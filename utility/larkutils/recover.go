@@ -5,10 +5,9 @@ import (
 	"runtime/debug"
 
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
-	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
@@ -138,14 +137,14 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 		span.RecordError(e)
 	}
 	stack := string(debug.Stack())
-	log.Zlog.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("msg_id", msgID))
+	logs.L.Error(ctx, "panic-detected!", "trace_id", traceID, "panic", err, "msg_id", msgID)
 	card := cardutil.NewCardBuildHelper().
 		SetTitle("Panic Detected!").
 		SetSubTitle("Please check the log for more information.").
 		SetContent("```go\n" + stack + "\n```").Build(ctx)
 	err = ReplyCard(ctx, card, msgID, "", true)
 	if err != nil {
-		log.Zlog.Error("send error", zaplog.Any("error", err))
+		logs.L.Error(ctx, "send error", "error", err)
 	}
 }
 
@@ -167,13 +166,13 @@ func SendRecoveredMsgUserID(ctx context.Context, err any, chatID string) {
 	}
 	stack := string(debug.Stack())
 
-	log.Zlog.Error("panic-detected!", zaplog.String("trace_id", traceID), zaplog.Any("panic", err), zaplog.String("chat_id", chatID))
+	logs.L.Error(ctx, "panic-detected!", "trace_id", traceID, "panic", err, "chat_id", chatID)
 	card := cardutil.NewCardBuildHelper().
 		SetTitle("Panic Detected!").
 		SetSubTitle("Please check the log for more information.").
 		SetContent("```go\n" + stack + "\n```").Build(ctx)
 	err = SendCard(ctx, card, chatID, "")
 	if err != nil {
-		log.Zlog.Error("send error", zaplog.Any("error", err))
+		logs.L.Error(ctx, "send error", "error", err)
 	}
 }

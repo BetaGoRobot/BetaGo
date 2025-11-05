@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/kevinmatthe/zaplog"
 	"github.com/pkg/errors"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
@@ -15,7 +14,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -119,7 +118,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 				*event.Event.Message.ChatId,
 			)
 			if err != nil {
-				log.Zlog.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				logs.L.Error(ctx, "repeat message error", "error", err, "traceID", span.SpanContext().TraceID().String())
 			}
 		} else {
 			repeatReq := larkim.NewCreateMessageReqBuilder().
@@ -138,7 +137,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 			}
 			if !resp.Success() {
 				if strings.Contains(resp.Error(), "invalid image_key") {
-					log.Zlog.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+					logs.L.Error(ctx, "repeat message error", "error", err, "traceID", span.SpanContext().TraceID().String())
 					return nil
 				}
 				return errors.New(resp.Error())

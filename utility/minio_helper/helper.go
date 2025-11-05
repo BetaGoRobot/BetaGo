@@ -12,11 +12,10 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
 
-	"github.com/kevinmatthe/zaplog"
 	"github.com/minio/minio-go/v7"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -113,7 +112,7 @@ func (m *MinioManager) SetFileFromURL(url string) *MinioManager {
 		m.span.SetAttributes(attribute.Key("url").String(url))
 		resp, err := requests.Req().SetContext(m.Context).SetDoNotParseResponse(true).Get(url)
 		if err != nil {
-			log.Zlog.Error("Get file failed", zaplog.Error(err))
+			logs.L.Error(m.Context, "get file failed", "error", err)
 			m.err = err
 			m.span.SetStatus(2, err.Error())
 			return
@@ -238,10 +237,10 @@ func (m *MinioManager) addTracePresigned(u *url.URL) {
 		if url := u.String(); url != "" {
 			m.span.SetAttributes(attribute.String("presigned_url", url))
 		} else {
-			log.Zlog.Error("presigned url is empty")
+			logs.L.Error(m.Context, "presigned url is empty")
 		}
 	} else {
-		log.Zlog.Error("presigned url is nil")
+		logs.L.Error(m.Context, "presigned url is nil")
 	}
 }
 
@@ -292,10 +291,10 @@ func (m *MinioManager) UploadFileOverwrite(opts minio.PutObjectOptions) (u *url.
 	if m.inputTransFunc != nil {
 		m.inputTransFunc(m)
 	}
-	log.Zlog.Warn("tryGetFile failed", zaplog.Error(err))
+	logs.L.Warn(m.Context, "tryGetFile failed", "error", err)
 	err = m.UploadFile(opts)
 	if err != nil {
-		log.Zlog.Error("uploadFile failed", zaplog.Error(err))
+		logs.L.Error(m.Context, "uploadFile failed", "error", err)
 		return
 	}
 	return m.PresignURL()
@@ -320,7 +319,7 @@ func (m *MinioManager) UploadFile(opts minio.PutObjectOptions) (err error) {
 
 	err = minioUploadReader(ctx, m.bucketName, m.file, m.objName, opts)
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error(ctx, err.Error())
 		return
 	}
 	return

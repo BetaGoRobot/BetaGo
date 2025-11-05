@@ -8,7 +8,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
-	"github.com/BetaGoRobot/BetaGo/utility/logging"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -45,7 +45,7 @@ func HybridSearch(ctx context.Context, req HybridSearchRequest, embeddingFunc Em
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
-	logging.Logger.Info().Ctx(ctx).Str("query_text", strings.Join(req.QueryText, " ")).Msg("开始混合搜索")
+	logs.L.Info(ctx, "开始混合搜索", "query_text", strings.Join(req.QueryText, " "))
 	if req.TopK <= 0 {
 		req.TopK = 5
 	}

@@ -16,12 +16,11 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	ark "github.com/BetaGoRobot/BetaGo/utility/doubao"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/bytedance/sonic"
 
 	redis_client "github.com/BetaGoRobot/BetaGo/utility/redis" // Renamed to avoid conflict with package name
-	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/redis/go-redis/v9"
 	uuid "github.com/satori/go.uuid"
@@ -131,7 +130,7 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 	// 1. 从Redis获取当前会话
 	val, err := m.redisClient.Get(ctx, sessionKey).Result()
 	if err != nil && err != redis.Nil {
-		log.Zlog.Error("Failed to get session from Redis", zaplog.String("groupID", groupID), zaplog.Error(err))
+		logs.L.Error(ctx, "failed to get session from Redis", "groupID", groupID, "error", err)
 		return err
 	}
 
@@ -139,7 +138,7 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 	// 如果会话存在，则反序列化它。否则，将使用一个新的空缓冲区。
 	if err == nil || errors.Is(err, redis.Nil) {
 		if err := json.Unmarshal([]byte(val), &buffer); err != nil {
-			log.Zlog.Warn("Failed to unmarshal session buffer, starting a new one", zaplog.String("data", val), zaplog.String("groupID", groupID), zaplog.Error(err))
+			logs.L.Warn(ctx, "failed to unmarshal session buffer, starting a new one", "data", val, "groupID", groupID, "error", err)
 			// 数据可能已损坏，从一个新缓冲区开始
 			m.redisClient.Del(ctx, sessionKey)
 			buffer = SessionBuffer{}
@@ -151,9 +150,9 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 
 	// 3. 检查缓冲区大小是否超过限制
 	if len(buffer.Messages) >= MAX_CHUNK_SIZE {
-		log.Zlog.Info("Chunk reached max size, triggering immediate merge",
-			zaplog.String("groupID", groupID),
-			zaplog.Int("size", len(buffer.Messages)),
+		logs.L.Info(ctx, "chunk reached max size, triggering immediate merge",
+			"groupID", groupID,
+			"size", len(buffer.Messages),
 		)
 
 		// 将完整的块发送到处理队列
@@ -170,7 +169,7 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 		if err != nil {
 			// 记录错误但继续，因为块已排队等待处理。
 			// 超时机制后续可能会尝试处理一个不存在的键，这是无害的。
-			log.Zlog.Error("Failed to execute Redis cleanup pipeline after max size merge", zaplog.String("groupID", groupID), zaplog.Error(err))
+			logs.L.Error(ctx, "failed to execute Redis cleanup pipeline after max size merge", "groupID", groupID, "error", err)
 		}
 		return nil // 触发合并，操作完成
 	}
@@ -178,7 +177,7 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 	// 4. 如果未达到大小限制，则在Redis中更新会话
 	bufferJSON, err := json.Marshal(buffer)
 	if err != nil {
-		log.Zlog.Error("Failed to marshal session buffer", zaplog.String("groupID", groupID), zaplog.Error(err))
+		logs.L.Error(ctx, "failed to marshal session buffer", "groupID", groupID, "error", err)
 		return err
 	}
 
@@ -189,11 +188,11 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 	pipe.ZAdd(ctx, redisActiveSessionsKey, redis.Z{Score: float64(newTimestamp), Member: groupID})
 	_, err = pipe.Exec(ctx)
 	if err != nil {
-		log.Zlog.Error("Failed to execute Redis update pipeline", zaplog.String("groupID", groupID), zaplog.Error(err))
+		logs.L.Error(ctx, "failed to execute Redis update pipeline", "groupID", groupID, "error", err)
 		return err
 	}
 
-	log.Zlog.Debug("Message submitted and session updated", zaplog.String("groupID", groupID), zaplog.Int("buffer_size", len(buffer.Messages)))
+	logs.L.Debug(ctx, "message submitted and session updated", "groupID", groupID, "buffer_size", len(buffer.Messages))
 	return nil
 }
 
@@ -235,8 +234,9 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 	}
 	res = strings.Trim(res, "```")
 	res = strings.TrimLeft(res, "json")
-	log.SLog.Infof(
-		"OnMerge chunk processed by LLM:\n records: %s\nres: %s\n", chunkStr, res,
+	logs.L.Info(ctx, "OnMerge chunk processed by LLM",
+		"records", chunkStr,
+		"res", res,
 	)
 
 	chunkLog := &handlertypes.MessageChunkLogV3{
@@ -252,7 +252,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 	}
 	embedding, _, err := ark.EmbeddingText(ctx, BuildEmbeddingInput(chunkLog))
 	if err != nil {
-		log.Zlog.Info("embedding error")
+		logs.L.Info(ctx, "embedding error")
 		return
 	}
 	chunkLog.ConversationEmbedding = Normalize(embedding)
@@ -265,7 +265,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 
 // StartBackgroundCleaner starts a goroutine to periodically scan for and process timed-out sessions.
 func (m *Management) StartBackgroundCleaner(ctx context.Context) {
-	log.Zlog.Info("Starting background cleaner for timed-out sessions...")
+	logs.L.Info(ctx, "starting background cleaner for timed-out sessions...")
 	// Start the consumer goroutine
 	go func() {
 		for chunk := range m.processingQueue {
@@ -274,9 +274,9 @@ func (m *Management) StartBackgroundCleaner(ctx context.Context) {
 			}
 			// Each chunk is processed in its own goroutine to avoid blocking the queue consumer
 			go func(c *Chunk) {
-				log.Zlog.Info("Processing a merged chunk", zaplog.Int("message_count", len(c.Messages)))
+				logs.L.Info(ctx, "processing a merged chunk", "message_count", len(c.Messages))
 				if err := m.OnMerge(ctx, c); err != nil {
-					log.Zlog.Error("Error during OnMerge", zaplog.Error(err))
+					logs.L.Error(ctx, "error during OnMerge", "error", err)
 				}
 			}(chunk)
 		}
@@ -289,7 +289,7 @@ func (m *Management) StartBackgroundCleaner(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Zlog.Info("Stopping background cleaner.")
+				logs.L.Info(ctx, "stopping background cleaner.")
 				return
 			case <-ticker.C:
 				m.scanAndProcessTimeouts(ctx)
@@ -300,7 +300,7 @@ func (m *Management) StartBackgroundCleaner(ctx context.Context) {
 
 // scanAndProcessTimeouts is the internal logic for the background cleaner.
 func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
-	log.Zlog.Debug("Scanning for timed-out sessions...")
+	logs.L.Debug(ctx, "scanning for timed-out sessions...")
 	// Calculate the timestamp threshold for timeout. Sessions older than this will be processed.
 	timeoutThreshold := time.Now().Add(-INACTIVITY_TIMEOUT).UnixMilli()
 
@@ -310,15 +310,15 @@ func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
 		Max: strconv.FormatInt(timeoutThreshold, 10),
 	}).Result()
 	if err != nil {
-		log.Zlog.Error("Failed to get timed-out sessions from Redis", zaplog.Error(err))
+		logs.L.Error(ctx, "failed to get timed-out sessions from Redis", "error", err)
 		return
 	}
 
 	if len(timedOutGroupIDs) == 0 {
-		log.Zlog.Info("not session is timed out, will do nothing...")
+		logs.L.Info(ctx, "not session is timed out, will do nothing...")
 		return // Nothing to do
 	}
-	log.Zlog.Info("Found timed-out sessions", zaplog.Int("count", len(timedOutGroupIDs)), zaplog.Strings("group_ids", timedOutGroupIDs))
+	logs.L.Info(ctx, "found timed-out sessions", "count", len(timedOutGroupIDs), "group_ids", timedOutGroupIDs)
 
 	// 2. Process and clean up each timed-out session
 	for _, groupID := range timedOutGroupIDs {
@@ -332,7 +332,7 @@ func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
 			continue
 		}
 		if err != nil {
-			log.Zlog.Error("Failed to GetDel session from Redis", zaplog.String("groupID", groupID), zaplog.Error(err))
+			logs.L.Error(ctx, "failed to GetDel session from Redis", "groupID", groupID, "error", err)
 			continue
 		}
 
@@ -341,7 +341,7 @@ func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
 
 		var buffer SessionBuffer
 		if err := json.Unmarshal([]byte(val), &buffer); err != nil {
-			log.Zlog.Error("Failed to unmarshal timed-out session buffer", zaplog.String("groupID", groupID), zaplog.Error(err))
+			logs.L.Error(ctx, "failed to unmarshal timed-out session buffer", "groupID", groupID, "error", err)
 			continue
 		}
 

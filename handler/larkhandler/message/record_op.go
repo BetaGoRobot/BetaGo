@@ -7,11 +7,10 @@ import (
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
-	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"gorm.io/gorm/clause"
 )
@@ -77,7 +76,7 @@ func (r *RecordMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 		contentMap := make(map[string]string)
 		err := sonic.UnmarshalString(*msg.Content, &contentMap)
 		if err != nil {
-			log.Zlog.Error("repeatMessage", zaplog.Error(err))
+			logs.L.Error(ctx, "repeat message error", "error", err)
 			return err
 		}
 		stickerKey := contentMap["file_key"]

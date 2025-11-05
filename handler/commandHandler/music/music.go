@@ -10,11 +10,10 @@ import (
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/dal/qqmusicapi"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
-	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -146,7 +145,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 		}
 		cardStr, err = cardMessage.BuildMessage()
 		if err != nil {
-			log.Zlog.Error("构建消息失败", zaplog.Error(err))
+			logs.L.Error(ctx, "构建消息失败", "error", err)
 			return
 		}
 	} else {

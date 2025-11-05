@@ -11,9 +11,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkconsts"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
-	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
@@ -32,7 +31,7 @@ func (m *LarkMessageEvent) MsgID() (res string) {
 func (m *LarkMessageEvent) TimeStamp() (res int64) {
 	t, err := strconv.ParseInt(*m.Event.Message.CreateTime, 10, 64)
 	if err != nil {
-		zaplog.Logger.Error("getTimestampFunc error", zaplog.Error(err))
+		logs.L.Error(context.Background(), "getTimestampFunc error", "error", err)
 		return time.Now().UnixMilli()
 	}
 	return t
@@ -81,7 +80,7 @@ func (m *LarkMessageEvent) BuildLine() (line string) {
 	} else {
 		member, err := grouputil.GetUserMemberFromChat(context.Background(), *m.Event.Message.ChatId, *m.Event.Sender.SenderId.OpenId)
 		if err != nil {
-			log.Zlog.Error("got error openID", zaplog.String("openID", *m.Event.Sender.SenderId.OpenId))
+			logs.L.Error(context.Background(), "got error openID", "openID", *m.Event.Sender.SenderId.OpenId)
 		}
 		if member == nil {
 			userName = "NULL"

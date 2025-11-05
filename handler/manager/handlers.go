@@ -14,7 +14,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/handler/commandHandler/wordcontrol"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
@@ -125,7 +125,7 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 			},
 		})
 		if err != nil {
-			log.Zlog.Error(err.Error())
+			logs.L.Error(context.Background(), "message update error", "error", err)
 			return
 		}
 		return

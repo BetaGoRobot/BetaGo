@@ -11,11 +11,10 @@ import (
 	errorsender "github.com/BetaGoRobot/BetaGo/handler/commandHandler/error_sender"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
-	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 	"github.com/patrickmn/go-cache"
 	"go.opentelemetry.io/otel/attribute"
@@ -26,7 +25,7 @@ var chatCache = cache.New(time.Minute*30, time.Minute*1)
 func init() {
 	go func() {
 		for {
-			log.Zlog.Info("Syncing chat cache to db...")
+			logs.L.Info(context.Background(), "syncing chat cache to db")
 			for authorID, messages := range chatCache.Items() {
 				m, err := json.Marshal(messages.Object.([]Message))
 				if err != nil {
@@ -382,7 +381,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		}}
 		m, err := consts.GlobalSession.MessageView(quoteID)
 		if err != nil {
-			log.Zlog.Error("MessageView error", zaplog.Error(err))
+			logs.L.Error(ctx, "message view error", "error", err)
 			return
 		}
 
@@ -407,7 +406,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		modules...,
 	)
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error(context.Background(), "build card message error", "error", err)
 	}
 	err = consts.GlobalSession.MessageUpdate(&kook.MessageUpdate{
 		MessageUpdateBase: kook.MessageUpdateBase{
@@ -416,7 +415,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		},
 	})
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error(context.Background(), "message update error", "error", err)
 	}
 }
 

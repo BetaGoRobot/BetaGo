@@ -5,9 +5,7 @@ import (
 	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
-	"github.com/BetaGoRobot/BetaGo/utility/logging"
-	"github.com/kevinmatthe/zaplog"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -130,9 +128,9 @@ func (p *Processor[T, K]) RunStages() (err error) {
 		if err != nil {
 			trace.SpanFromContext(p.Context).RecordError(err)
 			if errors.Is(err, consts.ErrStageSkip) {
-				log.Zlog.Warn("pre run stage skipped: ", zaplog.Error(err))
+				logs.L.Warn(p.Context, "pre run stage skipped", "error", err)
 			} else {
-				log.Zlog.Error("pre run stage skipped: ", zaplog.Error(err))
+				logs.L.Error(p.Context, "pre run stage skipped", "error", err)
 			}
 			return
 		}
@@ -140,9 +138,9 @@ func (p *Processor[T, K]) RunStages() (err error) {
 		if err != nil {
 			trace.SpanFromContext(p.Context).RecordError(err)
 			if errors.Is(err, consts.ErrStageSkip) {
-				log.Zlog.Warn("run stage skipped: ", zaplog.Error(err))
+				logs.L.Warn(p.Context, "run stage skipped", "error", err)
 			} else {
-				log.Zlog.Error("run stage skipped: ", zaplog.Error(err))
+				logs.L.Error(p.Context, "run stage skipped", "error", err)
 			}
 			return
 		}
@@ -150,9 +148,9 @@ func (p *Processor[T, K]) RunStages() (err error) {
 		if err != nil {
 			trace.SpanFromContext(p.Context).RecordError(err)
 			if errors.Is(err, consts.ErrStageSkip) {
-				log.Zlog.Warn("post run stage skipped: ", zaplog.Error(err))
+				logs.L.Warn(p.Context, "post run stage skipped", "error", err)
 			} else {
-				log.Zlog.Error("post run stage skipped: ", zaplog.Error(err))
+				logs.L.Error(p.Context, "post run stage skipped", "error", err)
 			}
 			return
 		}
@@ -193,7 +191,7 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			defer p.Defer()
 			var err error
 			defer func() {
-				logging.Logger.Error().Stack().Err(err)
+				logs.L.Error(p.Context, "parallel stage error", "error", err)
 				errorChan <- err
 				wg.Done()
 			}()
@@ -201,9 +199,9 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			if err != nil {
 				trace.SpanFromContext(p.Context).RecordError(err)
 				if errors.Is(err, consts.ErrStageSkip) {
-					log.Zlog.Warn("pre run stage skipped: ", zaplog.Error(err))
+					logs.L.Warn(p.Context, "pre run stage skipped", "error", err)
 				} else {
-					log.Zlog.Error("pre run stage skipped: ", zaplog.Error(err))
+					logs.L.Error(p.Context, "pre run stage skipped", "error", err)
 				}
 				return
 			}
@@ -212,9 +210,9 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			if err != nil {
 				trace.SpanFromContext(p.Context).RecordError(err)
 				if errors.Is(err, consts.ErrStageSkip) {
-					log.Zlog.Warn("run stage skipped: ", zaplog.Error(err))
+					logs.L.Warn(p.Context, "run stage skipped", "error", err)
 				} else {
-					log.Zlog.Error("run stage skipped: ", zaplog.Error(err))
+					logs.L.Error(p.Context, "run stage skipped", "error", err)
 				}
 				return
 			}
@@ -222,9 +220,9 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			if err != nil {
 				trace.SpanFromContext(p.Context).RecordError(err)
 				if errors.Is(err, consts.ErrStageSkip) {
-					log.Zlog.Warn("post run stage skipped: ", zaplog.Error(err))
+					logs.L.Warn(p.Context, "post run stage skipped", "error", err)
 				} else {
-					log.Zlog.Error("post run stage skipped: ", zaplog.Error(err))
+					logs.L.Error(p.Context, "post run stage skipped", "error", err)
 				}
 				return
 			}
@@ -238,7 +236,7 @@ func (p *Processor[T, K]) RunParallelStages() error {
 	for err := range errorChan {
 		if err != nil {
 			mergedErr = errors.Wrap(mergedErr, err.Error())
-			log.Zlog.Warn("error in parallel stages", zaplog.Error(err))
+			logs.L.Warn(p.Context, "error in parallel stages", "error", err)
 		}
 	}
 	return mergedErr

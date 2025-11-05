@@ -10,10 +10,9 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
-	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
@@ -38,7 +37,7 @@ func WordAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaDa
 		return errors.ErrUnsupported
 	}
 	argMap, _ := parseArgs(args...)
-	log.Zlog.Info("wordAddHandler", zaplog.Any("args", argMap))
+	logs.L.Info(ctx, "word add handler", "args", argMap)
 
 	word, ok := argMap["word"]
 	if !ok {
@@ -73,7 +72,7 @@ func WordGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaDa
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	argMap, _ := parseArgs(args...)
-	log.Zlog.Info("wordGetHandler", zaplog.Any("args", argMap))
+	logs.L.Info(ctx, "word get handler", "args", argMap)
 	ChatID := *data.Event.Message.ChatId
 
 	lines := make([]map[string]string, 0)

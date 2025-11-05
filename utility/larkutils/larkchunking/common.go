@@ -10,9 +10,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkconsts"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
-	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
@@ -74,7 +73,7 @@ func buildLineCommon(
 	} else {
 		member, err := grouputil.GetUserMemberFromChat(ctx, *chatID, *senderID)
 		if err != nil {
-			log.Zlog.Error("got error openID", zaplog.String("openID", *senderID))
+			logs.L.Error(ctx, "got error openID", "openID", *senderID)
 		}
 		if member == nil {
 			userName = "NULL"

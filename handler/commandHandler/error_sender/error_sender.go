@@ -5,11 +5,10 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
-	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 )
 
@@ -81,7 +80,7 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx cont
 	}
 
 	if err != nil {
-		log.Zlog.Error("SendErrorInfo", zaplog.Error(sourceErr))
+		logs.L.Error(ctx, "send error info", "error", sourceErr)
 		return
 	}
 	consts.GlobalSession.MessageCreate(&kook.MessageCreate{

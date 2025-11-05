@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,8 +14,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts/check"
 	"github.com/BetaGoRobot/BetaGo/handler/commandHandler/notifier"
 	server "github.com/BetaGoRobot/BetaGo/handler/webhookserver"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
-	"github.com/kevinmatthe/zaplog"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 )
 
 func init() {
@@ -28,7 +28,7 @@ func main() {
 	check.CheckEnv()
 	e := consts.GlobalSession.Open()
 	if e != nil {
-		log.Zlog.Error("连接失败", zaplog.Error(e))
+		logs.L.Error(context.Background(), "连接失败", "error", e)
 		panic(e)
 	}
 	notifier.StartAutoService()

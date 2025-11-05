@@ -8,10 +8,9 @@ import (
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command/handlers"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
-	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
@@ -64,7 +63,7 @@ func (r *ReplyChatOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 
 	reactionID, err := larkutils.AddReaction(ctx, "OnIt", *event.Event.Message.MessageId)
 	if err != nil {
-		log.Zlog.Error("Add reaction to msg failed", zaplog.Error(err))
+		logs.L.Error(ctx, "add reaction to msg failed", "error", err)
 	} else {
 		defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
 	}
