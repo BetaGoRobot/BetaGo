@@ -257,6 +257,11 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 		ctx, consts.LarkChunkIndex, uuid.NewV4().String(),
 		chunkLog,
 	)
+	if err != nil {
+		logs.L.Error().Ctx(ctx).Str("groupID", chunk.GroupID).Err(err).Msg("insert chunk log error")
+		return
+	}
+
 	return
 }
 
