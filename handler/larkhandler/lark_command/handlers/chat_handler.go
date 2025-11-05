@@ -183,7 +183,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	}
 	docs, err := retriver.Cli.RecallDocs(ctx, chatID, *event.Event.Message.Content, 10)
 	if err != nil {
-		logs.L.Err(err)
+		logs.L.Error().Err(err).Msg("RecallDocs err")
 	}
 	promptTemplate.Context = commonutils.TransSlice(docs, func(doc schema.Document) string {
 		if doc.Metadata == nil {

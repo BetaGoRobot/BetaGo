@@ -6,10 +6,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/h2non/bimg"
-	"github.com/kevinmatthe/zaplog"
 )
 
 func ResizeIMGFromReader(ctx context.Context, r io.ReadCloser) (output []byte) {
@@ -17,7 +16,7 @@ func ResizeIMGFromReader(ctx context.Context, r io.ReadCloser) (output []byte) {
 	defer span.End()
 	imgBody, err := io.ReadAll(r)
 	if err != nil {
-		log.Zlog.Error("read image error", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("read image error")
 		return
 	}
 	newImage, err := bimg.NewImage(imgBody).Resize(512, 512)

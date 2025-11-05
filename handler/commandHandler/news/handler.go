@@ -11,11 +11,10 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
-	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 	"github.com/patrickmn/go-cache"
 	"github.com/spyzhov/ajson"
@@ -74,7 +73,7 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 			SetQueryParam("type", newsType).
 			Get(apiBaseURL)
 		if err != nil {
-			log.Zlog.Error("获取新闻失败...", zaplog.Error(err))
+			logs.L.Error().Err(err).Msg("获取新闻失败")
 			return err
 		}
 
@@ -86,7 +85,7 @@ func Handler(ctx context.Context, targetID, quoteID, authorID string, args ...st
 		fmt.Println(string(resp.Body()))
 		err = json.Unmarshal(resp.Body(), &res)
 		if err != nil {
-			log.Zlog.Error("Unmarshal err", zaplog.Error(err))
+			logs.L.Error().Err(err).Msg("Unmarshal err")
 			return err
 		}
 		newsCache.Set(newsType, res, 0)
@@ -177,7 +176,7 @@ func MorningHandler(ctx context.Context, targetID, quoteID, authorID string, arg
 			SetBody(fmt.Sprintf("token=%s&format=json", apiKey)).
 			Post(apiDailyMorningReport)
 		if err != nil || resp.StatusCode() != 200 {
-			log.Zlog.Error("获取新闻失败...", zaplog.Error(err))
+			logs.L.Error().Err(err).Msg("获取早报失败")
 			return fmt.Errorf("StatusCode: %d, err is %v", resp.StatusCode(), err)
 		}
 		fmt.Println(resp)

@@ -1,6 +1,7 @@
 package shorter
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"net/url"
@@ -8,9 +9,8 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
-	"github.com/kevinmatthe/zaplog"
 )
 
 type TimeUnit string
@@ -64,21 +64,21 @@ type KuttResp struct {
 // 			},
 // 		).Post("https://aka.kmhomelab.cn/api/link")
 // 	if err != nil || r.StatusCode() != 200 {
-// 		log.ZapLogger.Error("Post failed", zaplog.Error(err), zaplog.Int("status_code", r.StatusCode()))
+// 		log.ZapLogger.Error("Post failed", Err(err), Int("status_code", r.StatusCode()))
 // 		return
 // 	}
 // 	newURL, err = url.Parse(slug)
 // 	if err != nil {
-// 		log.ZapLogger.Error("Parse url failed", zaplog.Error(err))
+// 		log.ZapLogger.Error("Parse url failed", err).Msg("Error")
 // 		return
 // 	}
-// 	log.ZapLogger.Info("GenAKA with url", zaplog.String("new_url", newURL.String()), zaplog.String("old_url", oldURL))
+// 	log.ZapLogger.Info("GenAKA with url", Str("new_url", newURL.String()), Str("old_url", oldURL))
 // 	newURL.Host = "aka.kmhomelab.cn"
 // 	newURL.Scheme = "https"
 // 	return
 // }
 
-func GenAKA(u *url.URL) (newURL *url.URL) {
+func GenAKA(ctx context.Context, u *url.URL) (newURL *url.URL) {
 	expires := ExpireTime{
 		Value: 30,
 		Unit:  TimeUnitsDay,
@@ -91,7 +91,7 @@ func GenAKA(u *url.URL) (newURL *url.URL) {
 	}
 	reqBody, err := sonic.Marshal(req)
 	if err != nil {
-		log.Zlog.Error("Marshal failed", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Marshal failed")
 		return
 	}
 	r, err := consts.HttpClient.R().
@@ -100,25 +100,25 @@ func GenAKA(u *url.URL) (newURL *url.URL) {
 		SetBody(reqBody).
 		Post("https://kutt.kmhomelab.cn/api/links")
 	if err != nil || (r.StatusCode() != 200 && r.StatusCode() != 201) {
-		log.Zlog.Error("Post failed", zaplog.Error(err), zaplog.Int("status_code", r.StatusCode()))
+		logs.L.Error().Ctx(ctx).Err(err).Int("status_code", r.StatusCode()).Msg("Post failed")
 		return
 	}
 	resp := &KuttResp{}
 	err = sonic.Unmarshal(r.Body(), resp)
 	if err != nil {
-		log.Zlog.Error("Unmarshal failed", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Unmarshal failed")
 		return
 	}
 	newURL, err = url.Parse(resp.Link)
 	if err != nil {
-		log.Zlog.Error("Parse url failed", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Parse url failed")
 		return
 	}
-	log.Zlog.Info("GenAKA with url", zaplog.String("new_url", newURL.String()), zaplog.String("old_url", oldURL))
+	logs.L.Info().Ctx(ctx).Str("new_url", newURL.String()).Str("old_url", oldURL).Msg("GenAKA with url")
 	return
 }
 
-func GenAKAKutt(u *url.URL, expires ExpireTime) (newURL *url.URL) {
+func GenAKAKutt(ctx context.Context, u *url.URL, expires ExpireTime) (newURL *url.URL) {
 	oldURL := u.String()
 	req := &KuttRequest{
 		Target:   oldURL,
@@ -127,7 +127,7 @@ func GenAKAKutt(u *url.URL, expires ExpireTime) (newURL *url.URL) {
 	}
 	reqBody, err := sonic.Marshal(req)
 	if err != nil {
-		log.Zlog.Error("Marshal failed", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Marshal failed")
 		return
 	}
 	r, err := consts.HttpClient.R().
@@ -136,21 +136,21 @@ func GenAKAKutt(u *url.URL, expires ExpireTime) (newURL *url.URL) {
 		SetBody(reqBody).
 		Post("https://kutt.kmhomelab.cn/api/links")
 	if err != nil || (r.StatusCode() != 200 && r.StatusCode() != 201) {
-		log.Zlog.Error("Post failed", zaplog.Error(err), zaplog.Int("status_code", r.StatusCode()))
+		logs.L.Error().Ctx(ctx).Err(err).Int("status_code", r.StatusCode()).Msg("Post failed")
 		return
 	}
 	resp := &KuttResp{}
 	err = sonic.Unmarshal(r.Body(), resp)
 	if err != nil {
-		log.Zlog.Error("Unmarshal failed", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Unmarshal failed")
 		return
 	}
 	newURL, err = url.Parse(resp.Link)
 	if err != nil {
-		log.Zlog.Error("Parse url failed", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Parse url failed")
 		return
 	}
-	log.Zlog.Info("GenAKA with url", zaplog.String("new_url", newURL.String()), zaplog.String("old_url", oldURL))
+	logs.L.Info().Ctx(ctx).Str("new_url", newURL.String()).Str("old_url", oldURL).Msg("GenAKA with url")
 	return
 }
 

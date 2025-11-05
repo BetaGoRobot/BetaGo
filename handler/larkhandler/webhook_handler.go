@@ -16,15 +16,14 @@ import (
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/message"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
 	miniohelper "github.com/BetaGoRobot/BetaGo/utility/minio_helper"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
-	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	"github.com/larksuite/oapi-sdk-go/v3/event/dispatcher/callback"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -84,7 +83,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *template
 	)
 	musicURL, err := neteaseapi.NetEaseGCtx.GetMusicURL(ctx, musicID)
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to get music URL")
 		return nil
 	}
 
@@ -92,7 +91,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *template
 	picURL := songDetail.Al.PicURL
 	imageKey, ossURL, err := larkimg.UploadPicAllinOne(ctx, picURL, musicID, true)
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to upload picture")
 		return nil
 	}
 
@@ -133,7 +132,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *template
 		Overwrite().
 		Upload()
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to upload to minio")
 		return nil
 	}
 
@@ -194,7 +193,7 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 
 	albumDetails, err := neteaseapi.NetEaseGCtx.GetAlbumDetail(ctx, albumID)
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to get album detail")
 		return
 	}
 	searchRes := neteaseapi.SearchMusic{Result: *albumDetails}
@@ -254,17 +253,17 @@ func HandleWithDraw(ctx context.Context, cardAction *callback.CardActionTriggerE
 			SetContent(fmt.Sprintf("这条消息被%s撤回啦！", larkutils.AtUserString(userID))).Build(ctx)
 		err := larkutils.PatchCard(ctx, cardContent, msgID)
 		if err != nil {
-			log.Zlog.Error(err.Error())
+			logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to patch card")
 		}
 	} else {
 		// 撤回消息
 		resp, err := lark.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(msgID).Build())
 		if err != nil {
-			log.Zlog.Error(err.Error())
+			logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to delete message")
 			return
 		}
 		if !resp.Success() {
-			log.Zlog.Error("delete message error", zaplog.String("error", resp.Error()))
+			logs.L.Error().Ctx(ctx).Str("error", resp.Error()).Msg("Delete message error")
 		}
 	}
 }
@@ -289,7 +288,7 @@ func HandleRefreshMusic(ctx context.Context, musicID, msgID string) {
 		return
 	}
 	if !resp.Success() {
-		log.Zlog.Error("refresh music card error", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Refresh music card error")
 		return
 	}
 	return
@@ -315,7 +314,7 @@ func HandleRefreshObj(ctx context.Context, cardAction *callback.CardActionTrigge
 		srcCmd,
 	)
 	if err != nil {
-		log.Zlog.Error("refresh obj error", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Refresh obj error")
 	}
 }
 
@@ -327,11 +326,11 @@ func HandleSubmit(ctx context.Context, cardAction *callback.CardActionTriggerEve
 	etStr, _ := cardAction.Event.Action.FormValue["end_time_picker"].(string)
 	st, err := time.ParseInLocation("2006-01-02 15:04 -0700", stStr, utility.UTCPlus8Loc())
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to parse start time")
 	}
 	et, err := time.ParseInLocation("2006-01-02 15:04 -0700", etStr, utility.UTCPlus8Loc())
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to parse end time")
 	}
 
 	srcCmd += fmt.Sprintf(" --st=\"%s\" --et=\"%s\"", st.In(utility.UTCPlus8Loc()).Format(time.DateTime), et.In(utility.UTCPlus8Loc()).Format(time.DateTime))
@@ -353,6 +352,6 @@ func HandleSubmit(ctx context.Context, cardAction *callback.CardActionTriggerEve
 		srcCmd,
 	)
 	if err != nil {
-		log.Zlog.Error("refresh obj error", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Refresh obj error")
 	}
 }

@@ -9,10 +9,9 @@ import (
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	larkcommand "github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
-	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
@@ -80,7 +79,7 @@ func ExecuteFromRawCommand(ctx context.Context, event *larkim.P2MessageReceiveV1
 		var reactionID string
 		reactionID, err = larkutils.AddReaction(ctx, "OnIt", *event.Event.Message.MessageId)
 		if err != nil {
-			log.Zlog.Error("Add reaction to msg failed", zaplog.Error(err))
+			logs.L.Error().Ctx(ctx).Err(err).Msg("Add reaction to msg failed")
 		} else {
 			defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
 		}
@@ -96,7 +95,7 @@ func ExecuteFromRawCommand(ctx context.Context, event *larkim.P2MessageReceiveV1
 			} else {
 				text := fmt.Sprintf("%v\n[Jaeger Trace](https://jaeger.kmhomelab.cn/trace/%s)", err.Error(), span.SpanContext().TraceID().String())
 				larkutils.ReplyCardText(ctx, text, *event.Event.Message.MessageId, "_OpErr", true)
-				log.Zlog.Error("CommandOperator", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				logs.L.Error().Ctx(ctx).Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("CommandOperator")
 				return
 			}
 		}

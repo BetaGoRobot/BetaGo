@@ -9,11 +9,10 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
-	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
@@ -104,7 +103,7 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 		if replyItem.ReplyType == consts.ReplyTypeText {
 			_, err := larkutils.ReplyMsgText(ctx, replyItem.Reply, *event.Event.Message.MessageId, "_wordReply", false)
 			if err != nil {
-				log.Zlog.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				logs.L.Error().Ctx(ctx).Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("ReplyMessage error")
 				return err
 			}
 		} else if replyItem.ReplyType == consts.ReplyTypeImg {
@@ -122,7 +121,7 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 			}
 			_, err := larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, msgType, content, "_wordReply", false)
 			if err != nil {
-				log.Zlog.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				logs.L.Error().Ctx(ctx).Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("ReplyMessage")
 				return err
 			}
 		} else {

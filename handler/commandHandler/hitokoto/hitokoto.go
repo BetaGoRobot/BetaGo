@@ -6,13 +6,12 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -128,11 +127,11 @@ func GetHitokotoHandler(ctx context.Context, targetID, quoteID, authorID string,
 func GetHitokoto(field ...string) (hitokotoRes RespBody, err error) {
 	resp, err := requests.Req().SetQueryParamsFromValues(map[string][]string{"c": field}).Get(hitokotoURL)
 	if err != nil {
-		log.Zlog.Error("获取一言失败", zaplog.Error(err))
+		logs.L.Error().Err(err).Msg("获取一言失败")
 		return
 	}
 	if err = json.Unmarshal(resp.Body(), &hitokotoRes); err != nil {
-		log.Zlog.Error("获取一言失败", zaplog.Error(err))
+		logs.L.Error().Err(err).Msg("获取一言失败")
 		return
 	}
 	return

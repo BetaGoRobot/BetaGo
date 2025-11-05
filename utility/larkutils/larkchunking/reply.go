@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kevinmatthe/zaplog"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 )
 
@@ -24,7 +24,7 @@ func (m *LarkMessageRespReply) MsgID() (res string) {
 func (m *LarkMessageRespReply) TimeStamp() (res int64) {
 	t, err := strconv.ParseInt(*m.Data.CreateTime, 10, 64)
 	if err != nil {
-		zaplog.Logger.Error("getTimestampFunc error", zaplog.Error(err))
+		logs.L.Error().Err(err).Msg("getTimestampFunc error")
 		return time.Now().UnixMilli()
 	}
 	return t

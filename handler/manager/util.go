@@ -7,7 +7,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/lonelyevil/kook"
 	"github.com/lonelyevil/kook/log_adapter/plog"
 	p_log "github.com/phuslu/log"
@@ -69,7 +69,7 @@ func Reconnect() (err error) {
 	// 		return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
 	// 	}
 	// }
-	log.Zlog.Info("Reconnecting successfully")
+	logs.L.Info().Msg("Reconnecting successfully")
 	time.Sleep(time.Second * 5)
 	return
 }

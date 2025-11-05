@@ -6,9 +6,8 @@ import (
 	"os"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/jordan-wright/email"
-	"github.com/kevinmatthe/zaplog"
 	"gorm.io/gorm"
 )
 
@@ -33,9 +32,9 @@ func SendEmail(Subject string, Body string) {
 	em.Text = []byte(Body)
 	err := em.Send(netEaseEmailURLWithPort, smtp.PlainAuth("", netEaseEmailAddress, netEaseEmailSecret, netEaseEmailURL))
 	if err != nil {
-		log.Zlog.DPanic("Send email failed", zaplog.Error(err))
+		logs.L.Error().Err(err).Msg("Send email failed")
 	}
-	log.Zlog.Info("Send email success")
+	logs.L.Info().Msg("Send email success")
 }
 
 // SendQRCodeMail is the function to send QRCode mail

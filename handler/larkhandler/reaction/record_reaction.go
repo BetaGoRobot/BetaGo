@@ -65,7 +65,7 @@ func (r *RecordReactionOperator) Run(ctx context.Context, event *larkim.P2Messag
 		return err
 	}
 	if member == nil || member.Name == nil {
-		logs.L.Error().Ctx(ctx).Msgf("user %s not found in chat %s", *event.Event.UserId.OpenId, chatID)
+		logs.L.Error().Ctx(ctx).Str("TraceID", span.SpanContext().TraceID().String()).Msgf("user %s not found in chat %s", *event.Event.UserId.OpenId, chatID)
 		return
 	}
 	database.GetDbConnection().Create(&database.InteractionStats{

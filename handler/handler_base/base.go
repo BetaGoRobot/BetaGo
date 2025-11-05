@@ -5,9 +5,7 @@ import (
 	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
-	"github.com/kevinmatthe/zaplog"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -201,9 +199,9 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			if err != nil {
 				trace.SpanFromContext(p.Context).RecordError(err)
 				if errors.Is(err, consts.ErrStageSkip) {
-					log.Zlog.Warn("pre run stage skipped: ", zaplog.Error(err))
+					logs.L.Warn().Ctx(p.Context).Str("stage", "pre run").Msg("stage skipped")
 				} else {
-					log.Zlog.Error("pre run stage skipped: ", zaplog.Error(err))
+					logs.L.Error().Ctx(p.Context).Err(err).Msg("pre run stage error")
 				}
 				return
 			}
@@ -212,9 +210,9 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			if err != nil {
 				trace.SpanFromContext(p.Context).RecordError(err)
 				if errors.Is(err, consts.ErrStageSkip) {
-					log.Zlog.Warn("run stage skipped: ", zaplog.Error(err))
+					logs.L.Warn().Ctx(p.Context).Str("stage", "run").Msg("stage skipped")
 				} else {
-					log.Zlog.Error("run stage skipped: ", zaplog.Error(err))
+					logs.L.Error().Ctx(p.Context).Err(err).Msg("run stage error")
 				}
 				return
 			}
@@ -222,9 +220,9 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			if err != nil {
 				trace.SpanFromContext(p.Context).RecordError(err)
 				if errors.Is(err, consts.ErrStageSkip) {
-					log.Zlog.Warn("post run stage skipped: ", zaplog.Error(err))
+					logs.L.Warn().Ctx(p.Context).Str("stage", "post run").Msg("stage skipped")
 				} else {
-					log.Zlog.Error("post run stage skipped: ", zaplog.Error(err))
+					logs.L.Error().Ctx(p.Context).Err(err).Msg("post run stage error")
 				}
 				return
 			}
@@ -238,7 +236,7 @@ func (p *Processor[T, K]) RunParallelStages() error {
 	for err := range errorChan {
 		if err != nil {
 			mergedErr = errors.Wrap(mergedErr, err.Error())
-			log.Zlog.Warn("error in parallel stages", zaplog.Error(err))
+			logs.L.Warn().Ctx(p.Context).Err(err).Msg("error in parallel stages")
 		}
 	}
 	return mergedErr

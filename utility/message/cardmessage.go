@@ -13,7 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
@@ -185,11 +185,11 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 		req := larkcardkit.NewContentCardElementReqBuilder().CardId(cardID).ElementId(key).Body(body).Build()
 		resp, err := lark.LarkClient.Cardkit.V1.CardElement.Content(ctx, req)
 		if err != nil {
-			log.Zlog.Error("patch message failed with error msg: " + err.Error())
+			logs.L.Error().Ctx(ctx).Err(err).Msg("patch message failed with error msg")
 			return
 		}
 		if !resp.Success() {
-			log.Zlog.Error("patch message failed with error msg: " + resp.Error())
+			logs.L.Error().Ctx(ctx).Str("CodeError.Error", resp.CodeError.Error()).Msg("patch message failed with error msg")
 			return
 		}
 	}

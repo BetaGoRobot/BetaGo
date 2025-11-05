@@ -10,13 +10,12 @@ import (
 	"github.com/BetaGoRobot/BetaGo/cts"
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
-	"go.uber.org/zap"
 )
 
 func GenUUIDStr(str string, length int) string {
@@ -41,12 +40,11 @@ func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 	}
 	defer span.End()
 	defer func() { span.RecordError(err) }()
-	log.Zlog.Info("reply card",
-		zap.String("msgID", msgID),
-		zap.String("suffix", suffix),
-		zap.String("replyInThread", strconv.FormatBool(replyInThread)),
-		zap.String("cardContent", cardContent.String()),
-	)
+	logs.L.Info().Ctx(ctx).
+		Str("msgID", msgID).
+		Str("suffix", suffix).
+		Bool("replyInThread", replyInThread).
+		Str("cardContent", cardContent.String()).Msg("reply card")
 	resp, err := lark.LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).

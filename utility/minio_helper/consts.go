@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -37,7 +37,7 @@ func init() {
 		Secure: useSSLInternal,
 	})
 	if err != nil {
-		log.Zlog.Panic(err.Error())
+		logs.L.Panic().Err(err).Msg("MinIO client initialization failed")
 	}
 
 	minioClientExternal, err = minio.New(endPointExternal, &minio.Options{
@@ -45,6 +45,6 @@ func init() {
 		Secure: useSSLExternal,
 	})
 	if err != nil {
-		log.Zlog.Panic(err.Error())
+		logs.L.Panic().Err(err).Msg("MinIO client initialization failed")
 	}
 }

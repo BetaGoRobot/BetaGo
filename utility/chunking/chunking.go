@@ -16,13 +16,11 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	ark "github.com/BetaGoRobot/BetaGo/utility/doubao"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/bytedance/sonic"
 
 	redis_client "github.com/BetaGoRobot/BetaGo/utility/redis" // Renamed to avoid conflict with package name
-	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/redis/go-redis/v9"
 	uuid "github.com/satori/go.uuid"
@@ -267,7 +265,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 
 // StartBackgroundCleaner starts a goroutine to periodically scan for and process timed-out sessions.
 func (m *Management) StartBackgroundCleaner(ctx context.Context) {
-	log.Zlog.Info("Starting background cleaner for timed-out sessions...")
+	logs.L.Info().Ctx(ctx).Msg("Starting background cleaner for timed-out sessions...")
 	// Start the consumer goroutine
 	go func() {
 		for chunk := range m.processingQueue {
@@ -291,7 +289,7 @@ func (m *Management) StartBackgroundCleaner(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				log.Zlog.Info("Stopping background cleaner.")
+				logs.L.Info().Ctx(ctx).Msg("Stopping background cleaner...")
 				return
 			case <-ticker.C:
 				m.scanAndProcessTimeouts(ctx)
@@ -302,7 +300,7 @@ func (m *Management) StartBackgroundCleaner(ctx context.Context) {
 
 // scanAndProcessTimeouts is the internal logic for the background cleaner.
 func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
-	log.Zlog.Debug("Scanning for timed-out sessions...")
+	logs.L.Debug().Ctx(ctx).Msg("Scanning for timed-out sessions...")
 	// Calculate the timestamp threshold for timeout. Sessions older than this will be processed.
 	timeoutThreshold := time.Now().Add(-INACTIVITY_TIMEOUT).UnixMilli()
 
@@ -312,7 +310,7 @@ func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
 		Max: strconv.FormatInt(timeoutThreshold, 10),
 	}).Result()
 	if err != nil {
-		log.Zlog.Error("Failed to get timed-out sessions from Redis", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to get timed-out sessions from Redis")
 		return
 	}
 
@@ -320,7 +318,7 @@ func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
 		logs.L.Info().Ctx(ctx).Msg("not session is timed out, will do nothing...")
 		return // Nothing to do
 	}
-	log.Zlog.Info("Found timed-out sessions", zaplog.Int("count", len(timedOutGroupIDs)), zaplog.Strings("group_ids", timedOutGroupIDs))
+	logs.L.Info().Ctx(ctx).Int("count", len(timedOutGroupIDs)).Strs("group_ids", timedOutGroupIDs).Msg("Found timed-out sessions")
 
 	// 2. Process and clean up each timed-out session
 	for _, groupID := range timedOutGroupIDs {

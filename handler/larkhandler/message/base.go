@@ -13,12 +13,11 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkchunking"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/retriver"
 	"github.com/BetaGoRobot/go_utils/reflecting"
-	"github.com/kevinmatthe/zaplog"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/tmc/langchaingo/schema"
 	"github.com/yanyiwu/gojieba"
@@ -72,7 +71,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		content := larkutils.PreGetTextMsg(ctx, event)
 		embedded, usage, err := doubao.EmbeddingText(ctx, content)
 		if err != nil {
-			log.Zlog.Error("EmbeddingText error", zaplog.Error(err))
+			logs.L.Error().Ctx(ctx).Err(err).Msg("EmbeddingText error")
 		}
 		jieba := gojieba.NewJieba()
 		defer jieba.Free()
@@ -106,7 +105,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 			},
 		)
 		if err != nil {
-			log.Zlog.Error("InsertData error", zaplog.Error(err))
+			logs.L.Error().Ctx(ctx).Err(err).Msg("InsertData error")
 		}
 		err = retriver.Cli.AddDocuments(ctx, utility.AddressORNil(event.Event.Message.ChatId),
 			[]schema.Document{{
@@ -120,7 +119,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 				},
 			}})
 		if err != nil {
-			log.Zlog.Error("AddDocuments error", zaplog.Error(err))
+			logs.L.Error().Ctx(ctx).Err(err).Msg("AddDocuments error")
 		}
 	}()
 }

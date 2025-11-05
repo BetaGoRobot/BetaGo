@@ -8,10 +8,10 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/shorter"
 	"github.com/BetaGoRobot/go_utils/reflecting"
-	"github.com/kevinmatthe/zaplog"
 	"github.com/minio/minio-go/v7"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -27,7 +27,7 @@ func presignObj(ctx context.Context, bucketName, objName string, needAKA bool) (
 		u = shortenURL(ctx, u)
 	}
 	span.SetAttributes(attribute.String("presigned_url_shortened", u.String()))
-	log.Zlog.Info("Presined file with url", zaplog.String("presigned_url", u.String()))
+	logs.L.Info().Ctx(ctx).Str("presigned_url", u.String()).Msg("Presined file with url")
 	return
 }
 
@@ -38,7 +38,7 @@ func presignObjInner(ctx context.Context, bucketName, objName string) (u *url.UR
 
 	u, err = minioClientExternal.PresignedGetObject(ctx, bucketName, objName, env.OSS_EXPIRATION_TIME, nil)
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error().Ctx(ctx).Err(err).Msg("PresignedGetObject failed")
 		return
 	}
 	return
@@ -48,7 +48,7 @@ func shortenURL(ctx context.Context, u *url.URL) *url.URL {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
-	if shortenedURL := shorter.GenAKA(u); shortenedURL != nil {
+	if shortenedURL := shorter.GenAKA(ctx, u); shortenedURL != nil {
 		return shortenedURL
 	}
 	return u
@@ -58,7 +58,7 @@ func MinioTryGetFile(ctx context.Context, bucketName, ObjName string, needAKA bo
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
-	log.Zlog.Info("MinioTryGetFile...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+	logs.L.Info().Ctx(ctx).Str("traceid", span.SpanContext().TraceID().String()).Msg("MinioTryGetFile...")
 
 	if MinioCheckFileExists(ctx, bucketName, ObjName) {
 		return presignObj(ctx, bucketName, ObjName, needAKA)
@@ -70,7 +70,7 @@ func MinioCheckFileExists(ctx context.Context, bucketName, ObjName string) bool 
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
-	log.Zlog.Info("MinioCheckFileExists...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+	logs.L.Info().Ctx(ctx).Str("traceid", span.SpanContext().TraceID().String()).Msg("MinioCheckFileExists...")
 
 	_, err := minioClientInternal.StatObject(ctx, bucketName, ObjName, minio.StatObjectOptions{})
 	if err != nil {
@@ -83,7 +83,7 @@ func minioUploadReader(ctx context.Context, bucketName string, file io.ReadClose
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
-	log.Zlog.Info("MinioUploadReader...", zaplog.String("traceid", span.SpanContext().TraceID().String()))
+	logs.L.Info().Ctx(ctx).Str("traceid", span.SpanContext().TraceID().String()).Msg("MinioUploadReader...")
 
 	info, err := minioClientInternal.PutObject(ctx,
 		bucketName,
@@ -93,7 +93,7 @@ func minioUploadReader(ctx context.Context, bucketName string, file io.ReadClose
 		opts,
 	)
 	if err != nil {
-		log.Zlog.Error(err.Error())
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to upload file")
 		return
 	}
 	defer span.SetAttributes(attribute.Key("path").String(objName), attribute.Key("size").Int64(info.Size))

@@ -1,6 +1,7 @@
 package shorter
 
 import (
+	"context"
 	"net/url"
 	"testing"
 )
@@ -11,5 +12,5 @@ func TestGenAKAKutt(t *testing.T) {
 		Host:   "beta.betagov.cn",
 		Path:   "/api/v1/oss/object",
 	}
-	GenAKAKutt(u, ExpireTime{1, TimeUnitsMinute})
+	GenAKAKutt(context.Background(), u, ExpireTime{1, TimeUnitsMinute})
 }

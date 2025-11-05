@@ -20,7 +20,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/message"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -28,7 +28,6 @@ import (
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	"github.com/defensestation/osquery"
-	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
@@ -64,7 +63,7 @@ func DebugGetIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 
 	err = larkutils.ReplyCardText(ctx, getIDText+*data.Event.Message.ParentId, *data.Event.Message.MessageId, "_getID", false)
 	if err != nil {
-		log.Zlog.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+		logs.L.Error().Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("ReplyMessage")
 		return err
 	}
 	return nil
@@ -87,7 +86,7 @@ func DebugGetGroupIDHandler(ctx context.Context, data *larkim.P2MessageReceiveV1
 	if chatID != nil {
 		err := larkutils.ReplyCardText(ctx, getGroupIDText+*chatID, *data.Event.Message.MessageId, "_getGroupID", false)
 		if err != nil {
-			log.Zlog.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+			logs.L.Error().Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("ReplyMessage")
 			return err
 		}
 	}
@@ -222,7 +221,7 @@ func DebugTraceHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 	traceIDStr := "TraceIDs:\n" + strings.Join(traceIDs, "\n")
 	err = larkutils.ReplyCardText(ctx, traceIDStr, *data.Event.Message.MessageId, "_trace", replyInThread)
 	if err != nil {
-		log.Zlog.Error("ReplyMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+		logs.L.Error().Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("ReplyMessage")
 		return err
 	}
 	return nil
@@ -252,7 +251,7 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 					return err
 				}
 				if !resp.Success() {
-					log.Zlog.Error("DeleteMessage", zaplog.String("MessageID", *msg.MessageId), zaplog.Error(errors.New(resp.Error())))
+					logs.L.Error().Err(errors.New(resp.Error())).Str("MessageID", *msg.MessageId).Msg("DeleteMessage")
 				}
 			}
 		}
@@ -311,7 +310,7 @@ func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 		}
 		if !resp.Success() {
 			if strings.Contains(resp.Error(), "invalid image_key") {
-				log.Zlog.Error("repeatMessage", zaplog.Error(err), zaplog.String("TraceID", span.SpanContext().TraceID().String()))
+				logs.L.Error().Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("repeatMessage")
 				return nil
 			}
 			return errors.New(resp.Error())

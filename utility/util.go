@@ -15,10 +15,9 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
 	"github.com/golang/freetype/truetype"
-	"github.com/kevinmatthe/zaplog"
 	"github.com/lonelyevil/kook"
 	"github.com/lonelyevil/kook/log_adapter/plog"
 	p_log "github.com/phuslu/log"
@@ -62,12 +61,12 @@ func InitGlowSansSCFontType() {
 	fontFile := filepath.Join(consts.FontPath, "Microsoft Yahei.ttf")
 	fontBytes, err := ioutil.ReadFile(fontFile)
 	if err != nil {
-		log.Zlog.Info("errot init font", zaplog.Error(err))
+		logs.L.Info().Err(err).Msg("errot init font")
 		return
 	}
 	MicrosoftYaHei, err = truetype.Parse(fontBytes)
 	if err != nil {
-		log.Zlog.Info("errot init font", zaplog.Error(err))
+		logs.L.Info().Err(err).Msg("errot init font")
 		return
 	}
 }
@@ -148,7 +147,7 @@ func GetUserInfo(userID, guildID string) (userInfo *kook.User, err error) {
 func GetGuildIDFromChannelID(channelID string) (GuildID string) {
 	c, err := consts.GlobalSession.ChannelView(channelID)
 	if err != nil {
-		log.Zlog.Error("Error getting guild", zaplog.Error(err))
+		logs.L.Error().Err(err).Msg("Error getting guild")
 	}
 	return c.GuildID
 }
@@ -290,7 +289,7 @@ func Reconnect() (err error) {
 	// 		return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
 	// 	}
 	// }
-	log.Zlog.Info("Reconnecting successfully")
+	logs.L.Info().Msg("Reconnecting successfully")
 	time.Sleep(time.Second * 5)
 	return
 }
@@ -332,7 +331,7 @@ func BuildCardMessage(theme, size, title, quoteID string, span any, modules ...a
 	if quoteID != "" {
 		m, err := consts.GlobalSession.MessageView(quoteID)
 		if err != nil {
-			log.Zlog.Error("MessageView Error", zaplog.Error(err))
+			logs.L.Error().Err(err).Msg("MessageView Error")
 		}
 		prevCardMessage := make(kook.CardMessage, 0)
 		err = json.UnmarshalFromString(m.Content, &prevCardMessage)

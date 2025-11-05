@@ -13,11 +13,10 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkconsts"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
-	"github.com/kevinmatthe/zaplog"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
@@ -41,7 +40,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer func() { span.RecordError(err) }()
 
 	argMap, _ := parseArgs(args...)
-	log.Zlog.Info("wordAddHandler", zaplog.Any("args", argMap))
+	logs.L.Info().Str("TraceID", span.SpanContext().TraceID().String()).Interface("args", argMap).Msg("wordAddHandler")
 	if len(argMap) > 0 {
 		var imgKey string
 		// by url
@@ -123,7 +122,7 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	argMap, _ := parseArgs(args...)
-	log.Zlog.Info("replyGetHandler", zaplog.Any("args", argMap))
+	logs.L.Info().Str("TraceID", span.SpanContext().TraceID().String()).Interface("args", argMap).Msg("replyGetHandler")
 	ChatID := *data.Event.Message.ChatId
 
 	lines := make([]map[string]string, 0)
@@ -166,7 +165,7 @@ func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer span.RecordError(err)
 
 	argMap, _ := parseArgs(args...)
-	log.Zlog.Info("replyDelHandler", zaplog.Any("args", argMap))
+	logs.L.Info().Str("TraceID", span.SpanContext().TraceID().String()).Interface("args", argMap).Msg("replyDelHandler")
 
 	if data.Event.Message.ThreadId != nil {
 		// 找到话题中的所有图片
@@ -229,7 +228,7 @@ func getImageKey(msg *larkim.Message) string {
 		contentMap := make(map[string]string)
 		err := sonic.UnmarshalString(*msg.Body.Content, &contentMap)
 		if err != nil {
-			log.Zlog.Error("repeatMessage", zaplog.Error(err))
+			logs.L.Error().Err(err).Msg("Error")
 			return ""
 		}
 		switch *msg.MsgType {

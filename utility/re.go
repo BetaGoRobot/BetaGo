@@ -4,11 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/dlclark/regexp2"
 	gocache "github.com/eko/gocache/lib/v4/cache"
 	gocache_store "github.com/eko/gocache/store/go_cache/v4"
-	"github.com/kevinmatthe/zaplog"
 	"github.com/patrickmn/go-cache"
 )
 
@@ -27,7 +26,7 @@ func RegexpMatch(str, pattern string) bool {
 	}
 	re, err := regexp2.Compile(pattern, 0)
 	if err != nil {
-		log.Zlog.Error("compile regexp error", zaplog.Error(err))
+		logs.L.Error().Err(err).Msg("compile regexp error")
 		return false
 	}
 	repatternCache.Set(context.Background(), pattern, re)

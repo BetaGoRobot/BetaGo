@@ -13,8 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts/check"
 	"github.com/BetaGoRobot/BetaGo/handler/commandHandler/notifier"
 	server "github.com/BetaGoRobot/BetaGo/handler/webhookserver"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
-	"github.com/kevinmatthe/zaplog"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 )
 
 func init() {
@@ -28,7 +27,7 @@ func main() {
 	check.CheckEnv()
 	e := consts.GlobalSession.Open()
 	if e != nil {
-		log.Zlog.Error("连接失败", zaplog.Error(e))
+		logs.L.Error().Err(e).Msg("连接失败")
 		panic(e)
 	}
 	notifier.StartAutoService()

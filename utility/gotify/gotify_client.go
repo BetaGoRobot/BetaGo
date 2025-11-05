@@ -7,14 +7,13 @@ import (
 	"os"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
-	"github.com/BetaGoRobot/BetaGo/utility/log"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/gotify/go-api-client/v2/auth"
 	"github.com/gotify/go-api-client/v2/client"
 	"github.com/gotify/go-api-client/v2/client/message"
 	"github.com/gotify/go-api-client/v2/gotify"
 	"github.com/gotify/go-api-client/v2/models"
-	"github.com/kevinmatthe/zaplog"
 )
 
 var (
@@ -35,7 +34,7 @@ func init() {
 func SendMessage(ctx context.Context, title, msg string, priority int) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, "SendMessage")
 	defer span.End()
-	log.Zlog.Info("SendMessage...", zaplog.String("traceID", span.SpanContext().TraceID().String()))
+	logs.L.Info().Ctx(ctx).Str("traceID", span.SpanContext().TraceID().String()).Msg("SendMessage...")
 
 	if title == "" {
 		title = "BetaGo Notification"
@@ -53,8 +52,8 @@ func SendMessage(ctx context.Context, title, msg string, priority int) {
 
 	_, err := DefaultGotifyClient.Message.CreateMessage(params, tokenParsed)
 	if err != nil {
-		log.Zlog.Error("Could not send message %v", zaplog.Error(err))
+		logs.L.Error().Ctx(ctx).Err(err).Msg("Could not send message")
 		return
 	}
-	log.Zlog.Info("Gotify Message Sent!")
+	logs.L.Info().Ctx(ctx).Msg("Gotify Message Sent!")
 }
