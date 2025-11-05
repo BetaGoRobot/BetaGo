@@ -258,6 +258,7 @@ func getChunks(ctx context.Context, chatID string, st, et time.Time) (chunks []*
 		chunkData.SentimentAndTone = nil
 
 		chunkData.UserIDs4Lark = commonutils.TransSlice(chunkLog.InteractionAnalysis.Participants, func(p *handlertypes.Participant) *templates.UserUnit { return &templates.UserUnit{ID: p.UserID} })
+		chunkData.UserIDs4Lark = utility.Dedup(chunkData.UserIDs4Lark)
 		chunkData.UserIDs = nil
 
 		chunkData.UnresolvedQuestions = strings.Join(commonutils.TransSlice(chunkLog.InteractionAnalysis.UnresolvedQuestions, func(q string) string { return larkmsgutils.TagText(q, "red") }), "")
