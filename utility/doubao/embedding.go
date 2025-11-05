@@ -414,7 +414,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				Union: &responses.ContentItem_Image{
 					Image: &responses.ContentItemImage{
 						Type:     responses.ContentItemType_input_image,
-						ImageUrl: f,
+						ImageUrl: utility.Ptr(f),
 					},
 				},
 			})
