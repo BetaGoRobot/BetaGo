@@ -236,11 +236,12 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 	logs.L.Info().Ctx(ctx).Str("groupID", chunk.GroupID).Msgf("OnMerge chunk processed by LLM:\n records: %s\nres: %s\n", chunkStr, res)
 
 	chunkLog := &handlertypes.MessageChunkLogV3{
-		ID:        uuid.NewV1().String(),
-		Timestamp: utility.UTCPlus8Time().Format(time.RFC3339),
-		GroupID:   chunk.GroupID,
-		MsgIDs:    msgIDs,
-		MsgList:   chunkLines,
+		ID:          uuid.NewV1().String(),
+		Timestamp:   utility.UTCPlus8Time().Format(time.RFC3339),
+		TimestampV2: utility.Ptr(utility.UTCPlus8Time().Format(time.RFC3339)),
+		GroupID:     chunk.GroupID,
+		MsgIDs:      msgIDs,
+		MsgList:     chunkLines,
 	}
 	err = sonic.UnmarshalString(res, &chunkLog)
 	if err != nil {

@@ -383,7 +383,7 @@ func DebugConversationHandler(ctx context.Context, data *larkim.P2MessageReceive
 				},
 			},
 			"sort": map[string]any{
-				"timestamp": map[string]any{
+				"timestamp_v2": map[string]any{
 					"order": "desc",
 				},
 			},

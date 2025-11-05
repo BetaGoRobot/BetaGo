@@ -223,7 +223,7 @@ func getChunks(ctx context.Context, chatID string, st, et time.Time) (chunks []*
 	queryReq := NewSearchRequest().
 		Query(NewBoolQuery().Must(
 			NewTermQuery("group_id", chatID),
-			NewRangeQuery("timestamp_v2").Gte(st.UTC().Format(time.DateTime)).Lte(et.UTC().Format(time.DateTime)),
+			NewRangeQuery("timestamp_v2").Gte(st.UTC().Format(time.RFC3339)).Lte(et.UTC().Format(time.RFC3339)),
 		)).
 		FetchSourceIncludeExclude(
 			[]string{}, []string{"conversation_embedding", "msg_ids", "msg_list"},

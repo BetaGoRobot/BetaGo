@@ -199,7 +199,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 		msgID, ok := doc.Metadata["msg_id"]
 		if ok {
 			resp, err := opensearchdal.SearchData(ctx, consts.LarkChunkIndex, osquery.
-				Search().Sort("timestamp", osquery.OrderDesc).
+				Search().Sort("timestamp_v2", osquery.OrderDesc).
 				Query(osquery.Bool().Must(osquery.Term("msg_ids", msgID))).
 				Size(1),
 			)

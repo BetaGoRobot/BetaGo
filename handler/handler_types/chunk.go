@@ -15,7 +15,7 @@ type MessageChunkLogV3 struct {
 	UserIDs     []string `json:"user_ids,omitempty"`
 	GroupID     string   `json:"group_id"`
 	Timestamp   string   `json:"timestamp"`
-	TimestampV2 string   `json:"timestamp_v2"`
+	TimestampV2 *string  `json:"timestamp_v2"`
 	MsgIDs      []string `json:"msg_ids"`
 }
 
