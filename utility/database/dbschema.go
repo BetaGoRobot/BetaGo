@@ -297,12 +297,6 @@ func init() {
 	sqlDb.SetMaxIdleConns(10)
 	sqlDb.SetMaxOpenConns(100)
 	sqlDb.SetConnMaxLifetime(time.Minute * 10)
-
-	// // 启动时，清空所有的超时Channel log
-	// db.Model(&ChannelLogExt{}).Where("left_time < joined_time").Delete(&ChannelLogExt{})
-
-	// // 标记所有update为true
-	// db.Model(&ChannelLogExt{}).Where("is_update = false").Update("is_update", true).Debug()
 }
 
 // GetDbConnection  returns the db connection
@@ -314,8 +308,6 @@ func GetDbConnection() *gorm.DB {
 			var dsn string = " user=postgres password=%s dbname=betago port=%s sslmode=disable TimeZone=Asia/Shanghai application_name=" + consts.RobotName
 			if consts.IsTest {
 				dsn = consts.DBHostTest + fmt.Sprintf(dsn, os.Getenv("DB_PASSWORD"), "15432")
-			} else if consts.IsCluster {
-				dsn = consts.DBHostCluster + fmt.Sprintf(dsn, os.Getenv("DB_PASSWORD"), "5432")
 			} else {
 				dsn = consts.DBHostCompose + fmt.Sprintf(dsn, os.Getenv("DB_PASSWORD"), "5432")
 			}
