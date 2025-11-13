@@ -9,5 +9,5 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName(GetHitokotoHandler) // from handler/commandHandler/hitokoto/hitokoto.go:55
+	reflecting.GetFunctionName(GetHitokotoHandler) // from handler/commandHandler/hitokoto/hitokoto.go:56
 }

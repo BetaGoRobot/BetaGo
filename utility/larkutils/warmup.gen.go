@@ -5,31 +5,32 @@
 package larkutils
 
 import (
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 )
 
 func init() {
-	reflecting.GetFunctionName(AddReaction)                     // from utility/larkutils/msg.go:414
-	reflecting.GetFunctionName(AddReaction2DB)                  // from utility/larkutils/msg.go:183
-	reflecting.GetFunctionName(AddReactionAsync)                // from utility/larkutils/msg.go:433
-	reflecting.GetFunctionName(CreateMsgText)                   // from utility/larkutils/msg.go:370
-	reflecting.GetFunctionName(CreateMsgTextRaw)                // from utility/larkutils/msg.go:380
-	reflecting.GetFunctionName(GetChatIDFromMsgID)              // from utility/larkutils/lark.go:77
-	reflecting.GetFunctionName(GetChatName)                     // from utility/larkutils/lark.go:61
-	reflecting.GetFunctionName(grouputil.GetUserMapFromChatID)  // from utility/larkutils/lark.go:17
-	reflecting.GetFunctionName(grouputil.GetUserMemberFromChat) // from utility/larkutils/lark.go:50
-	reflecting.GetFunctionName(PatchCardTextGraph)              // from utility/larkutils/reply.go:235
-	reflecting.GetFunctionName(PreGetTextMsg)                   // from utility/larkutils/msg.go:43
-	reflecting.GetFunctionName(RecordCardAction2Opensearch)     // from utility/larkutils/msg.go:288
-	reflecting.GetFunctionName(RecordMessage2Opensearch)        // from utility/larkutils/msg.go:238
-	reflecting.GetFunctionName(RecordReplyMessage2Opensearch)   // from utility/larkutils/msg.go:318
-	reflecting.GetFunctionName(RemoveReaction)                  // from utility/larkutils/msg.go:454
-	reflecting.GetFunctionName(ReplyCard)                       // from utility/larkutils/reply.go:34
-	reflecting.GetFunctionName(ReplyCardText)                   // from utility/larkutils/reply.go:69
-	reflecting.GetFunctionName(ReplyMsgRawAsText)               // from utility/larkutils/msg.go:196
-	reflecting.GetFunctionName(ReplyMsgText)                    // from utility/larkutils/msg.go:231
-	reflecting.GetFunctionName(SendCard)                        // from utility/larkutils/reply.go:112
-	reflecting.GetFunctionName(SendCardText)                    // from utility/larkutils/reply.go:151
-	reflecting.GetFunctionName(TrimAtMsg)                       // from utility/larkutils/msg.go:76
+	reflecting.GetFunctionName(AddReaction)                   // from utility/larkutils/msg.go:521
+	reflecting.GetFunctionName(AddReaction2DB)                // from utility/larkutils/msg.go:201
+	reflecting.GetFunctionName(AddReactionAsync)              // from utility/larkutils/msg.go:541
+	reflecting.GetFunctionName(CreateMsgText)                 // from utility/larkutils/msg.go:475
+	reflecting.GetFunctionName(CreateMsgTextRaw)              // from utility/larkutils/msg.go:486
+	reflecting.GetFunctionName(GetChatIDFromMsgID)            // from utility/larkutils/lark.go:32
+	reflecting.GetFunctionName(GetChatName)                   // from utility/larkutils/lark.go:14
+	reflecting.GetFunctionName(PatchCard)                     // from utility/larkutils/reply.go:290
+	reflecting.GetFunctionName(PatchCardTextGraph)            // from utility/larkutils/reply.go:251
+	reflecting.GetFunctionName(PreGetTextMsg)                 // from utility/larkutils/msg.go:49
+	reflecting.GetFunctionName(RecordCardAction2Opensearch)   // from utility/larkutils/msg.go:375
+	reflecting.GetFunctionName(RecordMessage2Opensearch)      // from utility/larkutils/msg.go:292
+	reflecting.GetFunctionName(RecordReplyMessage2Opensearch) // from utility/larkutils/msg.go:405
+	reflecting.GetFunctionName(RemoveReaction)                // from utility/larkutils/msg.go:563
+	reflecting.GetFunctionName(ReplyCard)                     // from utility/larkutils/reply.go:37
+	reflecting.GetFunctionName(ReplyCardText)                 // from utility/larkutils/reply.go:81
+	reflecting.GetFunctionName(ReplyMsgRawAsText)             // from utility/larkutils/msg.go:217
+	reflecting.GetFunctionName(ReplyMsgRawContentType)        // from utility/larkutils/msg.go:248
+	reflecting.GetFunctionName(ReplyMsgText)                  // from utility/larkutils/msg.go:284
+	reflecting.GetFunctionName(SendCard)                      // from utility/larkutils/reply.go:125
+	reflecting.GetFunctionName(SendCardText)                  // from utility/larkutils/reply.go:165
+	reflecting.GetFunctionName(TrimAtMsg)                     // from utility/larkutils/msg.go:88
+	reflecting.GetFunctionName(UpdateMessageText)             // from utility/larkutils/msg.go:622
+	reflecting.GetFunctionName(UpdateMessageTextRaw)          // from utility/larkutils/msg.go:590
 }

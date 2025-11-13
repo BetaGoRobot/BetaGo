@@ -9,11 +9,11 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName(ChannelJoinedAsyncHandler) // from handler/manager/manager.go:55
-	reflecting.GetFunctionName(ChannelLeftAsyncHandler)   // from handler/manager/manager.go:74
-	reflecting.GetFunctionName(ClickEventAsyncHandler)    // from handler/manager/manager.go:86
-	reflecting.GetFunctionName(CommandHandler)            // from handler/manager/manager.go:23
-	reflecting.GetFunctionName(MessageEventAsyncHandler)  // from handler/manager/manager.go:98
-	reflecting.GetFunctionName(clickEventHandler)         // from handler/manager/handlers.go:27
-	reflecting.GetFunctionName(messageEventHandler)       // from handler/manager/handlers.go:266
+	reflecting.GetFunctionName(ChannelJoinedAsyncHandler) // from handler/manager/manager.go:56
+	reflecting.GetFunctionName(ChannelLeftAsyncHandler)   // from handler/manager/manager.go:75
+	reflecting.GetFunctionName(ClickEventAsyncHandler)    // from handler/manager/manager.go:87
+	reflecting.GetFunctionName(CommandHandler)            // from handler/manager/manager.go:24
+	reflecting.GetFunctionName(MessageEventAsyncHandler)  // from handler/manager/manager.go:99
+	reflecting.GetFunctionName(clickEventHandler)         // from handler/manager/handlers.go:28
+	reflecting.GetFunctionName(messageEventHandler)       // from handler/manager/handlers.go:267
 }

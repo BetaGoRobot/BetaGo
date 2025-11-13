@@ -9,5 +9,5 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName(NewCardContent) // from utility/larkutils/templates/templates.go:58
+	reflecting.GetFunctionName(NewCardContent) // from utility/larkutils/templates/templates.go:73
 }

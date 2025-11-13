@@ -9,14 +9,15 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName(DownImgFromMsgAsync)      // from utility/larkutils/larkimg/img.go:108
-	reflecting.GetFunctionName(DownImgFromMsgSync)       // from utility/larkutils/larkimg/img.go:41
-	reflecting.GetFunctionName(GetAllImageFromMsgEvent)  // from utility/larkutils/larkimg/img.go:272
-	reflecting.GetFunctionName(GetAllImgTagFromMsg)      // from utility/larkutils/larkimg/img.go:234
-	reflecting.GetFunctionName(GetAndResizePicFromURL)   // from utility/larkutils/larkimg/img.go:406
-	reflecting.GetFunctionName(Upload2Lark)              // from utility/larkutils/larkimg/img.go:484
-	reflecting.GetFunctionName(UploadPicAllinOne)        // from utility/larkutils/larkimg/img.go:435
-	reflecting.GetFunctionName(UploadPicture2Lark)       // from utility/larkutils/larkimg/img.go:543
-	reflecting.GetFunctionName(UploadPicture2LarkReader) // from utility/larkutils/larkimg/img.go:517
-	reflecting.GetFunctionName(getAllImage)              // from utility/larkutils/larkimg/img.go:306
+	reflecting.GetFunctionName(DownImgFromMsgAsync)      // from utility/larkutils/larkimg/img.go:105
+	reflecting.GetFunctionName(DownImgFromMsgSync)       // from utility/larkutils/larkimg/img.go:42
+	reflecting.GetFunctionName(GetAllImageFromMsgEvent)  // from utility/larkutils/larkimg/img.go:265
+	reflecting.GetFunctionName(GetAllImgTagFromMsg)      // from utility/larkutils/larkimg/img.go:226
+	reflecting.GetFunctionName(GetAllImgURLFromMsg)      // from utility/larkutils/larkimg/img.go:326, utility/larkutils/larkimg/img.go:349
+	reflecting.GetFunctionName(GetAndResizePicFromURL)   // from utility/larkutils/larkimg/img.go:414
+	reflecting.GetFunctionName(Upload2Lark)              // from utility/larkutils/larkimg/img.go:494
+	reflecting.GetFunctionName(UploadPicAllinOne)        // from utility/larkutils/larkimg/img.go:444
+	reflecting.GetFunctionName(UploadPicture2Lark)       // from utility/larkutils/larkimg/img.go:554
+	reflecting.GetFunctionName(UploadPicture2LarkReader) // from utility/larkutils/larkimg/img.go:528
+	reflecting.GetFunctionName(getAllImage)              // from utility/larkutils/larkimg/img.go:300
 }

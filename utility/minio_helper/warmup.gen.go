@@ -9,13 +9,13 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName((*MinioManager).PresignURL) // from utility/minio_helper/helper.go:328
+	reflecting.GetFunctionName((*MinioManager).PresignURL) // from utility/minio_helper/helper.go:330
 	reflecting.GetFunctionName((*MinioManager).TryGetFile) // from utility/minio_helper/helper.go:306
-	reflecting.GetFunctionName((*MinioManager).UploadFile) // from utility/minio_helper/helper.go:316
-	reflecting.GetFunctionName(MinioCheckFileExists)       // from utility/minio_helper/uploads.go:67
-	reflecting.GetFunctionName(MinioTryGetFile)            // from utility/minio_helper/uploads.go:56
-	reflecting.GetFunctionName(minioUploadReader)          // from utility/minio_helper/uploads.go:80
+	reflecting.GetFunctionName((*MinioManager).UploadFile) // from utility/minio_helper/helper.go:317
+	reflecting.GetFunctionName(MinioCheckFileExists)       // from utility/minio_helper/uploads.go:70
+	reflecting.GetFunctionName(MinioTryGetFile)            // from utility/minio_helper/uploads.go:58
+	reflecting.GetFunctionName(minioUploadReader)          // from utility/minio_helper/uploads.go:83
 	reflecting.GetFunctionName(presignObj)                 // from utility/minio_helper/uploads.go:20
-	reflecting.GetFunctionName(presignObjInner)            // from utility/minio_helper/uploads.go:34
-	reflecting.GetFunctionName(shortenURL)                 // from utility/minio_helper/uploads.go:46
+	reflecting.GetFunctionName(presignObjInner)            // from utility/minio_helper/uploads.go:35
+	reflecting.GetFunctionName(shortenURL)                 // from utility/minio_helper/uploads.go:48
 }

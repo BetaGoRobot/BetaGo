@@ -9,6 +9,7 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName(InsertData) // from utility/opensearch_dal/client.go:46
-	reflecting.GetFunctionName(SearchData) // from utility/opensearch_dal/client.go:60
+	reflecting.GetFunctionName(InsertData)    // from utility/opensearch_dal/client.go:49
+	reflecting.GetFunctionName(SearchData)    // from utility/opensearch_dal/client.go:67
+	reflecting.GetFunctionName(SearchDataStr) // from utility/opensearch_dal/client.go:81
 }
