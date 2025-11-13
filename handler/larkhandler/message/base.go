@@ -83,6 +83,9 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		wsTags := []*handlertypes.WordWithTag{}
 		for _, tag := range wts {
 			sp := strings.Split(tag, "/")
+			if sp[0] = strings.TrimSpace(sp[0]); sp[0] == "" {
+				continue
+			}
 			wsTags = append(wsTags, &handlertypes.WordWithTag{Word: sp[0], Tag: sp[1]})
 		}
 		err = opensearchdal.InsertData(
