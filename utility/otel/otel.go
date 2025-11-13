@@ -6,7 +6,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
@@ -30,11 +30,11 @@ func OtelProvider() *tracesdk.TracerProvider {
 }
 
 // 重构：改成OtelCollector来收集
-var otelCollectorURL = "http://otel-collector:4318/v1/traces"
+var otelCollectorURL = "otel-collector:4317"
 
 func init() {
 	if consts.IsTest {
-		otelProvider, _ = tracerProvider("http://192.168.31.74:4318/v1/traces")
+		otelProvider, _ = tracerProvider("192.168.31.74:4317")
 	} else if consts.IsCluster {
 		otelProvider, _ = tracerProvider(otelCollectorURL)
 	} else if consts.IsCompose {
@@ -57,7 +57,7 @@ var (
 func tracerProvider(url string) (*tracesdk.TracerProvider, error) {
 	// Create the Jaeger exporter
 	ctx := context.Background()
-	exp, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(url))
+	exp, err := otlptracegrpc.New(ctx, otlptracegrpc.WithEndpoint(url), otlptracegrpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
