@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/opensearch-project/opensearch-go/opensearchutil"
@@ -50,7 +52,7 @@ func InsertData(ctx context.Context, index string, id string, data any) error {
 	if os.Getenv("DEV_CHAN") != "" {
 		return nil
 	}
-
+	index += "-" + time.Now().In(utility.UTCPlus8Loc()).Format("2006-01-02")
 	req := opensearchapi.IndexReq{
 		Index:      index,
 		DocumentID: id,
