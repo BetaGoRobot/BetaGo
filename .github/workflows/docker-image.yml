@@ -60,11 +60,11 @@ jobs:
             zip \
             -r \
             -9 \
-            betago.zip \
+            -q betago.zip \
             . \
             -x ".git/*" \
             -x "qqmusicapi/qqmusic-api-service/*" \
-            -x "neteaseapi/netease-api-service/*"
+            -x "neteaseapi/netease-api-service/*" && \
             DOCKER_BUILDKIT=1 docker build \
              --build-arg ROBOT_NAME=$ROBOT_NAME \
              --build-arg TEST_CHAN_ID=$TEST_CHAN_ID \
