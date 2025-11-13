@@ -218,7 +218,7 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 }
 
 func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("musicID").String(musicID))
 	defer span.End()
 	songDetail := neteaseapi.NetEaseGCtx.GetDetail(ctx, musicID).Songs[0]
@@ -270,7 +270,7 @@ func HandleWithDraw(ctx context.Context, cardAction *callback.CardActionTriggerE
 }
 
 func HandleRefreshMusic(ctx context.Context, musicID, msgID string) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("musicID").String(musicID))
 	defer span.End()
 

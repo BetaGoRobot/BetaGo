@@ -82,7 +82,7 @@ func (m *MinioManager) Overwrite() *MinioManager {
 //	@author heyuhengmatt
 //	@update 2024-05-13 01:54:13
 func (m *MinioManager) SetContext(ctx context.Context) *MinioManager {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, "UploadToMinio")
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, "UploadToMinio")
 	m.Context = ctx
 	m.span = span
 	return m
@@ -303,7 +303,7 @@ func (m *MinioManager) UploadFileOverwrite(opts minio.PutObjectOptions) (u *url.
 
 // 此函数会修改入参，不返回err外的值
 func (m *MinioManager) TryGetFile() (shareURL *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(m, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(m, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
@@ -314,7 +314,7 @@ func (m *MinioManager) TryGetFile() (shareURL *url.URL, err error) {
 }
 
 func (m *MinioManager) UploadFile(opts minio.PutObjectOptions) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(m, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(m, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
@@ -327,7 +327,7 @@ func (m *MinioManager) UploadFile(opts minio.PutObjectOptions) (err error) {
 }
 
 func (m *MinioManager) PresignURL() (u *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(m, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(m, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
@@ -352,7 +352,7 @@ func (m *MinioManager) PresignURL() (u *url.URL, err error) {
 //	@author heyuhengmatt
 //	@update 2024-05-13 01:54:13
 func (m *MinioManager) Run(ctx context.Context) *MinioManager {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, "UploadToMinio")
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, "UploadToMinio")
 	m.Context = ctx
 	m.span = span
 	return m

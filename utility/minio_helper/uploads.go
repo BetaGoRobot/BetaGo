@@ -17,7 +17,7 @@ import (
 )
 
 func presignObj(ctx context.Context, bucketName, objName string, needAKA bool) (u *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
@@ -32,7 +32,7 @@ func presignObj(ctx context.Context, bucketName, objName string, needAKA bool) (
 }
 
 func presignObjInner(ctx context.Context, bucketName, objName string) (u *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
@@ -45,7 +45,7 @@ func presignObjInner(ctx context.Context, bucketName, objName string) (u *url.UR
 }
 
 func shortenURL(ctx context.Context, u *url.URL) *url.URL {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	if shortenedURL := shorter.GenAKA(ctx, u); shortenedURL != nil {
@@ -55,7 +55,7 @@ func shortenURL(ctx context.Context, u *url.URL) *url.URL {
 }
 
 func MinioTryGetFile(ctx context.Context, bucketName, ObjName string, needAKA bool) (url *url.URL, err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	logs.L().Ctx(ctx).Info("MinioTryGetFile...", zap.String("traceid", span.SpanContext().TraceID().String()))
@@ -67,7 +67,7 @@ func MinioTryGetFile(ctx context.Context, bucketName, ObjName string, needAKA bo
 }
 
 func MinioCheckFileExists(ctx context.Context, bucketName, ObjName string) bool {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
 	logs.L().Ctx(ctx).Info("MinioCheckFileExists...", zap.String("traceid", span.SpanContext().TraceID().String()))
@@ -80,7 +80,7 @@ func MinioCheckFileExists(ctx context.Context, bucketName, ObjName string) bool 
 }
 
 func minioUploadReader(ctx context.Context, bucketName string, file io.ReadCloser, objName string, opts minio.PutObjectOptions) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	logs.L().Ctx(ctx).Info("MinioUploadReader...", zap.String("traceid", span.SpanContext().TraceID().String()))

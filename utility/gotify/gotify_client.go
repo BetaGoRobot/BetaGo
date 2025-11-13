@@ -33,7 +33,7 @@ func init() {
 }
 
 func SendMessage(ctx context.Context, title, msg string, priority int) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, "SendMessage")
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, "SendMessage")
 	defer span.End()
 	logs.L().Ctx(ctx).Info("SendMessage...", zap.String("traceID", span.SpanContext().TraceID().String()))
 

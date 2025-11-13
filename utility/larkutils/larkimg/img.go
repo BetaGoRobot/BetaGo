@@ -323,7 +323,7 @@ func jsonTrans[T any](s string) (*T, error) {
 type visitedMsgKey struct{}
 
 func GetAllImgURLFromMsg(ctx context.Context, msgID string) (resSeq iter.Seq[string], err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
@@ -346,7 +346,7 @@ func GetAllImgURLFromMsg(ctx context.Context, msgID string) (resSeq iter.Seq[str
 		return nil, err
 	}
 	return func(yield func(string) bool) {
-		ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+		ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer span.End()
 		defer func() { span.RecordError(err) }()
 

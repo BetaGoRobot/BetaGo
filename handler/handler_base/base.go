@@ -6,6 +6,8 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -123,6 +125,10 @@ func (p *Processor[T, K]) AddParallelStages(stage Operator[T, K]) *Processor[T, 
 //	@param ctx
 //	@param event
 func (p *Processor[T, K]) RunStages() (err error) {
+	var span trace.Span
+	p.Context, span = otel.LarkRobotOtelTracer.Start(p.Context, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	for _, s := range p.stages {
 		defer p.Defer()
 		err = s.PreRun(p.Context, p.data, p.metaData)
@@ -183,6 +189,10 @@ func (p *Processor[T, K]) Run() {
 //	@param event
 //	@return error
 func (p *Processor[T, K]) RunParallelStages() error {
+	var span trace.Span
+	p.Context, span = otel.LarkRobotOtelTracer.Start(p.Context, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	wg := &sync.WaitGroup{}
 	errorChan := make(chan error, len(p.parrallelStages))
 

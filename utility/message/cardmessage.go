@@ -24,7 +24,7 @@ import (
 )
 
 func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*doubao.ModelStreamRespReasoning]) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
@@ -94,7 +94,7 @@ func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, m
 }
 
 func SendAndReplyStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*doubao.ModelStreamRespReasoning], inThread bool) (err error) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
@@ -169,7 +169,7 @@ type KV[K comparable, V any] struct {
 }
 
 func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespReasoning], cardID string) (err error, lastIdx int) {
-	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	idx := &atomic.Int32{}
@@ -179,7 +179,7 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 		lastIdx = int(idx.Load())
 	}()
 	sendFunc := func(key, content string) {
-		ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+		ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer span.End()
 		defer func() { span.RecordError(err) }()
 		body := larkcardkit.NewContentCardElementReqBodyBuilder().Content(content).Sequence(int(idx.Add(1))).Build()
@@ -205,7 +205,7 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 		defer close(msgChan)
 
 		writeFunc := func(data doubao.ModelStreamRespReasoning) error {
-			_, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+			_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 			defer span.End()
 			defer func() { span.RecordError(err) }()
 
