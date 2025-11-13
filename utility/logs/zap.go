@@ -26,6 +26,7 @@ func init() {
 	encCfg := zap.NewProductionEncoderConfig()
 	encCfg.TimeKey = "time"
 	encCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+	encCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	consoleEncoder := zapcore.NewConsoleEncoder(encCfg)
 	stdoutCore := zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zap.InfoLevel)
 	stdoutLogger := zap.New(stdoutCore, zap.AddCaller())
