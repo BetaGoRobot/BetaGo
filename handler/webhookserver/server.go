@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/handler/commandHandler/admin"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/bytedance/sonic"
 	"github.com/enescakir/emoji"
 	"github.com/fasthttp/router"
 	"github.com/spyzhov/ajson"
@@ -28,7 +28,7 @@ func WebHookHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 	body := ctx.Request.Body()
-	json.Unmarshal(body, &a)
+	sonic.Unmarshal(body, &a)
 	defer func() {
 		if e := recover(); e != nil {
 			log.Println(a, e)

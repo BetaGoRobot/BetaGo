@@ -25,6 +25,7 @@ import (
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 // DownImgFromMsgSync 从Msg中下载附件
@@ -80,13 +81,12 @@ func DownImgFromMsgSync(ctx context.Context, msgID, fileType, fileKey string) (u
 		SetV4().
 		Upload()
 	if err != nil {
-		logs.L.Warn().Ctx(ctx).Str("file_key", fileKey).Str("file_type", fileType).Msg("upload pic to minio error")
+		logs.L().Ctx(ctx).Warn("upload pic to minio error", zap.String("file_key", fileKey), zap.String("file_type", fileType))
 		return
 	}
-	logs.L.Info().Ctx(ctx).
-		Str("file_key", fileKey).
-		Str("file_type", fileType).
-		Str("url", u.String()).Msg("upload pic to minio success")
+	logs.L().Ctx(ctx).Info("upload pic to minio success", zap.String("file_key", fileKey),
+		zap.String("file_type", fileType),
+		zap.String("url", u.String()))
 	url = u.String()
 	return
 }
@@ -146,12 +146,11 @@ func DownImgFromMsgAsync(ctx context.Context, msgID, fileType, fileKey string) (
 			SetContentType(ct.ContentType(contentType)).
 			Upload()
 		if err != nil {
-			logs.L.Warn().Ctx(ctx).Str("file_key", fileKey).Str("file_type", fileType).Msg("upload pic to minio error")
+			logs.L().Ctx(ctx).Warn("upload pic to minio error", zap.String("file_key", fileKey), zap.String("file_type", fileType))
 			return
 		}
-		logs.L.Info().Ctx(ctx).Str("file_type", fileType).
-			Str("url", u.String()).
-			Msg("upload pic to minio success")
+		logs.L().Ctx(ctx).Info("upload pic to minio success", zap.String("file_type", fileType),
+			zap.String("url", u.String()))
 	}()
 
 	return
@@ -419,7 +418,7 @@ func GetAndResizePicFromURL(ctx context.Context, imageURL string) (res []byte, e
 
 	picResp, err := requests.Req().SetDoNotParseResponse(true).Get(imageURL)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("get pic from url error")
+		logs.L().Ctx(ctx).Error("get pic from url error", zap.Error(err))
 		return
 	}
 
@@ -435,7 +434,7 @@ func checkDBCache(ctx context.Context, musicID string) (imgKey string, err error
 		Find(&database.LarkImg{SongID: musicID}).
 		First(&larkImgs).Error
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("get lark img from db error")
+		logs.L().Ctx(ctx).Error("get lark img from db error", zap.Error(err))
 		return
 	}
 	return larkImgs[0].ImgKey, err
@@ -449,18 +448,18 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 
 	imgKey, err := checkDBCache(ctx, musicID)
 	if err != nil {
-		logs.L.Warn().Ctx(ctx).Str("musicID", musicID).Msg("get lark img from db error")
+		logs.L().Ctx(ctx).Warn("get lark img from db error", zap.String("musicID", musicID))
 		// db 缓存未找到，准备resize上传
 		var picData []byte
 		picData, err = GetAndResizePicFromURL(ctx, imageURL)
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("resize pic from url error")
+			logs.L().Ctx(ctx).Error("resize pic from url error", zap.Error(err))
 			return
 		}
 
 		imgKey, err = Upload2Lark(ctx, musicID, io.NopCloser(bytes.NewReader(picData)))
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("upload pic to lark error")
+			logs.L().Ctx(ctx).Error("upload pic to lark error", zap.Error(err))
 			return
 		}
 		if uploadOSS {
@@ -472,7 +471,7 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 				SetContentType(ct.ContentTypeImgJPEG).
 				Upload()
 			if err != nil {
-				logs.L.Warn().Ctx(ctx).Str("imageURL", imageURL).Str("imageKey", imgKey).Msg("upload pic to minio error")
+				logs.L().Ctx(ctx).Warn("upload pic to minio error", zap.String("imageURL", imageURL), zap.String("imageKey", imgKey))
 				err = nil
 			}
 			if u != nil {
@@ -482,7 +481,7 @@ func UploadPicAllinOne(ctx context.Context, imageURL, musicID string, uploadOSS 
 	}
 	u, err := miniohelper.MinioTryGetFile(ctx, "cloudmusic", "picture/"+musicID+filepath.Ext(imageURL), true)
 	if err != nil {
-		logs.L.Warn().Ctx(ctx).Str("imageURL", imageURL).Str("imageKey", imgKey).Msg("get pic from minio error")
+		logs.L().Ctx(ctx).Warn("get pic from minio error", zap.String("imageURL", imageURL), zap.String("imageKey", imgKey))
 		err = nil
 	}
 	if u != nil {
@@ -506,7 +505,7 @@ func Upload2Lark(ctx context.Context, musicID string, bodyReader io.ReadCloser) 
 		Build()
 	resp, err := lark.LarkClient.Im.Image.Create(ctx, req)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Error")
+		logs.L().Ctx(ctx).Error("Error", zap.Error(err))
 		return "", nil
 	}
 	if !resp.Success() {
@@ -518,7 +517,7 @@ func Upload2Lark(ctx context.Context, musicID string, bodyReader io.ReadCloser) 
 		Find(&database.LarkImg{SongID: musicID}).
 		FirstOrCreate(&database.LarkImg{SongID: musicID, ImgKey: imgKey}).Error
 	if err != nil {
-		logs.L.Warn().Ctx(ctx).Str("musicID", musicID).Msg("create lark img in db error")
+		logs.L().Ctx(ctx).Warn("create lark img in db error", zap.String("musicID", musicID))
 		return imgKey, nil
 	}
 
@@ -540,11 +539,11 @@ func UploadPicture2LarkReader(ctx context.Context, picture io.Reader) (imgKey st
 
 	resp, err := lark.LarkClient.Im.Image.Create(ctx, req)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Error")
+		logs.L().Ctx(ctx).Error("Error", zap.Error(err))
 		return
 	}
 	if !resp.Success() {
-		logs.L.Error().Ctx(ctx).Msg("error with code" + strconv.Itoa(resp.Code))
+		logs.L().Ctx(ctx).Error("error with code" + strconv.Itoa(resp.Code))
 		return
 	}
 	imgKey = *resp.Data.ImageKey
@@ -557,7 +556,7 @@ func UploadPicture2Lark(ctx context.Context, URL string) (imgKey string) {
 
 	picData, err := GetAndResizePicFromURL(ctx, URL)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("resize pic from url error")
+		logs.L().Ctx(ctx).Error("resize pic from url error", zap.Error(err))
 		return
 	}
 
@@ -572,11 +571,11 @@ func UploadPicture2Lark(ctx context.Context, URL string) (imgKey string) {
 
 	resp, err := lark.LarkClient.Im.Image.Create(ctx, req)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Error")
+		logs.L().Ctx(ctx).Error("Error", zap.Error(err))
 		return
 	}
 	if !resp.Success() {
-		logs.L.Error().Ctx(ctx).Msg("error with code" + strconv.Itoa(resp.Code))
+		logs.L().Ctx(ctx).Error("error with code" + strconv.Itoa(resp.Code))
 		return
 	}
 	imgKey = *resp.Data.ImageKey
@@ -595,7 +594,7 @@ func UploadPicBatch(ctx context.Context, sourceURLIDs map[string]int) chan [2]st
 		go func(url string, musicID int) {
 			_, _, err := UploadPicAllinOne(ctx, url, strconv.Itoa(musicID), true)
 			if err != nil {
-				logs.L.Error().Ctx(ctx).Err(err).Msg("upload pic to lark error")
+				logs.L().Ctx(ctx).Error("upload pic to lark error", zap.Error(err))
 				return
 			}
 			c <- [2]string{url, strconv.Itoa(musicID)}
@@ -609,11 +608,11 @@ func GetMsgImages(ctx context.Context, msgID, fileKey, fileType string) (file io
 	req := larkim.NewGetMessageResourceReqBuilder().MessageId(msgID).FileKey(fileKey).Type(fileType).Build()
 	resp, err := lark.LarkClient.Im.MessageResource.Get(ctx, req)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Error")
+		logs.L().Ctx(ctx).Error("Error", zap.Error(err))
 		return nil, err
 	}
 	if !resp.Success() {
-		logs.L.Error().Ctx(ctx).Msg("GetMsgImages error with code" + strconv.Itoa(resp.Code))
+		logs.L().Ctx(ctx).Error("GetMsgImages error with code" + strconv.Itoa(resp.Code))
 		return nil, errors.New(resp.Error())
 	}
 	return resp.File, nil

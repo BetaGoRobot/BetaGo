@@ -2,10 +2,37 @@ package logs
 
 import (
 	"context"
+	"os"
 
+	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"go.opentelemetry.io/contrib/bridges/otelzap"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
+
+var logger *ContextualLogger
+
+func L() *ContextualLogger {
+	return logger
+}
+
+func init() {
+	otelCore := otelzap.NewCore(consts.BotIdentifier, otelzap.WithLoggerProvider(otel.LoggerProvider()))
+	otelLogger := zap.New(otelCore, zap.AddCaller())
+
+	// Stdout logger
+	encCfg := zap.NewProductionEncoderConfig()
+	encCfg.TimeKey = "time"
+	encCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+	consoleEncoder := zapcore.NewConsoleEncoder(encCfg)
+	stdoutCore := zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zap.InfoLevel)
+	stdoutLogger := zap.New(stdoutCore, zap.AddCaller())
+
+	// 组合
+	logger = NewContextualLogger(stdoutLogger, otelLogger)
+}
 
 // ContextualLogger ：双写封装
 type ContextualLogger struct {
@@ -33,9 +60,7 @@ func (l *ContextualLogger) Ctx(ctx context.Context) *ContextualLogger {
 	)
 
 	// otel 需要 context
-	otelWithCtx := l.otel.With(
-		zap.Any("context", ctx),
-	)
+	otelWithCtx := l.otel.With(zap.Any("context", ctx))
 
 	return &ContextualLogger{
 		stdout: stdoutWithTrace,

@@ -12,7 +12,7 @@ func CheckEnv() {
 		manager.SendMessageToTestChannel(consts.GlobalSession, ">  机器人未配置名称！")
 	}
 	if consts.RobotID == "" {
-		logs.L.Fatal().Msg("机器人未配置ID！")
+		logs.L().Fatal("机器人未配置ID！")
 	}
 }
 

@@ -16,6 +16,7 @@ import (
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 	"github.com/yanyiwu/gojieba"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 // SearchResult 是我们最终返回给 LLM 的标准结果格式
@@ -45,7 +46,7 @@ func HybridSearch(ctx context.Context, req HybridSearchRequest, embeddingFunc Em
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
-	logs.L.Info().Ctx(ctx).Str("query_text", strings.Join(req.QueryText, " ")).Msg("开始混合搜索")
+	logs.L().Ctx(ctx).Info("开始混合搜索", zap.String("query_text", strings.Join(req.QueryText, " ")))
 	if req.TopK <= 0 {
 		req.TopK = 5
 	}

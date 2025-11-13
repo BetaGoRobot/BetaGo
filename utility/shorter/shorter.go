@@ -11,6 +11,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
+	"go.uber.org/zap"
 )
 
 type TimeUnit string
@@ -61,7 +62,7 @@ func GenAKA(ctx context.Context, u *url.URL) (newURL *url.URL) {
 	}
 	reqBody, err := sonic.Marshal(req)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Marshal failed")
+		logs.L().Ctx(ctx).Error("Marshal failed", zap.Error(err))
 		return
 	}
 	r, err := consts.HttpClient.R().
@@ -70,21 +71,21 @@ func GenAKA(ctx context.Context, u *url.URL) (newURL *url.URL) {
 		SetBody(reqBody).
 		Post("https://kutt.kmhomelab.cn/api/links")
 	if err != nil || (r.StatusCode() != 200 && r.StatusCode() != 201) {
-		logs.L.Error().Ctx(ctx).Err(err).Int("status_code", r.StatusCode()).Msg("Post failed")
+		logs.L().Ctx(ctx).Error("Post failed", zap.Error(err), zap.Int("status_code", r.StatusCode()))
 		return
 	}
 	resp := &KuttResp{}
 	err = sonic.Unmarshal(r.Body(), resp)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Unmarshal failed")
+		logs.L().Ctx(ctx).Error("Unmarshal failed", zap.Error(err))
 		return
 	}
 	newURL, err = url.Parse(resp.Link)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Parse url failed")
+		logs.L().Ctx(ctx).Error("Parse url failed", zap.Error(err))
 		return
 	}
-	logs.L.Info().Ctx(ctx).Str("new_url", newURL.String()).Str("old_url", oldURL).Msg("GenAKA with url")
+	logs.L().Ctx(ctx).Info("GenAKA with url", zap.String("new_url", newURL.String()), zap.String("old_url", oldURL))
 	return
 }
 
@@ -97,7 +98,7 @@ func GenAKAKutt(ctx context.Context, u *url.URL, expires ExpireTime) (newURL *ur
 	}
 	reqBody, err := sonic.Marshal(req)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Marshal failed")
+		logs.L().Ctx(ctx).Error("Marshal failed", zap.Error(err))
 		return
 	}
 	r, err := consts.HttpClient.R().
@@ -106,21 +107,21 @@ func GenAKAKutt(ctx context.Context, u *url.URL, expires ExpireTime) (newURL *ur
 		SetBody(reqBody).
 		Post("https://kutt.kmhomelab.cn/api/links")
 	if err != nil || (r.StatusCode() != 200 && r.StatusCode() != 201) {
-		logs.L.Error().Ctx(ctx).Err(err).Int("status_code", r.StatusCode()).Msg("Post failed")
+		logs.L().Ctx(ctx).Error("Post failed", zap.Error(err), zap.Int("status_code", r.StatusCode()))
 		return
 	}
 	resp := &KuttResp{}
 	err = sonic.Unmarshal(r.Body(), resp)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Unmarshal failed")
+		logs.L().Ctx(ctx).Error("Unmarshal failed", zap.Error(err))
 		return
 	}
 	newURL, err = url.Parse(resp.Link)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Parse url failed")
+		logs.L().Ctx(ctx).Error("Parse url failed", zap.Error(err))
 		return
 	}
-	logs.L.Info().Ctx(ctx).Str("new_url", newURL.String()).Str("old_url", oldURL).Msg("GenAKA with url")
+	logs.L().Ctx(ctx).Info("GenAKA with url", zap.String("new_url", newURL.String()), zap.String("old_url", oldURL))
 	return
 }
 

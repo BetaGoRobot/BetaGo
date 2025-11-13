@@ -14,6 +14,7 @@ import (
 	"github.com/gotify/go-api-client/v2/client/message"
 	"github.com/gotify/go-api-client/v2/gotify"
 	"github.com/gotify/go-api-client/v2/models"
+	"go.uber.org/zap"
 )
 
 var (
@@ -34,7 +35,7 @@ func init() {
 func SendMessage(ctx context.Context, title, msg string, priority int) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, "SendMessage")
 	defer span.End()
-	logs.L.Info().Ctx(ctx).Str("traceID", span.SpanContext().TraceID().String()).Msg("SendMessage...")
+	logs.L().Ctx(ctx).Info("SendMessage...", zap.String("traceID", span.SpanContext().TraceID().String()))
 
 	if title == "" {
 		title = "BetaGo Notification"
@@ -52,8 +53,8 @@ func SendMessage(ctx context.Context, title, msg string, priority int) {
 
 	_, err := DefaultGotifyClient.Message.CreateMessage(params, tokenParsed)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Could not send message")
+		logs.L().Ctx(ctx).Error("Could not send message", zap.Error(err))
 		return
 	}
-	logs.L.Info().Ctx(ctx).Msg("Gotify Message Sent!")
+	logs.L().Ctx(ctx).Info("Gotify Message Sent!")
 }

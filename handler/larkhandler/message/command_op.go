@@ -16,6 +16,7 @@ import (
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 var _ Op = &CommandOperator{}
@@ -79,7 +80,7 @@ func ExecuteFromRawCommand(ctx context.Context, event *larkim.P2MessageReceiveV1
 		var reactionID string
 		reactionID, err = larkutils.AddReaction(ctx, "OnIt", *event.Event.Message.MessageId)
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("Add reaction to msg failed")
+			logs.L().Ctx(ctx).Error("Add reaction to msg failed", zap.Error(err))
 		} else {
 			defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
 		}
@@ -95,7 +96,7 @@ func ExecuteFromRawCommand(ctx context.Context, event *larkim.P2MessageReceiveV1
 			} else {
 				text := fmt.Sprintf("%v\n[Jaeger Trace](https://jaeger.kmhomelab.cn/trace/%s)", err.Error(), span.SpanContext().TraceID().String())
 				larkutils.ReplyCardText(ctx, text, *event.Event.Message.MessageId, "_OpErr", true)
-				logs.L.Error().Ctx(ctx).Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("CommandOperator")
+				logs.L().Ctx(ctx).Error("CommandOperator", zap.Error(err), zap.String("TraceID", span.SpanContext().TraceID().String()))
 				return
 			}
 		}

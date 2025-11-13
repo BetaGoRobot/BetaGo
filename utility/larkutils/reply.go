@@ -16,6 +16,7 @@ import (
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 func GenUUIDStr(str string, length int) string {
@@ -40,11 +41,14 @@ func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 	}
 	defer span.End()
 	defer func() { span.RecordError(err) }()
-	logs.L.Info().Ctx(ctx).
-		Str("msgID", msgID).
-		Str("suffix", suffix).
-		Bool("replyInThread", replyInThread).
-		Str("cardContent", cardContent.String()).Msg("reply card")
+	logs.L().Ctx(ctx).Info(
+		"reply card",
+		zap.String("msgID", msgID),
+		zap.String("suffix", suffix),
+		zap.Bool("replyInThread", replyInThread),
+		zap.String("cardContent", cardContent.String()),
+	)
+
 	resp, err := lark.LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).

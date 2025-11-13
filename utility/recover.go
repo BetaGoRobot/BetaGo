@@ -12,6 +12,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/gotify"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/bytedance/sonic"
+	"go.uber.org/zap"
 
 	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
@@ -50,7 +52,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 				fmt.Sprintf("%s Panic-Collected!",
 					emoji.Warning.String()), ctx)
 		}
-		logs.L.Error().Ctx(ctx).Str("stack", string(debug.Stack())).Msg("=====Panic======")
+		logs.L().Error("=====Panic======", zap.String("stack", string(debug.Stack())))
 	}
 }
 
@@ -92,7 +94,7 @@ func removeSensitiveInfo(stack []byte) string {
 //	@param v
 //	@return string
 func ForceMarshalJSON(v interface{}) string {
-	b, _ := json.MarshalIndent(v, "", "    ")
+	b, _ := sonic.MarshalIndent(v, "", "    ")
 
 	return string(b)
 }

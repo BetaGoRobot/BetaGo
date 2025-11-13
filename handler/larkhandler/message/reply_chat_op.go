@@ -15,6 +15,7 @@ import (
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 var _ Op = &ReplyChatOperator{}
@@ -63,7 +64,7 @@ func (r *ReplyChatOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 
 	reactionID, err := larkutils.AddReaction(ctx, "OnIt", *event.Event.Message.MessageId)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Add reaction to msg failed")
+		logs.L().Ctx(ctx).Error("Add reaction to msg failed", zap.Error(err))
 	} else {
 		defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
 	}

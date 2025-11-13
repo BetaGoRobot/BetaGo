@@ -14,6 +14,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/handler/commandHandler/notifier"
 	server "github.com/BetaGoRobot/BetaGo/handler/webhookserver"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
+	"go.uber.org/zap"
 )
 
 func init() {
@@ -27,7 +28,7 @@ func main() {
 	check.CheckEnv()
 	e := consts.GlobalSession.Open()
 	if e != nil {
-		logs.L.Error().Err(e).Msg("连接失败")
+		logs.L().Error("连接失败", zap.Error(e))
 		panic(e)
 	}
 	notifier.StartAutoService()

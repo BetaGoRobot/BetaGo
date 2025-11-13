@@ -4,13 +4,13 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"testing"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/bytedance/sonic"
 	"github.com/spyzhov/ajson"
 )
 
@@ -36,7 +36,7 @@ func TestGPTClient_PostWithStream(t *testing.T) {
 		Stream:    true,
 		AsyncChan: make(chan string, 50),
 	}
-	r, err := json.Marshal(&a)
+	r, err := sonic.Marshal(&a)
 	if err != nil {
 		log.Println(err.Error())
 	}

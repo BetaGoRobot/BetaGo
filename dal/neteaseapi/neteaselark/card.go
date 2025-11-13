@@ -12,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"go.uber.org/zap"
 )
 
 type musicItemTransFunc[T any] func(*T) *neteaseapi.SearchMusicItem
@@ -66,7 +67,7 @@ func BuildMusicListCard[T any](ctx context.Context, resList []*T, transFunc musi
 				defer wg.Done()
 				comment, err := neteaseapi.NetEaseGCtx.GetComment(ctx, resourceType, item.ID)
 				if err != nil {
-					logs.L.Error().Ctx(ctx).Err(err).Msg("GetComment Error")
+					logs.L().Ctx(ctx).Error("GetComment Error", zap.Error(err))
 				}
 				line := map[string]interface{}{
 					"idx":         idx,

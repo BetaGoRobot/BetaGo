@@ -15,6 +15,7 @@ import (
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 func isOutDated(createTime string) bool {
@@ -43,10 +44,10 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) (er
 	if *event.Event.Sender.SenderId.OpenId == consts.BotOpenID {
 		return nil
 	}
-	logs.L.Info().Ctx(ctx).Str("TraceID", span.SpanContext().TraceID().String()).Str("event", larkcore.Prettify(event)).Msg("Inside the child span for complex handler")
+	logs.L().Ctx(ctx).Info("Inside the child span for complex handler", zap.String("event", larkcore.Prettify(event)))
 	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).Run()
 
-	logs.L.Info().Ctx(ctx).Str("TraceID", span.SpanContext().TraceID().String()).Str("event", larkcore.Prettify(event)).Msg("Message event received")
+	logs.L().Ctx(ctx).Info("Message event received", zap.String("event", larkcore.Prettify(event)))
 	return nil
 }
 

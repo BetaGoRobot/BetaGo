@@ -12,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"go.uber.org/zap"
 	"gorm.io/gorm/clause"
 )
 
@@ -76,7 +77,7 @@ func (r *RecordMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 		contentMap := make(map[string]string)
 		err := sonic.UnmarshalString(*msg.Content, &contentMap)
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("repeatMessage error")
+			logs.L().Ctx(ctx).Error("repeatMessage error", zap.Error(err))
 			return err
 		}
 		stickerKey := contentMap["file_key"]

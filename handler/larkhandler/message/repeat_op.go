@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
@@ -118,7 +119,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 				*event.Event.Message.ChatId,
 			)
 			if err != nil {
-				logs.L.Error().Ctx(ctx).Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("repeatMessage error")
+				logs.L().Ctx(ctx).Error("repeatMessage error", zap.Error(err), zap.String("TraceID", span.SpanContext().TraceID().String()))
 			}
 		} else {
 			repeatReq := larkim.NewCreateMessageReqBuilder().
@@ -137,7 +138,7 @@ func (r *RepeatMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 			}
 			if !resp.Success() {
 				if strings.Contains(resp.Error(), "invalid image_key") {
-					logs.L.Error().Ctx(ctx).Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("repeatMessage error")
+					logs.L().Ctx(ctx).Error("repeatMessage error", zap.Error(err), zap.String("TraceID", span.SpanContext().TraceID().String()))
 					return nil
 				}
 				return errors.New(resp.Error())

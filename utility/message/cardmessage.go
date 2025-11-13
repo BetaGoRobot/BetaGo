@@ -19,6 +19,7 @@ import (
 	"github.com/bytedance/sonic"
 	larkcardkit "github.com/larksuite/oapi-sdk-go/v3/service/cardkit/v1"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -185,11 +186,11 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 		req := larkcardkit.NewContentCardElementReqBuilder().CardId(cardID).ElementId(key).Body(body).Build()
 		resp, err := lark.LarkClient.Cardkit.V1.CardElement.Content(ctx, req)
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("patch message failed with error msg")
+			logs.L().Ctx(ctx).Error("patch message failed with error msg", zap.Error(err))
 			return
 		}
 		if !resp.Success() {
-			logs.L.Error().Ctx(ctx).Str("CodeError.Error", resp.CodeError.Error()).Msg("patch message failed with error msg")
+			logs.L().Ctx(ctx).Error("patch message failed with error msg", zap.String("CodeError.Error", resp.CodeError.Error()))
 			return
 		}
 	}

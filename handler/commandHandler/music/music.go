@@ -16,6 +16,7 @@ import (
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 // SearchMusicByRobot  搜索音乐
@@ -145,7 +146,7 @@ func SearchMusicByRobot(ctx context.Context, targetID, quoteID, authorID string,
 		}
 		cardStr, err = cardMessage.BuildMessage()
 		if err != nil {
-			logs.L.Error().Err(err).Msg("构建消息失败")
+			logs.L().Error("构建消息失败", zap.Error(err))
 			return
 		}
 	} else {

@@ -8,6 +8,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
+	"go.uber.org/zap"
 )
 
 // SendMessageTempAndDelete 1
@@ -33,7 +34,7 @@ func SendMessageTempAndDelete(targetID, QuoteID, authorID, newMsg string) {
 			},
 		})
 	if err != nil {
-		logs.L.Error().Err(err).Msg("发送消息错误")
+		logs.L().Error("发送消息错误", zap.Error(err))
 		return
 	}
 	_, err = consts.GlobalSession.MessageCreate(
@@ -83,7 +84,7 @@ func SendMessageTemp(targetID, QuoteID, authorID, newMsg string) {
 		},
 	}.BuildMessage()
 	if err != nil {
-		logs.L.Error().Err(err).Msg("发送消息错误")
+		logs.L().Error("发送消息错误", zap.Error(err))
 		return
 	}
 	consts.GlobalSession.MessageCreate(
@@ -126,7 +127,7 @@ func SendMessage(targetID, QuoteID, authorID string, message string) {
 		},
 	}.BuildMessage()
 	if err != nil {
-		logs.L.Error().Err(err).Msg("发送消息错误")
+		logs.L().Error("发送消息错误", zap.Error(err))
 		return
 	}
 	consts.GlobalSession.MessageCreate(
@@ -163,7 +164,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		},
 	}.BuildMessage()
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("发送消息错误")
+		logs.L().Error("发送消息错误", zap.Error(err))
 		return
 	}
 	resp, err := consts.GlobalSession.MessageCreate(
@@ -177,7 +178,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		},
 	)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("发送消息错误")
+		logs.L().Error("发送消息错误", zap.Error(err))
 		return
 	}
 	return resp.MsgID
@@ -210,7 +211,7 @@ func SendErrorMessageWithTitle(targetID, QuoteID, authorID, message, title strin
 		},
 	}.BuildMessage()
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("发送消息错误")
+		logs.L().Error("发送消息错误", zap.Error(err))
 		return
 	}
 	consts.GlobalSession.MessageCreate(

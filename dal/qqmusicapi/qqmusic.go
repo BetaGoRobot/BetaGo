@@ -10,6 +10,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/sonic"
 	jsoniter "github.com/json-iterator/go"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -65,7 +66,7 @@ func (qqCtx *QQmusicContext) SearchMusic(ctx context.Context, keywords []string)
 	}
 	body := resp.Body()
 	searchResp := &QQmusicSearchResponse{}
-	json.Unmarshal(body, searchResp)
+	sonic.Unmarshal(body, searchResp)
 	for _, song := range searchResp.Data.List {
 		var ArtistName string
 		for _, name := range song.Singer {
@@ -115,7 +116,7 @@ func (qqCtx *QQmusicContext) GetMusicURLByID(ctx context.Context, mid, mediaMid 
 	}
 	body := resp.Body()
 	music := &MusicURLId{}
-	err = json.Unmarshal(body, music)
+	err = sonic.Unmarshal(body, music)
 	musicURL = music.SongURL
 	return
 }

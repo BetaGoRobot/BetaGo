@@ -14,6 +14,7 @@ import (
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 var _ Op = &RecordReactionOperator{}
@@ -65,7 +66,7 @@ func (r *RecordReactionOperator) Run(ctx context.Context, event *larkim.P2Messag
 		return err
 	}
 	if member == nil || member.Name == nil {
-		logs.L.Error().Ctx(ctx).Str("TraceID", span.SpanContext().TraceID().String()).Msgf("user %s not found in chat %s", *event.Event.UserId.OpenId, chatID)
+		logs.L().Ctx(ctx).Error("user not found in chat", zap.String("TraceID", span.SpanContext().TraceID().String()), zap.String("OpenID", *event.Event.UserId.OpenId), zap.String("ChatID", chatID))
 		return
 	}
 	database.GetDbConnection().Create(&database.InteractionStats{

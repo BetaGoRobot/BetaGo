@@ -19,6 +19,7 @@ import (
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 	"gorm.io/gorm/clause"
 )
 
@@ -31,10 +32,11 @@ import (
 //	@author heyuhengmatt
 //	@update 2024-08-06 08:27:18
 func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
+	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	argMap, _ := parseArgs(args...)
-	logs.L.Info().Ctx(ctx).
-		Str("handler", "ReplyAddHandler").
-		Interface("args", argMap).Msg("args")
+	logs.L().Ctx(ctx).Info("args", zap.Any("args", argMap))
 	if len(argMap) > 0 {
 		word, ok := argMap["word"]
 		if !ok {
@@ -70,7 +72,7 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 				contentMap := make(map[string]string)
 				err := sonic.UnmarshalString(*parentMsgItem.Body.Content, &contentMap)
 				if err != nil {
-					logs.L.Error().Ctx(ctx).Err(err).Msg("repeatMessage")
+					logs.L().Ctx(ctx).Warn("repeatMessage", zap.Error(err))
 					return err
 				}
 				switch *parentMsgItem.MsgType {
@@ -79,7 +81,7 @@ func ReplyAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 					res, _ := database.FindByCacheFunc(database.StickerMapping{StickerKey: imgKey}, func(r database.StickerMapping) string { return r.StickerKey })
 					if len(res) == 0 {
 						if stickerFile, err := larkimg.GetMsgImages(ctx, *data.Event.Message.ParentId, contentMap["file_key"], "image"); err != nil {
-							logs.L.Error().Ctx(ctx).Err(err).Msg("repeatMessage")
+							logs.L().Ctx(ctx).Warn("repeatMessage", zap.Error(err))
 						} else {
 							newImgKey := larkimg.UploadPicture2LarkReader(ctx, stickerFile)
 							database.GetDbConnection().Clauses(clause.OnConflict{UpdateAll: true}).Create(&database.StickerMapping{
@@ -136,9 +138,7 @@ func ReplyGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	argMap, _ := parseArgs(args...)
-	logs.L.Info().Ctx(ctx).
-		Str("handler", "ReplyGetHandler").
-		Interface("args", argMap).Msg("args")
+	logs.L().Ctx(ctx).Info("args", zap.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
 
 	lines := make([]map[string]string, 0)

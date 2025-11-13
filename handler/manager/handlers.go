@@ -21,6 +21,7 @@ import (
 	"github.com/lonelyevil/kook"
 	"github.com/spyzhov/ajson"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickContext) {
@@ -125,7 +126,7 @@ func clickEventHandler(baseCtx context.Context, ctx *kook.MessageButtonClickCont
 			},
 		})
 		if err != nil {
-			logs.L.Error().Ctx(baseCtx).Str("TraceID", span.SpanContext().TraceID().String()).Err(err)
+			logs.L().Ctx(baseCtx).Error("MessageUpdate error", zap.Error(err), zap.String("TraceID", span.SpanContext().TraceID().String()))
 			return
 		}
 		return
@@ -264,7 +265,7 @@ func channelLeftHandler(baseCtx context.Context, kookCtx *kook.GuildChannelMembe
 
 func messageEventHandler(baseCtx context.Context, kookCtx *kook.KmarkdownMessageContext) {
 	baseCtx, span := otel.BetaGoOtelTracer.Start(baseCtx, reflecting.GetCurrentFunc())
-	rawRecord, _ := json.Marshal(&kookCtx.Extra)
+	rawRecord, _ := sonic.Marshal(&kookCtx.Extra)
 	span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer span.End()
 	if kookCtx.Common.Type != kook.MessageTypeKMarkdown {

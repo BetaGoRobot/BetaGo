@@ -13,6 +13,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"go.uber.org/zap"
 )
 
 // LarkMessage defines a common interface for Lark message responses.
@@ -73,7 +74,7 @@ func buildLineCommon(
 	} else {
 		member, err := grouputil.GetUserMemberFromChat(ctx, *chatID, *senderID)
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("got error openID")
+			logs.L().Ctx(ctx).Error("got error openID", zap.Error(err))
 		}
 		if member == nil {
 			userName = "NULL"

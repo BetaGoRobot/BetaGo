@@ -11,6 +11,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts/ct"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"go.uber.org/zap"
 
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -112,7 +113,7 @@ func (m *MinioManager) SetFileFromURL(url string) *MinioManager {
 		m.span.SetAttributes(attribute.Key("url").String(url))
 		resp, err := requests.Req().SetContext(m.Context).SetDoNotParseResponse(true).Get(url)
 		if err != nil {
-			logs.L.Error().Ctx(m).Err(err).Msg("Get file failed")
+			logs.L().Ctx(m).Error("Get file failed", zap.Error(err))
 			m.err = err
 			m.span.SetStatus(2, err.Error())
 			return
@@ -237,10 +238,10 @@ func (m *MinioManager) addTracePresigned(u *url.URL) {
 		if url := u.String(); url != "" {
 			m.span.SetAttributes(attribute.String("presigned_url", url))
 		} else {
-			logs.L.Error().Ctx(m).Msg("presigned url is empty")
+			logs.L().Ctx(m).Error("presigned url is empty")
 		}
 	} else {
-		logs.L.Error().Ctx(m).Msg("presigned url is nil")
+		logs.L().Ctx(m).Error("presigned url is nil")
 	}
 }
 
@@ -291,10 +292,10 @@ func (m *MinioManager) UploadFileOverwrite(opts minio.PutObjectOptions) (u *url.
 	if m.inputTransFunc != nil {
 		m.inputTransFunc(m)
 	}
-	logs.L.Warn().Ctx(m).Err(err).Msg("tryGetFile failed")
+	logs.L().Ctx(m).Warn("tryGetFile failed", zap.Error(err))
 	err = m.UploadFile(opts)
 	if err != nil {
-		logs.L.Error().Ctx(m).Err(err).Msg("uploadFile failed")
+		logs.L().Ctx(m).Error("uploadFile failed", zap.Error(err))
 		return
 	}
 	return m.PresignURL()
@@ -319,7 +320,7 @@ func (m *MinioManager) UploadFile(opts minio.PutObjectOptions) (err error) {
 
 	err = minioUploadReader(ctx, m.bucketName, m.file, m.objName, opts)
 	if err != nil {
-		logs.L.Error().Ctx(m).Err(err).Msg("uploadFile failed")
+		logs.L().Ctx(m).Error("uploadFile failed", zap.Error(err))
 		return
 	}
 	return

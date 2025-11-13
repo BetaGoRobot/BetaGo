@@ -16,6 +16,7 @@ import (
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 var _ Op = &ReactMsgOperator{}
@@ -76,10 +77,10 @@ func (r *ReactMsgOperator) Run(ctx context.Context, event *larkim.P2MessageRecei
 			Build()
 		resp, err := lark.LarkClient.Im.V1.MessageReaction.Create(ctx, req)
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Str("TraceID", span.SpanContext().TraceID().String()).Err(err).Msg("reactMessage error")
+			logs.L().Ctx(ctx).Error("reactMessage error", zap.Error(err), zap.String("TraceID", span.SpanContext().TraceID().String()))
 			return err
 		}
-		logs.L.Info().Ctx(ctx).Interface("resp", resp).Msg("reactMessage")
+		logs.L().Ctx(ctx).Info("reactMessage", zap.Any("resp", resp))
 	} else {
 		if utility.Probability(float64(realRate) / 100) {
 			res, hitCache := database.FindByCacheFunc(database.ReactImageMeterial{

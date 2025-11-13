@@ -16,6 +16,7 @@ import (
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 	"gorm.io/gorm/clause"
 )
 
@@ -37,9 +38,7 @@ func WordAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaDa
 		return errors.ErrUnsupported
 	}
 	argMap, _ := parseArgs(args...)
-	logs.L.Info().Ctx(ctx).
-		Str("handler", "WordAddHandler").
-		Interface("args", argMap).Msg("args")
+	logs.L().Ctx(ctx).Info("args", zap.Any("args", argMap))
 
 	word, ok := argMap["word"]
 	if !ok {
@@ -74,9 +73,7 @@ func WordGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaDa
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	argMap, _ := parseArgs(args...)
-	logs.L.Info().Ctx(ctx).
-		Str("handler", "WordGetHandler").
-		Interface("args", argMap).Msg("args")
+	logs.L().Ctx(ctx).Info("args", zap.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
 
 	lines := make([]map[string]string, 0)

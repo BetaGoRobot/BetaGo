@@ -22,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.uber.org/zap"
 	"gorm.io/gorm/clause"
 )
 
@@ -40,7 +41,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer func() { span.RecordError(err) }()
 
 	argMap, _ := parseArgs(args...)
-	logs.L.Info().Str("TraceID", span.SpanContext().TraceID().String()).Interface("args", argMap).Msg("wordAddHandler")
+	logs.L().Info("wordAddHandler", zap.String("TraceID", span.SpanContext().TraceID().String()), zap.Any("args", argMap))
 	if len(argMap) > 0 {
 		var imgKey string
 		// by url
@@ -122,7 +123,7 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	argMap, _ := parseArgs(args...)
-	logs.L.Info().Str("TraceID", span.SpanContext().TraceID().String()).Interface("args", argMap).Msg("replyGetHandler")
+	logs.L().Info("replyGetHandler", zap.String("TraceID", span.SpanContext().TraceID().String()), zap.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
 
 	lines := make([]map[string]string, 0)
@@ -165,7 +166,7 @@ func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer span.RecordError(err)
 
 	argMap, _ := parseArgs(args...)
-	logs.L.Info().Str("TraceID", span.SpanContext().TraceID().String()).Interface("args", argMap).Msg("replyDelHandler")
+	logs.L().Info("replyDelHandler", zap.String("TraceID", span.SpanContext().TraceID().String()), zap.Any("args", argMap))
 
 	if data.Event.Message.ThreadId != nil {
 		// 找到话题中的所有图片
@@ -228,7 +229,7 @@ func getImageKey(msg *larkim.Message) string {
 		contentMap := make(map[string]string)
 		err := sonic.UnmarshalString(*msg.Body.Content, &contentMap)
 		if err != nil {
-			logs.L.Error().Err(err).Msg("Error")
+			logs.L().Error("Error", zap.Error(err))
 			return ""
 		}
 		switch *msg.MsgType {

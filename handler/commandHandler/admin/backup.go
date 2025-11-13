@@ -1,12 +1,12 @@
 package admin
 
 import (
-	"encoding/json"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/bytedance/sonic"
 	"github.com/spyzhov/ajson"
 )
 
@@ -42,7 +42,7 @@ func writeBackups(toWrite []*content) {
 		panic(err)
 	}
 	defer f.Close()
-	tmp, err := json.Marshal(&backups)
+	tmp, err := sonic.Marshal(&backups)
 	if err != nil {
 		panic(err)
 	}

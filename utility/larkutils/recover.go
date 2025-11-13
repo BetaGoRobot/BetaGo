@@ -9,6 +9,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/bytedance/sonic"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"go.uber.org/zap"
 )
 
 type panicPatternStruct struct {
@@ -137,14 +138,14 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 		span.RecordError(e)
 	}
 	stack := string(debug.Stack())
-	logs.L.Error().Ctx(ctx).Any("Error", err).Str("trace_id", traceID).Str("msg_id", msgID).Msg("panic-detected!")
+	logs.L().Ctx(ctx).Error("panic-detected!", zap.Any("Error", err), zap.String("trace_id", traceID), zap.String("msg_id", msgID))
 	card := cardutil.NewCardBuildHelper().
 		SetTitle("Panic Detected!").
 		SetSubTitle("Please check the log for more information.").
 		SetContent("```go\n" + stack + "\n```").Build(ctx)
 	err = ReplyCard(ctx, card, msgID, "", true)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err.(error)).Msg("send error")
+		logs.L().Ctx(ctx).Error("send error", zap.Error(err.(error)))
 	}
 }
 
@@ -166,13 +167,13 @@ func SendRecoveredMsgUserID(ctx context.Context, err any, chatID string) {
 	}
 	stack := string(debug.Stack())
 
-	logs.L.Error().Ctx(ctx).Any("Error", err).Str("trace_id", traceID).Str("chat_id", chatID).Msg("panic-detected!")
+	logs.L().Ctx(ctx).Error("panic-detected!", zap.Any("Error", err), zap.String("trace_id", traceID), zap.String("chat_id", chatID))
 	card := cardutil.NewCardBuildHelper().
 		SetTitle("Panic Detected!").
 		SetSubTitle("Please check the log for more information.").
 		SetContent("```go\n" + stack + "\n```").Build(ctx)
 	err = SendCard(ctx, card, chatID, "")
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err.(error)).Msg("send error")
+		logs.L().Ctx(ctx).Error("send error", zap.Error(err.(error)))
 	}
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model/responses"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 var (
@@ -61,7 +62,7 @@ func EmbeddingText(ctx context.Context, input string) (embedded []float32, token
 		arkruntime.WithCustomHeader("x-is-encrypted", "true"),
 	)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("embeddings error")
+		logs.L().Ctx(ctx).Error("embeddings error", zap.Error(err))
 		return
 	}
 	embedded = resp.Data[0].Embedding
@@ -79,7 +80,7 @@ func ResponseWithCache(ctx context.Context, sysPrompt, userPrompt, modelID strin
 
 	respID, err := redisdal.GetRedisClient().Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("get cache error")
+		logs.L().Ctx(ctx).Error("get cache error", zap.Error(err))
 		return
 	}
 	if respID == "" {
@@ -113,15 +114,15 @@ func ResponseWithCache(ctx context.Context, sysPrompt, userPrompt, modelID strin
 		// 先创建cache
 		resp, err := client.CreateResponses(ctx, req)
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("responses error")
+			logs.L().Ctx(ctx).Error("responses error", zap.Error(err))
 			return "", err
 		}
 		if err := redisdal.GetRedisClient().Set(ctx, key, resp.Id, 0).Err(); err != nil && err != redis.Nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("set cache error")
+			logs.L().Ctx(ctx).Error("set cache error", zap.Error(err))
 			return "", err
 		}
 		if err := redisdal.GetRedisClient().ExpireAt(ctx, key, time.Unix(exp, 0)).Err(); err != nil && err != redis.Nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("expire cache error")
+			logs.L().Ctx(ctx).Error("expire cache error", zap.Error(err))
 			return "", err
 		}
 		respID = resp.Id
@@ -153,7 +154,7 @@ func ResponseWithCache(ctx context.Context, sysPrompt, userPrompt, modelID strin
 
 	resp, err := client.CreateResponses(ctx, secondReq)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("responses error")
+		logs.L().Ctx(ctx).Error("responses error", zap.Error(err))
 		return "", err
 	}
 
@@ -256,7 +257,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, f
 
 	r, err := client.CreateChatCompletionStream(ctx, req, arkruntime.WithCustomHeader("x-is-encrypted", "true"))
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("chat error")
+		logs.L().Ctx(ctx).Error("chat error", zap.Error(err))
 		return nil, err
 	}
 
@@ -460,7 +461,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 	}
 	resp, err := client.CreateResponsesStream(ctx, req)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("responses error")
+		logs.L().Ctx(ctx).Error("responses error", zap.Error(err))
 		return nil, err
 	}
 
@@ -480,7 +481,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				return
 			}
 			if err != nil {
-				logs.L.Error().Ctx(ctx).Err(err).Msg("responses error")
+				logs.L().Ctx(ctx).Error("responses error", zap.Error(err))
 				return
 			}
 			if id := event.GetResponse().GetResponse().GetId(); id != "" {
@@ -492,7 +493,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				fmt.Println(utility.MustMashal(responseEvent.GetResponse()))
 			}
 			if fa := event.GetFunctionCallArguments(); fa != nil && fa.GetType() == responses.EventType_response_function_call_arguments_done {
-				logs.L.Info().Ctx(ctx).Str("arguments", fa.GetArguments()).Msg("function call arguments")
+				logs.L().Ctx(ctx).Info("function call arguments", zap.String("arguments", fa.GetArguments()))
 				// 调用检索
 				args := &Arguments{}
 				err = sonic.UnmarshalString(fa.GetArguments(), &args)

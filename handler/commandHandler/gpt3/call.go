@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/bytedance/sonic"
 	"github.com/carlmjohnson/requests"
 	"github.com/oliveagle/jsonpath"
 	"github.com/spyzhov/ajson"
@@ -153,7 +153,7 @@ var ErrorMaxToken = fmt.Errorf(
 //	@return executeMsg
 //	@return err
 func (g *GPTClient) PostWithStream(ctx context.Context) (err error) {
-	jsonBody, err := json.Marshal(&g)
+	jsonBody, err := sonic.Marshal(&g)
 	if err != nil {
 		return
 	}

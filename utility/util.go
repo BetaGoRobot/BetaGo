@@ -21,6 +21,7 @@ import (
 	"github.com/lonelyevil/kook"
 	"github.com/lonelyevil/kook/log_adapter/plog"
 	p_log "github.com/phuslu/log"
+	"go.uber.org/zap"
 
 	"go.opentelemetry.io/otel/trace"
 )
@@ -61,12 +62,12 @@ func InitGlowSansSCFontType() {
 	fontFile := filepath.Join(consts.FontPath, "Microsoft Yahei.ttf")
 	fontBytes, err := ioutil.ReadFile(fontFile)
 	if err != nil {
-		logs.L.Info().Err(err).Msg("errot init font")
+		logs.L().Error("errot init font", zap.Error(err))
 		return
 	}
 	MicrosoftYaHei, err = truetype.Parse(fontBytes)
 	if err != nil {
-		logs.L.Info().Err(err).Msg("errot init font")
+		logs.L().Error("errot init font", zap.Error(err))
 		return
 	}
 }
@@ -147,7 +148,7 @@ func GetUserInfo(userID, guildID string) (userInfo *kook.User, err error) {
 func GetGuildIDFromChannelID(channelID string) (GuildID string) {
 	c, err := consts.GlobalSession.ChannelView(channelID)
 	if err != nil {
-		logs.L.Error().Err(err).Msg("Error getting guild")
+		logs.L().Error("Error getting guild", zap.Error(err))
 	}
 	return c.GuildID
 }
@@ -289,7 +290,7 @@ func Reconnect() (err error) {
 	// 		return fmt.Errorf("reconnect to kook server reaches max retry cnt 5, need restart or try again" + err.Error())
 	// 	}
 	// }
-	logs.L.Info().Msg("Reconnecting successfully")
+	logs.L().Info("Reconnecting successfully")
 	time.Sleep(time.Second * 5)
 	return
 }
@@ -331,10 +332,10 @@ func BuildCardMessage(theme, size, title, quoteID string, span any, modules ...a
 	if quoteID != "" {
 		m, err := consts.GlobalSession.MessageView(quoteID)
 		if err != nil {
-			logs.L.Error().Err(err).Msg("MessageView Error")
+			logs.L().Error("MessageView Error", zap.Error(err))
 		}
 		prevCardMessage := make(kook.CardMessage, 0)
-		err = json.UnmarshalFromString(m.Content, &prevCardMessage)
+		err = sonic.UnmarshalString(m.Content, &prevCardMessage)
 		if err != nil {
 			// 不是卡片消息
 			if len(m.MentionInfo.MentionPart) > 0 {

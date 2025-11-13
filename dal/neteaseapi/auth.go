@@ -22,6 +22,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
+	"go.uber.org/zap"
 )
 
 // RefreshLogin 刷新登录
@@ -31,14 +32,14 @@ import (
 func (neteaseCtx *NetEaseContext) RefreshLogin(ctx context.Context) error {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
-	logs.L.Info().Ctx(ctx).Msg("RefreshLogin...")
+	logs.L().Ctx(ctx).Info("RefreshLogin...")
 
 	resp, err := consts.HttpClient.R().
 		SetCookies(neteaseCtx.cookies).
 		Post(NetEaseAPIBaseURL + "/login/refresh")
 
 	if err != nil || (resp != nil && resp.StatusCode() != 200) {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("error in request refresh login")
+		logs.L().Ctx(ctx).Error("error in request refresh login", zap.Error(err))
 		return err
 	}
 	respMap := make(map[string]interface{})
@@ -68,7 +69,7 @@ func (neteaseCtx *NetEaseContext) RefreshLogin(ctx context.Context) error {
 func (neteaseCtx *NetEaseContext) GetUniKey(ctx context.Context) (err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
-	logs.L.Info().Ctx(ctx).Str("traceID", span.SpanContext().TraceID().String()).Msg("getUniKey...")
+	logs.L().Ctx(ctx).Info("getUniKey...", zap.String("traceID", span.SpanContext().TraceID().String()))
 
 	resp, err := requests.Req().Post(NetEaseAPIBaseURL + "/login/qr/key")
 	if err != nil || resp.StatusCode() != 200 {
@@ -89,7 +90,7 @@ func (neteaseCtx *NetEaseContext) GetUniKey(ctx context.Context) (err error) {
 func (neteaseCtx *NetEaseContext) GetQRBase64(ctx context.Context) (err error) {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
-	logs.L.Info().Ctx(ctx).Str("traceID", span.SpanContext().TraceID().String()).Msg("getQRBase64...")
+	logs.L().Ctx(ctx).Info("getQRBase64...", zap.String("traceID", span.SpanContext().TraceID().String()))
 
 	resp, err := requests.
 		ReqTimestamp().
@@ -139,17 +140,17 @@ func (neteaseCtx *NetEaseContext) checkQRStatus(ctx context.Context) (err error)
 			}
 			switch respMap["code"].(float64) {
 			case 801:
-				once.Do(func() { logs.L.Info().Msg("Waiting for scan") })
+				once.Do(func() { logs.L().Ctx(ctx).Info("Waiting for scan") })
 			case 800:
 				once.Do(func() {
-					logs.L.Info().Ctx(ctx).Msg("二维码已失效")
+					logs.L().Ctx(ctx).Info("二维码已失效")
 					neteaseCtx.qrStruct.isOutDated = true
 				})
 				return err
 			case 802:
-				once.Do(func() { logs.L.Info().Msg("扫描未确认") })
+				once.Do(func() { logs.L().Ctx(ctx).Info("扫描未确认") })
 			case 803:
-				logs.L.Info().Msg("登陆成功！")
+				logs.L().Ctx(ctx).Info("登陆成功！")
 				neteaseCtx.cookies = resp.Cookies()
 				neteaseCtx.SaveCookie(ctx)
 				neteaseCtx.loginType = "qr"
@@ -169,7 +170,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
-	logs.L.Info().Ctx(ctx).Str("traceID", span.SpanContext().TraceID().String()).Msg("LoginNetEaseQR...")
+	logs.L().Ctx(ctx).Info("LoginNetEaseQR...", zap.String("traceID", span.SpanContext().TraceID().String()))
 	neteaseCtx.GetUniKey(ctx)
 
 	neteaseCtx.GetQRBase64(ctx)
@@ -183,7 +184,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEaseQR(ctx context.Context) (err error
 		SetExpiration(time.Now().Add(time.Hour)).
 		Upload()
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("upload QRCode failed")
+		logs.L().Ctx(ctx).Error("upload QRCode failed", zap.Error(err))
 		return err
 	}
 
@@ -210,11 +211,11 @@ func (neteaseCtx *NetEaseContext) LoginNetEase(ctx context.Context) (err error) 
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
-	logs.L.Info().Ctx(ctx).Str("traceID", span.SpanContext().TraceID().String()).Msg("LoginNetEase...")
+	logs.L().Ctx(ctx).Info("LoginNetEase...")
 
 	// !Step1:检查登陆状态
 	if neteaseCtx.CheckIfLogin(ctx) {
-		logs.L.Info().Msg("Already login")
+		logs.L().Ctx(ctx).Info("Already login")
 		if neteaseCtx.loginType != "qr" {
 			// 已登陆，刷新登陆
 			err = neteaseCtx.RefreshLogin(ctx)
@@ -223,7 +224,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEase(ctx context.Context) (err error) 
 	}
 
 	if phoneNum, password := env.NETEASE_EMAIL, env.NETEASE_PASSWORD; phoneNum == "" && password == "" {
-		logs.L.Info().Msg("Empty NetEase account and password")
+		logs.L().Ctx(ctx).Info("Empty NetEase account and password")
 		return
 	}
 	// !Step2:未登陆，启动登陆
@@ -255,7 +256,7 @@ func (neteaseCtx *NetEaseContext) LoginNetEase(ctx context.Context) (err error) 
 func (neteaseCtx *NetEaseContext) CheckIfLogin(ctx context.Context) bool {
 	ctx, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
-	logs.L.Info().Ctx(ctx).Str("traceID", span.SpanContext().TraceID().String()).Msg("ChekIfLogin...")
+	logs.L().Ctx(ctx).Info("ChekIfLogin...")
 
 	resp, err := consts.HttpClient.R().
 		SetCookies(neteaseCtx.cookies).
@@ -263,13 +264,13 @@ func (neteaseCtx *NetEaseContext) CheckIfLogin(ctx context.Context) bool {
 		SetQueryParam("timestamp", fmt.Sprint(time.Now().UnixNano())).
 		Get(NetEaseAPIBaseURL + "/login/status")
 	if err != nil || resp.StatusCode() != 200 {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("error in request login status")
+		logs.L().Ctx(ctx).Error("error in request login status", zap.Error(err))
 		return false
 	}
 	data := resp.Body()
 	loginStatus := LoginStatusStruct{}
 	if err = sonic.Unmarshal(data, &loginStatus); err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("error in unmarshal loginStatus")
+		logs.L().Ctx(ctx).Error("error in unmarshal loginStatus", zap.Error(err))
 	} else {
 		if anonimousUser, ok := loginStatus.Data.Account["anonimousUser"].(bool); ok && anonimousUser {
 			return false
@@ -291,20 +292,20 @@ func (neteaseCtx *NetEaseContext) TryGetLastCookie(ctx context.Context) {
 
 	f, err := os.Open("/data/last_cookie.json")
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("error in open last_cookie.json")
+		logs.L().Ctx(ctx).Error("error in open last_cookie.json", zap.Error(err))
 		return
 	}
 	defer f.Close()
 	cookieData := make([]byte, 0)
 	cookieData, err = io.ReadAll(f)
 	if len(cookieData) == 0 {
-		logs.L.Info().Msg("No cookieData, skip json marshal")
+		logs.L().Ctx(ctx).Info("No cookieData, skip json marshal")
 		return
 	}
 	cookie := make(map[string]string)
 
 	if err = sonic.Unmarshal(cookieData, &cookie); err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("error in unmarshal cookieData")
+		logs.L().Ctx(ctx).Error("error in unmarshal cookieData", zap.Error(err))
 	}
 	for k, v := range cookie {
 		neteaseCtx.cookies = append(neteaseCtx.cookies, &http.Cookie{Name: k, Value: v})
@@ -323,7 +324,7 @@ func (neteaseCtx *NetEaseContext) SaveCookie(ctx context.Context) {
 	}
 	f, err := os.OpenFile("/data/last_cookie.json", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("error in open last_cookie.json")
+		logs.L().Ctx(ctx).Error("error in open last_cookie.json", zap.Error(err))
 		return
 	}
 	defer f.Close()
@@ -334,7 +335,7 @@ func (neteaseCtx *NetEaseContext) SaveCookie(ctx context.Context) {
 	}
 	cookieData, err := sonic.Marshal(toWriteMap)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Unknown error")
+		logs.L().Ctx(ctx).Error("Unknown error", zap.Error(err))
 	}
 	f.Write(cookieData)
 }

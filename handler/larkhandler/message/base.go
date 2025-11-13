@@ -21,6 +21,7 @@ import (
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/tmc/langchaingo/schema"
 	"github.com/yanyiwu/gojieba"
+	"go.uber.org/zap"
 )
 
 // Handler  消息处理器
@@ -71,7 +72,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		content := larkutils.PreGetTextMsg(ctx, event)
 		embedded, usage, err := doubao.EmbeddingText(ctx, content)
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("EmbeddingText error")
+			logs.L().Ctx(ctx).Error("EmbeddingText error", zap.Error(err))
 		}
 		jieba := gojieba.NewJieba()
 		defer jieba.Free()
@@ -108,7 +109,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 			},
 		)
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("InsertData error")
+			logs.L().Ctx(ctx).Error("InsertData error", zap.Error(err))
 		}
 		err = retriver.Cli.AddDocuments(ctx, utility.AddressORNil(event.Event.Message.ChatId),
 			[]schema.Document{{
@@ -122,7 +123,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 				},
 			}})
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("AddDocuments error")
+			logs.L().Ctx(ctx).Error("AddDocuments error", zap.Error(err))
 		}
 	}()
 }

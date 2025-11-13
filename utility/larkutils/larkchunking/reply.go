@@ -7,6 +7,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"go.uber.org/zap"
 )
 
 type LarkMessageRespReply struct {
@@ -24,7 +25,7 @@ func (m *LarkMessageRespReply) MsgID() (res string) {
 func (m *LarkMessageRespReply) TimeStamp() (res int64) {
 	t, err := strconv.ParseInt(*m.Data.CreateTime, 10, 64)
 	if err != nil {
-		logs.L.Error().Err(err).Msg("getTimestampFunc error")
+		logs.L().Ctx(context.Background()).Error("getTimestampFunc error", zap.Error(err))
 		return time.Now().UnixMilli()
 	}
 	return t

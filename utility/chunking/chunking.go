@@ -2,7 +2,6 @@ package chunking
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -19,6 +18,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/bytedance/sonic"
+	"go.uber.org/zap"
 
 	redis_client "github.com/BetaGoRobot/BetaGo/utility/redis" // Renamed to avoid conflict with package name
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -130,15 +130,15 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 	// 1. 从Redis获取当前会话
 	val, err := m.redisClient.Get(ctx, sessionKey).Result()
 	if err != nil && err != redis.Nil {
-		logs.L.Error().Ctx(ctx).Str("groupID", groupID).Err(err).Msg("Failed to get session from Redis")
+		logs.L().Ctx(ctx).Error("Failed to get session from Redis", zap.String("groupID", groupID), zap.Error(err))
 		return err
 	}
 
 	var buffer SessionBuffer
 	// 如果会话存在，则反序列化它。否则，将使用一个新的空缓冲区。
 	if err == nil || errors.Is(err, redis.Nil) {
-		if err := json.Unmarshal([]byte(val), &buffer); err != nil {
-			logs.L.Warn().Ctx(ctx).Str("groupID", groupID).Err(err).Msg("Failed to unmarshal session buffer, starting a new one")
+		if err := sonic.Unmarshal([]byte(val), &buffer); err != nil {
+			logs.L().Ctx(ctx).Warn("Failed to unmarshal session buffer, starting a new one", zap.String("groupID", groupID), zap.Error(err))
 			// 数据可能已损坏，从一个新缓冲区开始
 			m.redisClient.Del(ctx, sessionKey)
 			buffer = SessionBuffer{}
@@ -150,7 +150,7 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 
 	// 3. 检查缓冲区大小是否超过限制
 	if len(buffer.Messages) >= MAX_CHUNK_SIZE {
-		logs.L.Info().Ctx(ctx).Str("groupID", groupID).Int("size", len(buffer.Messages)).Msg("Chunk reached max size, triggering immediate merge")
+		logs.L().Ctx(ctx).Info("Chunk reached max size, triggering immediate merge", zap.String("groupID", groupID), zap.Int("size", len(buffer.Messages)))
 
 		// 将完整的块发送到处理队列
 		m.processingQueue <- &Chunk{
@@ -166,15 +166,15 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 		if err != nil {
 			// 记录错误但继续，因为块已排队等待处理。
 			// 超时机制后续可能会尝试处理一个不存在的键，这是无害的。
-			logs.L.Error().Ctx(ctx).Str("groupID", groupID).Err(err).Msg("Failed to execute Redis cleanup pipeline after max size merge")
+			logs.L().Ctx(ctx).Error("Failed to execute Redis cleanup pipeline after max size merge", zap.String("groupID", groupID), zap.Error(err))
 		}
 		return nil // 触发合并，操作完成
 	}
 
 	// 4. 如果未达到大小限制，则在Redis中更新会话
-	bufferJSON, err := json.Marshal(buffer)
+	bufferJSON, err := sonic.Marshal(buffer)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Str("groupID", groupID).Err(err).Msg("Failed to marshal session buffer")
+		logs.L().Ctx(ctx).Error("Failed to marshal session buffer", zap.String("groupID", groupID), zap.Error(err))
 		return err
 	}
 
@@ -185,11 +185,11 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 	pipe.ZAdd(ctx, redisActiveSessionsKey, redis.Z{Score: float64(newTimestamp), Member: groupID})
 	_, err = pipe.Exec(ctx)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Str("groupID", groupID).Err(err).Msg("Failed to execute Redis update pipeline")
+		logs.L().Ctx(ctx).Error("Failed to execute Redis update pipeline", zap.String("groupID", groupID), zap.Error(err))
 		return err
 	}
 
-	logs.L.Debug().Ctx(ctx).Str("groupID", groupID).Int("buffer_size", len(buffer.Messages)).Msg("Message submitted and session updated")
+	logs.L().Ctx(ctx).Debug("Message submitted and session updated", zap.String("groupID", groupID), zap.Int("buffer_size", len(buffer.Messages)))
 	return nil
 }
 
@@ -231,7 +231,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 	}
 	res = strings.Trim(res, "```")
 	res = strings.TrimLeft(res, "json")
-	logs.L.Info().Ctx(ctx).Str("groupID", chunk.GroupID).Msgf("OnMerge chunk processed by LLM:\n records: %s\nres: %s\n", chunkStr, res)
+	logs.L().Ctx(ctx).Info("OnMerge chunk processed by LLM", zap.String("groupID", chunk.GroupID), zap.String("chunkStr", chunkStr), zap.String("res", res))
 
 	chunkLog := &handlertypes.MessageChunkLogV3{
 		ID:          uuid.NewV1().String(),
@@ -247,7 +247,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 	}
 	embedding, _, err := ark.EmbeddingText(ctx, BuildEmbeddingInput(chunkLog))
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Str("groupID", chunk.GroupID).Err(err).Msg("embedding error")
+		logs.L().Ctx(ctx).Error("embedding error", zap.String("groupID", chunk.GroupID), zap.Error(err))
 		return
 	}
 	chunkLog.ConversationEmbedding = Normalize(embedding)
@@ -256,7 +256,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 		chunkLog,
 	)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Str("groupID", chunk.GroupID).Err(err).Msg("insert chunk log error")
+		logs.L().Ctx(ctx).Error("insert chunk log error", zap.String("groupID", chunk.GroupID), zap.Error(err))
 		return
 	}
 
@@ -265,7 +265,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 
 // StartBackgroundCleaner starts a goroutine to periodically scan for and process timed-out sessions.
 func (m *Management) StartBackgroundCleaner(ctx context.Context) {
-	logs.L.Info().Ctx(ctx).Msg("Starting background cleaner for timed-out sessions...")
+	logs.L().Ctx(ctx).Info("Starting background cleaner for timed-out sessions...")
 	// Start the consumer goroutine
 	go func() {
 		for chunk := range m.processingQueue {
@@ -274,9 +274,9 @@ func (m *Management) StartBackgroundCleaner(ctx context.Context) {
 			}
 			// Each chunk is processed in its own goroutine to avoid blocking the queue consumer
 			go func(c *Chunk) {
-				logs.L.Info().Ctx(ctx).Int("message_count", len(c.Messages)).Msg("Processing a merged chunk")
+				logs.L().Ctx(ctx).Info("Processing a merged chunk", zap.Int("message_count", len(c.Messages)))
 				if err := m.OnMerge(ctx, c); err != nil {
-					logs.L.Error().Ctx(ctx).Err(err).Msg("Error during OnMerge")
+					logs.L().Ctx(ctx).Error("Error during OnMerge", zap.Error(err))
 				}
 			}(chunk)
 		}
@@ -289,7 +289,7 @@ func (m *Management) StartBackgroundCleaner(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				logs.L.Info().Ctx(ctx).Msg("Stopping background cleaner...")
+				logs.L().Ctx(ctx).Info("Stopping background cleaner...")
 				return
 			case <-ticker.C:
 				m.scanAndProcessTimeouts(ctx)
@@ -300,7 +300,7 @@ func (m *Management) StartBackgroundCleaner(ctx context.Context) {
 
 // scanAndProcessTimeouts is the internal logic for the background cleaner.
 func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
-	logs.L.Debug().Ctx(ctx).Msg("Scanning for timed-out sessions...")
+	logs.L().Ctx(ctx).Debug("Scanning for timed-out sessions...")
 	// Calculate the timestamp threshold for timeout. Sessions older than this will be processed.
 	timeoutThreshold := time.Now().Add(-INACTIVITY_TIMEOUT).UnixMilli()
 
@@ -310,15 +310,15 @@ func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
 		Max: strconv.FormatInt(timeoutThreshold, 10),
 	}).Result()
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to get timed-out sessions from Redis")
+		logs.L().Ctx(ctx).Error("Failed to get timed-out sessions from Redis", zap.Error(err))
 		return
 	}
 
 	if len(timedOutGroupIDs) == 0 {
-		logs.L.Info().Ctx(ctx).Msg("not session is timed out, will do nothing...")
+		logs.L().Ctx(ctx).Info("not session is timed out, will do nothing...")
 		return // Nothing to do
 	}
-	logs.L.Info().Ctx(ctx).Int("count", len(timedOutGroupIDs)).Strs("group_ids", timedOutGroupIDs).Msg("Found timed-out sessions")
+	logs.L().Ctx(ctx).Info("Found timed-out sessions", zap.Int("count", len(timedOutGroupIDs)), zap.Strings("group_ids", timedOutGroupIDs))
 
 	// 2. Process and clean up each timed-out session
 	for _, groupID := range timedOutGroupIDs {
@@ -332,7 +332,7 @@ func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
 			continue
 		}
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Str("groupID", groupID).Err(err).Msg("Failed to GetDel session from Redis")
+			logs.L().Ctx(ctx).Error("Failed to GetDel session from Redis", zap.String("groupID", groupID), zap.Error(err))
 			continue
 		}
 
@@ -340,8 +340,8 @@ func (m *Management) scanAndProcessTimeouts(ctx context.Context) {
 		m.redisClient.ZRem(ctx, redisActiveSessionsKey, groupID)
 
 		var buffer SessionBuffer
-		if err := json.Unmarshal([]byte(val), &buffer); err != nil {
-			logs.L.Error().Ctx(ctx).Str("groupID", groupID).Err(err).Msg("Failed to unmarshal timed-out session buffer")
+		if err := sonic.Unmarshal([]byte(val), &buffer); err != nil {
+			logs.L().Ctx(ctx).Error("Failed to unmarshal timed-out session buffer", zap.String("groupID", groupID), zap.Error(err))
 			continue
 		}
 

@@ -10,6 +10,7 @@ import (
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
+	"go.uber.org/zap"
 )
 
 // SendErrorInfo 发送错误信息
@@ -78,7 +79,7 @@ func SendErrorInfo(targetID, QuoteID, authorID string, sourceErr error, ctx cont
 	}
 
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(sourceErr).Msg("SendErrorInfo")
+		logs.L().Ctx(ctx).Warn("SendErrorInfo", zap.Error(sourceErr))
 		return
 	}
 	consts.GlobalSession.MessageCreate(&kook.MessageCreate{

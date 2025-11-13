@@ -10,6 +10,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/lib/pq"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -248,7 +249,7 @@ type CronCmdTask struct {
 func init() {
 	// try get db conn
 	if GetDbConnection() == nil {
-		logs.L.Error().Msg("get db connection error")
+		logs.L().Error("get db connection error")
 		os.Exit(-1)
 	}
 
@@ -286,12 +287,12 @@ func init() {
 		&PromptTemplateArgs{},
 	)
 	if err != nil {
-		logs.L.Error().Err(err).Msg("init db schema error")
+		logs.L().Error("init db schema error", zap.Error(err))
 	}
 	utility.GetReceieverEmailList(consts.GlobalDBConn)
 	sqlDb, err := db.DB()
 	if err != nil {
-		logs.L.Panic().Msg("get sql db error")
+		logs.L().Panic("get sql db error")
 	}
 	sqlDb.SetMaxIdleConns(10)
 	sqlDb.SetMaxOpenConns(100)
@@ -326,7 +327,7 @@ func GetDbConnection() *gorm.DB {
 				},
 			})
 			if err != nil {
-				logs.L.Error().Err(err).Msg("get db connection error, will try local version")
+				logs.L().Error("get db connection error, will try local version", zap.Error(err))
 				return
 			}
 		},

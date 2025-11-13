@@ -34,6 +34,7 @@ import (
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/tmc/langchaingo/schema"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
@@ -183,7 +184,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	}
 	docs, err := retriver.Cli.RecallDocs(ctx, chatID, *event.Event.Message.Content, 10)
 	if err != nil {
-		logs.L.Error().Err(err).Msg("RecallDocs err")
+		logs.L().Error("RecallDocs err", zap.Error(err))
 	}
 	promptTemplate.Context = commonutils.TransSlice(docs, func(doc schema.Document) string {
 		if doc.Metadata == nil {

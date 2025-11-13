@@ -9,6 +9,7 @@ import (
 	gocache "github.com/eko/gocache/lib/v4/cache"
 	gocache_store "github.com/eko/gocache/store/go_cache/v4"
 	"github.com/patrickmn/go-cache"
+	"go.uber.org/zap"
 )
 
 var repatternCache *gocache.Cache[*regexp2.Regexp]
@@ -26,7 +27,7 @@ func RegexpMatch(str, pattern string) bool {
 	}
 	re, err := regexp2.Compile(pattern, 0)
 	if err != nil {
-		logs.L.Error().Err(err).Msg("compile regexp error")
+		logs.L().Error("compile regexp error", zap.Error(err))
 		return false
 	}
 	repatternCache.Set(context.Background(), pattern, re)

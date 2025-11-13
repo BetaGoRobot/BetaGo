@@ -2,7 +2,6 @@ package gpt3
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -14,10 +13,12 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/sonic"
 	"github.com/enescakir/emoji"
 	"github.com/lonelyevil/kook"
 	"github.com/patrickmn/go-cache"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 var chatCache = cache.New(time.Minute*30, time.Minute*1)
@@ -25,9 +26,9 @@ var chatCache = cache.New(time.Minute*30, time.Minute*1)
 func init() {
 	go func() {
 		for {
-			logs.L.Info().Msg("Syncing chat cache to db...")
+			logs.L().Info("Syncing chat cache to db...")
 			for authorID, messages := range chatCache.Items() {
-				m, err := json.Marshal(messages.Object.([]Message))
+				m, err := sonic.Marshal(messages.Object.([]Message))
 				if err != nil {
 					errorsender.SendErrorInfo("4988093461275944", "", "", err, context.Background())
 				}
@@ -175,7 +176,7 @@ func ClientHandlerStream(ctx context.Context, targetID, quoteID, authorID string
 			})
 		if recordLog.RecordStr != "" {
 			oldMessages := make([]Message, 0)
-			err = json.Unmarshal([]byte(recordLog.RecordStr), &oldMessages)
+			err = sonic.Unmarshal([]byte(recordLog.RecordStr), &oldMessages)
 			if err != nil {
 				return
 			}
@@ -318,7 +319,7 @@ func ClientHandlerStreamUpdate(ctx context.Context, targetID, quoteID, authorID,
 			})
 		if recordLog.RecordStr != "" {
 			oldMessages := make([]Message, 0)
-			err = json.Unmarshal([]byte(recordLog.RecordStr), &oldMessages)
+			err = sonic.Unmarshal([]byte(recordLog.RecordStr), &oldMessages)
 			if err != nil {
 				return
 			}
@@ -381,7 +382,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		}}
 		m, err := consts.GlobalSession.MessageView(quoteID)
 		if err != nil {
-			logs.L.Error().Err(err).Msg("MessageView error")
+			logs.L().Error("MessageView error", zap.Error(err))
 			return
 		}
 
@@ -406,7 +407,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		modules...,
 	)
 	if err != nil {
-		logs.L.Error().Err(err).Msg("BuildCardMessage error")
+		logs.L().Error("BuildCardMessage error", zap.Error(err))
 	}
 	err = consts.GlobalSession.MessageUpdate(&kook.MessageUpdate{
 		MessageUpdateBase: kook.MessageUpdateBase{
@@ -415,7 +416,7 @@ func updateMessage(curMsgID, quoteID, lastMsg, spanID, msg string, cardMessageDu
 		},
 	})
 	if err != nil {
-		logs.L.Error().Err(err).Msg("MessageUpdate error")
+		logs.L().Error("MessageUpdate error", zap.Error(err))
 	}
 }
 

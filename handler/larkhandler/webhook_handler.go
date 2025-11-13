@@ -17,6 +17,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
+	"go.uber.org/zap"
 
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
@@ -83,7 +84,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *template
 	)
 	musicURL, err := neteaseapi.NetEaseGCtx.GetMusicURL(ctx, musicID)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to get music URL")
+		logs.L().Error("Failed to get music URL", zap.Error(err))
 		return nil
 	}
 
@@ -91,7 +92,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *template
 	picURL := songDetail.Al.PicURL
 	imageKey, ossURL, err := larkimg.UploadPicAllinOne(ctx, picURL, musicID, true)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to upload picture")
+		logs.L().Error("Failed to upload picture", zap.Error(err))
 		return nil
 	}
 
@@ -132,7 +133,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *template
 		Overwrite().
 		Upload()
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to upload to minio")
+		logs.L().Error("Failed to upload to minio", zap.Error(err))
 		return nil
 	}
 
@@ -193,7 +194,7 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 
 	albumDetails, err := neteaseapi.NetEaseGCtx.GetAlbumDetail(ctx, albumID)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to get album detail")
+		logs.L().Error("Failed to get album detail", zap.Error(err))
 		return
 	}
 	searchRes := neteaseapi.SearchMusic{Result: *albumDetails}
@@ -253,17 +254,17 @@ func HandleWithDraw(ctx context.Context, cardAction *callback.CardActionTriggerE
 			SetContent(fmt.Sprintf("这条消息被%s撤回啦！", larkutils.AtUserString(userID))).Build(ctx)
 		err := larkutils.PatchCard(ctx, cardContent, msgID)
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to patch card")
+			logs.L().Error("Failed to patch card", zap.Error(err))
 		}
 	} else {
 		// 撤回消息
 		resp, err := lark.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(msgID).Build())
 		if err != nil {
-			logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to delete message")
+			logs.L().Error("Failed to delete message", zap.Error(err))
 			return
 		}
 		if !resp.Success() {
-			logs.L.Error().Ctx(ctx).Str("error", resp.Error()).Msg("Delete message error")
+			logs.L().Error("Delete message error", zap.String("error", resp.Error()))
 		}
 	}
 }
@@ -288,7 +289,7 @@ func HandleRefreshMusic(ctx context.Context, musicID, msgID string) {
 		return
 	}
 	if !resp.Success() {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Refresh music card error")
+		logs.L().Error("Refresh music card error", zap.Error(err))
 		return
 	}
 	return
@@ -314,7 +315,7 @@ func HandleRefreshObj(ctx context.Context, cardAction *callback.CardActionTrigge
 		srcCmd,
 	)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Refresh obj error")
+		logs.L().Error("Refresh obj error", zap.Error(err))
 	}
 }
 
@@ -326,11 +327,11 @@ func HandleSubmit(ctx context.Context, cardAction *callback.CardActionTriggerEve
 	etStr, _ := cardAction.Event.Action.FormValue["end_time_picker"].(string)
 	st, err := time.ParseInLocation("2006-01-02 15:04 -0700", stStr, utility.UTCPlus8Loc())
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to parse start time")
+		logs.L().Error("Failed to parse start time", zap.Error(err))
 	}
 	et, err := time.ParseInLocation("2006-01-02 15:04 -0700", etStr, utility.UTCPlus8Loc())
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Failed to parse end time")
+		logs.L().Error("Failed to parse end time", zap.Error(err))
 	}
 
 	srcCmd += fmt.Sprintf(" --st=\"%s\" --et=\"%s\"", st.In(utility.UTCPlus8Loc()).Format(time.DateTime), et.In(utility.UTCPlus8Loc()).Format(time.DateTime))
@@ -352,6 +353,6 @@ func HandleSubmit(ctx context.Context, cardAction *callback.CardActionTriggerEve
 		srcCmd,
 	)
 	if err != nil {
-		logs.L.Error().Ctx(ctx).Err(err).Msg("Refresh obj error")
+		logs.L().Error("Refresh obj error", zap.Error(err))
 	}
 }

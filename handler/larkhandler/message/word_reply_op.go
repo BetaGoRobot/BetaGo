@@ -16,6 +16,7 @@ import (
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 var _ Op = &WordReplyMsgOperator{}
@@ -103,7 +104,7 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 		if replyItem.ReplyType == consts.ReplyTypeText {
 			_, err := larkutils.ReplyMsgText(ctx, replyItem.Reply, *event.Event.Message.MessageId, "_wordReply", false)
 			if err != nil {
-				logs.L.Error().Ctx(ctx).Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("ReplyMessage error")
+				logs.L().Ctx(ctx).Error("ReplyMessage error", zap.Error(err), zap.String("TraceID", span.SpanContext().TraceID().String()))
 				return err
 			}
 		} else if replyItem.ReplyType == consts.ReplyTypeImg {
@@ -121,7 +122,7 @@ func (r *WordReplyMsgOperator) Run(ctx context.Context, event *larkim.P2MessageR
 			}
 			_, err := larkutils.ReplyMsgRawContentType(ctx, *event.Event.Message.MessageId, msgType, content, "_wordReply", false)
 			if err != nil {
-				logs.L.Error().Ctx(ctx).Err(err).Str("TraceID", span.SpanContext().TraceID().String()).Msg("ReplyMessage")
+				logs.L().Ctx(ctx).Error("ReplyMessage error", zap.Error(err), zap.String("TraceID", span.SpanContext().TraceID().String()))
 				return err
 			}
 		} else {

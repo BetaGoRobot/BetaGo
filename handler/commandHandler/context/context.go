@@ -2,11 +2,11 @@ package context
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	errorsender "github.com/BetaGoRobot/BetaGo/handler/commandHandler/error_sender"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/sonic"
 	"github.com/enescakir/emoji"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -134,7 +134,7 @@ func (ctx *CommandContext) ErrorSenderHandler(err error) {
 //	@param err
 func (ctx *CommandContext) ErrorSenderHandlerNew(ctxFunc interface{}, parameters ...string) {
 	ctx.Ctx, ctx.span = otel.BetaGoOtelTracer.Start(ctx.Ctx, utility.GetFuncFromInstance(ctxFunc))
-	rawRecord, _ := json.Marshal(&ctx.Extra)
+	rawRecord, _ := sonic.Marshal(&ctx.Extra)
 	ctx.span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer ctx.span.End()
 
@@ -157,7 +157,7 @@ func (ctx *CommandContext) ErrorSenderHandlerNew(ctxFunc interface{}, parameters
 //	@param parameters
 func (ctx *CommandContext) ContextHandler(Command string, parameters ...string) {
 	ctx.Ctx, ctx.span = otel.BetaGoOtelTracer.Start(ctx.Ctx, reflecting.GetCurrentFunc())
-	rawRecord, _ := json.Marshal(&ctx.Extra)
+	rawRecord, _ := sonic.Marshal(&ctx.Extra)
 	ctx.span.SetAttributes(attribute.Key("Record").String(string(rawRecord)))
 	defer ctx.span.End()
 

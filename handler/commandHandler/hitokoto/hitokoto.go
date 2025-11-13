@@ -10,10 +10,12 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/requests"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/sonic"
 	"github.com/enescakir/emoji"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/lonelyevil/kook"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -127,11 +129,11 @@ func GetHitokotoHandler(ctx context.Context, targetID, quoteID, authorID string,
 func GetHitokoto(field ...string) (hitokotoRes RespBody, err error) {
 	resp, err := requests.Req().SetQueryParamsFromValues(map[string][]string{"c": field}).Get(hitokotoURL)
 	if err != nil {
-		logs.L.Error().Err(err).Msg("获取一言失败")
+		logs.L().Error("获取一言失败", zap.Error(err))
 		return
 	}
-	if err = json.Unmarshal(resp.Body(), &hitokotoRes); err != nil {
-		logs.L.Error().Err(err).Msg("获取一言失败")
+	if err = sonic.Unmarshal(resp.Body(), &hitokotoRes); err != nil {
+		logs.L().Error("获取一言失败", zap.Error(err))
 		return
 	}
 	return
