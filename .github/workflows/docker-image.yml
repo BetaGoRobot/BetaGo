@@ -60,7 +60,7 @@ jobs:
             zip \
             -r \
             -9 \
-            -q betago.zip \
+            betago.zip \
             . \
             -x ".git/*" \
             -x "qqmusicapi/qqmusic-api-service/*" \
