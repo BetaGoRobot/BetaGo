@@ -109,10 +109,10 @@ func IsMentioned(mentions []*larkim.MentionEvent) bool {
 func GetMsgByID(ctx context.Context, msgID string) string {
 	resp, err := lark.LarkClient.Im.V1.Message.Get(ctx, larkim.NewGetMessageReqBuilder().MessageId(msgID).Build())
 	if err != nil {
-		logs.L().Error("GetMsgByID", zap.Error(err))
+		logs.L().Ctx(ctx).Error("GetMsgByID", zap.Error(err))
 	}
 	if !resp.Success() {
-		logs.L().Error("GetMsgByID", zap.String("error", resp.Error()))
+		logs.L().Ctx(ctx).Error("GetMsgByID", zap.String("error", resp.Error()))
 	}
 	return *resp.Data.Items[0].Body.Content
 }
@@ -120,10 +120,10 @@ func GetMsgByID(ctx context.Context, msgID string) string {
 func GetMsgFullByID(ctx context.Context, msgID string) *larkim.GetMessageResp {
 	resp, err := lark.LarkClient.Im.V1.Message.Get(ctx, larkim.NewGetMessageReqBuilder().MessageId(msgID).Build())
 	if err != nil {
-		logs.L().Error("GetMsgByID", zap.Error(err))
+		logs.L().Ctx(ctx).Error("GetMsgByID", zap.Error(err))
 	}
 	if !resp.Success() {
-		logs.L().Error("GetMsgByID", zap.String("error", resp.Error()))
+		logs.L().Ctx(ctx).Error("GetMsgByID", zap.String("error", resp.Error()))
 	}
 	return resp
 }
@@ -133,7 +133,7 @@ func GetCommandWithMatched(ctx context.Context, content string) (commands []stri
 		isCommand = true
 		match, err := commandMsgRepattern.FindStringMatch(content)
 		if err != nil {
-			logs.L().Error("GetCommand", zap.Error(err))
+			logs.L().Ctx(ctx).Error("GetCommand", zap.Error(err))
 			return
 		}
 		if match.GroupByName("content") != nil {
@@ -148,7 +148,7 @@ func GetCommand(ctx context.Context, content string) (commands []string) {
 	// 校验合法性
 	matched, err := commandFullRepattern.MatchString(content)
 	if err != nil {
-		logs.L().Error("GetCommand", zap.Error(err))
+		logs.L().Ctx(ctx).Error("GetCommand", zap.Error(err))
 		return
 	}
 	if !matched {
@@ -162,7 +162,7 @@ func GetCommand(ctx context.Context, content string) (commands []string) {
 		// 转换args
 		match, err := commandArgRepattern.FindStringMatch(content)
 		if err != nil {
-			logs.L().Error("GetCommand", zap.Error(err))
+			logs.L().Ctx(ctx).Error("GetCommand", zap.Error(err))
 			return
 		}
 		if match != nil {
@@ -191,7 +191,7 @@ func IsCommand(ctx context.Context, content string) bool {
 	content = strings.Trim(content, " ")
 	matched, err := commandMsgRepattern.MatchString(content)
 	if err != nil {
-		logs.L().Error("GetCommand", zap.Error(err))
+		logs.L().Ctx(ctx).Error("GetCommand", zap.Error(err))
 		return matched
 	}
 	return matched
@@ -201,7 +201,7 @@ func AddReaction2DB(ctx context.Context, msgID string) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
-	logs.L().Info("AddTraceLog2DB",
+	logs.L().Ctx(ctx).Info("AddTraceLog2DB",
 		zap.String("msgID", msgID),
 		zap.String("traceID", span.SpanContext().TraceID().String()),
 	)
@@ -209,7 +209,7 @@ func AddReaction2DB(ctx context.Context, msgID string) {
 		MsgID:   msgID,
 		TraceID: span.SpanContext().TraceID().String(),
 	}); result.Error != nil {
-		logs.L().Error("AddTraceLog2DB", zap.Error(result.Error))
+		logs.L().Ctx(ctx).Error("AddTraceLog2DB", zap.Error(result.Error))
 	}
 }
 
@@ -233,11 +233,11 @@ func ReplyMsgRawAsText(ctx context.Context, msgID, msgType, content, suffix stri
 
 	resp, err = lark.LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
-		logs.L().Error("ReplyMessage", zap.Error(err))
+		logs.L().Ctx(ctx).Error("ReplyMessage", zap.Error(err))
 		return nil, err
 	}
 	if !resp.Success() {
-		logs.L().Error("ReplyMessage", zap.String("Error", larkcore.Prettify(resp.CodeError.Err)))
+		logs.L().Ctx(ctx).Error("ReplyMessage", zap.String("Error", larkcore.Prettify(resp.CodeError.Err)))
 		return nil, errors.New(resp.Error())
 	}
 	RecordReplyMessage2Opensearch(ctx, resp, content)
@@ -264,11 +264,11 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 
 	resp, err = lark.LarkClient.Im.V1.Message.Reply(ctx, req)
 	if err != nil {
-		logs.L().Error("ReplyMessage", zap.Error(err))
+		logs.L().Ctx(ctx).Error("ReplyMessage", zap.Error(err))
 		return nil, err
 	}
 	if !resp.Success() {
-		logs.L().Error("ReplyMessage", zap.String("Error", larkcore.Prettify(resp.CodeError.Err)))
+		logs.L().Ctx(ctx).Error("ReplyMessage", zap.String("Error", larkcore.Prettify(resp.CodeError.Err)))
 		return nil, errors.New(resp.Error())
 	}
 	RecordReplyMessage2Opensearch(ctx, resp, content)
@@ -307,7 +307,7 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 	)
 	if len(config) > 0 && config[0].Enable {
 		// 隐私模式，不存了
-		logs.L().Info("ChatID hit private config, will not record data...",
+		logs.L().Ctx(ctx).Info("ChatID hit private config, will not record data...",
 			zap.String("chat_id", utility.AddressORNil(resp.Data.ChatId)),
 		)
 		return
@@ -329,7 +329,7 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 	}
 	embedded, usage, err := doubao.EmbeddingText(ctx, utility.AddressORNil(resp.Data.Body.Content))
 	if err != nil {
-		logs.L().Error("EmbeddingText error", zap.Error(err))
+		logs.L().Ctx(ctx).Error("EmbeddingText error", zap.Error(err))
 	}
 	jieba := gojieba.NewJieba()
 	defer jieba.Free()
@@ -351,7 +351,7 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 		},
 	)
 	if err != nil {
-		logs.L().Error("InsertData", zap.Error(err))
+		logs.L().Ctx(ctx).Error("InsertData", zap.Error(err))
 		return
 	}
 	err = retriver.Cli.AddDocuments(ctx, utility.AddressORNil(resp.Data.ChatId),
@@ -367,7 +367,7 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 		}},
 	)
 	if err != nil {
-		logs.L().Error("AddDocuments error", zap.Error(err))
+		logs.L().Ctx(ctx).Error("AddDocuments error", zap.Error(err))
 	}
 }
 
@@ -396,7 +396,7 @@ func RecordCardAction2Opensearch(ctx context.Context, cardAction *callback.CardA
 		idxData,
 	)
 	if err != nil {
-		logs.L().Error("InsertData", zap.Error(err))
+		logs.L().Ctx(ctx).Error("InsertData", zap.Error(err))
 		return
 	}
 }
@@ -429,7 +429,7 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 
 	embedded, usage, err := doubao.EmbeddingText(ctx, utility.AddressORNil(resp.Data.Body.Content))
 	if err != nil {
-		logs.L().Error("EmbeddingText error", zap.Error(err))
+		logs.L().Ctx(ctx).Error("EmbeddingText error", zap.Error(err))
 	}
 	jieba := gojieba.NewJieba()
 	defer jieba.Free()
@@ -450,7 +450,7 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 		},
 	)
 	if err != nil {
-		logs.L().Error("InsertData", zap.Error(err))
+		logs.L().Ctx(ctx).Error("InsertData", zap.Error(err))
 		return
 	}
 	err = retriver.Cli.AddDocuments(ctx, utility.AddressORNil(resp.Data.ChatId),
@@ -466,7 +466,7 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 		}},
 	)
 	if err != nil {
-		logs.L().Error("AddDocuments error", zap.Error(err))
+		logs.L().Ctx(ctx).Error("AddDocuments error", zap.Error(err))
 	}
 }
 

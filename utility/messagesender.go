@@ -178,7 +178,7 @@ func SendMessageWithTitle(targetID, QuoteID, authorID, message, title string, ct
 		},
 	)
 	if err != nil {
-		logs.L().Error("发送消息错误", zap.Error(err))
+		logs.L().Ctx(ctx).Error("发送消息错误", zap.Error(err))
 		return
 	}
 	return resp.MsgID
@@ -211,7 +211,7 @@ func SendErrorMessageWithTitle(targetID, QuoteID, authorID, message, title strin
 		},
 	}.BuildMessage()
 	if err != nil {
-		logs.L().Error("发送消息错误", zap.Error(err))
+		logs.L().Ctx(ctx).Error("发送消息错误", zap.Error(err))
 		return
 	}
 	consts.GlobalSession.MessageCreate(

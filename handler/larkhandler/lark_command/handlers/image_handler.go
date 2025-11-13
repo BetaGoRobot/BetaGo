@@ -41,7 +41,7 @@ func ImageAddHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer func() { span.RecordError(err) }()
 
 	argMap, _ := parseArgs(args...)
-	logs.L().Info("wordAddHandler", zap.String("TraceID", span.SpanContext().TraceID().String()), zap.Any("args", argMap))
+	logs.L().Ctx(ctx).Info("wordAddHandler", zap.String("TraceID", span.SpanContext().TraceID().String()), zap.Any("args", argMap))
 	if len(argMap) > 0 {
 		var imgKey string
 		// by url
@@ -123,7 +123,7 @@ func ImageGetHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	argMap, _ := parseArgs(args...)
-	logs.L().Info("replyGetHandler", zap.String("TraceID", span.SpanContext().TraceID().String()), zap.Any("args", argMap))
+	logs.L().Ctx(ctx).Info("replyGetHandler", zap.String("TraceID", span.SpanContext().TraceID().String()), zap.Any("args", argMap))
 	ChatID := *data.Event.Message.ChatId
 
 	lines := make([]map[string]string, 0)
@@ -166,7 +166,7 @@ func ImageDelHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	defer span.RecordError(err)
 
 	argMap, _ := parseArgs(args...)
-	logs.L().Info("replyDelHandler", zap.String("TraceID", span.SpanContext().TraceID().String()), zap.Any("args", argMap))
+	logs.L().Ctx(ctx).Info("replyDelHandler", zap.String("TraceID", span.SpanContext().TraceID().String()), zap.Any("args", argMap))
 
 	if data.Event.Message.ThreadId != nil {
 		// 找到话题中的所有图片

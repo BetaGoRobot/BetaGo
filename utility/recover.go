@@ -52,7 +52,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 				fmt.Sprintf("%s Panic-Collected!",
 					emoji.Warning.String()), ctx)
 		}
-		logs.L().Error("=====Panic======", zap.String("stack", string(debug.Stack())))
+		logs.L().Ctx(ctx).Error("=====Panic======", zap.String("stack", string(debug.Stack())))
 	}
 }
 
