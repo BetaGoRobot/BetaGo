@@ -37,12 +37,13 @@ func init() {
 
 // ContextualLogger ：双写封装
 type ContextualLogger struct {
-	stdout *zap.Logger
-	otel   *zap.Logger
+	stdout     *zap.Logger
+	otel       *zap.Logger
+	withFields []zap.Field
 }
 
 func NewContextualLogger(stdoutLogger, otelLogger *zap.Logger) *ContextualLogger {
-	return &ContextualLogger{stdout: stdoutLogger, otel: otelLogger}
+	return &ContextualLogger{stdout: stdoutLogger, otel: otelLogger, withFields: make([]zap.Field, 0)}
 }
 
 func (l *ContextualLogger) Ctx(ctx context.Context) *ContextualLogger {
@@ -55,31 +56,34 @@ func (l *ContextualLogger) Ctx(ctx context.Context) *ContextualLogger {
 		traceID = spanCtx.TraceID().String()
 		spanID = spanCtx.SpanID().String()
 	}
-
-	// stdout 不带 context，只带 trace/span id
-	stdoutWithTrace := l.stdout.With(
+	stdoutWithFields := append([]zap.Field{
 		zap.String("trace_id", traceID),
 		zap.String("span_id", spanID),
-	)
+	}, l.withFields...)
+	// stdout 不带 context，只带 trace/span id
+	stdoutWithTrace := l.stdout.With(stdoutWithFields...)
 
 	// otel 需要 context
-	otelWithCtx := l.otel.With(zap.Any("context", ctx))
+	otelWithFields := append([]zap.Field{zap.Any("context", ctx)}, l.withFields...)
+	otelWithCtx := l.otel.With(otelWithFields...)
 
 	return &ContextualLogger{
-		stdout: stdoutWithTrace,
-		otel:   otelWithCtx,
+		stdout:     stdoutWithTrace,
+		otel:       otelWithCtx,
+		withFields: l.withFields,
 	}
 }
 
 func (l *ContextualLogger) With(fields ...zap.Field) *ContextualLogger {
 	return &ContextualLogger{
-		stdout: l.stdout.With(fields...),
-		otel:   l.otel.With(fields...),
+		stdout:     l.stdout,
+		otel:       l.otel,
+		withFields: fields,
 	}
 }
 
 func (l *ContextualLogger) Debug(msg string, fields ...zap.Field) {
-	l.stdout.Debug(msg, fields...)
+	l.stdout.Debug(msg, append(l.withFields, fields...)...)
 	l.otel.Debug(msg, fields...)
 }
 
