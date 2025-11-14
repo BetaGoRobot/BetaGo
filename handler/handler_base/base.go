@@ -177,9 +177,10 @@ func (p *Processor[T, K]) Run() {
 			defer fn(p.Context, p.data, p.metaData)
 		}
 	}
-
-	go p.RunStages()
-	go p.RunParallelStages()
+	wg := sync.WaitGroup{}
+	wg.Go(func() { p.RunStages() })
+	wg.Go(func() { p.RunParallelStages() })
+	wg.Wait()
 }
 
 // RunParallelStages  运行并行处理阶段
@@ -195,15 +196,16 @@ func (p *Processor[T, K]) RunParallelStages() error {
 
 	wg := &sync.WaitGroup{}
 	errorChan := make(chan error, len(p.parrallelStages))
-
 	for _, operator := range p.parrallelStages {
 		wg.Add(1)
 		go func(op Operator[T, K]) {
 			defer p.Defer()
 			var err error
 			defer func() {
-				logs.L().Ctx(p).Error("pre run stage error", zap.Error(err))
-				errorChan <- err
+				if err != nil {
+					logs.L().Ctx(p).Error("pre run stage error", zap.Error(err))
+					errorChan <- err
+				}
 				wg.Done()
 			}()
 			err = op.PreRun(p.Context, p.data, p.metaData)

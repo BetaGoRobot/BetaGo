@@ -32,10 +32,10 @@ func isOutDated(createTime string) bool {
 //	@param event
 //	@return error
 func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) (err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	fn := reflecting.GetCurrentFunc()
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, fn)
 	defer larkutils.RecoverMsg(ctx, *event.Event.Message.MessageId)
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(event)))
-	defer span.End()
 	defer func() { span.RecordError(err) }()
 
 	if isOutDated(*event.Event.Message.CreateTime) {
@@ -45,7 +45,11 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) (er
 		return nil
 	}
 	logs.L().Ctx(ctx).Info("Inside the child span for complex handler", zap.String("event", larkcore.Prettify(event)))
-	go message.Handler.Clean().WithCtx(ctx).WithEvent(event).Run()
+	go func() {
+		subCtx, span := otel.LarkRobotOtelTracer.Start(context.Background(), fn+"_RealRun")
+		defer span.End()
+		message.Handler.Clean().WithCtx(subCtx).WithEvent(event).Run()
+	}()
 
 	logs.L().Ctx(ctx).Info("Message event received", zap.String("event", larkcore.Prettify(event)))
 	return nil
