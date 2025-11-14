@@ -28,6 +28,10 @@ type ReplyChatOperator struct {
 	OpBase
 }
 
+func (r *ReplyChatOperator) Name() string {
+	return "ReplyChatOperator"
+}
+
 // PreRun Music
 //
 //	@receiver r *MusicMsgOperator

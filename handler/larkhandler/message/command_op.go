@@ -27,6 +27,10 @@ type CommandOperator struct {
 	command string
 }
 
+func (r *CommandOperator) Name() string {
+	return "CommandOperator"
+}
+
 // PreRun Music
 //
 //	@receiver r *MusicMsgOperator

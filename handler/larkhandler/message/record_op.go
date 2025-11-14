@@ -26,6 +26,10 @@ type RecordMsgOperator struct {
 	OpBase
 }
 
+func (r *RecordMsgOperator) Name() string {
+	return "RecordMsgOperator"
+}
+
 // PreRun Repeat
 //
 //	@receiver r *RepeatMsgOperator

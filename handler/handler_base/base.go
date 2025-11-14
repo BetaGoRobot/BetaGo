@@ -14,6 +14,8 @@ import (
 )
 
 type Operator[T, K any] interface {
+	Name() string
+
 	PreRun(context.Context, *T, *K) error
 	Run(context.Context, *T, *K) error
 	PostRun(context.Context, *T, *K) error
@@ -48,6 +50,10 @@ type (
 		deferFn         []ProcDeferFunc[T, K]
 	}
 )
+
+func (op *OperatorBase[T, K]) Name() string {
+	return "NotImplementBaseName"
+}
 
 func (op *OperatorBase[T, K]) PreRun(context.Context, *T, *K) error {
 	return nil
@@ -218,6 +224,7 @@ func (p *Processor[T, K]) RunParallelStages() error {
 				return
 			}
 
+			logs.L().Ctx(p).Info("Run Handler", zap.String("handler", reflecting.GetFunctionName(op.Run)))
 			err = op.Run(p.Context, p.data, p.metaData)
 			if err != nil {
 				if errors.Is(err, consts.ErrStageSkip) {

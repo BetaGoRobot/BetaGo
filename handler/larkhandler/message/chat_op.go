@@ -27,6 +27,10 @@ type ChatMsgOperator struct {
 	OpBase
 }
 
+func (r *ChatMsgOperator) Name() string {
+	return "ChatMsgOperator"
+}
+
 // PreRun Repeat
 //
 //	@receiver r *ImitateMsgOperator

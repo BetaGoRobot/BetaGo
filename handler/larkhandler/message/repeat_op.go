@@ -32,6 +32,10 @@ type RepeatMsgOperator struct {
 	OpBase
 }
 
+func (r *RepeatMsgOperator) Name() string {
+	return "RepeatMsgOperator"
+}
+
 // PreRun Repeat
 //
 //	@receiver r *RepeatMsgOperator

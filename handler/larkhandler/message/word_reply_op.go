@@ -29,6 +29,10 @@ type WordReplyMsgOperator struct {
 	OpBase
 }
 
+func (r *WordReplyMsgOperator) Name() string {
+	return "WordReplyMsgOperator"
+}
+
 // PreRun Repeat
 //
 //	@receiver r *WordReplyMsgOperator

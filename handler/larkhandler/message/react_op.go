@@ -26,6 +26,10 @@ type ReactMsgOperator struct {
 	OpBase
 }
 
+func (r *ReactMsgOperator) Name() string {
+	return "ReactMsgOperator"
+}
+
 // PreRun Repeat
 //
 //	@receiver r

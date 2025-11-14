@@ -10,6 +10,9 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
+	"github.com/BetaGoRobot/go_utils/reflecting"
+	"go.uber.org/zap"
 )
 
 // CommandFunc Repeat
@@ -38,7 +41,10 @@ type Command[T any] struct {
 //	@author heyuhengmatt
 //	@update 2024-07-18 05:30:21
 func (c *Command[T]) Execute(ctx context.Context, data T, metaData *handlerbase.BaseMetaData, args []string) error {
+	l := logs.L().Ctx(ctx).With(zap.String("command_name", c.Name), zap.Strings("args", args), zap.Any("meta", metaData))
+	l.Debug("Executing On Command")
 	if c.Func != nil { // 当前Command有执行方法，直接执行
+		l.Info("Executing on Command Function", zap.String("func_name", reflecting.GetFunctionName(c.Func)))
 		return c.Func(ctx, data, metaData, args...)
 	}
 	if len(args) == 0 { // 无执行方法且无后续参数
