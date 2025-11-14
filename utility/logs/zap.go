@@ -29,7 +29,7 @@ func init() {
 	encCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	consoleEncoder := zapcore.NewConsoleEncoder(encCfg)
 	stdoutCore := zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), zap.InfoLevel)
-	stdoutLogger := zap.New(stdoutCore, zap.AddCaller())
+	stdoutLogger := zap.New(stdoutCore, zap.AddCaller(), zap.AddCallerSkip(1))
 
 	// 组合
 	logger = NewContextualLogger(stdoutLogger, otelLogger)
