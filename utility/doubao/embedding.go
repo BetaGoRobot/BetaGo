@@ -480,7 +480,12 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 		}
 		content := &strings.Builder{}
 		reasoningContent := &strings.Builder{}
-		defer logs.L().With(logFields...).Ctx(subCtx).Info("content", zap.String("content", content.String()))
+		defer logs.L().With(logFields...).Ctx(subCtx).
+			Info(
+				"responsing done",
+				zap.String("content", content.String()),
+				zap.String("reasoning_content", reasoningContent.String()),
+			)
 		for {
 			event, err := resp.Recv()
 			if err == io.EOF {
