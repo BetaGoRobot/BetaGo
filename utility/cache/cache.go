@@ -1,10 +1,12 @@
 package cache
 
 import (
-	"log"
+	"context"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/patrickmn/go-cache"
+	"go.uber.org/zap"
 )
 
 var wrapper = NewCacheWrapper(30*time.Minute, 30*time.Minute)
@@ -20,13 +22,13 @@ func NewCacheWrapper(defaultExpiration, cleanupInterval time.Duration) *CacheWra
 	}
 }
 
-func GetOrExecute[T any](key string, fn func() (T, error)) (val T, err error) {
+func GetOrExecute[T any](ctx context.Context, key string, fn func() (T, error)) (val T, err error) {
 	if value, found := wrapper.c.Get(key); found {
-		log.Printf("✅ Cache HIT for key: %s\n", key)
+		logs.L().Ctx(ctx).Info("✅ Cache HIT for key: %s", zap.String("key", key))
 		return value.(T), nil
 	}
 
-	log.Printf("❌ Cache MISS for key: %s. Executing function...\n", key)
+	logs.L().Ctx(ctx).Warn("❌ Cache MISS for key: %s. Executing function...", zap.String("key", key))
 
 	value, err := fn()
 	if err != nil {
@@ -34,7 +36,7 @@ func GetOrExecute[T any](key string, fn func() (T, error)) (val T, err error) {
 	}
 
 	wrapper.c.Set(key, value, cache.DefaultExpiration)
-	log.Printf("📦 Cache SET for key: %s\n", key)
+	logs.L().Ctx(ctx).Info("📦 Cache SET for key: %s", zap.String("key", key))
 
 	return
 }

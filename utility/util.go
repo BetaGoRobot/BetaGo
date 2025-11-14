@@ -2,7 +2,6 @@ package utility
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
@@ -60,7 +59,7 @@ func GenerateTraceButtonSection(traceInfo string) kook.CardMessageSection {
 // InitGlowSansSCFontType 初始化字体类型
 func InitGlowSansSCFontType() {
 	fontFile := filepath.Join(consts.FontPath, "Microsoft Yahei.ttf")
-	fontBytes, err := ioutil.ReadFile(fontFile)
+	fontBytes, err := os.ReadFile(fontFile)
 	if err != nil {
 		logs.L().Error("errot init font", zap.Error(err))
 		return
@@ -76,11 +75,9 @@ func InitGlowSansSCFontType() {
 func GetOutBoundIP() (ip string, err error) {
 	conn, err := net.Dial("udp", "101.132.154.52:80")
 	if err != nil {
-		fmt.Println(err)
 		return
 	}
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	fmt.Println(localAddr.String())
 	ip = strings.Split(localAddr.String(), ":")[0]
 	return
 }

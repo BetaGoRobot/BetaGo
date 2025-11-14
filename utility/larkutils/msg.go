@@ -354,7 +354,7 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 		logs.L().Ctx(ctx).Error("InsertData", zap.Error(err))
 		return
 	}
-	err = retriver.Cli.AddDocuments(ctx, utility.AddressORNil(resp.Data.ChatId),
+	err = retriver.Cli().AddDocuments(ctx, utility.AddressORNil(resp.Data.ChatId),
 		[]schema.Document{{
 			PageContent: content,
 			Metadata: map[string]any{
@@ -389,7 +389,6 @@ func RecordCardAction2Opensearch(ctx context.Context, cardAction *callback.CardA
 		UserName:               utility.AddressORNil(member.Name),
 		ActionValue:            cardAction.Event.Action.Value,
 	}
-	fmt.Println(sonic.MarshalString(idxData))
 	err = opensearchdal.InsertData(ctx,
 		consts.LarkCardActionIndex,
 		cardAction.Event.Operator.OpenID,
@@ -453,7 +452,7 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 		logs.L().Ctx(ctx).Error("InsertData", zap.Error(err))
 		return
 	}
-	err = retriver.Cli.AddDocuments(ctx, utility.AddressORNil(resp.Data.ChatId),
+	err = retriver.Cli().AddDocuments(ctx, utility.AddressORNil(resp.Data.ChatId),
 		[]schema.Document{{
 			PageContent: content,
 			Metadata: map[string]any{

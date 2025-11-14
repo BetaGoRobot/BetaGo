@@ -111,7 +111,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		if err != nil {
 			logs.L().Ctx(ctx).Error("InsertData error", zap.Error(err))
 		}
-		err = retriver.Cli.AddDocuments(ctx, utility.AddressORNil(event.Event.Message.ChatId),
+		err = retriver.Cli().AddDocuments(ctx, utility.AddressORNil(event.Event.Message.ChatId),
 			[]schema.Document{{
 				PageContent: content,
 				Metadata: map[string]any{

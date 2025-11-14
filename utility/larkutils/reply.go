@@ -88,7 +88,13 @@ func ReplyCardText(ctx context.Context, text string, msgID, suffix string, reply
 	).
 		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
 		AddVariable("content", text)
-	fmt.Println(cardContent.String())
+	logs.L().Ctx(ctx).Info(
+		"reply card text",
+		zap.String("msgID", msgID),
+		zap.String("suffix", suffix),
+		zap.Bool("replyInThread", replyInThread),
+		zap.String("cardContent", cardContent.String()),
+	)
 	resp, err := lark.LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).
@@ -172,7 +178,13 @@ func SendCardText(ctx context.Context, text string, chatID, suffix string) (err 
 	).
 		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
 		AddVariable("content", text)
-	fmt.Println(cardContent.String())
+	logs.L().Ctx(ctx).Info(
+		"reply card text",
+		zap.String("chatID", chatID),
+		zap.String("text", text),
+		zap.String("suffix", suffix),
+		zap.String("cardContent", cardContent.String()),
+	)
 	resp, err := lark.LarkClient.Im.V1.Message.Create(
 		ctx, larkim.NewCreateMessageReqBuilder().ReceiveIdType(larkim.ReceiveIdTypeChatId).
 			Body(
@@ -212,7 +224,13 @@ func ReplyCardTextGraph[X cts.ValidType, Y cts.Numeric](ctx context.Context, tex
 		AddJaegerTraceInfo(span.SpanContext().TraceID().String()).
 		AddVariable("content", text).
 		AddVariable("graph", graph)
-	fmt.Println(cardContent.String())
+	logs.L().Ctx(ctx).Info(
+		"reply card text",
+		zap.String("msgID", msgID),
+		zap.String("suffix", suffix),
+		zap.Bool("replyInThread", replyInThread),
+		zap.String("cardContent", cardContent.String()),
+	)
 	resp, err := lark.LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).
@@ -258,7 +276,11 @@ func PatchCardTextGraph(ctx context.Context, text string, graph any, msgID strin
 	).
 		AddVariable("content", text).
 		AddVariable("graph", graph)
-	fmt.Println(cardContent.String())
+	logs.L().Ctx(ctx).Info(
+		"reply card text",
+		zap.String("msgID", msgID),
+		zap.String("cardContent", cardContent.String()),
+	)
 	resp, err := lark.LarkClient.Im.V1.Message.Patch(
 		ctx, larkim.NewPatchMessageReqBuilder().
 			MessageId(msgID).

@@ -4,27 +4,34 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	opensearchgo "github.com/opensearch-project/opensearch-go"
 	"github.com/tmc/langchaingo/embeddings"
 	"github.com/tmc/langchaingo/llms/openai"
 	"github.com/tmc/langchaingo/schema"
 	"github.com/tmc/langchaingo/vectorstores"
 	"github.com/tmc/langchaingo/vectorstores/opensearch"
+	"go.uber.org/zap"
 )
 
-var Cli *RAGSystem
+var cli *RAGSystem
 
 const (
 	IndexNamePrefix = "langchaingo_default"
 	vectorDimension = 2560
 )
+
+func Cli() *RAGSystem {
+	return cli
+}
 
 func init() {
 	var err error
@@ -39,11 +46,11 @@ func init() {
 		OpenSearchUsername:   os.Getenv("OPENSEARCH_USERNAME"),
 		OpenSearchPassword:   os.Getenv("OPENSEARCH_PASSWORD"),
 	}
-	Cli, err = NewRAGSystem(ctx, cfg)
+	cli, err = NewRAGSystem(ctx, cfg)
 	if err != nil {
-		log.Fatalf("初始化 RAG 系统失败: %v", err)
+		logs.L().Ctx(ctx).Fatal("初始化 RAG 系统失败", zap.Error(err))
 	}
-	log.Println("RAG 系统初始化成功！")
+	logs.L().Ctx(ctx).Info("RAG 系统初始化成功！")
 }
 
 // RAGSystem 结构体封装了 RAG 应用所需的所有核心组件
@@ -68,6 +75,9 @@ type Config struct {
 // NewRAGSystem 是 RAGSystem 的构造函数，负责初始化所有客户端和组件
 // 这是我们的第一个“原子能力”：系统初始化
 func NewRAGSystem(ctx context.Context, cfg Config) (*RAGSystem, error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	// 1. 创建 LLM 和 Embedding 模型
 	llm, err := openai.New(
 		openai.WithToken(cfg.OpenAIAPIKey),
@@ -117,11 +127,14 @@ func NewRAGSystem(ctx context.Context, cfg Config) (*RAGSystem, error) {
 // AddDocuments 是我们的第二个“原子能力”：插入文档
 // 它负责创建索引（如果不存在）并将文档添加进去
 func (rs *RAGSystem) AddDocuments(ctx context.Context, suffix string, docs []schema.Document) error {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	if utility.IsDevChan() {
 		return nil
 	}
 	indexName := IndexNamePrefix + "_" + suffix
-	log.Printf("正在为索引 '%s' 准备...", indexName)
+	logs.L().Ctx(ctx).Info("正在为索引 '%s' 准备...", zap.String("indexName", indexName))
 	// 确保索引存在且维度正确
 	// CreateIndex 是幂等的，如果索引已存在，会返回错误，我们可以检查并忽略特定错误，或者简单地尝试添加
 	_, err := rs.store.CreateIndex(ctx, indexName, func(indexMap *map[string]interface{}) {
@@ -130,16 +143,16 @@ func (rs *RAGSystem) AddDocuments(ctx context.Context, suffix string, docs []sch
 	})
 	if err != nil {
 		// 如果索引已存在，通常会报错，这里可以根据实际错误类型进行更精细的判断
-		log.Printf("创建索引 '%s' 时出现问题 (可能已存在): %v", indexName, err)
+		logs.L().Ctx(ctx).Warn("创建索引 '%s' 时出现问题 (可能已存在): %v", zap.String("indexName", indexName), zap.Error(err))
 	}
 
-	log.Printf("正在向索引 '%s' 添加 %d 个文档...", indexName, len(docs))
+	logs.L().Ctx(ctx).Info("正在向索引 '%s' 添加 %d 个文档...", zap.String("indexName", indexName), zap.Int("docCount", len(docs)))
 	_, err = rs.store.AddDocuments(ctx, docs, vectorstores.WithNameSpace(indexName))
 	if err != nil {
 		return fmt.Errorf("添加文档到 '%s' 失败: %w", indexName, err)
 	}
 
-	log.Printf("文档成功添加到 '%s'！", indexName)
+	logs.L().Ctx(ctx).Info("文档成功添加到 '%s'！", zap.String("indexName", indexName))
 	return nil
 }
 
@@ -147,7 +160,7 @@ func (rs *RAGSystem) AddDocuments(ctx context.Context, suffix string, docs []sch
 // 它根据查询字符串从指定索引中检索最相关的 k 个文档
 func (rs *RAGSystem) RecallDocs(ctx context.Context, suffix string, query string, k int) ([]schema.Document, error) {
 	indexName := IndexNamePrefix + "_" + suffix
-	log.Printf("正在从索引 '%s' 中检索与 '%s' 相关的文档...", indexName, query)
+	logs.L().Ctx(ctx).Info("正在从索引 '%s' 中检索与 '%s' 相关的文档...", zap.String("indexName", indexName), zap.String("query", query))
 	// 创建一个临时的检索器来执行查询
 	retriever := vectorstores.ToRetriever(rs.store, k, vectorstores.WithNameSpace(indexName))
 
@@ -170,7 +183,7 @@ func (rs *RAGSystem) AnswerQuery(ctx context.Context, suffix string, query strin
 	}
 
 	if len(contextDocs) == 0 {
-		log.Println("没有检索到相关文档，将直接调用 LLM 回答。")
+		logs.L().Ctx(ctx).Warn("没有检索到相关文档，将直接调用 LLM 回答。", zap.String("indexName", indexName))
 	}
 
 	// 2. 将检索到的文档内容格式化为上下文字符串
@@ -188,7 +201,7 @@ func (rs *RAGSystem) AnswerQuery(ctx context.Context, suffix string, query strin
 问题: %s`, contextBuilder.String(), query)
 
 	// 4. 调用 LLM 生成最终答案
-	log.Printf("正在调用 LLM 基于上下文生成回答...")
+	logs.L().Ctx(ctx).Info("正在调用 LLM 基于上下文生成回答...", zap.String("indexName", indexName))
 	answer, err := rs.llm.Call(ctx, prompt)
 	if err != nil {
 		return "", contextDocs, fmt.Errorf("RAG - LLM 调用失败: %w", err)

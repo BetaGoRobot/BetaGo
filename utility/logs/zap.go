@@ -15,7 +15,7 @@ import (
 var logger *ContextualLogger
 
 func L() *ContextualLogger {
-	return logger
+	return logger.Ctx(context.Background()) // 默认都要搞一个context出来
 }
 
 func init() {
@@ -49,10 +49,14 @@ func (l *ContextualLogger) Ctx(ctx context.Context) *ContextualLogger {
 	if ctx == nil {
 		return l
 	}
-
+	var traceID, spanID string
 	spanCtx := trace.SpanContextFromContext(ctx)
-	traceID := spanCtx.TraceID().String()
-	spanID := spanCtx.SpanID().String()
+	if spanCtx.HasSpanID() && spanCtx.HasTraceID() {
+		traceID = spanCtx.TraceID().String()
+		spanID = spanCtx.SpanID().String()
+	} else {
+		// 生成一个新的TraceID
+	}
 
 	// stdout 不带 context，只带 trace/span id
 	stdoutWithTrace := l.stdout.With(
@@ -66,6 +70,13 @@ func (l *ContextualLogger) Ctx(ctx context.Context) *ContextualLogger {
 	return &ContextualLogger{
 		stdout: stdoutWithTrace,
 		otel:   otelWithCtx,
+	}
+}
+
+func (l *ContextualLogger) With(fields ...zap.Field) *ContextualLogger {
+	return &ContextualLogger{
+		stdout: l.stdout.With(fields...),
+		otel:   l.otel.With(fields...),
 	}
 }
 

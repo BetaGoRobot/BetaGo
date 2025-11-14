@@ -24,7 +24,7 @@ func GetUserMemberFromChat(ctx context.Context, chatID, openID string) (member *
 }
 
 func GetUserMapFromChatIDCache(ctx context.Context, chatID string) (memberMap map[string]*larkim.ListMember, err error) {
-	return cache.GetOrExecute(chatID, func() (map[string]*larkim.ListMember, error) {
+	return cache.GetOrExecute(ctx, chatID, func() (map[string]*larkim.ListMember, error) {
 		return GetUserMapFromChatID(ctx, chatID)
 	})
 }

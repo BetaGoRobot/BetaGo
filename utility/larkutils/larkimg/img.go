@@ -120,13 +120,13 @@ func DownImgFromMsgAsync(ctx context.Context, msgID, fileType, fileKey string) (
 	resp, err := lark.LarkClient.Im.V1.MessageResource.Get(ctx, req)
 	// 处理错误
 	if err != nil {
-		fmt.Println(err)
+		logs.L().Ctx(ctx).Error("get message resource error", zap.String("file_key", fileKey), zap.String("file_type", fileType), zap.Error(err))
 		return
 	}
 
 	// 服务端错误处理
 	if !resp.Success() {
-		fmt.Printf("logId: %s, error response: \n%s", resp.RequestId(), larkcore.Prettify(resp.CodeError))
+		logs.L().Ctx(ctx).Error("get message resource error", zap.String("file_key", fileKey), zap.String("file_type", fileType), zap.Error(resp))
 		return
 	}
 

@@ -473,6 +473,11 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 		span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 		span.SetAttributes(attribute.Key("model_id").String(modelID))
 		span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))
+		logFields := []zap.Field{
+			zap.String("sys_prompt", sysPrompt),
+			zap.String("model_id", modelID),
+			zap.Strings("files", files),
+		}
 		content := &strings.Builder{}
 		reasoningContent := &strings.Builder{}
 		for {
@@ -489,11 +494,11 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 			}
 
 			if responseEvent := event.GetResponse(); responseEvent != nil {
-				fmt.Println(event.GetEventType())
-				fmt.Println(utility.MustMashal(responseEvent.GetResponse()))
+				logs.L().With(logFields...).Ctx(ctx).Info("event type", zap.String("event_type", event.GetEventType()))
+				logs.L().With(logFields...).Ctx(ctx).Info("response", zap.String("response", utility.MustMashal(responseEvent.GetResponse())))
 			}
 			if fa := event.GetFunctionCallArguments(); fa != nil && fa.GetType() == responses.EventType_response_function_call_arguments_done {
-				logs.L().Ctx(ctx).Info("function call arguments", zap.String("arguments", fa.GetArguments()))
+				logs.L().With(logFields...).Ctx(ctx).Info("function call arguments", zap.String("arguments", fa.GetArguments()))
 				// 调用检索
 				args := &Arguments{}
 				err = sonic.UnmarshalString(fa.GetArguments(), &args)
@@ -510,7 +515,8 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				if err != nil {
 					return
 				}
-				span.SetAttributes(attribute.Key("search_res").String(string(utility.MustMashal(searchRes))))
+				logs.L().With(logFields...).Ctx(ctx).Info("called fc history_search search_res", zap.String("search_res", string(utility.MustMashal(searchRes))))
+				// span.SetAttributes(attribute.Key("search_res").String(string(utility.MustMashal(searchRes))))
 				message := &responses.ResponsesInput{
 					Union: &responses.ResponsesInput_ListValue{
 						ListValue: &responses.InputItemList{ListValue: []*responses.InputItem{
@@ -541,21 +547,23 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 			if part := event.GetReasoningText(); part != nil {
 				reasoningContent.WriteString(part.GetDelta())
 				span.SetAttributes(attribute.Key("reasoning_content").String(reasoningContent.String()))
+				// logs.L().With(logFields...).Ctx(ctx).Info("reasoning text", zap.String("delta", part.GetDelta()))
 			}
 			if part := event.GetText(); part != nil {
 				content.WriteString(part.GetDelta())
 				span.SetAttributes(attribute.Key("content").String(content.String()))
+				// logs.L().With(logFields...).Ctx(ctx).Info("text", zap.String("delta", part.GetDelta()))
 			}
 			if part := event.GetResponseWebSearchCallSearching(); part != nil {
 				key := "web_search_searching"
 				span.SetAttributes(attribute.Key(key).String(part.String()))
-				// res.Reply2Show = &ReplyUnit{key, "🔍 开始搜索"}
 			}
 			if event.GetEventType() == responses.EventType_response_output_item_done.String() &&
 				event.GetItem() != nil && event.GetItem().GetItem().GetFunctionWebSearch() != nil {
 				searchKeywords := event.GetItem().Item.GetFunctionWebSearch().GetAction().GetQuery()
 				res.Reply2Show = &ReplyUnit{"query", "✅ 完成搜索, 关键词：" + searchKeywords}
 				span.SetAttributes(attribute.Key("content").String(searchKeywords))
+				logs.L().With(logFields...).Ctx(ctx).Info("完成WebSearch搜索", zap.String("关键词", searchKeywords))
 			}
 			if part := event.GetResponseWebSearchCallInProgress(); part != nil {
 				span.SetAttributes(attribute.Key("web_search_in_progress").String(part.String()))

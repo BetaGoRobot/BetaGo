@@ -3,6 +3,7 @@ package utility
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"runtime/debug"
@@ -27,7 +28,7 @@ func CollectPanic(ctx context.Context, kookCtx interface{}, TargetID, QuoteID, U
 	if err := recover(); err != nil {
 		ctx, span := otel.BetaGoOtelTracer.Start(ctx, GetCurrentFunc())
 		span.SetAttributes(attribute.Key("Panic Stack").String(removeSensitiveInfo(debug.Stack())))
-		defer span.RecordError(fmt.Errorf(err.(string)))
+		defer span.RecordError(errors.New(err.(string)))
 		defer span.End()
 
 		JSONStr := ForceMarshalJSON(ctx)

@@ -2,9 +2,10 @@ package database
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -26,7 +27,7 @@ func (music *khlMusicDownload) DownloadMusicDB() {
 	db := GetDbConnection()
 	err := db.AutoMigrate(&khlMusicDownload{})
 	if err != nil {
-		log.Println(err.Error())
+		logs.L().Error("❌ Database Migration Failed for khlMusicDownload", zap.Error(err))
 	}
 }
 
