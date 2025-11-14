@@ -202,8 +202,7 @@ func (p *Processor[T, K]) RunParallelStages() error {
 			defer p.Defer()
 			var err error
 			defer func() {
-				if err != nil {
-					logs.L().Ctx(p).Error("pre run stage error", zap.Error(err))
+				if err != nil && !errors.Is(err, consts.ErrStageSkip) {
 					errorChan <- err
 				}
 				wg.Done()
