@@ -9,6 +9,5 @@ dal/neteaseapi/netease-api-service
 # 忽略其他不需要在镜像中的文件
 README.md
 *.md
-betago.zip
 image_latest.tar.gz
 image_timestamp.tar.gz
