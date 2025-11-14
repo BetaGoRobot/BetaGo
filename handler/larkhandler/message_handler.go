@@ -8,6 +8,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/message"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/reaction"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -48,6 +49,7 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) (er
 	go func() {
 		subCtx, span := otel.LarkRobotOtelTracer.Start(context.Background(), fn+"_RealRun")
 		defer span.End()
+		span.SetAttributes(attribute.String("msgID", utility.AddressORNil(event.Event.Message.MessageId)))
 		message.Handler.Clean().WithCtx(subCtx).WithEvent(event).Run()
 	}()
 
