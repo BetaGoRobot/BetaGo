@@ -130,7 +130,7 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 	// 1. 从Redis获取当前会话
 	val, err := m.redisClient.Get(ctx, sessionKey).Result()
 	if err != nil && err != redis.Nil {
-		logs.L().Ctx(ctx).Error("Failed to get session from Redis", zap.String("groupID", groupID), zap.Error(err))
+		logs.L().Ctx(ctx).Error("Failed to get session from Redis", zap.String("groupID", groupID), zap.Error(err), zap.String("val", val))
 		return err
 	}
 
@@ -138,7 +138,7 @@ func (m *Management) SubmitMessage(ctx context.Context, msg GenericMsg) (err err
 	// 如果会话存在，则反序列化它。否则，将使用一个新的空缓冲区。
 	if err == nil || errors.Is(err, redis.Nil) {
 		if err := sonic.Unmarshal([]byte(val), &buffer); err != nil {
-			logs.L().Ctx(ctx).Warn("Failed to unmarshal session buffer, starting a new one", zap.String("groupID", groupID), zap.Error(err))
+			logs.L().Ctx(ctx).Warn("Failed to unmarshal session buffer, starting a new one", zap.String("groupID", groupID), zap.Error(err), zap.String("val", val))
 			// 数据可能已损坏，从一个新缓冲区开始
 			m.redisClient.Del(ctx, sessionKey)
 			buffer = SessionBuffer{}

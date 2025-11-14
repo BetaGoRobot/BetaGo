@@ -24,11 +24,11 @@ func NewCacheWrapper(defaultExpiration, cleanupInterval time.Duration) *CacheWra
 
 func GetOrExecute[T any](ctx context.Context, key string, fn func() (T, error)) (val T, err error) {
 	if value, found := wrapper.c.Get(key); found {
-		logs.L().Ctx(ctx).Info("✅ Cache HIT for key: %s", zap.String("key", key))
+		logs.L().Ctx(ctx).Info("✅ Cache HIT", zap.String("key", key))
 		return value.(T), nil
 	}
 
-	logs.L().Ctx(ctx).Warn("❌ Cache MISS for key: %s. Executing function...", zap.String("key", key))
+	logs.L().Ctx(ctx).Warn("❌ Cache MISS. Executing function...", zap.String("key", key))
 
 	value, err := fn()
 	if err != nil {
@@ -36,7 +36,7 @@ func GetOrExecute[T any](ctx context.Context, key string, fn func() (T, error)) 
 	}
 
 	wrapper.c.Set(key, value, cache.DefaultExpiration)
-	logs.L().Ctx(ctx).Info("📦 Cache SET for key: %s", zap.String("key", key))
+	logs.L().Ctx(ctx).Info("📦 Cache SET", zap.String("key", key))
 
 	return
 }

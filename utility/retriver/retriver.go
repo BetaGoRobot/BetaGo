@@ -134,7 +134,7 @@ func (rs *RAGSystem) AddDocuments(ctx context.Context, suffix string, docs []sch
 		return nil
 	}
 	indexName := IndexNamePrefix + "_" + suffix
-	logs.L().Ctx(ctx).Info("正在为索引 '%s' 准备...", zap.String("indexName", indexName))
+	logs.L().Ctx(ctx).Info("正在为索引准备...", zap.String("indexName", indexName))
 	// 确保索引存在且维度正确
 	// CreateIndex 是幂等的，如果索引已存在，会返回错误，我们可以检查并忽略特定错误，或者简单地尝试添加
 	_, err := rs.store.CreateIndex(ctx, indexName, func(indexMap *map[string]interface{}) {
@@ -143,16 +143,16 @@ func (rs *RAGSystem) AddDocuments(ctx context.Context, suffix string, docs []sch
 	})
 	if err != nil {
 		// 如果索引已存在，通常会报错，这里可以根据实际错误类型进行更精细的判断
-		logs.L().Ctx(ctx).Warn("创建索引 '%s' 时出现问题 (可能已存在): %v", zap.String("indexName", indexName), zap.Error(err))
+		logs.L().Ctx(ctx).Warn("创建索引时出现问题 (可能已存在): %v", zap.String("indexName", indexName), zap.Error(err))
 	}
 
-	logs.L().Ctx(ctx).Info("正在向索引 '%s' 添加 %d 个文档...", zap.String("indexName", indexName), zap.Int("docCount", len(docs)))
+	logs.L().Ctx(ctx).Info("正在向索引添加文档...", zap.String("indexName", indexName), zap.Int("docCount", len(docs)))
 	_, err = rs.store.AddDocuments(ctx, docs, vectorstores.WithNameSpace(indexName))
 	if err != nil {
 		return fmt.Errorf("添加文档到 '%s' 失败: %w", indexName, err)
 	}
 
-	logs.L().Ctx(ctx).Info("文档成功添加到 '%s'！", zap.String("indexName", indexName))
+	logs.L().Ctx(ctx).Info("文档成功添加到索引.", zap.String("indexName", indexName))
 	return nil
 }
 
@@ -160,7 +160,7 @@ func (rs *RAGSystem) AddDocuments(ctx context.Context, suffix string, docs []sch
 // 它根据查询字符串从指定索引中检索最相关的 k 个文档
 func (rs *RAGSystem) RecallDocs(ctx context.Context, suffix string, query string, k int) ([]schema.Document, error) {
 	indexName := IndexNamePrefix + "_" + suffix
-	logs.L().Ctx(ctx).Info("正在从索引 '%s' 中检索与 '%s' 相关的文档...", zap.String("indexName", indexName), zap.String("query", query))
+	logs.L().Ctx(ctx).Info("正在从索引中检索相关文档...", zap.String("indexName", indexName), zap.String("query", query))
 	// 创建一个临时的检索器来执行查询
 	retriever := vectorstores.ToRetriever(rs.store, k, vectorstores.WithNameSpace(indexName))
 
