@@ -480,6 +480,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 		}
 		content := &strings.Builder{}
 		reasoningContent := &strings.Builder{}
+		defer logs.L().With(logFields...).Ctx(subCtx).Info("content", zap.String("content", content.String()))
 		for {
 			event, err := resp.Recv()
 			if err == io.EOF {
@@ -516,7 +517,6 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 					return
 				}
 				logs.L().With(logFields...).Ctx(subCtx).Info("called fc history_search search_res", zap.String("search_res", string(utility.MustMashal(searchRes))))
-				// span.SetAttributes(attribute.Key("search_res").String(string(utility.MustMashal(searchRes))))
 				message := &responses.ResponsesInput{
 					Union: &responses.ResponsesInput_ListValue{
 						ListValue: &responses.InputItemList{ListValue: []*responses.InputItem{
@@ -547,12 +547,10 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 			if part := event.GetReasoningText(); part != nil {
 				reasoningContent.WriteString(part.GetDelta())
 				span.SetAttributes(attribute.Key("reasoning_content").String(reasoningContent.String()))
-				// logs.L().With(logFields...).subCtx(subCtx).Info("reasoning text", zap.String("delta", part.GetDelta()))
 			}
 			if part := event.GetText(); part != nil {
 				content.WriteString(part.GetDelta())
 				span.SetAttributes(attribute.Key("content").String(content.String()))
-				// logs.L().With(logFields...).subCtx(subCtx).Info("text", zap.String("delta", part.GetDelta()))
 			}
 			if part := event.GetResponseWebSearchCallSearching(); part != nil {
 				key := "web_search_searching"
