@@ -207,7 +207,7 @@ func (p *Processor[T, K]) RunParallelStages() error {
 				}
 				wg.Done()
 			}()
-			err = op.PreRun(p.Context, p.data, p.metaData)
+			err = op.PreRun(p, p.data, p.metaData)
 			if err != nil {
 				if errors.Is(err, consts.ErrStageSkip) {
 					logs.L().Ctx(p).Info("Skipped pre run stage", zap.Error(err))

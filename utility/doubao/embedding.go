@@ -467,7 +467,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 
 	return func(yield func(s *ModelStreamRespReasoning) bool) {
 		lastRespID := ""
-		_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+		subCtx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 		defer span.End()
 		defer func() { span.RecordError(err) }()
 		span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
@@ -486,7 +486,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				return
 			}
 			if err != nil {
-				logs.L().Ctx(ctx).Error("responses error", zap.Error(err))
+				logs.L().Ctx(subCtx).Error("responses error", zap.Error(err))
 				return
 			}
 			if id := event.GetResponse().GetResponse().GetId(); id != "" {
@@ -494,18 +494,18 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 			}
 
 			if responseEvent := event.GetResponse(); responseEvent != nil {
-				logs.L().With(logFields...).Ctx(ctx).Info("event type", zap.String("event_type", event.GetEventType()))
-				logs.L().With(logFields...).Ctx(ctx).Info("response", zap.String("response", utility.MustMashal(responseEvent.GetResponse())))
+				logs.L().With(logFields...).Ctx(subCtx).Info("event type", zap.String("event_type", event.GetEventType()))
+				logs.L().With(logFields...).Ctx(subCtx).Info("response", zap.String("response", utility.MustMashal(responseEvent.GetResponse())))
 			}
 			if fa := event.GetFunctionCallArguments(); fa != nil && fa.GetType() == responses.EventType_response_function_call_arguments_done {
-				logs.L().With(logFields...).Ctx(ctx).Info("function call arguments", zap.String("arguments", fa.GetArguments()))
+				logs.L().With(logFields...).Ctx(subCtx).Info("function call arguments", zap.String("arguments", fa.GetArguments()))
 				// 调用检索
 				args := &Arguments{}
 				err = sonic.UnmarshalString(fa.GetArguments(), &args)
 				if err != nil {
 					return
 				}
-				searchRes, err := history.HybridSearch(ctx,
+				searchRes, err := history.HybridSearch(subCtx,
 					history.HybridSearchRequest{
 						QueryText: args.Keywords,
 						TopK:      args.TopK,
@@ -515,7 +515,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				if err != nil {
 					return
 				}
-				logs.L().With(logFields...).Ctx(ctx).Info("called fc history_search search_res", zap.String("search_res", string(utility.MustMashal(searchRes))))
+				logs.L().With(logFields...).Ctx(subCtx).Info("called fc history_search search_res", zap.String("search_res", string(utility.MustMashal(searchRes))))
 				// span.SetAttributes(attribute.Key("search_res").String(string(utility.MustMashal(searchRes))))
 				message := &responses.ResponsesInput{
 					Union: &responses.ResponsesInput_ListValue{
@@ -532,7 +532,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 						}},
 					},
 				}
-				resp, err = client.CreateResponsesStream(ctx, &responses.ResponsesRequest{
+				resp, err = client.CreateResponsesStream(subCtx, &responses.ResponsesRequest{
 					Model:              modelID,
 					PreviousResponseId: &lastRespID,
 					Input:              message,
@@ -547,12 +547,12 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 			if part := event.GetReasoningText(); part != nil {
 				reasoningContent.WriteString(part.GetDelta())
 				span.SetAttributes(attribute.Key("reasoning_content").String(reasoningContent.String()))
-				// logs.L().With(logFields...).Ctx(ctx).Info("reasoning text", zap.String("delta", part.GetDelta()))
+				// logs.L().With(logFields...).subCtx(subCtx).Info("reasoning text", zap.String("delta", part.GetDelta()))
 			}
 			if part := event.GetText(); part != nil {
 				content.WriteString(part.GetDelta())
 				span.SetAttributes(attribute.Key("content").String(content.String()))
-				// logs.L().With(logFields...).Ctx(ctx).Info("text", zap.String("delta", part.GetDelta()))
+				// logs.L().With(logFields...).subCtx(subCtx).Info("text", zap.String("delta", part.GetDelta()))
 			}
 			if part := event.GetResponseWebSearchCallSearching(); part != nil {
 				key := "web_search_searching"
@@ -563,7 +563,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				searchKeywords := event.GetItem().Item.GetFunctionWebSearch().GetAction().GetQuery()
 				res.Reply2Show = &ReplyUnit{"query", "✅ 完成搜索, 关键词：" + searchKeywords}
 				span.SetAttributes(attribute.Key("content").String(searchKeywords))
-				logs.L().With(logFields...).Ctx(ctx).Info("完成WebSearch搜索", zap.String("关键词", searchKeywords))
+				logs.L().With(logFields...).Ctx(subCtx).Info("完成WebSearch搜索", zap.String("关键词", searchKeywords))
 			}
 			if part := event.GetResponseWebSearchCallInProgress(); part != nil {
 				span.SetAttributes(attribute.Key("web_search_in_progress").String(part.String()))

@@ -54,8 +54,6 @@ func (l *ContextualLogger) Ctx(ctx context.Context) *ContextualLogger {
 	if spanCtx.HasSpanID() && spanCtx.HasTraceID() {
 		traceID = spanCtx.TraceID().String()
 		spanID = spanCtx.SpanID().String()
-	} else {
-		// 生成一个新的TraceID
 	}
 
 	// stdout 不带 context，只带 trace/span id
@@ -86,11 +84,13 @@ func (l *ContextualLogger) Debug(msg string, fields ...zap.Field) {
 }
 
 func (l *ContextualLogger) Info(msg string, fields ...zap.Field) {
+	fields = append(fields, zap.String("level", "INFO"))
 	l.stdout.Info(msg, fields...)
 	l.otel.Info(msg, fields...)
 }
 
 func (l *ContextualLogger) Error(msg string, fields ...zap.Field) {
+	fields = append(fields, zap.String("level", "ERROR"))
 	l.stdout.Error(msg, fields...)
 	l.otel.Error(msg, fields...)
 }
