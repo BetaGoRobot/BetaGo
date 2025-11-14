@@ -57,7 +57,6 @@ jobs:
           max_attempts: 3
           retry_wait_seconds: 15
           command:  |
-            ls -a && \
             zip \
             -r \
             -9 \

@@ -1,6 +1,6 @@
 FROM ghcr.io/betagorobot/betago-golang:master as builder
 
-COPY betago.zip /data/
+COPY ./betago.zip /data/
 
 WORKDIR /data/
 
