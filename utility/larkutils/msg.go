@@ -577,6 +577,29 @@ func RemoveReaction(ctx context.Context, reactionID, msgID string) (err error) {
 	return
 }
 
+func RemoveReactionAsync(ctx context.Context, reactionID, msgID string) (err error) {
+	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	span.SetAttributes(attribute.Key("msgID").String(msgID))
+	defer span.End()
+	defer func() { span.RecordError(err) }()
+	req := larkim.NewDeleteMessageReactionReqBuilder().MessageId(msgID).ReactionId(reactionID).Build()
+	go func() {
+		resp, err := lark.LarkClient.Im.V1.MessageReaction.Delete(ctx, req)
+		if err != nil {
+			logs.L().Ctx(ctx).Error("RemoveReaction", zap.Error(err))
+			return
+		}
+		if !resp.Success() {
+			logs.L().Ctx(ctx).Error("RemoveReaction", zap.String("respError", resp.Error()))
+			err = errors.New(resp.Error())
+			return
+		}
+		AddReaction2DB(ctx, msgID)
+		return
+	}()
+	return
+}
+
 // UpdateMessageTextRaw textMsg必须是序列化后的JSON
 //
 //	@param ctx context.Context

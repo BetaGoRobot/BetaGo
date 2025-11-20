@@ -86,7 +86,7 @@ func ExecuteFromRawCommand(ctx context.Context, event *larkim.P2MessageReceiveV1
 		if err != nil {
 			logs.L().Ctx(ctx).Error("Add reaction to msg failed", zap.Error(err))
 		} else {
-			defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
+			defer larkutils.RemoveReactionAsync(ctx, reactionID, *event.Event.Message.MessageId)
 		}
 		err = larkcommand.LarkRootCommand.Execute(ctx, event, meta, commands)
 		if err != nil {
@@ -104,7 +104,9 @@ func ExecuteFromRawCommand(ctx context.Context, event *larkim.P2MessageReceiveV1
 				return
 			}
 		}
-		larkutils.AddReactionAsync(ctx, "DONE", *event.Event.Message.MessageId)
+		if !meta.SkipDone {
+			larkutils.AddReactionAsync(ctx, "DONE", *event.Event.Message.MessageId)
+		}
 	}
 	return
 }

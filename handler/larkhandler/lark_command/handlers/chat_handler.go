@@ -39,6 +39,7 @@ import (
 
 func ChatHandler(chatType string) func(ctx context.Context, event *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
 	return func(ctx context.Context, event *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
+		defer func() { metaData.SkipDone = true }()
 		newChatType := chatType
 		size := new(int)
 		*size = 20

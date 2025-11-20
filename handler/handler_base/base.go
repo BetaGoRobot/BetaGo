@@ -31,6 +31,9 @@ type (
 		MainCommand string
 		TraceID     string
 		UserID      string
+
+		ForceReplyDirect bool
+		SkipDone         bool
 	}
 )
 
