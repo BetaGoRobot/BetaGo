@@ -48,7 +48,7 @@ require (
 	github.com/spyzhov/ajson v0.9.6
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.71
 	github.com/tmc/langchaingo v0.1.14
-	github.com/valyala/fasthttp v1.67.0
+	github.com/valyala/fasthttp v1.68.0
 	github.com/volcengine/volcengine-go-sdk v1.1.46
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 	github.com/yanyiwu/gojieba v1.4.6
@@ -114,7 +114,7 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/klauspost/compress v1.18.0 // indirect
+	github.com/klauspost/compress v1.18.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
