@@ -49,7 +49,7 @@ require (
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.71
 	github.com/tmc/langchaingo v0.1.14
 	github.com/valyala/fasthttp v1.68.0
-	github.com/volcengine/volcengine-go-sdk v1.1.46
+	github.com/volcengine/volcengine-go-sdk v1.1.49
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 	github.com/yanyiwu/gojieba v1.4.6
 	go.opentelemetry.io/contrib/bridges/otelzap v0.13.0
@@ -65,7 +65,7 @@ require (
 	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
 	golang.org/x/sync v0.18.0
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.31.0
+	gorm.io/gorm v1.31.1
 )
 
 require (
