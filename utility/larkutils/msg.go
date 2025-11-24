@@ -379,6 +379,7 @@ func RecordCardAction2Opensearch(ctx context.Context, cardAction *callback.CardA
 	userID := cardAction.Event.Operator.OpenID
 	member, err := grouputil.GetUserMemberFromChat(ctx, chatID, userID)
 	if err != nil {
+		logs.L().Ctx(ctx).Error("GetUserMemberFromChat error", zap.Error(err))
 		return
 	}
 	idxData := &handlertypes.CardActionIndex{

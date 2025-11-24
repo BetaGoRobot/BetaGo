@@ -6,9 +6,11 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	"github.com/BetaGoRobot/BetaGo/utility/cache"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"go.uber.org/zap"
 )
 
 func GetUserMemberFromChat(ctx context.Context, chatID, openID string) (member *larkim.ListMember, err error) {
@@ -18,6 +20,7 @@ func GetUserMemberFromChat(ctx context.Context, chatID, openID string) (member *
 
 	memberMap, err := GetUserMapFromChatIDCache(ctx, chatID)
 	if err != nil {
+		logs.L().Ctx(ctx).Error("GetUserMapFromChatIDCache error", zap.Error(err))
 		return
 	}
 	return memberMap[openID], err
