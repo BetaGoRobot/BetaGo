@@ -28,6 +28,15 @@ func GenUUIDStr(str string, length int) string {
 	return str
 }
 
+func GenUUIDCode(srcKey, specificKey string, length int) string {
+	// 重点是分发的时候，是某个消息（srcKey），只会触发一次（specificKey）
+	res := srcKey + specificKey
+	if len(res) > length {
+		res = res[:length]
+	}
+	return res
+}
+
 // ReplyCard  注意：不要传入已经Build过的文本
 //
 //	@param ctx
@@ -56,7 +65,7 @@ func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 				larkim.NewReplyMessageReqBodyBuilder().
 					MsgType(larkim.MsgTypeInteractive).
 					Content(cardContent.String()).
-					Uuid(GenUUIDStr(msgID+suffix, 50)).
+					Uuid(GenUUIDCode(msgID, suffix, 50)).
 					ReplyInThread(replyInThread).
 					Build(),
 			).
