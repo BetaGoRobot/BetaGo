@@ -473,14 +473,14 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 		span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
 		span.SetAttributes(attribute.Key("model_id").String(modelID))
 		span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))
-		logFields := []zap.Field{
-			// zap.String("sys_prompt", sysPrompt),
-			zap.String("model_id", modelID),
-			zap.Strings("files", files),
-		}
+		// logFields := []zap.Field{
+		// 	// zap.String("sys_prompt", sysPrompt),
+		// 	zap.String("model_id", modelID),
+		// 	zap.Strings("files", files),
+		// }
 		content := &strings.Builder{}
 		reasoningContent := &strings.Builder{}
-		defer logs.L().With(logFields...).Ctx(subCtx).
+		defer logs.L().Ctx(subCtx).
 			Info(
 				"responsing done",
 				zap.String("content", content.String()),
@@ -489,7 +489,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 		for {
 			event, err := resp.Recv()
 			if err == io.EOF {
-				logs.L().With(logFields...).Ctx(subCtx).Info("responses done",
+				logs.L().Ctx(subCtx).Info("responses done",
 					zap.String("content", content.String()),
 					zap.String("reasoning_content", reasoningContent.String()),
 				)
@@ -503,9 +503,11 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				lastRespID = id
 			}
 			switch eventType := event.GetEventType(); eventType {
+			case responses.EventType_response_output_item_added.String():
+				logs.L().Ctx(subCtx).Info("output item added", zap.Any("item", event))
 			case responses.EventType_response_function_call_arguments_done.String():
 				fa := event.GetFunctionCallArgumentsDone()
-				logs.L().With(logFields...).Ctx(subCtx).Info("function call arguments", zap.String("arguments", fa.GetArguments()))
+				logs.L().Ctx(subCtx).Info("function call arguments", zap.String("arguments", fa.GetArguments()))
 				// 调用检索
 				args := &Arguments{}
 				err = sonic.UnmarshalString(fa.GetArguments(), &args)
@@ -522,7 +524,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				if err != nil {
 					return
 				}
-				logs.L().With(logFields...).Ctx(subCtx).Info("called fc history_search search_res", zap.String("search_res", string(utility.MustMashal(searchRes))))
+				logs.L().Ctx(subCtx).Info("called fc history_search search_res", zap.String("search_res", string(utility.MustMashal(searchRes))))
 				message := &responses.ResponsesInput{
 					Union: &responses.ResponsesInput_ListValue{
 						ListValue: &responses.InputItemList{ListValue: []*responses.InputItem{
@@ -554,15 +556,15 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				part := event.GetText()
 				content.WriteString(part.GetDelta())
 			case responses.EventType_response_web_search_call_searching.String():
-				logs.L().With(logFields...).Ctx(subCtx).Info("web search call searching")
+				logs.L().Ctx(subCtx).Info("web search call searching")
 			case responses.EventType_response_web_search_call_in_progress.String():
-				logs.L().With(logFields...).Ctx(subCtx).Info("web search call in progress")
+				logs.L().Ctx(subCtx).Info("web search call in progress")
 			case responses.EventType_response_web_search_call_completed.String():
-				logs.L().With(logFields...).Ctx(subCtx).Info("web search call completed")
+				logs.L().Ctx(subCtx).Info("web search call completed")
 			}
 			eventType := event.GetEventType()
 			if strings.HasSuffix(eventType, ".done") {
-				logs.L().With(logFields...).Ctx(subCtx).Info("event done",
+				logs.L().Ctx(subCtx).Info("event done",
 					zap.String("event", event.GetEventType()), zap.Any("event", event))
 			}
 
