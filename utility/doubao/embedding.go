@@ -439,17 +439,19 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 					}}},
 				},
 			},
-			Tools: Tools(),
+			Temperature: utility.Ptr(0.1),
+			Tools:       Tools(),
 			// Store:  utility.Ptr(true),
 			Stream: utility.Ptr(true),
 			// Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
 		}
 	} else {
 		req = &responses.ResponsesRequest{
-			Model: modelID,
-			Input: &responses.ResponsesInput{Union: &responses.ResponsesInput_StringValue{StringValue: sysPrompt}},
-			Store: utility.Ptr(true),
-			Tools: Tools(),
+			Model:       modelID,
+			Input:       &responses.ResponsesInput{Union: &responses.ResponsesInput_StringValue{StringValue: sysPrompt}},
+			Store:       utility.Ptr(true),
+			Tools:       Tools(),
+			Temperature: utility.Ptr(0.1),
 			Text: &responses.ResponsesText{
 				Format: &responses.TextFormat{
 					Type: responses.TextType_json_object,

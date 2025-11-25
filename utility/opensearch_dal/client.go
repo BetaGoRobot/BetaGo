@@ -22,8 +22,6 @@ var opensearchClient *opensearchapi.Client
 
 var opensearchDomain = os.Getenv("OPENSEARCH_DOMAIN")
 
-var msgIdx = "lark_msg_index_jieba"
-
 func OpenSearchClient() *opensearchapi.Client {
 	if opensearchClient == nil {
 		var err error
