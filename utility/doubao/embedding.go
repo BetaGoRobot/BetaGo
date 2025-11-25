@@ -474,7 +474,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 		span.SetAttributes(attribute.Key("model_id").String(modelID))
 		span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))
 		logFields := []zap.Field{
-			zap.String("sys_prompt", sysPrompt),
+			// zap.String("sys_prompt", sysPrompt),
 			zap.String("model_id", modelID),
 			zap.Strings("files", files),
 		}
@@ -489,6 +489,10 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 		for {
 			event, err := resp.Recv()
 			if err == io.EOF {
+				logs.L().With(logFields...).Ctx(subCtx).Info("responses done",
+					zap.String("content", content.String()),
+					zap.String("reasoning_content", reasoningContent.String()),
+				)
 				return
 			}
 			if err != nil {
@@ -498,12 +502,9 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 			if id := event.GetResponse().GetResponse().GetId(); id != "" {
 				lastRespID = id
 			}
-
-			if responseEvent := event.GetResponse(); responseEvent != nil {
-				logs.L().With(logFields...).Ctx(subCtx).Info("event type", zap.String("event_type", event.GetEventType()))
-				logs.L().With(logFields...).Ctx(subCtx).Info("response", zap.String("response", utility.MustMashal(responseEvent.GetResponse())))
-			}
-			if fa := event.GetFunctionCallArguments(); fa != nil && fa.GetType() == responses.EventType_response_function_call_arguments_done {
+			switch eventType := event.GetEventType(); eventType {
+			case responses.EventType_response_function_call_arguments_done.String():
+				fa := event.GetFunctionCallArgumentsDone()
 				logs.L().With(logFields...).Ctx(subCtx).Info("function call arguments", zap.String("arguments", fa.GetArguments()))
 				// 调用检索
 				args := &Arguments{}
@@ -546,32 +547,26 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 					return
 				}
 				continue
+			case responses.EventType_response_reasoning_summary_text_delta.String():
+				part := event.GetReasoningText()
+				reasoningContent.WriteString(part.GetDelta())
+			case responses.EventType_response_output_text_delta.String():
+				part := event.GetText()
+				content.WriteString(part.GetDelta())
+			case responses.EventType_response_web_search_call_searching.String():
+				logs.L().With(logFields...).Ctx(subCtx).Info("web search call searching")
+			case responses.EventType_response_web_search_call_in_progress.String():
+				logs.L().With(logFields...).Ctx(subCtx).Info("web search call in progress")
+			case responses.EventType_response_web_search_call_completed.String():
+				logs.L().With(logFields...).Ctx(subCtx).Info("web search call completed")
+			}
+			eventType := event.GetEventType()
+			if strings.HasSuffix(eventType, ".done") {
+				logs.L().With(logFields...).Ctx(subCtx).Info("event done",
+					zap.String("event", event.GetEventType()), zap.Any("event", event))
 			}
 
 			res := &ModelStreamRespReasoning{}
-			if part := event.GetReasoningText(); part != nil {
-				reasoningContent.WriteString(part.GetDelta())
-				span.SetAttributes(attribute.Key("reasoning_content").String(reasoningContent.String()))
-			}
-			if part := event.GetText(); part != nil {
-				content.WriteString(part.GetDelta())
-				span.SetAttributes(attribute.Key("content").String(content.String()))
-			}
-			if part := event.GetResponseWebSearchCallSearching(); part != nil {
-				key := "web_search_searching"
-				span.SetAttributes(attribute.Key(key).String(part.String()))
-			}
-			if event.GetEventType() == responses.EventType_response_output_item_done.String() &&
-				event.GetItem() != nil && event.GetItem().GetItem().GetFunctionWebSearch() != nil {
-				searchKeywords := event.GetItem().Item.GetFunctionWebSearch().GetAction().GetQuery()
-				res.Reply2Show = &ReplyUnit{"query", "✅ 完成搜索, 关键词：" + searchKeywords}
-				span.SetAttributes(attribute.Key("content").String(searchKeywords))
-				logs.L().With(logFields...).Ctx(subCtx).Info("完成WebSearch搜索", zap.String("关键词", searchKeywords))
-			}
-			if part := event.GetResponseWebSearchCallInProgress(); part != nil {
-				span.SetAttributes(attribute.Key("web_search_in_progress").String(part.String()))
-			}
-
 			{
 				rc := reasoningContent.String()
 				c := content.String()
