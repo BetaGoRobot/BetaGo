@@ -11,8 +11,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/ark"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
-	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkchunking"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
@@ -327,7 +327,7 @@ func RecordMessage2Opensearch(ctx context.Context, resp *larkim.CreateMessageRes
 		Content:     content,
 		TraceID:     span.SpanContext().TraceID().String(),
 	}
-	embedded, usage, err := doubao.EmbeddingText(ctx, utility.AddressORNil(resp.Data.Body.Content))
+	embedded, usage, err := ark.EmbeddingText(ctx, utility.AddressORNil(resp.Data.Body.Content))
 	if err != nil {
 		logs.L().Ctx(ctx).Error("EmbeddingText error", zap.Error(err))
 	}
@@ -427,7 +427,7 @@ func RecordReplyMessage2Opensearch(ctx context.Context, resp *larkim.ReplyMessag
 		TraceID:     span.SpanContext().TraceID().String(),
 	}
 
-	embedded, usage, err := doubao.EmbeddingText(ctx, utility.AddressORNil(resp.Data.Body.Content))
+	embedded, usage, err := ark.EmbeddingText(ctx, utility.AddressORNil(resp.Data.Body.Content))
 	if err != nil {
 		logs.L().Ctx(ctx).Error("EmbeddingText error", zap.Error(err))
 	}

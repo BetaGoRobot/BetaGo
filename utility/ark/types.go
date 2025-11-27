@@ -1,4 +1,4 @@
-package doubao
+package ark
 
 import (
 	"github.com/BetaGoRobot/BetaGo/utility"

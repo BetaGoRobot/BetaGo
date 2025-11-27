@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/doubao"
+	"github.com/BetaGoRobot/BetaGo/utility/ark"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -37,10 +37,10 @@ func init() {
 	var err error
 	ctx := context.Background()
 	cfg := Config{
-		OpenAIAPIKey:         doubao.DOUBAO_API_KEY,
+		OpenAIAPIKey:         ark.DOUBAO_API_KEY,
 		OpenAIBaseURL:        "https://ark.cn-beijing.volces.com/api/v3/",
-		OpenAIModel:          doubao.ARK_NORMAL_EPID,
-		OpenAIEmbeddingModel: doubao.DOUBAO_EMBEDDING_EPID,
+		OpenAIModel:          ark.ARK_NORMAL_EPID,
+		OpenAIEmbeddingModel: ark.DOUBAO_EMBEDDING_EPID,
 		OpenAIEmbeddingDims:  vectorDimension, // 确保这个维度和你的模型匹配
 		OpenSearchURL:        "https://" + os.Getenv("OPENSEARCH_DOMAIN") + ":9200",
 		OpenSearchUsername:   os.Getenv("OPENSEARCH_USERNAME"),

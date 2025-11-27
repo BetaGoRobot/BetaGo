@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
-	"github.com/BetaGoRobot/BetaGo/utility/doubao"
+	"github.com/BetaGoRobot/BetaGo/utility/ark"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
@@ -23,7 +23,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*doubao.ModelStreamRespReasoning]) (err error) {
+func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*ark.ModelStreamRespReasoning]) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
@@ -93,7 +93,7 @@ func SendAndUpdateStreamingCard(ctx context.Context, msg *larkim.EventMessage, m
 	return nil
 }
 
-func SendAndReplyStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*doubao.ModelStreamRespReasoning], inThread bool) (err error) {
+func SendAndReplyStreamingCard(ctx context.Context, msg *larkim.EventMessage, msgSeq iter.Seq[*ark.ModelStreamRespReasoning], inThread bool) (err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
@@ -168,7 +168,7 @@ type KV[K comparable, V any] struct {
 	Val V
 }
 
-func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespReasoning], cardID string) (err error, lastIdx int) {
+func updateCardFunc(ctx context.Context, res iter.Seq[*ark.ModelStreamRespReasoning], cardID string) (err error, lastIdx int) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
@@ -204,7 +204,7 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 	eg.Go(func() error {
 		defer close(msgChan)
 
-		writeFunc := func(data doubao.ModelStreamRespReasoning) error {
+		writeFunc := func(data ark.ModelStreamRespReasoning) error {
 			_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 			defer span.End()
 			defer func() { span.RecordError(err) }()
@@ -242,7 +242,7 @@ func updateCardFunc(ctx context.Context, res iter.Seq[*doubao.ModelStreamRespRea
 			for key, content := range chunkQueue {
 				if key == "content" {
 					// 尝试修复 JSON 字符串
-					contentStruct := &doubao.ContentStruct{}
+					contentStruct := &ark.ContentStruct{}
 					if !strings.HasSuffix(content, "}") {
 						content += "}"
 					}

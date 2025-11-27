@@ -138,7 +138,7 @@ func SendRecoveredMsg(ctx context.Context, err any, msgID string) {
 		span.RecordError(e)
 	}
 	stack := string(debug.Stack())
-	logs.L().Ctx(ctx).Error("panic-detected!", zap.Any("Error", err), zap.String("trace_id", traceID), zap.String("msg_id", msgID))
+	logs.L().Ctx(ctx).Error("panic-detected!", zap.Any("Error", err), zap.String("trace_id", traceID), zap.String("msg_id", msgID), zap.Stack("stack"))
 	card := cardutil.NewCardBuildHelper().
 		SetTitle("Panic Detected!").
 		SetSubTitle("Please check the log for more information.").

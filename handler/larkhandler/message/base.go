@@ -9,7 +9,7 @@ import (
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/doubao"
+	"github.com/BetaGoRobot/BetaGo/utility/ark"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkchunking"
@@ -70,7 +70,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 			TraceID:     span.SpanContext().TraceID().String(),
 		}
 		content := larkutils.PreGetTextMsg(ctx, event)
-		embedded, usage, err := doubao.EmbeddingText(ctx, content)
+		embedded, usage, err := ark.EmbeddingText(ctx, content)
 		if err != nil {
 			logs.L().Ctx(ctx).Error("EmbeddingText error", zap.Error(err))
 		}

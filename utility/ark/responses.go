@@ -1,4 +1,4 @@
-package doubao
+package ark
 
 import (
 	"context"
@@ -20,6 +20,7 @@ import (
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model/responses"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
 
@@ -304,11 +305,21 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *Fun
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
-	span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
-	span.SetAttributes(attribute.Key("model_id").String(modelID))
-	span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))
+
+	span.SetAttributes(
+		attribute.Key("sys_prompt.len").Int(len(sysPrompt)),
+		attribute.Key("sys_prompt.preview").String(sysPrompt), // 假设有一个截断辅助函数
+		attribute.Key("model_id").String(modelID),
+		attribute.Key("files.count").Int(len(files)),
+	)
 
 	var req *responses.ResponsesRequest
+
+	logs.L().Ctx(ctx).Info("preparing llm request",
+		zap.String("model_id", modelID),
+		zap.Int("file_count", len(files)),
+		zap.Bool("use_vision", len(files) > 0),
+	)
 	if len(files) > 0 {
 		span.SetAttributes(attribute.Key("files").String(strings.Join(files, ",")))
 		modelID = ARK_VISION_EPID
@@ -369,99 +380,171 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *Fun
 			Stream: utility.Ptr(true),
 		}
 	}
+
 	resp, err := client.CreateResponsesStream(ctx, req)
 	if err != nil {
-		logs.L().Ctx(ctx).Error("responses error", zap.Error(err))
+		logs.L().Ctx(ctx).Error("failed to create responses stream", zap.Error(err))
 		return nil, err
 	}
 
 	return func(yield func(s *ModelStreamRespReasoning) bool) {
 		lastRespID := ""
-		subCtx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
-		defer span.End()
-		defer func() { span.RecordError(err) }()
-		span.SetAttributes(attribute.Key("sys_prompt").String(sysPrompt))
-		span.SetAttributes(attribute.Key("model_id").String(modelID))
-		span.SetAttributes(attribute.Key("files").String(strings.Join(files, "\n")))
-		// logFields := []zap.Field{
-		// 	// zap.String("sys_prompt", sysPrompt),
-		// 	zap.String("model_id", modelID),
-		// 	zap.Strings("files", files),
-		// }
-		content := &strings.Builder{}
-		reasoningContent := &strings.Builder{}
-		defer logs.L().Ctx(subCtx).
-			Info(
-				"responsing done",
-				zap.String("content", content.String()),
-				zap.String("reasoning_content", reasoningContent.String()),
+		// 开启一个新的Span用于追踪流式接收过程
+		subCtx, subSpan := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc()+".StreamIter")
+		defer subSpan.End()
+		defer func() { subSpan.RecordError(err) }() // 这里的err需要捕获闭包内的错误
+
+		// 4. 定义流式过程中的统计变量
+		streamStartTime := time.Now()
+		var firstTokenTime *time.Time // 用于计算首字延迟 (TTFT)
+		contentBuilder := &strings.Builder{}
+		reasoningBuilder := &strings.Builder{}
+		eventCount := 0
+
+		// 使用 defer 统一打印流结束时的汇总日志
+		defer func() {
+			duration := time.Since(streamStartTime)
+			logs.L().Ctx(subCtx).Info("stream response finished",
+				zap.Duration("duration", duration),
+				zap.String("last_resp_id", lastRespID),
+				zap.Int("content_len", contentBuilder.Len()),
+				zap.Int("reasoning_len", reasoningBuilder.Len()),
+				zap.Int("event_count", eventCount),
 			)
+			// 将最终生成的完整内容写入 Span 属性（可视情况截断）
+			subSpan.SetAttributes(
+				attribute.Key("resp.content_len").Int(contentBuilder.Len()),
+				attribute.Key("resp.duration_ms").Int64(duration.Milliseconds()),
+			)
+		}()
 
 		functionName := ""
+
 		for {
 			event, err := resp.Recv()
+			eventCount++
+
 			if err == io.EOF {
-				logs.L().Ctx(subCtx).Info("responses done",
-					zap.String("content", content.String()),
-					zap.String("reasoning_content", reasoningContent.String()),
-				)
+				// EOF 不是错误，是正常结束，日志在 defer 中统一处理
 				return
 			}
 			if err != nil {
-				logs.L().Ctx(subCtx).Error("responses error", zap.Error(err))
+				// 流式中断错误，属于高优日志
+				logs.L().Ctx(subCtx).Error("stream receive error",
+					zap.String("last_resp_id", lastRespID),
+					zap.Error(err),
+				)
 				return
 			}
+
 			if id := event.GetResponse().GetResponse().GetId(); id != "" {
 				lastRespID = id
 			}
+
+			// 5. 计算首字延迟 (TTFT)
+			// 只要收到任何实质性的 delta (text 或 reasoning)，就算首字
+			if firstTokenTime == nil {
+				isContentDelta := event.GetEventType() == responses.EventType_response_output_text_delta.String() ||
+					event.GetEventType() == responses.EventType_response_reasoning_summary_text_delta.String()
+
+				if isContentDelta {
+					now := time.Now()
+					firstTokenTime = &now
+					ttft := now.Sub(streamStartTime)
+					logs.L().Ctx(subCtx).Info("ttft received", zap.Duration("ttft", ttft))
+					subSpan.SetAttributes(attribute.Key("resp.ttft_ms").Int64(ttft.Milliseconds()))
+				}
+			}
+
 			switch eventType := event.GetEventType(); eventType {
+
 			case responses.EventType_response_output_item_added.String():
 				item := event.GetItem()
-				logs.L().Ctx(subCtx).Info("output item added", zap.Any("item", item))
+				// 降噪：只在检测到函数调用时打印 Info，普通文本 Item 可以是 Debug
 				if call := item.GetItem().GetFunctionToolCall(); call != nil {
-					functionName = call.GetName() // functionName写入
-					logs.L().Ctx(subCtx).Info("decided to call function", zap.String("function_name", functionName))
+					functionName = call.GetName()
+					logs.L().Ctx(subCtx).Info("tool call detected",
+						zap.String("function_name", functionName),
+						zap.String("call_id", item.GetItem().GetFunctionToolCall().GetCallId()), // 假设有CallID
+					)
+					subSpan.AddEvent("tool_call_detected", trace.WithAttributes(attribute.String("func", functionName)))
+				} else {
+					logs.L().Ctx(subCtx).Debug("output item added", zap.String("type", "message"))
 				}
+
 			case responses.EventType_response_function_call_arguments_done.String():
 				fa := event.GetFunctionCallArgumentsDone()
-				logs.L().Ctx(subCtx).Info("function call arguments", zap.String("arguments", fa.GetArguments()))
+				args := fa.GetArguments()
+
+				logs.L().Ctx(subCtx).Info("ready to execute function",
+					zap.String("function_name", functionName),
+					// args 可能很长或包含敏感信息，建议截断或脱敏
+					zap.String("arguments_preview", args),
+				)
+
 				fc, ok := CallFunctionMap[functionName]
 				if !ok {
-					logs.L().Ctx(subCtx).Error("function not found", zap.String("function_name", functionName))
+					logs.L().Ctx(subCtx).Error("unknown function call", zap.String("function_name", functionName))
 					continue
 				}
+
+				// 6. 记录工具执行耗时
+				toolStart := time.Now()
 				resp, err = CallFunction(subCtx, fa, meta, modelID, lastRespID, fc)
+				toolDuration := time.Since(toolStart)
+
 				if err != nil {
-					return
+					logs.L().Ctx(subCtx).Error("function execution failed",
+						zap.String("function_name", functionName),
+						zap.Duration("latency", toolDuration),
+						zap.Error(err),
+					)
+					return // 或者 continue，取决于业务逻辑
 				}
+
+				logs.L().Ctx(subCtx).Info("function execution completed",
+					zap.String("function_name", functionName),
+					zap.Duration("latency", toolDuration),
+				)
+				// 重置首字时间，因为 Function Call 后通常会重新开始流式输出
+				firstTokenTime = nil
 				continue
+
 			case responses.EventType_response_reasoning_summary_text_delta.String():
 				part := event.GetReasoningText()
-				reasoningContent.WriteString(part.GetDelta())
+				reasoningBuilder.WriteString(part.GetDelta())
+				// 极其高频的日志，务必使用 Debug，否则会刷屏
+				logs.L().Ctx(subCtx).Debug("recv reasoning delta", zap.Int("delta_len", len(part.GetDelta())))
+
 			case responses.EventType_response_output_text_delta.String():
 				part := event.GetText()
-				content.WriteString(part.GetDelta())
+				contentBuilder.WriteString(part.GetDelta())
+				logs.L().Ctx(subCtx).Debug("recv content delta", zap.Int("delta_len", len(part.GetDelta())))
+
+			// Web Search 相关的状态流转，保留 Info 级别，这对于用户感知很重要
 			case responses.EventType_response_web_search_call_searching.String():
-				logs.L().Ctx(subCtx).Info("web search call searching")
+				logs.L().Ctx(subCtx).Info("web search: searching")
 			case responses.EventType_response_web_search_call_in_progress.String():
-				logs.L().Ctx(subCtx).Info("web search call in progress")
+				logs.L().Ctx(subCtx).Info("web search: processing")
 			case responses.EventType_response_web_search_call_completed.String():
-				logs.L().Ctx(subCtx).Info("web search call completed")
+				logs.L().Ctx(subCtx).Info("web search: completed")
 			}
-			eventType := event.GetEventType()
-			if strings.HasSuffix(eventType, ".done") {
-				logs.L().Ctx(subCtx).Info("event done",
-					zap.String("event", event.GetEventType()), zap.Any("event", event))
+
+			// 统一处理 .done 事件，避免每个 case 里写一遍
+			if strings.HasSuffix(event.GetEventType(), ".done") {
+				logs.L().Ctx(subCtx).Debug("event lifecycle done",
+					zap.String("event_type", event.GetEventType()),
+				)
 			}
-			res := &ModelStreamRespReasoning{}
-			{
-				rc := reasoningContent.String()
-				c := content.String()
-				res.ReasoningContent = rc
-				res.Content = c
+
+			// 构造返回给上层的对象
+			res := &ModelStreamRespReasoning{
+				ReasoningContent: reasoningBuilder.String(),
+				Content:          contentBuilder.String(),
 			}
 
 			if !yield(res) {
+				logs.L().Ctx(subCtx).Warn("stream iterator stopped by caller")
 				return
 			}
 		}
