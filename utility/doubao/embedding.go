@@ -11,12 +11,10 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	redisdal "github.com/BetaGoRobot/BetaGo/utility/redis"
 	"github.com/BetaGoRobot/go_utils/reflecting"
-	"github.com/bytedance/sonic"
 	"github.com/redis/go-redis/v9"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
@@ -302,94 +300,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, f
 	}, nil
 }
 
-type ReplyUnit struct {
-	ID      string
-	Content string
-}
-
-const (
-	ToolSearchHistory = "search_history"
-)
-
-type Property struct {
-	Type        string      `json:"type"`
-	Description string      `json:"description"`
-	Items       []*Property `json:"items,omitempty"`
-}
-type Parameters struct {
-	Type       string               `json:"type"`
-	Properties map[string]*Property `json:"properties"`
-	Required   []string             `json:"required,omitempty"`
-}
-
-type Arguments struct {
-	Keywords  []string `json:"keywords"`
-	TopK      int      `json:"top_k"`
-	StartTime string   `json:"start_time"`
-	EndTime   string   `json:"end_time"`
-	UserID    string   `json:"user_id"`
-}
-
-func (p *Parameters) JSON() []byte {
-	return []byte(utility.MustMashal(p))
-}
-
-func Tools() []*responses.ResponsesTool {
-	p := &Parameters{
-		Type: "object",
-		Properties: map[string]*Property{
-			"keywords": {
-				Type:        "array",
-				Description: "需要检索的关键词列表",
-				Items: []*Property{
-					{
-						Type:        "string",
-						Description: "关键词",
-					},
-				},
-			},
-			"user_id": {
-				Type:        "string",
-				Description: "用户ID",
-			},
-			"start_time": {
-				Type:        "string",
-				Description: "开始时间，格式为YYYY-MM-DD HH:MM:SS",
-			},
-			"end_time": {
-				Type:        "string",
-				Description: "结束时间，格式为YYYY-MM-DD HH:MM:SS",
-			},
-			"top_k": {
-				Type:        "number",
-				Description: "返回的结果数量",
-			},
-		},
-		Required: []string{"keywords"},
-	}
-	return []*responses.ResponsesTool{
-		{
-			Union: &responses.ResponsesTool_ToolWebSearch{
-				ToolWebSearch: &responses.ToolWebSearch{
-					Type:  responses.ToolType_web_search,
-					Limit: utility.Ptr[int64](10),
-				},
-			},
-		},
-		{
-			Union: &responses.ResponsesTool_ToolFunction{
-				ToolFunction: &responses.ToolFunction{
-					Name:        ToolSearchHistory,
-					Type:        responses.ToolType_function,
-					Description: utility.Ptr("根据输入的关键词搜索相关的历史对话记录"),
-					Parameters:  &responses.Bytes{Value: p.JSON()},
-				},
-			},
-		},
-	}
-}
-
-func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, files ...string) (seq iter.Seq[*ModelStreamRespReasoning], err error) {
+func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *FunctionCallMeta, files ...string) (seq iter.Seq[*ModelStreamRespReasoning], err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
@@ -441,9 +352,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 			},
 			Temperature: utility.Ptr(0.1),
 			Tools:       Tools(),
-			// Store:  utility.Ptr(true),
-			Stream: utility.Ptr(true),
-			// Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
+			Stream:      utility.Ptr(true),
 		}
 	} else {
 		req = &responses.ResponsesRequest{
@@ -457,7 +366,6 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 					Type: responses.TextType_json_object,
 				},
 			},
-			// Caching: &responses.ResponsesCaching{Type: responses.CacheType_enabled.Enum()},
 			Stream: utility.Ptr(true),
 		}
 	}
@@ -488,6 +396,8 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				zap.String("content", content.String()),
 				zap.String("reasoning_content", reasoningContent.String()),
 			)
+
+		functionName := ""
 		for {
 			event, err := resp.Recv()
 			if err == io.EOF {
@@ -506,47 +416,21 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 			}
 			switch eventType := event.GetEventType(); eventType {
 			case responses.EventType_response_output_item_added.String():
-				logs.L().Ctx(subCtx).Info("output item added", zap.Any("item", event))
+				item := event.GetItem()
+				logs.L().Ctx(subCtx).Info("output item added", zap.Any("item", item))
+				if call := item.GetItem().GetFunctionToolCall(); call != nil {
+					functionName = call.GetName() // functionName写入
+					logs.L().Ctx(subCtx).Info("decided to call function", zap.String("function_name", functionName))
+				}
 			case responses.EventType_response_function_call_arguments_done.String():
 				fa := event.GetFunctionCallArgumentsDone()
 				logs.L().Ctx(subCtx).Info("function call arguments", zap.String("arguments", fa.GetArguments()))
-				// 调用检索
-				args := &Arguments{}
-				err = sonic.UnmarshalString(fa.GetArguments(), &args)
-				if err != nil {
-					return
+				fc, ok := CallFunctionMap[functionName]
+				if !ok {
+					logs.L().Ctx(subCtx).Error("function not found", zap.String("function_name", functionName))
+					continue
 				}
-				searchRes, err := history.HybridSearch(subCtx,
-					history.HybridSearchRequest{
-						QueryText: args.Keywords,
-						TopK:      args.TopK,
-						UserID:    args.UserID,
-						ChatID:    chatID,
-					}, EmbeddingText)
-				if err != nil {
-					return
-				}
-				logs.L().Ctx(subCtx).Info("called fc history_search search_res", zap.String("search_res", string(utility.MustMashal(searchRes))))
-				message := &responses.ResponsesInput{
-					Union: &responses.ResponsesInput_ListValue{
-						ListValue: &responses.InputItemList{ListValue: []*responses.InputItem{
-							{
-								Union: &responses.InputItem_FunctionToolCallOutput{
-									FunctionToolCallOutput: &responses.ItemFunctionToolCallOutput{
-										CallId: fa.GetItemId(),
-										Output: string(utility.MustMashal(searchRes)),
-										Type:   responses.ItemType_function_call_output,
-									},
-								},
-							},
-						}},
-					},
-				}
-				resp, err = client.CreateResponsesStream(subCtx, &responses.ResponsesRequest{
-					Model:              modelID,
-					PreviousResponseId: &lastRespID,
-					Input:              message,
-				})
+				resp, err = CallFunction(subCtx, fa, meta, modelID, lastRespID, fc)
 				if err != nil {
 					return
 				}
@@ -569,7 +453,6 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID, chatID string, f
 				logs.L().Ctx(subCtx).Info("event done",
 					zap.String("event", event.GetEventType()), zap.Any("event", event))
 			}
-
 			res := &ModelStreamRespReasoning{}
 			{
 				rc := reasoningContent.String()
