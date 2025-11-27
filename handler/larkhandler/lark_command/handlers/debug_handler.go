@@ -12,6 +12,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/chunking"
 	"github.com/BetaGoRobot/BetaGo/utility/doubao"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
@@ -112,7 +113,7 @@ func DebugTryPanicHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, 
 }
 
 func (t *traceItem) TraceURLMD() string {
-	return strings.Join([]string{t.CreateTime, ": [Trace-", t.TraceID[:8], "]", "(https://jaeger.kmhomelab.cn/trace/", t.TraceID, ")"}, "")
+	return strings.Join([]string{t.CreateTime, ": [Trace-", t.TraceID[:8], "]", "(", utility.GenTraceURL(t.TraceID), ")"}, "")
 }
 
 // GetTraceFromMsgID to be filled

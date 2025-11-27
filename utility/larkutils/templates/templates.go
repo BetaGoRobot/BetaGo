@@ -126,7 +126,7 @@ func NewCardContentV2[T any](ctx context.Context, template database.TemplateVers
 	// default参数
 	v := CardBaseVars{
 		JaegerTraceInfo: "Trace",
-		JaegerTraceURL:  "https://jaeger.kmhomelab.cn/trace/" + traceID,
+		JaegerTraceURL:  utility.GenTraceURL(traceID),
 		WithdrawInfo:    "撤回卡片",
 		WithdrawTitle:   "撤回本条消息",
 		WithdrawConfirm: "你确定要撤回这条消息吗？",
@@ -149,7 +149,7 @@ func NewCardContentV2[T any](ctx context.Context, template database.TemplateVers
 
 func (c *TemplateCardContent) AddJaegerTraceInfo(traceID string) *TemplateCardContent {
 	return c.AddVariable("jaeger_trace_info", "Trace").
-		AddVariable("jaeger_trace_url", "https://jaeger.kmhomelab.cn/trace/"+traceID)
+		AddVariable("jaeger_trace_url", utility.GenTraceURL(traceID))
 }
 
 func (c *TemplateCardContent) AddVariable(key string, value interface{}) *TemplateCardContent {
