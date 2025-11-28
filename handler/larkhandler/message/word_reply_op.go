@@ -47,10 +47,10 @@ func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2Messa
 	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 
-	// 先判断群聊的功能启用情况
-	if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionWordReply) {
-		return errors.Wrap(consts.ErrStageSkip, "WordReplyMsgOperator: Not enabled")
-	}
+	// // 先判断群聊的功能启用情况
+	// if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionWordReply) {
+	// 	return errors.Wrap(consts.ErrStageSkip, "WordReplyMsgOperator: Not enabled")
+	// }
 
 	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
 		return errors.Wrap(consts.ErrStageSkip, "WordReplyMsgOperator: Is Command")
