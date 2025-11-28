@@ -14,7 +14,6 @@ import (
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
-	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 )
@@ -41,11 +40,11 @@ func (r *ReactMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRe
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
-	// 先判断群聊的功能启用情况
-	if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomReact) {
-		span.RecordError(err)
-		return errors.Wrap(consts.ErrStageSkip, "ReactMsgOperator: Not enabled")
-	}
+	// // 先判断群聊的功能启用情况
+	// if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomReact) {
+	// 	span.RecordError(err)
+	// 	return errors.Wrap(consts.ErrStageSkip, "ReactMsgOperator: Not enabled")
+	// }
 	return
 }
 
