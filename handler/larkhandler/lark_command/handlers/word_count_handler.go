@@ -76,7 +76,7 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 	}
 	if sortStr, ok := argMap["sort"]; ok {
 		if sortStr == "time" {
-			sort = NewFieldSort("create_time_v2").Desc()
+			sort = NewFieldSort("timestamp_v2").Desc()
 		}
 	}
 
