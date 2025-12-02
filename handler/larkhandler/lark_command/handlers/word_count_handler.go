@@ -15,6 +15,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
+	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
@@ -27,6 +28,7 @@ import (
 	. "github.com/olivere/elastic/v7"
 	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/zap"
 )
 
 func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData *handlerbase.BaseMetaData, args ...string) (err error) {
@@ -358,6 +360,11 @@ func genWordCount(ctx context.Context, chatID string, st, et time.Time) (wc Word
 		Size(0). // 设置 size 为 0，表示不返回任何文档，只关心聚合结果
 		Aggs(wordCloudTagsAgg)
 
+	rawQuery, err := query.MarshalJSON()
+	if err != nil {
+		return
+	}
+	logs.L().Ctx(ctx).Info("wordCloudTagsAgg query", zap.String("query", string(rawQuery)))
 	// 统计一下词频
 	resp, err := opensearchdal.SearchData(ctx, consts.LarkMsgIndex, query)
 	if err != nil {
