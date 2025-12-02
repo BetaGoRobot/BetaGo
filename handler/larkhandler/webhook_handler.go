@@ -334,7 +334,7 @@ func HandleSubmit(ctx context.Context, cardAction *callback.CardActionTriggerEve
 		logs.L().Ctx(ctx).Error("Failed to parse end time", zap.Error(err))
 	}
 
-	srcCmd += fmt.Sprintf(" --st=\"%s\" --et=\"%s\"", st.In(utility.UTCPlus8Loc()).Format(time.DateTime), et.In(utility.UTCPlus8Loc()).Format(time.DateTime))
+	srcCmd += fmt.Sprintf(" --st=\"%s\" --et=\"%s\"", st.In(utility.UTCPlus8Loc()).Format(time.RFC3339), et.In(utility.UTCPlus8Loc()).Format(time.RFC3339))
 	msgID := cardAction.Event.Context.OpenMessageID
 
 	data := new(larkim.P2MessageReceiveV1)

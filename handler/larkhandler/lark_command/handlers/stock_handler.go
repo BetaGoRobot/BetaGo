@@ -50,11 +50,11 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 	// 如果有st，et的配置，用st，et的配置来覆盖
 	if stStr, ok := argMap["st"]; ok {
 		if etStr, ok := argMap["et"]; ok {
-			st, err = time.ParseInLocation(time.DateTime, stStr, utility.UTCPlus8Loc())
+			st, err = time.Parse(time.RFC3339, stStr)
 			if err != nil {
 				return err
 			}
-			et, err = time.ParseInLocation(time.DateTime, etStr, utility.UTCPlus8Loc())
+			et, err = time.Parse(time.RFC3339, etStr)
 			if err != nil {
 				return err
 			}
@@ -136,11 +136,11 @@ func ZhAStockHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 	// 如果有st，et的配置，用st，et的配置来覆盖
 	if stStr, ok := argMap["st"]; ok {
 		if etStr, ok := argMap["et"]; ok {
-			st, err = time.ParseInLocation(time.DateTime, stStr, utility.UTCPlus8Loc())
+			st, err = time.Parse(time.RFC3339, stStr)
 			if err != nil {
 				return err
 			}
-			et, err = time.ParseInLocation(time.DateTime, etStr, utility.UTCPlus8Loc())
+			et, err = time.Parse(time.RFC3339, etStr)
 			if err != nil {
 				return err
 			}

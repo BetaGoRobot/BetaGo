@@ -61,6 +61,8 @@ func HybridSearch(ctx context.Context, meta *FunctionCallMeta, argStr string) (r
 			TopK:      args.TopK,
 			UserID:    args.UserID,
 			ChatID:    meta.ChatID,
+			StartTime: args.StartTime,
+			EndTime:   args.EndTime,
 		}, EmbeddingText)
 	if err != nil {
 		return

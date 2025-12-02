@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -12,6 +13,7 @@ import (
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/gg/gresult"
 	"github.com/bytedance/sonic"
 	"github.com/volcengine/volcengine-go-sdk/service/arkruntime/model"
 	"github.com/yanyiwu/gojieba"
@@ -36,6 +38,8 @@ type HybridSearchRequest struct {
 	TopK      int      `json:"top_k"`
 	UserID    string   `json:"user_id,omitempty"`
 	ChatID    string   `json:"chat_id,omitempty"`
+	StartTime string   `json:"start_time,omitempty"`
+	EndTime   string   `json:"end_time,omitempty"`
 }
 
 type EmbeddingFunc func(ctx context.Context, text string) (vector []float32, tokenUsage model.Usage, err error)
@@ -59,6 +63,21 @@ func HybridSearch(ctx context.Context, req HybridSearchRequest, embeddingFunc Em
 	}
 	if req.ChatID != "" {
 		filters = append(filters, map[string]interface{}{"term": map[string]interface{}{"chat_id": req.ChatID}})
+	}
+
+	if req.StartTime != "" {
+		if parseStartTime := parseTimeFormat(req.StartTime, time.DateTime); !parseStartTime.IsErr() {
+			filters = append(filters, map[string]interface{}{"range": map[string]interface{}{"create_time_v2": map[string]interface{}{"gte": parseStartTime.Value().Format(time.RFC3339)}}})
+		} else {
+			filters = append(filters, map[string]interface{}{"range": map[string]interface{}{"create_time_v2": map[string]interface{}{"gte": time.Now().Add(-1 * time.Hour * 24 * 7).Format(time.RFC3339)}}})
+		}
+	}
+	if req.EndTime != "" {
+		if parseEndTime := parseTimeFormat(req.EndTime, time.DateTime); !parseEndTime.IsErr() {
+			filters = append(filters, map[string]interface{}{"range": map[string]interface{}{"create_time_v2": map[string]interface{}{"lte": parseEndTime.Value().Format(time.RFC3339)}}})
+		} else {
+			filters = append(filters, map[string]interface{}{"range": map[string]interface{}{"create_time_v2": map[string]interface{}{"lte": time.Now().Add(-1 * time.Hour * 24 * 7).Format(time.RFC3339)}}})
+		}
 	}
 
 	queryTerms := make([]string, 0)
@@ -105,6 +124,7 @@ func HybridSearch(ctx context.Context, req HybridSearchRequest, embeddingFunc Em
 			"user_name",
 			"chat_name",
 			"create_time",
+			"create_time_v2",
 			"mentions",
 		},
 		"query": map[string]interface{}{
@@ -136,4 +156,8 @@ func HybridSearch(ctx context.Context, req HybridSearchRequest, embeddingFunc Em
 	}
 
 	return resultList, nil
+}
+
+func parseTimeFormat(s, fmt string) gresult.R[time.Time] {
+	return gresult.Of(time.Parse(fmt, s))
 }

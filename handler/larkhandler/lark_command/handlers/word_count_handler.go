@@ -353,9 +353,9 @@ func genWordCount(ctx context.Context, chatID string, st, et time.Time) (wc Word
 	query := osquery.Query(osquery.Bool().
 		Must(
 			osquery.Term("chat_id", chatID),
-			osquery.Range("create_time").
-				Gte(st.In(utility.UTCPlus8Loc()).Format(time.DateTime)).
-				Lte(et.In(utility.UTCPlus8Loc()).Format(time.DateTime)),
+			osquery.Range("create_time_v2").
+				Gte(st.Format(time.RFC3339)).
+				Lte(et.Format(time.RFC3339)),
 		)).
 		Size(0). // 设置 size 为 0，表示不返回任何文档，只关心聚合结果
 		Aggs(wordCloudTagsAgg)

@@ -58,11 +58,11 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData
 	// 如果有st，et的配置，用st，et的配置来覆盖
 	if stStr, ok := argMap["st"]; ok {
 		if etStr, ok := argMap["et"]; ok {
-			st, err = time.ParseInLocation(time.DateTime, stStr, utility.UTCPlus8Loc())
+			st, err = time.Parse(time.RFC3339, stStr)
 			if err != nil {
 				return err
 			}
-			et, err = time.ParseInLocation(time.DateTime, etStr, utility.UTCPlus8Loc())
+			et, err = time.Parse(time.RFC3339, etStr)
 			if err != nil {
 				return err
 			}
@@ -211,9 +211,9 @@ func (h *trendInternalHelper) TrendByUser(ctx context.Context) (trend history.Tr
 			osquery.Bool().
 				Must(
 					osquery.Term("chat_id", h.chatID),
-					osquery.Range("create_time").
-						Gte(h.st.In(utility.UTCPlus8Loc()).Format(time.DateTime)).
-						Lte(h.et.In(utility.UTCPlus8Loc()).Format(time.DateTime)),
+					osquery.Range("create_time_v2").
+						Gte(h.st.Format(time.RFC3339)).
+						Lte(h.et.Format(time.RFC3339)),
 				),
 		).
 		GetTrend(
@@ -234,9 +234,9 @@ func (h *trendInternalHelper) TrendRate(ctx context.Context, indexName, field st
 		osquery.Bool().
 			Must(
 				osquery.Term("chat_id", h.chatID),
-				osquery.Range("create_time").
-					Gte(h.st.In(utility.UTCPlus8Loc()).Format(time.DateTime)).
-					Lte(h.et.In(utility.UTCPlus8Loc()).Format(time.DateTime)),
+				osquery.Range("create_time_v2").
+					Gte(h.st.Format(time.RFC3339)).
+					Lte(h.et.Format(time.RFC3339)),
 			),
 	).Size(0).Aggs(osquery.TermsAgg("dimension", field))
 

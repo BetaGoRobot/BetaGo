@@ -226,7 +226,7 @@ func (h *Helper) GetTrend(interval, termField string) (trendList TrendSeries, er
 			aggKey1,
 			map[string]any{
 				"date_histogram": map[string]any{
-					"field":    "create_time",
+					"field":    "create_time_v2",
 					"interval": interval,
 				},
 				"aggs": map[string]any{
