@@ -223,7 +223,7 @@ func (h *trendInternalHelper) TrendByUser(ctx context.Context) (trend history.Tr
 	return
 }
 
-func (h *trendInternalHelper) TrendRate(ctx context.Context, indexName, field string) (singleDimAggs *history.SingleDimAggregate, err error) {
+func (h *trendInternalHelper) TrendRate(ctx context.Context, indexName, field string, size uint64) (singleDimAggs *history.SingleDimAggregate, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
@@ -238,7 +238,7 @@ func (h *trendInternalHelper) TrendRate(ctx context.Context, indexName, field st
 					Gte(h.st.Format(time.RFC3339)).
 					Lte(h.et.Format(time.RFC3339)),
 			),
-	).Size(0).Aggs(osquery.TermsAgg("dimension", field))
+	).Size(0).Aggs(osquery.TermsAgg("dimension", field).Size(size))
 
 	resp, err := opensearchdal.
 		SearchData(

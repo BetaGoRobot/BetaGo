@@ -25,6 +25,7 @@ import (
 	"github.com/defensestation/osquery"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
+	"github.com/olivere/elastic/v7"
 	. "github.com/olivere/elastic/v7"
 	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"go.opentelemetry.io/otel/attribute"
@@ -43,7 +44,13 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		st, et   time.Time
 	)
 	chatID := *data.Event.Message.ChatId
-	top := 10
+	var (
+		mTop        = 10
+		cTop        = 5
+		sort Sorter = NewScriptSort(
+			NewScript("script").Script("doc['msg_ids'].size()").Lang("painless"), "number",
+		).Order(false)
+	)
 	argMap, _ := parseArgs(args...)
 	if inputInterval, ok := argMap["interval"]; ok {
 		interval = inputInterval
@@ -57,10 +64,19 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 	if chatIDInput, ok := argMap["chat_id"]; ok {
 		chatID = chatIDInput
 	}
-	if topStr, ok := argMap["top"]; ok {
-		top, err = strconv.Atoi(topStr)
-		if err != nil || top <= 0 {
-			top = 15
+	if mTopStr, ok := argMap["mtop"]; ok {
+		if mTop, err = strconv.Atoi(mTopStr); err != nil || mTop <= 0 {
+			mTop = 15
+		}
+	}
+	if cTopStr, ok := argMap["ctop"]; ok {
+		if cTop, err = strconv.Atoi(cTopStr); err != nil || cTop <= 0 {
+			cTop = 5
+		}
+	}
+	if sortStr, ok := argMap["sort"]; ok {
+		if sortStr == "time" {
+			sort = NewFieldSort("create_time_v2").Desc()
 		}
 	}
 
@@ -83,7 +99,7 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		days: days, st: st, et: et, msgID: *data.Event.Message.MessageId, chatID: chatID, interval: interval,
 	}
 
-	userList, err := genHotRate(ctx, helper, top)
+	userList, err := genHotRate(ctx, helper, mTop)
 	if err != nil {
 		return
 	}
@@ -93,7 +109,7 @@ func WordCloudHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, meta
 		return
 	}
 
-	chunks, err := getChunks(ctx, chatID, st, et)
+	chunks, err := getChunks(ctx, chatID, st, et, cTop, sort)
 	if err != nil {
 		return
 	}
@@ -220,24 +236,21 @@ func GetToneStyle(key string) (phrase string, color string) {
 	return key, "neutral"
 }
 
-func getChunks(ctx context.Context, chatID string, st, et time.Time) (chunks []*templates.ChunkData, err error) {
+func getChunks(ctx context.Context, chatID string, st, et time.Time, size int, sort elastic.Sorter) (chunks []*templates.ChunkData, err error) {
 	chunks = make([]*templates.ChunkData, 0)
 	queryReq := NewSearchRequest().
 		Query(NewBoolQuery().Must(
 			NewTermQuery("group_id", chatID),
-			NewRangeQuery("timestamp_v2").Gte(st.UTC().Format(time.RFC3339)).Lte(et.UTC().Format(time.RFC3339)),
+			NewRangeQuery("timestamp_v2").Gte(st.Format(time.RFC3339)).Lte(et.Format(time.RFC3339)),
 		)).
 		FetchSourceIncludeExclude(
 			[]string{}, []string{"conversation_embedding", "msg_ids", "msg_list"},
 		).
-		SortBy(
-			NewScriptSort(
-				NewScript("script").Script("doc['msg_ids'].size()").Lang("painless"), "number",
-			).Order(false)).
-		// SortBy(
-		// 	NewFieldSort("timestamp").Desc(),
-		// ).
-		Size(5)
+		SortBy(sort).Size(size)
+	// SortBy(
+	// 	NewFieldSort("timestamp").Desc(),
+	// ).
+	// Size(5)
 
 	data, err := queryReq.Body()
 	if err != nil {
@@ -271,7 +284,7 @@ func getChunks(ctx context.Context, chatID string, st, et time.Time) (chunks []*
 func genHotRate(ctx context.Context, helper *trendInternalHelper, top int) (userList []*templates.UserListItem, err error) {
 	// 统计用户发送的消息数量
 	trendMap := make(map[string]*templates.UserListItem)
-	msgTrend, err := helper.TrendRate(ctx, consts.LarkMsgIndex, "user_id")
+	msgTrend, err := helper.TrendRate(ctx, consts.LarkMsgIndex, "user_id", uint64(top))
 	for _, bucket := range msgTrend.Dimension.Buckets {
 		trendMap[bucket.Key] = &templates.UserListItem{Number: -1, User: []*templates.UserUnit{{ID: bucket.Key}}, MsgCnt: bucket.DocCount}
 	}

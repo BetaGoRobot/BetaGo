@@ -99,6 +99,6 @@ func init() {
 		AddSubCommand(
 			newCmd("talkrate", handlers.TrendHandler).
 				AddArgs("days", "interval"),
-		).AddSubCommand(newCmd("wc", handlers.WordCloudHandler))
+		).AddSubCommand(newCmd("wc", handlers.WordCloudHandler).AddArgs("mtop", "ctop", "interval", "days", "st", "et", "chat_id", "sort"))
 	LarkRootCommand.BuildChain()
 }

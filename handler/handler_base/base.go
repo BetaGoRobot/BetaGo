@@ -34,6 +34,10 @@ type (
 
 		ForceReplyDirect bool
 		SkipDone         bool
+
+		// TODO: 暂时没有用上，后续改造替换掉st、et的反复解析，搞成通用参数
+		StartTime string
+		EndTime   string
 	}
 )
 
