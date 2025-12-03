@@ -13,11 +13,6 @@ import (
 
 type fcFunc func(context.Context, *FunctionCallMeta, string) (any, error)
 
-var CallFunctionMap = map[string]fcFunc{ // 基础的函数调用映射
-	ToolSearchHistory: HybridSearch,
-	// ToolSearchMusic:   SearchMusic,
-}
-
 func CallFunction(ctx context.Context, argEvent *responses.FunctionCallArgumentsDoneEvent, meta *FunctionCallMeta, modelID, lastRespID string, f fcFunc) (resp *utils.ResponsesStreamReader, err error) {
 	searchRes, err := f(ctx, meta, argEvent.GetArguments())
 	if err != nil {

@@ -285,7 +285,6 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *too
 	if len(files) > 0 {
 		span.SetAttributes(attribute.Key("files").String(strings.Join(files, ",")))
 		modelID = env.ARK_VISION_EPID
-		// responses.ResponsesInput_ListValue
 		listValue := make([]*model.ChatCompletionMessageContentPart, len(files)+1)
 		listValue[0] = &model.ChatCompletionMessageContentPart{
 			Type: model.ChatCompletionMessageContentPartTypeText,
@@ -324,7 +323,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *too
 				},
 			},
 			Temperature: utility.Ptr(0.1),
-			Tools:       tools.Tools(),
+			Tools:       tools.M().Tools(),
 			Stream:      utility.Ptr(true),
 		}
 	} else {
@@ -332,7 +331,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *too
 			Model:       modelID,
 			Input:       &responses.ResponsesInput{Union: &responses.ResponsesInput_StringValue{StringValue: sysPrompt}},
 			Store:       utility.Ptr(true),
-			Tools:       tools.Tools(),
+			Tools:       tools.M().Tools(),
 			Temperature: utility.Ptr(0.1),
 			Text: &responses.ResponsesText{
 				Format: &responses.TextFormat{
@@ -444,7 +443,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *too
 					zap.String("arguments_preview", args),
 				)
 
-				fc, ok := tools.CallFunctionMap[functionName]
+				fc, ok := tools.M().Get(functionName)
 				if !ok {
 					logs.L().Ctx(subCtx).Error("unknown function call", zap.String("function_name", functionName))
 					continue
@@ -452,7 +451,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *too
 
 				// 6. 记录工具执行耗时
 				toolStart := time.Now()
-				resp, err = tools.CallFunction(subCtx, fa, meta, modelID, lastRespID, fc)
+				resp, err = tools.CallFunction(subCtx, fa, meta, modelID, lastRespID, fc.Function)
 				toolDuration := time.Since(toolStart)
 
 				if err != nil {

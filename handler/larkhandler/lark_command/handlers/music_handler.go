@@ -8,6 +8,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi"
 	"github.com/BetaGoRobot/BetaGo/dal/neteaseapi/neteaselark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/ark/tools"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -73,4 +75,26 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 		return err
 	}
 	return
+}
+
+func init() {
+	params := tools.NewParameters("object").
+		AddProperty("keywords", &tools.Property{
+			Type:        "string",
+			Description: "音乐搜索的关键词, 多个关键词之间用空格隔开",
+		}).AddRequired("keywords")
+	fcu := tools.NewFunctionCallUnit().
+		Name("music_search").Desc("根据输入的关键词搜索相关的音乐并发送卡片").Params(params).Func(musicSearchWrap)
+	tools.M().Add(fcu)
+}
+
+func musicSearchWrap(ctx context.Context, meta *tools.FunctionCallMeta, args string) (any, error) {
+	s := struct {
+		Keywords string `json:"keywords"`
+	}{}
+	err := utility.UnmarshallStringPre(args, &s)
+	if err != nil {
+		return nil, err
+	}
+	return "执行成功", MusicSearchHandler(ctx, meta.LarkData, nil, s.Keywords)
 }

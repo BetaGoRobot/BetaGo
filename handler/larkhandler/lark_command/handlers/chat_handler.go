@@ -224,7 +224,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 		return nil, err
 	}
 
-	iter, err := responses.ResponseStreaming(ctx, b.String(), modelID, &tools.FunctionCallMeta{ChatID: chatID, UserID: *event.Event.Sender.SenderId.OpenId}, files...)
+	iter, err := responses.ResponseStreaming(ctx, b.String(), modelID, &tools.FunctionCallMeta{ChatID: chatID, UserID: *event.Event.Sender.SenderId.OpenId, LarkData: event}, files...)
 	if err != nil {
 		return
 	}
