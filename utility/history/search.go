@@ -23,13 +23,14 @@ import (
 
 // SearchResult 是我们最终返回给 LLM 的标准结果格式
 type SearchResult struct {
-	MessageID  string  `json:"message_id"`
-	RawMessage string  `json:"raw_message"`
-	UserName   string  `json:"user_name"`
-	ChatName   string  `json:"chat_name"`
-	CreateTime string  `json:"create_time"`
-	Mentions   string  `json:"mentions"`
-	Score      float64 `json:"score"`
+	MessageID    string  `json:"message_id"`
+	RawMessage   string  `json:"raw_message"`
+	UserName     string  `json:"user_name"`
+	ChatName     string  `json:"chat_name"`
+	CreateTime   string  `json:"create_time"`
+	CreateTimeV2 string  `json:"create_time_v2"`
+	Mentions     string  `json:"mentions"`
+	Score        float64 `json:"score"`
 }
 
 // HybridSearchRequest 定义了搜索的输入参数
@@ -145,11 +146,13 @@ func HybridSearch(ctx context.Context, req HybridSearchRequest, embeddingFunc Em
 	for _, hit := range res.Hits.Hits {
 		result := &SearchResult{}
 		if err = sonic.Unmarshal(hit.Source, &result); err != nil {
-			return
+			logs.L().Ctx(ctx).Warn("解析 SearchResult 失败", zap.Error(err), zap.String("source", string(hit.Source)))
+			continue
 		}
 		mentions := make([]*larkmsgutils.Mention, 0)
 		if err = sonic.UnmarshalString(result.Mentions, &mentions); err != nil {
-			return
+			logs.L().Ctx(ctx).Warn("解析 mentions 失败", zap.Error(err), zap.String("mentions", result.Mentions))
+			continue
 		}
 		result.RawMessage = larkmsgutils.ReplaceMentionToName(result.RawMessage, mentions)
 		resultList = append(resultList, result)
