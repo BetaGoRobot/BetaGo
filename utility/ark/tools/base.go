@@ -1,4 +1,4 @@
-package ark
+package tools
 
 import (
 	"github.com/BetaGoRobot/BetaGo/utility"
@@ -10,13 +10,9 @@ type FunctionCallMeta struct {
 	UserID string
 }
 
-type ReplyUnit struct {
-	ID      string
-	Content string
-}
-
 const (
 	ToolSearchHistory = "search_history"
+	ToolSearchMusic   = "search_music"
 )
 
 type Property struct {
@@ -28,14 +24,6 @@ type Parameters struct {
 	Type       string               `json:"type"`
 	Properties map[string]*Property `json:"properties"`
 	Required   []string             `json:"required,omitempty"`
-}
-
-type SearchArgs struct {
-	Keywords  []string `json:"keywords"`
-	TopK      int      `json:"top_k"`
-	StartTime string   `json:"start_time"`
-	EndTime   string   `json:"end_time"`
-	UserID    string   `json:"user_id"`
 }
 
 func (p *Parameters) JSON() []byte {

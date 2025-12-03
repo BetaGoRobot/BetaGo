@@ -1,4 +1,4 @@
-package ark
+package responses
 
 import (
 	"context"
@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"iter"
-	"os"
 	"strings"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/ark"
+	"github.com/BetaGoRobot/BetaGo/utility/ark/tools"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	redisdal "github.com/BetaGoRobot/BetaGo/utility/redis"
@@ -23,51 +25,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 )
-
-var (
-	DOUBAO_EMBEDDING_EPID = os.Getenv("DOUBAO_EMBEDDING_EPID")
-	DOUBAO_API_KEY        = os.Getenv("DOUBAO_API_KEY")
-
-	ARK_NORMAL_EPID = os.Getenv("ARK_NORMAL_EPID")
-	ARK_REASON_EPID = os.Getenv("ARK_REASON_EPID")
-	ARK_VISION_EPID = os.Getenv("ARK_VISION_EPID")
-	ARK_CHUNK_EPID  = os.Getenv("ARK_CHUNK_EPID")
-
-	NORMAL_MODEL_BOT_ID = os.Getenv("NORMAL_MODEL_BOT_ID")
-	REASON_MODEL_BOT_ID = os.Getenv("REASON_MODEL_BOT_ID")
-)
-
-var client = arkruntime.NewClientWithApiKey(DOUBAO_API_KEY)
-
-// EmbeddingText returns the embedding of the input text.
-//
-//	@param ctx
-//	@param input
-//	@return embedded
-//	@return err
-func EmbeddingText(ctx context.Context, input string) (embedded []float32, tokenUsage model.Usage, err error) {
-	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
-	span.SetAttributes(attribute.Key("input").String(input))
-	defer span.End()
-	defer func() { span.RecordError(err) }()
-
-	req := model.EmbeddingRequestStrings{
-		Input: []string{input},
-		Model: DOUBAO_EMBEDDING_EPID,
-	}
-	resp, err := client.CreateEmbeddings(
-		ctx,
-		req,
-		arkruntime.WithCustomHeader("x-is-encrypted", "true"),
-	)
-	if err != nil {
-		logs.L().Ctx(ctx).Error("embeddings error", zap.Error(err))
-		return
-	}
-	embedded = resp.Data[0].Embedding
-	tokenUsage = resp.Usage
-	return
-}
 
 func ResponseWithCache(ctx context.Context, sysPrompt, userPrompt, modelID string) (res string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
@@ -111,7 +68,7 @@ func ResponseWithCache(ctx context.Context, sysPrompt, userPrompt, modelID strin
 			ExpireAt: utility.Ptr(exp),
 		}
 		// 先创建cache
-		resp, err := client.CreateResponses(ctx, req)
+		resp, err := ark.Cli().CreateResponses(ctx, req)
 		if err != nil {
 			logs.L().Ctx(ctx).Error("responses error", zap.Error(err))
 			return "", err
@@ -151,7 +108,7 @@ func ResponseWithCache(ctx context.Context, sysPrompt, userPrompt, modelID strin
 		PreviousResponseId: &previousResponseID,
 	}
 
-	resp, err := client.CreateResponses(ctx, secondReq)
+	resp, err := ark.Cli().CreateResponses(ctx, secondReq)
 	if err != nil {
 		logs.L().Ctx(ctx).Error("responses error", zap.Error(err))
 		return "", err
@@ -195,6 +152,11 @@ func (s *ContentStruct) BuildOutput() string {
 	return output.String()
 }
 
+type ReplyUnit struct {
+	ID      string
+	Content string
+}
+
 type ModelStreamRespReasoning struct {
 	ReasoningContent string
 	Content          string
@@ -213,7 +175,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, f
 	var req model.CreateChatCompletionRequest
 	if len(files) > 0 {
 		span.SetAttributes(attribute.Key("files").String(strings.Join(files, ",")))
-		modelID = ARK_VISION_EPID
+		modelID = env.ARK_VISION_EPID
 		listValue := make([]*model.ChatCompletionMessageContentPart, len(files)+1)
 		listValue[0] = &model.ChatCompletionMessageContentPart{
 			Type: model.ChatCompletionMessageContentPartTypeText,
@@ -254,7 +216,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, f
 		}
 	}
 
-	r, err := client.CreateChatCompletionStream(ctx, req, arkruntime.WithCustomHeader("x-is-encrypted", "true"))
+	r, err := ark.Cli().CreateChatCompletionStream(ctx, req, arkruntime.WithCustomHeader("x-is-encrypted", "true"))
 	if err != nil {
 		logs.L().Ctx(ctx).Error("chat error", zap.Error(err))
 		return nil, err
@@ -301,7 +263,7 @@ func SingleChatStreamingPrompt(ctx context.Context, sysPrompt, modelID string, f
 	}, nil
 }
 
-func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *FunctionCallMeta, files ...string) (seq iter.Seq[*ModelStreamRespReasoning], err error) {
+func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *tools.FunctionCallMeta, files ...string) (seq iter.Seq[*ModelStreamRespReasoning], err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
@@ -322,7 +284,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *Fun
 	)
 	if len(files) > 0 {
 		span.SetAttributes(attribute.Key("files").String(strings.Join(files, ",")))
-		modelID = ARK_VISION_EPID
+		modelID = env.ARK_VISION_EPID
 		// responses.ResponsesInput_ListValue
 		listValue := make([]*model.ChatCompletionMessageContentPart, len(files)+1)
 		listValue[0] = &model.ChatCompletionMessageContentPart{
@@ -362,7 +324,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *Fun
 				},
 			},
 			Temperature: utility.Ptr(0.1),
-			Tools:       Tools(),
+			Tools:       tools.Tools(),
 			Stream:      utility.Ptr(true),
 		}
 	} else {
@@ -370,7 +332,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *Fun
 			Model:       modelID,
 			Input:       &responses.ResponsesInput{Union: &responses.ResponsesInput_StringValue{StringValue: sysPrompt}},
 			Store:       utility.Ptr(true),
-			Tools:       Tools(),
+			Tools:       tools.Tools(),
 			Temperature: utility.Ptr(0.1),
 			Text: &responses.ResponsesText{
 				Format: &responses.TextFormat{
@@ -381,7 +343,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *Fun
 		}
 	}
 
-	resp, err := client.CreateResponsesStream(ctx, req)
+	resp, err := ark.Cli().CreateResponsesStream(ctx, req)
 	if err != nil {
 		logs.L().Ctx(ctx).Error("failed to create responses stream", zap.Error(err))
 		return nil, err
@@ -482,7 +444,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *Fun
 					zap.String("arguments_preview", args),
 				)
 
-				fc, ok := CallFunctionMap[functionName]
+				fc, ok := tools.CallFunctionMap[functionName]
 				if !ok {
 					logs.L().Ctx(subCtx).Error("unknown function call", zap.String("function_name", functionName))
 					continue
@@ -490,7 +452,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *Fun
 
 				// 6. 记录工具执行耗时
 				toolStart := time.Now()
-				resp, err = CallFunction(subCtx, fa, meta, modelID, lastRespID, fc)
+				resp, err = tools.CallFunction(subCtx, fa, meta, modelID, lastRespID, fc)
 				toolDuration := time.Since(toolStart)
 
 				if err != nil {

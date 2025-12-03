@@ -10,10 +10,12 @@ import (
 	"text/template"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/consts/env"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/ark"
+	"github.com/BetaGoRobot/BetaGo/utility/ark/responses"
+	"github.com/BetaGoRobot/BetaGo/utility/ark/tools"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -61,7 +63,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 	defer func() { span.RecordError(err) }()
 
 	var (
-		res   iter.Seq[*ark.ModelStreamRespReasoning]
+		res   iter.Seq[*responses.ModelStreamRespReasoning]
 		files = make([]string, 0)
 	)
 	if ext, err := redis.GetRedisClient().
@@ -90,7 +92,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		}
 	}
 	if chatType == consts.MODEL_TYPE_REASON {
-		res, err = GenerateChatSeq(ctx, event, ark.ARK_REASON_EPID, size, files, args...)
+		res, err = GenerateChatSeq(ctx, event, env.ARK_REASON_EPID, size, files, args...)
 		if err != nil {
 			return
 		}
@@ -99,11 +101,11 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 			return
 		}
 	} else {
-		res, err = GenerateChatSeq(ctx, event, ark.ARK_NORMAL_EPID, size, files, args...)
+		res, err = GenerateChatSeq(ctx, event, env.ARK_NORMAL_EPID, size, files, args...)
 		if err != nil {
 			return err
 		}
-		lastData := &ark.ModelStreamRespReasoning{}
+		lastData := &responses.ModelStreamRespReasoning{}
 		for data := range res {
 			span.SetAttributes(attribute.String("lastData", data.Content))
 			lastData = data
@@ -134,7 +136,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 	return
 }
 
-func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, modelID string, size *int, files []string, input ...string) (res iter.Seq[*ark.ModelStreamRespReasoning], err error) {
+func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, modelID string, size *int, files []string, input ...string) (res iter.Seq[*responses.ModelStreamRespReasoning], err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
@@ -222,11 +224,11 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 		return nil, err
 	}
 
-	iter, err := ark.ResponseStreaming(ctx, b.String(), modelID, &ark.FunctionCallMeta{ChatID: chatID, UserID: *event.Event.Sender.SenderId.OpenId}, files...)
+	iter, err := responses.ResponseStreaming(ctx, b.String(), modelID, &tools.FunctionCallMeta{ChatID: chatID, UserID: *event.Event.Sender.SenderId.OpenId}, files...)
 	if err != nil {
 		return
 	}
-	return func(yield func(*ark.ModelStreamRespReasoning) bool) {
+	return func(yield func(*responses.ModelStreamRespReasoning) bool) {
 		mentionMap := make(map[string]string)
 		for _, item := range messageList {
 			mentionMap[item.UserName] = larkmsgutils.AtUser(item.UserID, item.UserName)
@@ -245,7 +247,7 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 			mentionMap[*member.MemberId] = larkmsgutils.AtUser(*member.MemberId, *member.Name)
 		}
 		trie := utility.BuildTrie(mentionMap)
-		lastData := &ark.ModelStreamRespReasoning{}
+		lastData := &responses.ModelStreamRespReasoning{}
 		for data := range iter {
 			lastData = data
 			if !yield(data) {

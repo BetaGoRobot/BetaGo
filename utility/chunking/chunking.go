@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/consts/env"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	ark "github.com/BetaGoRobot/BetaGo/utility/ark"
+	"github.com/BetaGoRobot/BetaGo/utility/ark/embedding"
+	"github.com/BetaGoRobot/BetaGo/utility/ark/responses"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
@@ -225,7 +227,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 		return
 	}
 	chunkStr := strings.Join(chunkLines, "\n")
-	res, err := ark.ResponseWithCache(ctx, sysPrompt.String(), chunkStr, ark.ARK_CHUNK_EPID)
+	res, err := responses.ResponseWithCache(ctx, sysPrompt.String(), chunkStr, env.ARK_CHUNK_EPID)
 	if err != nil {
 		return
 	}
@@ -245,7 +247,7 @@ func (m *Management) OnMerge(ctx context.Context, chunk *Chunk) (err error) {
 	if err != nil {
 		return
 	}
-	embedding, _, err := ark.EmbeddingText(ctx, BuildEmbeddingInput(chunkLog))
+	embedding, _, err := embedding.EmbeddingText(ctx, BuildEmbeddingInput(chunkLog))
 	if err != nil {
 		logs.L().Ctx(ctx).Error("embedding error", zap.String("groupID", chunk.GroupID), zap.Error(err))
 		return

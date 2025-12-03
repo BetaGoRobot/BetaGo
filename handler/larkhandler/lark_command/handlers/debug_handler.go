@@ -9,11 +9,12 @@ import (
 	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/consts/env"
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/ark"
+	"github.com/BetaGoRobot/BetaGo/utility/ark/responses"
 	"github.com/BetaGoRobot/BetaGo/utility/chunking"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -345,10 +346,10 @@ func DebugImageHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, met
 	} else {
 		inputPrompt = input
 	}
-	dataSeq, err := ark.SingleChatStreamingPrompt(
+	dataSeq, err := responses.SingleChatStreamingPrompt(
 		ctx,
 		inputPrompt,
-		ark.ARK_VISION_EPID,
+		env.ARK_VISION_EPID,
 		urls...,
 	)
 	if err != nil {

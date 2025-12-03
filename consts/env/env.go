@@ -45,3 +45,16 @@ var (
 	GrafanaBaseURL     = GetEnvWithDefault("GRAFANA_BASE_URL", "https://grafana.kmhomelab.cn/explore")
 	JaegerDataSourceID = GetEnvWithDefault("JAEGER_DATA_SOURCE_ID", "1")
 )
+
+var (
+	DOUBAO_EMBEDDING_EPID = os.Getenv("DOUBAO_EMBEDDING_EPID")
+	DOUBAO_API_KEY        = os.Getenv("DOUBAO_API_KEY")
+
+	ARK_NORMAL_EPID = os.Getenv("ARK_NORMAL_EPID")
+	ARK_REASON_EPID = os.Getenv("ARK_REASON_EPID")
+	ARK_VISION_EPID = os.Getenv("ARK_VISION_EPID")
+	ARK_CHUNK_EPID  = os.Getenv("ARK_CHUNK_EPID")
+
+	NORMAL_MODEL_BOT_ID = os.Getenv("NORMAL_MODEL_BOT_ID")
+	REASON_MODEL_BOT_ID = os.Getenv("REASON_MODEL_BOT_ID")
+)
