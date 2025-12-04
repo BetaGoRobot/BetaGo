@@ -111,6 +111,7 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		for data := range res {
 			span.SetAttributes(attribute.String("lastData", data.Content))
 			lastData = data
+			logs.L().Info("lastData", zap.Any("lastData", lastData))
 			span.SetAttributes(
 				attribute.String("lastData.ReasoningContent", data.ReasoningContent),
 				attribute.String("lastData.Content", data.Content),
