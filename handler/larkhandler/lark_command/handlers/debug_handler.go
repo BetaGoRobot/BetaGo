@@ -500,7 +500,7 @@ func Dedup[T, K comparable](slice []T, keyFunc func(T) K) []T {
 func init() {
 	params := tools.NewParameters("object")
 	fcu := tools.NewFunctionCallUnit().
-		Name("revert_message").Desc("可以撤回指定消息,调用时不需要任何参数，工具会判断要撤回的消息是什么，并且返回撤回的结果。如果不是机器人发出的消息,是不能撤回的").Params(params).Func(muteWrap)
+		Name("revert_message").Desc("可以撤回指定消息,调用时不需要任何参数，工具会判断要撤回的消息是什么，并且返回撤回的结果。如果不是机器人发出的消息,是不能撤回的").Params(params).Func(revertWrap)
 	tools.M().Add(fcu)
 }
 
