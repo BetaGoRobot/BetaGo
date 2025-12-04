@@ -11,12 +11,14 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command/handlers"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/BetaGo/utility/redis"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
@@ -54,6 +56,12 @@ func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageR
 	// }
 	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
 		return errors.Wrap(consts.ErrStageSkip, "RepeatMsgOperator: Is Command")
+	}
+	if ext, err := redis.GetRedisClient().
+		Exists(ctx, handlers.MuteRedisKeyPrefix+*event.Event.Message.ChatId).Result(); err != nil {
+		return err
+	} else if ext != 0 {
+		return errors.Wrap(consts.ErrStageSkip, "RepeatMsgOperator: Muted")
 	}
 	return
 }

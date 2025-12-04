@@ -34,12 +34,29 @@ type (
 
 		ForceReplyDirect bool
 		SkipDone         bool
+		Extra            map[string]any
 
 		// TODO: 暂时没有用上，后续改造替换掉st、et的反复解析，搞成通用参数
 		StartTime string
 		EndTime   string
 	}
 )
+
+func (m *BaseMetaData) GetExtra(key string) (any, bool) {
+	if m.Extra == nil {
+		m.Extra = make(map[string]any)
+		return nil, false
+	}
+	val, ok := m.Extra[key]
+	return val, ok
+}
+
+func (m *BaseMetaData) SetExtra(key string, val any) {
+	if m.Extra == nil {
+		m.Extra = make(map[string]any)
+	}
+	m.Extra[key] = val
+}
 
 type (
 	ProcPanicFunc[T, K any] func(context.Context, error, *T, *K)

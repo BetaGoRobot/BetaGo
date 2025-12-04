@@ -439,7 +439,6 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *too
 
 				logs.L().Ctx(subCtx).Info("ready to execute function",
 					zap.String("function_name", functionName),
-					// args 可能很长或包含敏感信息，建议截断或脱敏
 					zap.String("arguments_preview", args),
 				)
 
@@ -449,9 +448,8 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *too
 					continue
 				}
 
-				// 6. 记录工具执行耗时
 				toolStart := time.Now()
-				resp, err = tools.CallFunction(subCtx, fa, meta, modelID, lastRespID, fc.Function)
+				resp, err = tools.CallFunction(subCtx, fa, meta, modelID, lastRespID, fc)
 				toolDuration := time.Since(toolStart)
 
 				if err != nil {
@@ -460,7 +458,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *too
 						zap.Duration("latency", toolDuration),
 						zap.Error(err),
 					)
-					return // 或者 continue，取决于业务逻辑
+					return
 				}
 
 				logs.L().Ctx(subCtx).Info("function execution completed",

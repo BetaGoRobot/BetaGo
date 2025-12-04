@@ -66,11 +66,13 @@ func ChatHandlerInner(ctx context.Context, event *larkim.P2MessageReceiveV1, cha
 		res   iter.Seq[*responses.ModelStreamRespReasoning]
 		files = make([]string, 0)
 	)
-	if ext, err := redis.GetRedisClient().
-		Exists(ctx, MuteRedisKeyPrefix+*event.Event.Message.ChatId).Result(); err != nil {
-		return err
-	} else if ext != 0 {
-		return nil // Do nothing
+	if !larkutils.IsMentioned(event.Event.Message.Mentions) { // 禁言判断只对非at的生效
+		if ext, err := redis.GetRedisClient().
+			Exists(ctx, MuteRedisKeyPrefix+*event.Event.Message.ChatId).Result(); err != nil {
+			return err
+		} else if ext != 0 {
+			return nil // Do nothing
+		}
 	}
 	urlSeq, err := larkimg.GetAllImgURLFromMsg(ctx, *event.Event.Message.MessageId)
 	if err != nil {
