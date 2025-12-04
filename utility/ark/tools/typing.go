@@ -90,7 +90,7 @@ func (h *FunctionCallUnit) Func(f fcFunc) *FunctionCallUnit {
 }
 
 func (h *Manager) Add(unit *FunctionCallUnit) *Manager {
-	if unit.FunctionName == "" || unit.Description == "" || unit.Parameters == nil || unit.Function == nil {
+	if unit.FunctionName == "" || unit.Description == "" || unit.Function == nil {
 		panic("FunctionRegisterHelper: missing field")
 	}
 	h.FunctionMap.Store(unit.FunctionName, unit)

@@ -15,6 +15,7 @@ import (
 	handlertypes "github.com/BetaGoRobot/BetaGo/handler/handler_types"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/ark/responses"
+	"github.com/BetaGoRobot/BetaGo/utility/ark/tools"
 	"github.com/BetaGoRobot/BetaGo/utility/chunking"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -28,6 +29,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	commonutils "github.com/BetaGoRobot/go_utils/common_utils"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/gg/goption"
 	"github.com/bytedance/sonic"
 	"github.com/defensestation/osquery"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
@@ -241,8 +243,11 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(data)))
 	defer span.End()
 	defer func() { span.RecordError(err) }()
+	var res string = "撤回成功"
+	defer func() { metaData.SetExtra("revert_result", res) }()
 
 	if data.Event.Message.ThreadId != nil { // 话题模式，找到所有的traceID
+		res = "话题模式的消息，所有的机器人发言都被撤回了"
 		resp, err := lark.LarkClient.Im.Message.List(ctx, larkim.NewListMessageReqBuilder().ContainerIdType("thread").ContainerId(*data.Event.Message.ThreadId).Build())
 		if err != nil {
 			return err
@@ -262,9 +267,11 @@ func DebugRevertHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 		respMsg := larkutils.GetMsgFullByID(ctx, *data.Event.Message.ParentId)
 		msg := respMsg.Data.Items[0]
 		if msg == nil {
+			res = "没有圈选消息，不能撤回"
 			return errors.New("No parent message found")
 		}
 		if msg.Sender.Id == nil || *msg.Sender.Id != larkconsts.BotAppID {
+			res = "消息不是机器人发出的，不能撤回"
 			return errors.New("Parent message is not sent by bot")
 		}
 		resp, err := lark.LarkClient.Im.Message.Delete(ctx, larkim.NewDeleteMessageReqBuilder().MessageId(*data.Event.Message.ParentId).Build())
@@ -488,4 +495,34 @@ func Dedup[T, K comparable](slice []T, keyFunc func(T) K) []T {
 		}
 	}
 	return result
+}
+
+func init() {
+	params := tools.NewParameters("object")
+	fcu := tools.NewFunctionCallUnit().
+		Name("revert_message").Desc("可以撤回指定消息,调用时不需要任何参数，工具会判断要撤回的消息是什么，并且返回撤回的结果。如果不是机器人发出的消息,是不能撤回的").Params(params).Func(muteWrap)
+	tools.M().Add(fcu)
+}
+
+func revertWrap(ctx context.Context, meta *tools.FunctionCallMeta, args string) (any, error) {
+	s := struct {
+		Time   string `json:"time"`
+		Cancel bool   `json:"cancel"`
+	}{}
+	err := utility.UnmarshallStringPre(args, &s)
+	if err != nil {
+		return nil, err
+	}
+	argsSlice := make([]string, 0)
+	if s.Cancel {
+		argsSlice = append(argsSlice, "--cancel")
+	}
+	if s.Time != "" {
+		argsSlice = append(argsSlice, "--t="+s.Time)
+	}
+	metaData := &handlerbase.BaseMetaData{}
+	if err := DebugRevertHandler(ctx, meta.LarkData, metaData, argsSlice...); err != nil {
+		return nil, err
+	}
+	return goption.Of(metaData.GetExtra("revert_result")).ValueOr("执行完成但没有结果"), nil
 }
