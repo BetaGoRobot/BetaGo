@@ -49,7 +49,7 @@ require (
 	github.com/tencentyun/cos-go-sdk-v5 v0.7.71
 	github.com/tmc/langchaingo v0.1.14
 	github.com/valyala/fasthttp v1.68.0
-	github.com/volcengine/volcengine-go-sdk v1.1.52
+	github.com/volcengine/volcengine-go-sdk v1.1.53
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 	github.com/yanyiwu/gojieba v1.4.6
 	go.opentelemetry.io/contrib/bridges/otelzap v0.14.0
