@@ -19,7 +19,7 @@ require (
 	github.com/defensestation/osquery v1.0.0
 	github.com/dgraph-io/ristretto/v2 v2.3.0
 	github.com/dlclark/regexp2 v1.11.5
-	github.com/eko/gocache/lib/v4 v4.2.2
+	github.com/eko/gocache/lib/v4 v4.2.3
 	github.com/eko/gocache/store/go_cache/v4 v4.2.2
 	github.com/enescakir/emoji v1.0.0
 	github.com/fasthttp/router v1.5.4
@@ -41,7 +41,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phuslu/log v1.0.120
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.23.0
+	github.com/prometheus/client_golang v1.23.2
 	github.com/redis/go-redis/v9 v9.10.0
 	github.com/rs/zerolog v1.34.0
 	github.com/satori/go.uuid v1.2.0
@@ -60,8 +60,8 @@ require (
 	go.opentelemetry.io/otel/sdk/log v0.14.0
 	go.opentelemetry.io/otel/trace v1.39.0
 	go.uber.org/zap v1.27.1
-	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
-	golang.org/x/sync v0.18.0
+	golang.org/x/exp v0.0.0-20251209150349-8475f28825e9
+	golang.org/x/sync v0.19.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
 )
@@ -131,8 +131,8 @@ require (
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pkoukk/tiktoken-go v0.1.8 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.65.0 // indirect
-	github.com/prometheus/procfs v0.16.1 // indirect
+	github.com/prometheus/common v0.67.4 // indirect
+	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20240704082632-aef3928b8a38 // indirect
 	github.com/tidwall/gjson v1.18.0 // indirect
