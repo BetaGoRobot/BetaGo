@@ -20,7 +20,7 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.3.0
 	github.com/dlclark/regexp2 v1.11.5
 	github.com/eko/gocache/lib/v4 v4.2.2
-	github.com/eko/gocache/store/go_cache/v4 v4.2.2
+	github.com/eko/gocache/store/go_cache/v4 v4.2.4
 	github.com/enescakir/emoji v1.0.0
 	github.com/fasthttp/router v1.5.4
 	github.com/go-resty/resty/v2 v2.17.0
