@@ -13,6 +13,7 @@ replace (
 require (
 	github.com/BetaGoRobot/go_utils v0.0.3
 	github.com/RealAlexandreAI/json-repair v0.0.14
+	github.com/bytedance/gg v1.1.0
 	github.com/bytedance/sonic v1.14.2
 	github.com/carlmjohnson/requests v0.25.1
 	github.com/cloudwego/hertz v0.10.3
@@ -72,7 +73,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.13.0 // indirect
 	github.com/bits-and-blooms/bloom/v3 v3.7.0 // indirect
-	github.com/bytedance/gg v1.1.0 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic/loader v0.4.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
