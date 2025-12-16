@@ -10,12 +10,14 @@ import (
 	commandBase "github.com/BetaGoRobot/BetaGo/handler/command_base"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility"
+	"github.com/BetaGoRobot/BetaGo/utility/ark/tools"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/cardutil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/BetaGo/utility/vadvisor"
 	"github.com/BetaGoRobot/go_utils/reflecting"
+	"github.com/bytedance/gg/goption"
 	larkcore "github.com/larksuite/oapi-sdk-go/v3/core"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
 	"go.opentelemetry.io/otel/attribute"
@@ -46,7 +48,13 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 		defaultDays = 30
 		st, et      time.Time
 	)
-
+	defer func() {
+		if err != nil {
+			metaData.SetExtra("gold_result", "执行失败，错误原因"+err.Error())
+		} else {
+			metaData.SetExtra("gold_result", "执行成功")
+		}
+	}()
 	// 如果有st，et的配置，用st，et的配置来覆盖
 	if stStr, ok := argMap["st"]; ok {
 		if etStr, ok := argMap["et"]; ok {
@@ -61,7 +69,7 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 		}
 	}
 
-	if hours, ok := argMap["r"]; ok {
+	if hours, ok := argMap["h"]; ok {
 		if st.IsZero() || et.IsZero() {
 			hoursInt, err = strconv.Atoi(hours)
 			if err != nil || hoursInt <= 0 {
@@ -75,7 +83,7 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 		if err != nil {
 			return err
 		}
-	} else if daysStr, ok := argMap["h"]; ok {
+	} else if daysStr, ok := argMap["d"]; ok {
 		if st.IsZero() || et.IsZero() {
 			days, err = strconv.Atoi(daysStr)
 			if err != nil || days <= 0 {
@@ -263,4 +271,58 @@ func GetRealtimeGoldPriceGraph(ctx context.Context, st, et time.Time) (*template
 		SetEndTime(et).
 		Build(ctx)
 	return card, nil
+}
+
+func init() {
+	params := tools.NewParameters("object").
+		AddProperty("start_time", &tools.Property{
+			Type:        "string",
+			Description: "开始时间，默认可以不穿，格式为YYYY-MM-DD HH:MM:SS",
+		}).
+		AddProperty("end_time", &tools.Property{
+			Type:        "string",
+			Description: "结束时间，默认可以不传，格式为YYYY-MM-DD HH:MM:SS",
+		}).
+		AddProperty("hours", &tools.Property{
+			Type:        "number",
+			Description: "查询的小时数，默认1小时",
+		}).
+		AddProperty("days", &tools.Property{
+			Type:        "number",
+			Description: "查询的天数，默认30天",
+		})
+	fcu := tools.NewFunctionCallUnit().
+		Name("mute_robot").Desc("搜索指定时间范围内的金价变化情况，可选相对时间天或小时，也可以指定时间范围").Params(params).Func(goldWrap)
+	tools.M().Add(fcu)
+}
+
+func goldWrap(ctx context.Context, meta *tools.FunctionCallMeta, args string) (any, error) {
+	s := struct {
+		StartTime string `json:"start_time"`
+		EndTime   string `json:"end_time"`
+		Days      *int   `json:"days"`
+		Hours     *int   `json:"hours"`
+	}{}
+	err := utility.UnmarshallStringPre(args, &s)
+	if err != nil {
+		return nil, err
+	}
+	argsSlice := make([]string, 0)
+	if s.Days != nil && *s.Days > 0 {
+		argsSlice = append(argsSlice, "--d", strconv.Itoa(*s.Days))
+	}
+	if s.Hours != nil && *s.Hours > 0 {
+		argsSlice = append(argsSlice, "--h", strconv.Itoa(*s.Hours))
+	}
+	if s.StartTime != "" {
+		argsSlice = append(argsSlice, "--st="+s.StartTime)
+	}
+	if s.EndTime != "" {
+		argsSlice = append(argsSlice, "--et="+s.EndTime)
+	}
+	metaData := &handlerbase.BaseMetaData{}
+	if err := GoldHandler(ctx, meta.LarkData, metaData, argsSlice...); err != nil {
+		return nil, err
+	}
+	return goption.Of(metaData.GetExtra("gold_result")).ValueOr("执行完成但没有结果"), nil
 }
