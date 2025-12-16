@@ -292,7 +292,7 @@ func init() {
 			Description: "查询的天数，默认30天",
 		})
 	fcu := tools.NewFunctionCallUnit().
-		Name("mute_robot").Desc("搜索指定时间范围内的金价变化情况，可选相对时间天或小时，也可以指定时间范围").Params(params).Func(goldWrap)
+		Name("gold_price_get").Desc("搜索指定时间范围内的金价变化情况，可选相对时间天或小时，也可以指定时间范围").Params(params).Func(goldWrap)
 	tools.M().Add(fcu)
 }
 
