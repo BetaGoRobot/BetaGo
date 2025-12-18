@@ -53,7 +53,7 @@ func NewBaseMetaDataWithChatIDUID(ctx context.Context, chatID, userID string) *B
 			UserID: userID,
 		}
 	}
-	isP2P := *chat.ChatType == "p2p"
+	isP2P := *chat.ChatMode == "p2p"
 	return &BaseMetaData{
 		ChatID: chatID,
 		UserID: userID,
