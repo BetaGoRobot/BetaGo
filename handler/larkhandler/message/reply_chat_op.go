@@ -44,7 +44,7 @@ func (r *ReplyChatOperator) PreRun(ctx context.Context, event *larkim.P2MessageR
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
-	if !larkutils.IsMentioned(event.Event.Message.Mentions) {
+	if *event.Event.Message.ChatType != "p2p" && !larkutils.IsMentioned(event.Event.Message.Mentions) {
 		return errors.Wrap(consts.ErrStageSkip, "MusicMsgOperator: Not Mentioned")
 	}
 	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
