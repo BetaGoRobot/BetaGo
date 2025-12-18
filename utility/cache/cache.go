@@ -23,7 +23,7 @@ func NewCacheWrapper(defaultExpiration, cleanupInterval time.Duration) *CacheWra
 	}
 }
 
-func GetOrExecute[T any](ctx context.Context, key string, fn func() (T, error)) (val T, err error) {
+func GetOrExecute[T any](ctx context.Context, key string, fn func() (T, error)) (value T, err error) {
 	fName := reflecting.GetFunctionName(fn)
 	if value, found := wrapper.c.Get(fName + ":" + key); found {
 		logs.L().Ctx(ctx).Info("[✅ Cache HIT] Executing function to get cache value,", zap.String("key", key), zap.String("function", fName))
@@ -31,7 +31,7 @@ func GetOrExecute[T any](ctx context.Context, key string, fn func() (T, error)) 
 	}
 
 	logs.L().Ctx(ctx).Warn("[❌ Cache MISS] Executing function to get cache value,", zap.String("key", key), zap.String("function", fName))
-	value, err := fn()
+	value, err = fn()
 	if err != nil {
 		return
 	}
