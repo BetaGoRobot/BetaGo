@@ -325,7 +325,7 @@ func DebugRepeatHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 			}
 			return errors.New(resp.Error())
 		}
-		larkutils.RecordMessage2Opensearch(ctx, resp)
+		go larkutils.RecordMessage2Opensearch(ctx, resp)
 	}
 	return nil
 }
@@ -520,7 +520,7 @@ func revertWrap(ctx context.Context, meta *tools.FunctionCallMeta, args string) 
 	if s.Time != "" {
 		argsSlice = append(argsSlice, "--t="+s.Time)
 	}
-	metaData := &handlerbase.BaseMetaData{}
+	metaData := handlerbase.NewBaseMetaDataWithChatIDUID(ctx, meta.ChatID, meta.UserID)
 	if err := DebugRevertHandler(ctx, meta.LarkData, metaData, argsSlice...); err != nil {
 		return nil, err
 	}

@@ -132,6 +132,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 func init() {
 	Handler = Handler.
 		OnPanic(larkDeferFunc).
+		WithMetaDataProcess(metaInit).
 		WithDefer(CollectMessage).
 		WithDefer(func(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) {
 			if !meta.IsCommand { // 过滤Command
@@ -145,4 +146,12 @@ func init() {
 		AddParallelStages(&ReplyChatOperator{}).
 		AddParallelStages(&CommandOperator{}).
 		AddParallelStages(&ChatMsgOperator{})
+}
+
+func metaInit(event *larkim.P2MessageReceiveV1) *handlerbase.BaseMetaData {
+	return &handlerbase.BaseMetaData{
+		ChatID: *event.Event.Message.ChatId,
+		IsP2P:  *event.Event.Message.ChatType == "p2p",
+		UserID: *event.Event.Sender.SenderId.UserId,
+	}
 }

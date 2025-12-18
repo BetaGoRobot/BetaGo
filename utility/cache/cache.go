@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/patrickmn/go-cache"
 	"go.uber.org/zap"
 )
@@ -23,13 +24,13 @@ func NewCacheWrapper(defaultExpiration, cleanupInterval time.Duration) *CacheWra
 }
 
 func GetOrExecute[T any](ctx context.Context, key string, fn func() (T, error)) (val T, err error) {
-	if value, found := wrapper.c.Get(key); found {
-		logs.L().Ctx(ctx).Info("✅ Cache HIT", zap.String("key", key))
+	fName := reflecting.GetFunctionName(fn)
+	if value, found := wrapper.c.Get(fName + ":" + key); found {
+		logs.L().Ctx(ctx).Info("[✅ Cache HIT] Executing function to get cache value,", zap.String("key", key), zap.String("function", fName))
 		return value.(T), nil
 	}
 
-	logs.L().Ctx(ctx).Warn("❌ Cache MISS. Executing function...", zap.String("key", key))
-
+	logs.L().Ctx(ctx).Warn("[❌ Cache MISS] Executing function to get cache value,", zap.String("key", key), zap.String("function", fName))
 	value, err := fn()
 	if err != nil {
 		return

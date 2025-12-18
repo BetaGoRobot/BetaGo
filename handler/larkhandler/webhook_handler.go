@@ -37,25 +37,25 @@ func WebHookHandler(ctx context.Context, cardAction *callback.CardActionTriggerE
 	span.SetAttributes(attribute.Key("event").String(larkcore.Prettify(cardAction)))
 	defer span.End()
 	defer func() { span.RecordError(err) }()
-
+	metaData := handlerbase.NewBaseMetaDataWithChatIDUID(ctx, cardAction.Event.Context.OpenChatID, cardAction.Event.Operator.OpenID)
 	// 记录一下操作记录
-	defer larkutils.RecordCardAction2Opensearch(ctx, cardAction)
+	defer func() { go larkutils.RecordCardAction2Opensearch(ctx, cardAction) }()
 	if len(cardAction.Event.Action.FormValue) > 0 {
 		go HandleSubmit(ctx, cardAction)
 	} else if buttonType, ok := cardAction.Event.Action.Value["type"]; ok {
 		switch buttonType {
 		case "song":
 			if musicID, ok := cardAction.Event.Action.Value["id"]; ok {
-				go SendMusicCard(ctx, musicID.(string), cardAction.Event.Context.OpenMessageID, 1)
+				go SendMusicCard(ctx, metaData, musicID.(string), cardAction.Event.Context.OpenMessageID, 1)
 			}
 		case "album":
 			if albumID, ok := cardAction.Event.Action.Value["id"]; ok {
 				_ = albumID
-				go SendAlbumCard(ctx, albumID.(string), cardAction.Event.Context.OpenMessageID)
+				go SendAlbumCard(ctx, metaData, albumID.(string), cardAction.Event.Context.OpenMessageID)
 			}
 		case "lyrics":
 			if musicID, ok := cardAction.Event.Action.Value["id"]; ok {
-				go HandleFullLyrics(ctx, musicID.(string), cardAction.Event.Context.OpenMessageID)
+				go HandleFullLyrics(ctx, metaData, musicID.(string), cardAction.Event.Context.OpenMessageID)
 			}
 		case "withdraw":
 			// 撤回消息
@@ -175,19 +175,19 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *template
 		AddVariable("refresh_id", map[string]string{"type": "refresh", "id": musicID})
 }
 
-func SendMusicCard(ctx context.Context, musicID string, msgID string, page int) {
+func SendMusicCard(ctx context.Context, metaData *handlerbase.BaseMetaData, musicID string, msgID string, page int) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("musicID").String(musicID))
 	defer span.End()
 
 	card := GetCardMusicByPage(ctx, musicID, page)
-	err := larkutils.ReplyCard(ctx, card, msgID, "_music"+musicID, env.MusicCardInThread)
+	err := larkutils.ReplyCard(ctx, card, msgID, "_music"+musicID, utility.GetIfInthread(ctx, metaData, env.MusicCardInThread))
 	if err != nil {
 		return
 	}
 }
 
-func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
+func SendAlbumCard(ctx context.Context, metaData *handlerbase.BaseMetaData, albumID string, msgID string) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("albumID").String(albumID))
 	defer span.End()
@@ -211,13 +211,13 @@ func SendAlbumCard(ctx context.Context, albumID string, msgID string) {
 	if err != nil {
 		return
 	}
-	err = larkutils.ReplyCard(ctx, cardContent, msgID, "_album", env.MusicCardInThread)
+	err = larkutils.ReplyCard(ctx, cardContent, msgID, "_album", utility.GetIfInthread(ctx, metaData, env.MusicCardInThread))
 	if err != nil {
 		return
 	}
 }
 
-func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
+func HandleFullLyrics(ctx context.Context, metaData *handlerbase.BaseMetaData, musicID, msgID string) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(attribute.Key("msgID").String(msgID), attribute.Key("musicID").String(musicID))
 	defer span.End()
@@ -239,7 +239,7 @@ func HandleFullLyrics(ctx context.Context, musicID, msgID string) {
 		AddVariable("title", songDetail.Name).
 		AddVariable("sub_title", songDetail.Ar[0].Name).
 		AddVariable("imgkey", imgKey)
-	err = larkutils.ReplyCard(ctx, cardContent, msgID, "_music", env.MusicCardInThread)
+	err = larkutils.ReplyCard(ctx, cardContent, msgID, "_music", utility.GetIfInthread(ctx, metaData, env.MusicCardInThread))
 	if err != nil {
 		return
 	}

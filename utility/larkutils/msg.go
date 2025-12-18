@@ -240,7 +240,7 @@ func ReplyMsgRawAsText(ctx context.Context, msgID, msgType, content, suffix stri
 		logs.L().Ctx(ctx).Error("ReplyMessage", zap.String("Error", larkcore.Prettify(resp.CodeError.Err)))
 		return nil, errors.New(resp.Error())
 	}
-	RecordReplyMessage2Opensearch(ctx, resp, content)
+	go RecordReplyMessage2Opensearch(ctx, resp, content)
 	return
 }
 
@@ -271,7 +271,7 @@ func ReplyMsgRawContentType(ctx context.Context, msgID, msgType, content, suffix
 		logs.L().Ctx(ctx).Error("ReplyMessage", zap.String("Error", larkcore.Prettify(resp.CodeError.Err)))
 		return nil, errors.New(resp.Error())
 	}
-	RecordReplyMessage2Opensearch(ctx, resp, content)
+	go RecordReplyMessage2Opensearch(ctx, resp, content)
 	return
 }
 
@@ -513,7 +513,7 @@ func CreateMsgTextRaw(ctx context.Context, content, msgID, chatID string) (err e
 		logs.L().Ctx(ctx).Error("CreateMessage", zap.String("respError", resp.Error()))
 		return errors.New(resp.Error())
 	}
-	RecordMessage2Opensearch(ctx, resp)
+	go RecordMessage2Opensearch(ctx, resp)
 	return
 }
 

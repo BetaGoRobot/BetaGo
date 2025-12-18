@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/url"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/consts/env"
+	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
 	"github.com/golang/freetype/truetype"
@@ -537,4 +539,12 @@ func GenerateTraceURL(traceID string) (string, error) {
 	params.Add("orgId", "1")
 	params.Add("panes", string(jsonBytes))
 	return fmt.Sprintf("%s?%s", baseURL, params.Encode()), nil
+}
+
+func GetIfInthread(ctx context.Context, meta *handlerbase.BaseMetaData, sceneDefault bool) bool {
+	isP2P := meta.IsP2P
+	if sceneDefault { // 如果默认就是要发的，那就直接发
+		return true
+	}
+	return isP2P || sceneDefault // 如果默认不是要发的，再OR一下
 }

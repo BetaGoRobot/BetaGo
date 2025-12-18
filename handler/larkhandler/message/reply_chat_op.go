@@ -72,10 +72,12 @@ func (r *ReplyChatOperator) Run(ctx context.Context, event *larkim.P2MessageRece
 	} else {
 		defer larkutils.RemoveReaction(ctx, reactionID, *event.Event.Message.MessageId)
 	}
-	defer larkutils.AddReactionAsync(ctx, "DONE", *event.Event.Message.MessageId)
 
 	msg := larkutils.PreGetTextMsg(ctx, event)
 	msg = larkutils.TrimAtMsg(ctx, msg)
-
-	return handlers.ChatHandler("chat")(ctx, event, meta, strings.Split(msg, " ")...)
+	err = handlers.ChatHandler("chat")(ctx, event, meta, strings.Split(msg, " ")...)
+	if !meta.SkipDone {
+		larkutils.AddReactionAsync(ctx, "DONE", *event.Event.Message.MessageId)
+	}
+	return
 }

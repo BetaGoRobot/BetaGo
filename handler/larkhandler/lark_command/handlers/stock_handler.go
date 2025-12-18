@@ -320,7 +320,7 @@ func goldWrap(ctx context.Context, meta *tools.FunctionCallMeta, args string) (a
 	if s.EndTime != "" {
 		argsSlice = append(argsSlice, "--et="+s.EndTime)
 	}
-	metaData := &handlerbase.BaseMetaData{}
+	metaData := handlerbase.NewBaseMetaDataWithChatIDUID(ctx, meta.ChatID, meta.UserID)
 	if err := GoldHandler(ctx, meta.LarkData, metaData, argsSlice...); err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/BetaGoRobot/BetaGo/consts"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/chatutil"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -26,11 +27,13 @@ type Operator[T, K any] interface {
 type (
 	OperatorBase[T, K any] struct{}
 	BaseMetaData           struct {
+		ChatID      string
+		UserID      string
+		IsP2P       bool
 		Refresh     bool
 		IsCommand   bool
 		MainCommand string
 		TraceID     string
-		UserID      string
 
 		ForceReplyDirect bool
 		SkipDone         bool
@@ -41,6 +44,23 @@ type (
 		EndTime   string
 	}
 )
+
+func NewBaseMetaDataWithChatIDUID(ctx context.Context, chatID, userID string) *BaseMetaData {
+	chat, err := chatutil.GetChatInfoCache(ctx, chatID)
+	if err != nil {
+		return &BaseMetaData{
+			ChatID: chatID,
+			UserID: userID,
+		}
+	}
+	isP2P := *chat.ChatType == "p2p"
+	return &BaseMetaData{
+		ChatID: chatID,
+		UserID: userID,
+
+		IsP2P: isP2P,
+	}
+}
 
 func (m *BaseMetaData) GetExtra(key string) (any, bool) {
 	if m.Extra == nil {
@@ -61,7 +81,7 @@ func (m *BaseMetaData) SetExtra(key string, val any) {
 type (
 	ProcPanicFunc[T, K any] func(context.Context, error, *T, *K)
 	ProcDeferFunc[T, K any] func(context.Context, *T, *K)
-	MetaInitFunc[T, K any]  func(context.Context) (*K, error)
+	MetaInitFunc[T, K any]  func(*T) *K
 	Processor[T, K any]     struct {
 		context.Context
 
@@ -72,6 +92,7 @@ type (
 		parrallelStages []Operator[T, K]
 		onPanicFn       ProcPanicFunc[T, K]
 		deferFn         []ProcDeferFunc[T, K]
+		metaInitFn      MetaInitFunc[T, K]
 	}
 )
 
@@ -107,6 +128,11 @@ func (p *Processor[T, K]) OnPanic(fn ProcPanicFunc[T, K]) *Processor[T, K] {
 
 func (p *Processor[T, K]) WithDefer(fns ...ProcDeferFunc[T, K]) *Processor[T, K] {
 	p.deferFn = append(p.deferFn, fns...)
+	return p
+}
+
+func (p *Processor[T, K]) WithMetaDataProcess(fn MetaInitFunc[T, K]) *Processor[T, K] {
+	p.metaInitFn = fn
 	return p
 }
 
@@ -201,7 +227,10 @@ func (p *Processor[T, K]) RunStages() (err error) {
 //	@param ctx
 //	@param event
 func (p *Processor[T, K]) Run() {
-	p.metaData = new(K)
+	if p.metaInitFn == nil {
+		p.metaInitFn = func(*T) *K { return new(K) }
+	}
+	p.metaData = p.metaInitFn(p.data)
 	for _, fn := range p.deferFn {
 		if fn != nil {
 			defer fn(p.Context, p.data, p.metaData)

@@ -70,7 +70,7 @@ func MusicSearchHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, me
 		return errors.New("Unknown search type")
 	}
 
-	err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_musicSearch", env.MusicCardInThread)
+	err = larkutils.ReplyCard(ctx, cardContent, *data.Event.Message.MessageId, "_musicSearch", utility.GetIfInthread(ctx, metaData, env.MusicCardInThread))
 	if err != nil {
 		return err
 	}
@@ -96,5 +96,6 @@ func musicSearchWrap(ctx context.Context, meta *tools.FunctionCallMeta, args str
 	if err != nil {
 		return nil, err
 	}
-	return "执行成功", MusicSearchHandler(ctx, meta.LarkData, nil, s.Keywords)
+	metaData := handlerbase.NewBaseMetaDataWithChatIDUID(ctx, meta.ChatID, meta.UserID)
+	return "执行成功", MusicSearchHandler(ctx, meta.LarkData, metaData, s.Keywords)
 }

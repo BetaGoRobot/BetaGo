@@ -97,7 +97,7 @@ func muteWrap(ctx context.Context, meta *tools.FunctionCallMeta, args string) (a
 	if s.Time != "" {
 		argsSlice = append(argsSlice, "--t="+s.Time)
 	}
-	metaData := &handlerbase.BaseMetaData{}
+	metaData := handlerbase.NewBaseMetaDataWithChatIDUID(ctx, meta.ChatID, meta.UserID)
 	if err := MuteHandler(ctx, meta.LarkData, metaData, argsSlice...); err != nil {
 		return nil, err
 	}
