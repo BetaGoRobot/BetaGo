@@ -32,8 +32,7 @@ func GetChatInfoCache(ctx context.Context, chatID string) (val *larkim.GetChatRe
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 	defer func() { span.RecordError(err) }()
-	val, err = cache.GetOrExecute(ctx, chatID, func() (chat *larkim.GetChatRespData, err error) {
+	return cache.GetOrExecute(ctx, chatID, func() (chat *larkim.GetChatRespData, err error) {
 		return GetChatInfo(ctx, chatID)
 	})
-	return
 }
