@@ -542,9 +542,8 @@ func GenerateTraceURL(traceID string) (string, error) {
 }
 
 func GetIfInthread(ctx context.Context, meta *handlerbase.BaseMetaData, sceneDefault bool) bool {
-	isP2P := meta.IsP2P
 	if sceneDefault { // 如果默认就是要发的，那就直接发
 		return true
 	}
-	return isP2P || sceneDefault // 如果默认不是要发的，再OR一下
+	return meta.IsP2P || sceneDefault // 如果默认不是要发的，再OR一下
 }
