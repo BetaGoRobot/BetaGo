@@ -11,8 +11,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/ark/embedding"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkchunking"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/userutil"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
@@ -45,15 +45,16 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 		if err != nil {
 			return
 		}
-		member, err := grouputil.GetUserMemberFromChat(ctx, chatID, *event.Event.Sender.SenderId.OpenId)
+
+		userInfo, err := userutil.GetUserInfoCache(ctx, *event.Event.Sender.SenderId.OpenId)
 		if err != nil {
 			return
 		}
 		userName := ""
-		if member == nil {
+		if userInfo == nil {
 			userName = "NULL"
 		} else {
-			userName = *member.Name
+			userName = *userInfo.Name
 		}
 		msgLog := &handlertypes.MessageLog{
 			MessageID:   utility.AddressORNil(event.Event.Message.MessageId),

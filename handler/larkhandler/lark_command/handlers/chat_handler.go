@@ -22,6 +22,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkimg"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/userutil"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/BetaGo/utility/message"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
@@ -172,15 +173,15 @@ func GenerateChatSeq(ctx context.Context, event *larkim.P2MessageReceiveV1, mode
 	if err != nil {
 		return nil, err
 	}
-	member, err := grouputil.GetUserMemberFromChat(ctx, chatID, *event.Event.Sender.SenderId.OpenId)
+	userInfo, err := userutil.GetUserInfoCache(ctx, *event.Event.Sender.SenderId.OpenId)
 	if err != nil {
 		return
 	}
 	userName := ""
-	if member == nil {
+	if userInfo == nil {
 		userName = "NULL"
 	} else {
-		userName = *member.Name
+		userName = *userInfo.Name
 	}
 	createTime := utility.EpoMil2DateStr(*event.Event.Message.CreateTime)
 	promptTemplate.UserInput = []string{fmt.Sprintf("[%s](%s) <%s>: %s", createTime, *event.Event.Sender.SenderId.OpenId, userName, larkutils.PreGetTextMsg(ctx, event))}

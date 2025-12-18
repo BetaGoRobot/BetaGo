@@ -13,8 +13,8 @@ import (
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/ark/embedding"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkchunking"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/userutil"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	opensearchdal "github.com/BetaGoRobot/BetaGo/utility/opensearch_dal"
 	"github.com/BetaGoRobot/BetaGo/utility/retriver"
@@ -377,17 +377,17 @@ func RecordCardAction2Opensearch(ctx context.Context, cardAction *callback.CardA
 
 	chatID := cardAction.Event.Context.OpenChatID
 	userID := cardAction.Event.Operator.OpenID
-	member, err := grouputil.GetUserMemberFromChat(ctx, chatID, userID)
+	userInfo, err := userutil.GetUserInfoCache(ctx, userID)
 	if err != nil {
-		logs.L().Ctx(ctx).Error("GetUserMemberFromChat error", zap.Error(err))
+		logs.L().Ctx(ctx).Error("GetUserInfo error", zap.Error(err))
 		return
 	}
 	idxData := &handlertypes.CardActionIndex{
 		CardActionTriggerEvent: cardAction,
-		ChatName:               GetChatName(ctx, userID),
+		ChatName:               GetChatName(ctx, chatID),
 		CreateTime:             utility.EpoMicro2DateStr(cardAction.EventV2Base.Header.CreateTime),
-		UserID:                 cardAction.Event.Operator.OpenID,
-		UserName:               utility.AddressORNil(member.Name),
+		UserID:                 userID,
+		UserName:               utility.AddressORNil(userInfo.Name),
 		ActionValue:            cardAction.Event.Action.Value,
 	}
 	err = opensearchdal.InsertData(ctx,

@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkconsts"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/userutil"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -72,14 +72,14 @@ func buildLineCommon(
 	if *senderID == larkconsts.BotAppID {
 		userName = "机器人"
 	} else {
-		member, err := grouputil.GetUserMemberFromChat(ctx, *chatID, *senderID)
+		userInfo, err := userutil.GetUserInfoCache(ctx, *senderID)
 		if err != nil {
 			logs.L().Ctx(ctx).Error("got error openID", zap.Error(err))
 		}
-		if member == nil {
+		if userInfo == nil {
 			userName = "NULL"
 		} else {
-			userName = *member.Name
+			userName = *userInfo.Name
 		}
 	}
 

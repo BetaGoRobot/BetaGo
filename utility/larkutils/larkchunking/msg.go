@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/BetaGoRobot/BetaGo/utility"
-	"github.com/BetaGoRobot/BetaGo/utility/larkutils/grouputil"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkconsts"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/larkmsgutils"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils/userutil"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/bytedance/sonic"
 	larkim "github.com/larksuite/oapi-sdk-go/v3/service/im/v1"
@@ -79,14 +79,14 @@ func (m *LarkMessageEvent) BuildLine() (line string) {
 	if *m.Event.Sender.SenderId.OpenId == larkconsts.BotAppID {
 		userName = "机器人"
 	} else {
-		member, err := grouputil.GetUserMemberFromChat(context.Background(), *m.Event.Message.ChatId, *m.Event.Sender.SenderId.OpenId)
+		userInfo, err := userutil.GetUserInfoCache(context.Background(), *m.Event.Sender.SenderId.OpenId)
 		if err != nil {
 			logs.L().Ctx(context.Background()).Error("got error openID", zap.Error(err))
 		}
-		if member == nil {
+		if userInfo == nil {
 			userName = "NULL"
 		} else {
-			userName = *member.Name
+			userName = *userInfo.Name
 		}
 	}
 
