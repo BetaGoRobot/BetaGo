@@ -72,7 +72,7 @@ func buildLineCommon(
 	if *senderID == larkconsts.BotAppID {
 		userName = "机器人"
 	} else {
-		userInfo, err := userutil.GetUserInfoCache(ctx, *senderID)
+		userInfo, err := userutil.GetUserInfoCache(ctx, *chatID, *senderID)
 		if err != nil {
 			logs.L().Ctx(ctx).Error("got error openID", zap.Error(err))
 		}

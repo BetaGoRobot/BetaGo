@@ -79,7 +79,7 @@ func (m *LarkMessageEvent) BuildLine() (line string) {
 	if *m.Event.Sender.SenderId.OpenId == larkconsts.BotAppID {
 		userName = "机器人"
 	} else {
-		userInfo, err := userutil.GetUserInfoCache(context.Background(), *m.Event.Sender.SenderId.OpenId)
+		userInfo, err := userutil.GetUserInfoCache(context.Background(), *m.Event.Message.ChatId, *m.Event.Sender.SenderId.OpenId)
 		if err != nil {
 			logs.L().Ctx(context.Background()).Error("got error openID", zap.Error(err))
 		}

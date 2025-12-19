@@ -46,7 +46,7 @@ func CollectMessage(ctx context.Context, event *larkim.P2MessageReceiveV1, metaD
 			return
 		}
 
-		userInfo, err := userutil.GetUserInfoCache(ctx, *event.Event.Sender.SenderId.OpenId)
+		userInfo, err := userutil.GetUserInfoCache(ctx, *event.Event.Message.ChatId, *event.Event.Sender.SenderId.OpenId)
 		if err != nil {
 			return
 		}

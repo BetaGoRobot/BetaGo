@@ -377,7 +377,7 @@ func RecordCardAction2Opensearch(ctx context.Context, cardAction *callback.CardA
 
 	chatID := cardAction.Event.Context.OpenChatID
 	userID := cardAction.Event.Operator.OpenID
-	userInfo, err := userutil.GetUserInfoCache(ctx, userID)
+	userInfo, err := userutil.GetUserInfoCache(ctx, cardAction.Event.Context.OpenChatID, userID)
 	if err != nil {
 		logs.L().Ctx(ctx).Error("GetUserInfo error", zap.Error(err))
 		return

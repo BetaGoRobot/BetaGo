@@ -346,7 +346,7 @@ func ResponseStreaming(ctx context.Context, sysPrompt, modelID string, meta *too
 	if err != nil {
 		logs.L().Ctx(ctx).Error("failed to create responses stream", zap.Error(err))
 		return nil, err
-}
+	}
 
 	return func(yield func(s *ModelStreamRespReasoning) bool) {
 		lastRespID := ""

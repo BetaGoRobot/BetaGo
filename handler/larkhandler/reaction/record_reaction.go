@@ -59,7 +59,7 @@ func (r *RecordReactionOperator) Run(ctx context.Context, event *larkim.P2Messag
 	if *event.Event.OperatorType != "user" {
 		return nil
 	}
-	userInfo, err := userutil.GetUserInfoCache(ctx, *event.Event.UserId.OpenId)
+	userInfo, err := userutil.GetUserInfoCache(ctx, chatID, *event.Event.UserId.OpenId)
 	if err != nil {
 		return err
 	}
