@@ -10,7 +10,7 @@ import (
 
 func init() {
 	reflecting.GetFunctionName(AddReaction)                   // from utility/larkutils/msg.go:521
-	reflecting.GetFunctionName(AddReaction2DB)                // from utility/larkutils/msg.go:201
+	reflecting.GetFunctionName(AddTrace2DB)                // from utility/larkutils/msg.go:201
 	reflecting.GetFunctionName(AddReactionAsync)              // from utility/larkutils/msg.go:541
 	reflecting.GetFunctionName(CreateMsgText)                 // from utility/larkutils/msg.go:475
 	reflecting.GetFunctionName(CreateMsgTextRaw)              // from utility/larkutils/msg.go:486

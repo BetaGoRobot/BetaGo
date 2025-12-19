@@ -197,7 +197,7 @@ func IsCommand(ctx context.Context, content string) bool {
 	return matched
 }
 
-func AddReaction2DB(ctx context.Context, msgID string) {
+func AddTrace2DB(ctx context.Context, msgID string) {
 	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	defer span.End()
 
@@ -533,7 +533,7 @@ func AddReaction(ctx context.Context, reactionType, msgID string) (reactionID st
 		logs.L().Ctx(ctx).Error("AddReaction", zap.String("respError", resp.Error()))
 		return "", errors.New(resp.Error())
 	}
-	AddReaction2DB(ctx, msgID)
+	AddTrace2DB(ctx, msgID)
 	return *resp.Data.ReactionId, err
 }
 
@@ -554,7 +554,7 @@ func AddReactionAsync(ctx context.Context, reactionType, msgID string) (err erro
 			logs.L().Ctx(ctx).Error("AddReaction", zap.String("respError", resp.Error()))
 			return
 		}
-		AddReaction2DB(ctx, msgID)
+		AddTrace2DB(ctx, msgID)
 	}()
 	return nil
 }
@@ -574,7 +574,7 @@ func RemoveReaction(ctx context.Context, reactionID, msgID string) (err error) {
 		logs.L().Ctx(ctx).Error("RemoveReaction", zap.String("respError", resp.Error()))
 		return errors.New(resp.Error())
 	}
-	AddReaction2DB(ctx, msgID)
+	AddTrace2DB(ctx, msgID)
 	return
 }
 
@@ -595,8 +595,7 @@ func RemoveReactionAsync(ctx context.Context, reactionID, msgID string) (err err
 			err = errors.New(resp.Error())
 			return
 		}
-		AddReaction2DB(ctx, msgID)
-		return
+		AddTrace2DB(ctx, msgID)
 	}()
 	return
 }

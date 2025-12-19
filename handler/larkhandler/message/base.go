@@ -133,6 +133,9 @@ func init() {
 	Handler = Handler.
 		OnPanic(larkDeferFunc).
 		WithMetaDataProcess(metaInit).
+		WithPreRun(func(p *handlerbase.Processor[larkim.P2MessageReceiveV1, handlerbase.BaseMetaData]) {
+			go func() { larkutils.AddTrace2DB(p, *p.Data().Event.Message.MessageId) }()
+		}).
 		WithDefer(CollectMessage).
 		WithDefer(func(ctx context.Context, event *larkim.P2MessageReceiveV1, meta *handlerbase.BaseMetaData) {
 			if !meta.IsCommand { // 过滤Command

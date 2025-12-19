@@ -93,6 +93,7 @@ type (
 		onPanicFn       ProcPanicFunc[T, K]
 		deferFn         []ProcDeferFunc[T, K]
 		metaInitFn      MetaInitFunc[T, K]
+		preRunFn        func(p *Processor[T, K])
 	}
 )
 
@@ -136,9 +137,18 @@ func (p *Processor[T, K]) WithMetaDataProcess(fn MetaInitFunc[T, K]) *Processor[
 	return p
 }
 
-func (p *Processor[T, K]) WithEvent(event *T) *Processor[T, K] {
+func (p *Processor[T, K]) WithPreRun(f func(p *Processor[T, K])) *Processor[T, K] {
+	p.preRunFn = f
+	return p
+}
+
+func (p *Processor[T, K]) WithData(event *T) *Processor[T, K] {
 	p.data = event
 	return p
+}
+
+func (p *Processor[T, K]) Data() *T {
+	return p.data
 }
 
 func (p *Processor[T, K]) Clean() *Processor[T, K] {
@@ -230,7 +240,11 @@ func (p *Processor[T, K]) Run() {
 	if p.metaInitFn == nil {
 		p.metaInitFn = func(*T) *K { return new(K) }
 	}
-	p.metaData = p.metaInitFn(p.data)
+	p.metaData = p.metaInitFn(p.Data())
+
+	if p.preRunFn != nil {
+		p.preRunFn(p)
+	}
 	for _, fn := range p.deferFn {
 		if fn != nil {
 			defer fn(p.Context, p.data, p.metaData)

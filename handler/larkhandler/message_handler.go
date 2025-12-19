@@ -50,7 +50,7 @@ func MessageV2Handler(ctx context.Context, event *larkim.P2MessageReceiveV1) (er
 		subCtx, span := otel.LarkRobotOtelTracer.Start(context.Background(), fn+"_RealRun")
 		defer span.End()
 		span.SetAttributes(attribute.String("msgID", utility.AddressORNil(event.Event.Message.MessageId)))
-		message.Handler.Clean().WithCtx(subCtx).WithEvent(event).Run()
+		message.Handler.Clean().WithCtx(subCtx).WithData(event).Run()
 	}()
 
 	logs.L().Ctx(ctx).Info("Message event received", zap.String("event", larkcore.Prettify(event)))
@@ -68,6 +68,6 @@ func MessageReactionHandler(ctx context.Context, event *larkim.P2MessageReaction
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
-	go reaction.Handler.Clean().WithCtx(ctx).WithEvent(event).Run()
+	go reaction.Handler.Clean().WithCtx(ctx).WithData(event).Run()
 	return nil
 }

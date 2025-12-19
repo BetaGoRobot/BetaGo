@@ -135,10 +135,6 @@ func GetTraceFromMsgID(ctx context.Context, msgID string) (iter.Seq[*traceItem],
 		Query(
 			osquery.Bool().Must(
 				osquery.Term("message_id", msgID),
-			).MustNot(
-				osquery.MatchPhrase(
-					"raw_message_seg", "file _ key",
-				),
 			),
 		).
 		SourceIncludes("create_time", "trace_id").
