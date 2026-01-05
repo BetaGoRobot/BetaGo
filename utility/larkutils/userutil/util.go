@@ -36,7 +36,7 @@ func GetUserInfoCache(ctx context.Context, chatID, userID string) (user *larkcon
 	res, err := cache.GetOrExecute(ctx, userID, func() (*larkcontact.User, error) {
 		return GetUserInfo(ctx, userID)
 	})
-	logs.L().Ctx(ctx).Error("GetUserInfoCache", zap.Any("user", res))
+	logs.L().Ctx(ctx).Info("GetUserInfoCache", zap.Any("user", res))
 	// userInfo失败了，走群聊试试
 	groupMember, err := grouputil.GetUserMemberFromChat(ctx, chatID, userID)
 	if err != nil {
