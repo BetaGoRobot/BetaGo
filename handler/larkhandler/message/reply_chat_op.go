@@ -6,6 +6,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	larkcommand "github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command/handlers"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
@@ -45,10 +46,11 @@ func (r *ReplyChatOperator) PreRun(ctx context.Context, event *larkim.P2MessageR
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 	if *event.Event.Message.ChatType != "p2p" && !larkutils.IsMentioned(event.Event.Message.Mentions) {
-		return errors.Wrap(consts.ErrStageSkip, "MusicMsgOperator: Not Mentioned")
+		return errors.Wrap(consts.ErrStageSkip, r.Name()+" Not Mentioned")
 	}
-	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
-		return errors.Wrap(consts.ErrStageSkip, "MusicMsgOperator: Is Command")
+
+	if larkcommand.LarkRootCommand.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
+		return errors.Wrap(consts.ErrStageSkip, r.Name()+" Not Mentioned")
 	}
 	return
 }

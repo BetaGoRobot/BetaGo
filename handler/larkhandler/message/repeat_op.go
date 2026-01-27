@@ -11,6 +11,7 @@ import (
 	"github.com/BetaGoRobot/BetaGo/consts"
 	"github.com/BetaGoRobot/BetaGo/dal/lark"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	larkcommand "github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command/handlers"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
@@ -54,8 +55,8 @@ func (r *RepeatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageR
 	// if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
 	// 	return errors.Wrap(consts.ErrStageSkip, "RepeatMsgOperator: Not enabled")
 	// }
-	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
-		return errors.Wrap(consts.ErrStageSkip, "RepeatMsgOperator: Is Command")
+	if larkcommand.LarkRootCommand.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
+		return errors.Wrap(consts.ErrStageSkip, r.Name()+" Not Mentioned")
 	}
 	if ext, err := redis.GetRedisClient().
 		Exists(ctx, handlers.MuteRedisKeyPrefix+*event.Event.Message.ChatId).Result(); err != nil {

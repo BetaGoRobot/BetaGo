@@ -100,6 +100,11 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 
 	}
 
+	cardContent, err = GetHistoryGoldGraph(ctx, st, et)
+	if err != nil {
+		return err
+	}
+
 	if metaData != nil && metaData.Refresh {
 		err = larkutils.PatchCard(ctx,
 			cardContent,

@@ -128,22 +128,6 @@ func GetMsgFullByID(ctx context.Context, msgID string) *larkim.GetMessageResp {
 	return resp
 }
 
-func GetCommandWithMatched(ctx context.Context, content string) (commands []string, isCommand bool) {
-	if IsCommand(ctx, content) {
-		isCommand = true
-		match, err := commandMsgRepattern.FindStringMatch(content)
-		if err != nil {
-			logs.L().Ctx(ctx).Error("GetCommand", zap.Error(err))
-			return
-		}
-		if match.GroupByName("content") != nil {
-			commands = strings.Fields(strings.TrimPrefix(match.GroupByName("content").String(), "/"))
-		}
-	}
-
-	return
-}
-
 func GetCommand(ctx context.Context, content string) (commands []string) {
 	// 校验合法性
 	matched, err := commandFullRepattern.MatchString(content)
@@ -185,16 +169,6 @@ func GetCommand(ctx context.Context, content string) (commands []string) {
 	}
 
 	return
-}
-
-func IsCommand(ctx context.Context, content string) bool {
-	content = strings.Trim(content, " ")
-	matched, err := commandMsgRepattern.MatchString(content)
-	if err != nil {
-		logs.L().Ctx(ctx).Error("GetCommand", zap.Error(err))
-		return matched
-	}
-	return matched
 }
 
 func AddTrace2DB(ctx context.Context, msgID string) {

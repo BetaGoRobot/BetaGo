@@ -46,8 +46,8 @@ func (r *CommandOperator) PreRun(ctx context.Context, event *larkim.P2MessageRec
 	defer func() { span.RecordError(err) }()
 	defer span.RecordError(err)
 
-	if !larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
-		return errors.Wrap(consts.ErrStageSkip, "CommandOperator: Not Command")
+	if !larkcommand.LarkRootCommand.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
+		return errors.Wrap(consts.ErrStageSkip, r.Name()+" Not Mentioned")
 	}
 	return
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
 	"github.com/BetaGoRobot/BetaGo/utility/logs"
 	"github.com/BetaGoRobot/go_utils/reflecting"
 	"go.uber.org/zap"
@@ -195,6 +196,29 @@ func (c *Command[T]) AddArgs(args ...string) *Command[T] {
 		c.SupportArgs[arg] = struct{}{}
 	}
 	return c
+}
+
+// IsCommand 判断传入的文本是否符合 Command 的触发格式
+//
+//	@param text string 原始文本，如 "/abc d --ef=1"
+//	@return bool
+//	@author heyuhengmatt
+//	@update 2024-07-18 05:40:00
+func (c *Command[T]) IsCommand(ctx context.Context, text string) bool {
+	cmds := larkutils.GetCommand(ctx, text)
+	if len(cmds) == 0 {
+		return false
+	}
+
+	targetName := cmds[0]
+	if _, ok := c.SubCommands[targetName]; ok {
+		return true
+	}
+	if c.Name == targetName {
+		return true
+	}
+
+	return false
 }
 
 // NewCommand 创建一个新的Command结构

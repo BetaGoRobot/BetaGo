@@ -7,6 +7,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	larkcommand "github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command"
 	"github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command/handlers"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
@@ -47,8 +48,8 @@ func (r *ChatMsgOperator) PreRun(ctx context.Context, event *larkim.P2MessageRec
 	// if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionRandomRepeat) {
 	// 	return errors.Wrap(consts.ErrStageSkip, "ImitateMsgOperator: Not enabled")
 	// }
-	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
-		return errors.Wrap(consts.ErrStageSkip, "ImitateMsgOperator: Is Command")
+	if larkcommand.LarkRootCommand.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
+		return errors.Wrap(consts.ErrStageSkip, r.Name()+" Not Mentioned")
 	}
 	return
 }

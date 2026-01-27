@@ -6,6 +6,7 @@ import (
 
 	"github.com/BetaGoRobot/BetaGo/consts"
 	handlerbase "github.com/BetaGoRobot/BetaGo/handler/handler_base"
+	larkcommand "github.com/BetaGoRobot/BetaGo/handler/larkhandler/lark_command"
 	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/database"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils"
@@ -51,9 +52,8 @@ func (r *WordReplyMsgOperator) PreRun(ctx context.Context, event *larkim.P2Messa
 	// if !larkutils.CheckFunctionEnabling(*event.Event.Message.ChatId, consts.LarkFunctionWordReply) {
 	// 	return errors.Wrap(consts.ErrStageSkip, "WordReplyMsgOperator: Not enabled")
 	// }
-
-	if larkutils.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
-		return errors.Wrap(consts.ErrStageSkip, "WordReplyMsgOperator: Is Command")
+	if larkcommand.LarkRootCommand.IsCommand(ctx, larkutils.PreGetTextMsg(ctx, event)) {
+		return errors.Wrap(consts.ErrStageSkip, r.Name()+" Not Mentioned")
 	}
 	return
 }
