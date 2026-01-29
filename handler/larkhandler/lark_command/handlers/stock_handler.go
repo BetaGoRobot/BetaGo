@@ -280,6 +280,7 @@ func GetHistoryGoldGraph(ctx context.Context, st, et time.Time) (*templates.Temp
 			for _, v := range resultMap {
 				graph.AddData(v.X, v.Y, v.S)
 			}
+			graph.UpdateMinMax()
 		}
 	}
 	card := cardutil.NewCardBuildGraphHelper(graph).

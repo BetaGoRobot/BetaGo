@@ -131,14 +131,6 @@ func (g *MultiSeriesLineGraph[X, Y]) AddData(x X, y Y, seriesField string) *Mult
 		XField:      x,
 		SeriesField: seriesField,
 	})
-	if len(g.Axes) > 0 && g.Axes[0].Range != nil {
-		if float64(y) < g.Axes[0].Range.Min {
-			g.Axes[0].Range.Min = float64(y)
-		}
-		if float64(y) > g.Axes[0].Range.Max {
-			g.Axes[0].Range.Max = float64(y)
-		}
-	}
 	return g
 }
 
@@ -148,19 +140,30 @@ func (g *MultiSeriesLineGraph[X, Y]) SetTitle(title string) *MultiSeriesLineGrap
 }
 
 func (g *MultiSeriesLineGraph[X, Y]) SetRange(min, max float64) *MultiSeriesLineGraph[X, Y] {
-	g.Axes = append(g.Axes, &AxesStruct{
-		Orient:    "left",
-		AliasName: "yAxis",
-		Range: &AxeRange{
-			Min: min,
-			Max: max,
+	g.Axes = []*AxesStruct{
+		{
+			Orient:    "bottom",
+			AliasName: "xAxis",
+			Label: &AxeLabel{
+				AutoHide:   true,
+				AutoRotate: false,
+				AutoLimit:  true,
+			},
 		},
-		Label: &AxeLabel{
-			AutoHide:   true,
-			AutoRotate: false,
-			AutoLimit:  true,
+		{
+			Orient:    "left",
+			AliasName: "yAxis",
+			Range: &AxeRange{
+				Min: min,
+				Max: max,
+			},
+			Label: &AxeLabel{
+				AutoHide:   true,
+				AutoRotate: false,
+				AutoLimit:  true,
+			},
 		},
-	})
+	}
 	return g
 }
 
@@ -181,6 +184,27 @@ type (
 		S string // 序列数据、分组
 	}
 )
+
+func (g *MultiSeriesLineGraph[X, Y]) UpdateMinMax() {
+	var min, max *Y
+	for _, v := range g.Data.Values {
+		if min == nil {
+			min = new(Y)
+			*min = v.YField
+		}
+		if max == nil {
+			max = new(Y)
+			*max = v.YField
+		}
+		if *min > v.YField {
+			*min = v.YField
+		}
+		if *max < v.YField {
+			*max = v.YField
+		}
+	}
+	g.SetRange(float64(*min), float64(*max))
+}
 
 func (g *MultiSeriesLineGraph[X, Y]) AddPointSeries(
 	pFunc iter.Seq[XYSUnit[X, Y]],
