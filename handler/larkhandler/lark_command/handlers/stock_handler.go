@@ -241,6 +241,47 @@ func GetHistoryGoldGraph(ctx context.Context, st, et time.Time) (*templates.Temp
 				}
 			},
 		)
+
+	// 历史模式拉不到当天的，判断一下有没有涵盖当天
+	if et.Year() == time.Now().Year() && et.YearDay() == time.Now().YearDay() {
+		// 有当天，我们把当天的数据补进去.
+		res, err := aktool.GetRealtimeGoldPrice(ctx)
+		if err != nil {
+			// 弱依赖，错误可以丢弃
+			logs.L().Ctx(ctx).Warn("get today's gold price failed.")
+		}
+		// 计算开、收、最高、最低
+
+		if len(res) > 0 {
+			resultMap := map[string]*vadvisor.XYSUnit[string, float64]{
+				"开盘价": {X: time.Now().Format(time.DateOnly), Y: res[0].Price, S: "开盘价"},
+				"收盘价": {X: time.Now().Format(time.DateOnly), Y: res[len(res)-1].Price, S: "收盘价"},
+				"最高价": {X: time.Now().Format(time.DateOnly), Y: res[0].Price, S: "最高价"},
+				"最低价": {X: time.Now().Format(time.DateOnly), Y: res[0].Price, S: "最低价"},
+			}
+
+			for _, price := range res {
+				dStr := time.Now().Format(time.DateOnly) + " " + price.Time
+				t, err := time.ParseInLocation(time.DateTime, dStr, utility.UTCPlus8Loc())
+				if err != nil {
+					continue
+				}
+				if t.Before(st) || t.After(et) {
+					continue
+				}
+				if price.Price > resultMap["最高价"].Y {
+					resultMap["最高价"].Y = price.Price
+				}
+				if price.Price < resultMap["最低价"].Y {
+					resultMap["最低价"].Y = price.Price
+				}
+			}
+
+			for _, v := range resultMap {
+				graph.AddData(v.X, v.Y, v.S)
+			}
+		}
+	}
 	card := cardutil.NewCardBuildGraphHelper(graph).
 		SetTitle("沪金所价格数据").
 		SetStartTime(st).
@@ -273,6 +314,7 @@ func GetRealtimeGoldPriceGraph(ctx context.Context, st, et time.Time) (*template
 				}
 			},
 		)
+
 	card := cardutil.NewCardBuildGraphHelper(graph).
 		SetTitle("沪金所价格数据").
 		SetStartTime(st).
