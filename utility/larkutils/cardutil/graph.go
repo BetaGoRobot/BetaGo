@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/BetaGoRobot/BetaGo/utility"
 	"github.com/BetaGoRobot/BetaGo/utility/larkutils/templates"
 	"github.com/BetaGoRobot/BetaGo/utility/otel"
 	"github.com/BetaGoRobot/go_utils/reflecting"
@@ -56,8 +57,8 @@ func (h *CardBuilderGraph) Build(ctx context.Context) *templates.TemplateCardCon
 	cardContent := templates.NewCardContent(ctx, templates.NormalCardGraphReplyTemplate)
 	if !h.st.IsZero() && !h.et.IsZero() {
 		cardContent.
-			AddVariable("start_time", h.st.Format("2006-01-02 15:04")).
-			AddVariable("end_time", h.et.Format("2006-01-02 15:04"))
+			AddVariable("start_time", h.st.In(utility.UTCPlus8Loc()).Format("2006-01-02 15:04")).
+			AddVariable("end_time", h.et.In(utility.UTCPlus8Loc()).Format("2006-01-02 15:04"))
 	}
 	return cardContent.
 		AddVariable(
