@@ -161,7 +161,7 @@ func ZhAStockHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 			}
 		}
 	}
-	graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
+	graph := vadvisor.NewMultiSeriesLineGraph[string, float64](ctx)
 	stockPrice, err := aktool.GetStockPriceRT(ctx, stockCode)
 	if err != nil {
 		return err
@@ -214,8 +214,11 @@ func ZhAStockHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaD
 }
 
 func GetHistoryGoldGraph(ctx context.Context, st, et time.Time) (*templates.TemplateCardContent, error) {
+	_, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	logs.L().Ctx(ctx).Info("GetHistoryGoldGraph", zap.String("st", st.Format(time.RFC3339)), zap.String("et", et.Format(time.RFC3339)))
-	graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
+	graph := vadvisor.NewMultiSeriesLineGraph[string, float64](ctx)
 	goldPrices, err := aktool.GetHistoryGoldPrice(ctx)
 	if err != nil {
 		return nil, err
@@ -276,11 +279,10 @@ func GetHistoryGoldGraph(ctx context.Context, st, et time.Time) (*templates.Temp
 					resultMap["最低价"].Y = price.Price
 				}
 			}
-
 			for _, v := range resultMap {
 				graph.AddData(v.X, v.Y, v.S)
+				graph.UpdateMinMax(v.Y)
 			}
-			graph.UpdateMinMax()
 		}
 	}
 	card := cardutil.NewCardBuildGraphHelper(graph).
@@ -292,7 +294,7 @@ func GetHistoryGoldGraph(ctx context.Context, st, et time.Time) (*templates.Temp
 }
 
 func GetRealtimeGoldPriceGraph(ctx context.Context, st, et time.Time) (*templates.TemplateCardContent, error) {
-	graph := vadvisor.NewMultiSeriesLineGraph[string, float64]()
+	graph := vadvisor.NewMultiSeriesLineGraph[string, float64](ctx)
 	goldPrice, err := aktool.GetRealtimeGoldPrice(ctx)
 	if err != nil {
 		return nil, err

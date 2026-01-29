@@ -9,6 +9,6 @@ import (
 )
 
 func init() {
-	reflecting.GetFunctionName((*QQmusicContext).GetMusicURLByID) // from dal/qqmusicapi/qqmusic.go:104
-	reflecting.GetFunctionName((*QQmusicContext).SearchMusic)     // from dal/qqmusicapi/qqmusic.go:52
+	reflecting.GetFunctionName((*QQmusicContext).GetMusicURLByID) // from dal/qqmusicapi/qqmusic.go:105
+	reflecting.GetFunctionName((*QQmusicContext).SearchMusic)     // from dal/qqmusicapi/qqmusic.go:53
 }

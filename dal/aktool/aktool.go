@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 	"github.com/cloudwego/hertz/pkg/app/client"
 	"github.com/cloudwego/hertz/pkg/protocol"
@@ -41,6 +43,9 @@ type (
 )
 
 func GetRealtimeGoldPrice(ctx context.Context) (res GoldPriceDataRTList, err error) {
+	_, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	res = make(GoldPriceDataRTList, 0)
 	c, _ := client.NewClient()
 	req, resp := protocol.AcquireRequest(), protocol.AcquireResponse()
@@ -71,6 +76,9 @@ type GoldPriceDataHS []struct {
 }
 
 func GetHistoryGoldPrice(ctx context.Context) (res GoldPriceDataHS, err error) {
+	_, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	res = make(GoldPriceDataHS, 0)
 	c, _ := client.NewClient()
 	req, resp := protocol.AcquireRequest(), protocol.AcquireResponse()
@@ -100,6 +108,9 @@ period	str	period='5'; choice of {'1', '5', '15', '30', '60'}; 其中 1 分钟�
 adjust	str	adjust=”; choice of {”, 'qfq', 'hfq'}; ”: 不复权, 'qfq': 前复权, 'hfq': 后复权, 其中 1 分钟数据返回近 5 个交易日数据且不复权
 */
 func GetStockPriceRT(ctx context.Context, symbol string) (res StockPriceDataRTList, err error) {
+	_, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	res = make(StockPriceDataRTList, 0)
 	c, _ := client.NewClient()
 	req, resp := protocol.AcquireRequest(), protocol.AcquireResponse()
@@ -123,6 +134,9 @@ func GetStockPriceRT(ctx context.Context, symbol string) (res StockPriceDataRTLi
 }
 
 func GetStockSymbolInfo(ctx context.Context, symbol string) (stockName string, err error) {
+	_, span := otel.BetaGoOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	res := make([]map[string]any, 0)
 	c, _ := client.NewClient()
 	req, resp := protocol.AcquireRequest(), protocol.AcquireResponse()

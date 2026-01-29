@@ -1,26 +1,30 @@
 package vadvisor
 
 import (
+	"context"
 	"iter"
 
 	"github.com/BetaGoRobot/BetaGo/cts"
+	"github.com/BetaGoRobot/BetaGo/utility/otel"
+	"github.com/BetaGoRobot/go_utils/reflecting"
 	"github.com/bytedance/sonic"
 )
 
 type MultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric] struct {
-	Type        string            `json:"type"`
-	Title       *TitleConf        `json:"title,omitempty"`
-	Point       *PointConf        `json:"point,omitempty"`
-	Line        *LineConf         `json:"line,omitempty"`
-	Legends     *LegentConf       `json:"legends,omitempty"`
-	DataZoom    *ZoomConf         `json:"dataZoom,omitempty"`
-	Data        *DataStruct[X, Y] `json:"data"`
-	XField      string            `json:"xField"`
-	YField      string            `json:"yField"`
-	SeriesField string            `json:"seriesField"`
-	InvalidType string            `json:"invalidType"`
-	Axes        []*AxesStruct     `json:"axes,omitempty"`
-	Stack       bool              `json:"stack"`
+	context.Context `json:"-"`
+	Type            string            `json:"type"`
+	Title           *TitleConf        `json:"title,omitempty"`
+	Point           *PointConf        `json:"point,omitempty"`
+	Line            *LineConf         `json:"line,omitempty"`
+	Legends         *LegentConf       `json:"legends,omitempty"`
+	DataZoom        *ZoomConf         `json:"dataZoom,omitempty"`
+	Data            *DataStruct[X, Y] `json:"data"`
+	XField          string            `json:"xField"`
+	YField          string            `json:"yField"`
+	SeriesField     string            `json:"seriesField"`
+	InvalidType     string            `json:"invalidType"`
+	Axes            []*AxesStruct     `json:"axes,omitempty"`
+	Stack           bool              `json:"stack"`
 }
 type ZoomConf struct {
 	Orient string `json:"orient"`
@@ -82,10 +86,11 @@ const (
 	YField      = "yField"
 )
 
-func NewMultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric]() *MultiSeriesLineGraph[X, Y] {
+func NewMultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric](ctx context.Context) *MultiSeriesLineGraph[X, Y] {
 	return &MultiSeriesLineGraph[X, Y]{
-		Type:  "line",
-		Title: &TitleConf{},
+		Context: ctx,
+		Type:    "line",
+		Title:   &TitleConf{},
 		Point: &PointConf{
 			&PointStyle{
 				Size: 0,
@@ -126,6 +131,9 @@ func NewMultiSeriesLineGraph[X cts.ValidType, Y cts.Numeric]() *MultiSeriesLineG
 }
 
 func (g *MultiSeriesLineGraph[X, Y]) AddData(x X, y Y, seriesField string) *MultiSeriesLineGraph[X, Y] {
+	_, span := otel.BetaGoOtelTracer.Start(g, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	g.Data.Values = append(g.Data.Values, &DataValue[X, Y]{
 		YField:      y,
 		XField:      x,
@@ -173,6 +181,9 @@ func (g *MultiSeriesLineGraph[X, Y]) SetStack() *MultiSeriesLineGraph[X, Y] {
 }
 
 func (g *MultiSeriesLineGraph[X, Y]) String() string {
+	_, span := otel.BetaGoOtelTracer.Start(g, reflecting.GetCurrentFunc())
+	defer span.End()
+
 	s, _ := sonic.MarshalString(g)
 	return s
 }
@@ -185,32 +196,34 @@ type (
 	}
 )
 
-func (g *MultiSeriesLineGraph[X, Y]) UpdateMinMax() {
-	var min, max *Y
-	for _, v := range g.Data.Values {
-		if min == nil {
-			min = new(Y)
-			*min = v.YField
+// 一般来讲都是适配Y轴的最大最小值，不要处理X轴
+func (g *MultiSeriesLineGraph[X, Y]) UpdateMinMax(yVals ...float64) {
+	_, span := otel.BetaGoOtelTracer.Start(g, reflecting.GetCurrentFunc())
+	defer span.End()
+
+	// 如约定,Y轴是第二根轴
+	if len(g.Axes) > 1 && g.Axes[1].Range != nil {
+		lastMin, lastMax := g.Axes[1].Range.Min, g.Axes[1].Range.Max
+		for _, val := range yVals {
+			if val < lastMin {
+				lastMin = val
+			}
+			if val > lastMax {
+				lastMax = val
+			}
 		}
-		if max == nil {
-			max = new(Y)
-			*max = v.YField
-		}
-		if *min > v.YField {
-			*min = v.YField
-		}
-		if *max < v.YField {
-			*max = v.YField
-		}
+		g.Axes[1].Range.Min = lastMin
+		g.Axes[1].Range.Max = lastMax
 	}
-	g.SetRange(float64(*min), float64(*max))
 }
 
 func (g *MultiSeriesLineGraph[X, Y]) AddPointSeries(
 	pFunc iter.Seq[XYSUnit[X, Y]],
 ) *MultiSeriesLineGraph[X, Y] {
 	var min, max *Y
+	fName := "_pFunc_" + reflecting.GetFunctionName(pFunc)
 	for v := range pFunc {
+		_, span := otel.BetaGoOtelTracer.Start(g, fName)
 		if min == nil || max == nil {
 			min, max = new(Y), new(Y)
 			*min, *max = v.Y, v.Y
@@ -222,6 +235,7 @@ func (g *MultiSeriesLineGraph[X, Y]) AddPointSeries(
 			*max = v.Y
 		}
 		g.AddData(v.X, v.Y, v.S)
+		span.End()
 	}
 	if min == nil || max == nil {
 		return g

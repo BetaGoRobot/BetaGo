@@ -90,7 +90,7 @@ func TrendHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData
 			err = helper.DrawTrendPie(ctx, trend, !metaData.Refresh)
 		}
 	} else {
-		graph := vadvisor.NewMultiSeriesLineGraph[string, int64]()
+		graph := vadvisor.NewMultiSeriesLineGraph[string, int64](ctx)
 		graph.AddPointSeries(
 			func(yield func(vadvisor.XYSUnit[string, int64]) bool) {
 				for _, item := range trend {

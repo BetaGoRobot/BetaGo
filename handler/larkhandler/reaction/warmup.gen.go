@@ -10,7 +10,7 @@ import (
 
 func init() {
 	reflecting.GetFunctionName((*FollowReactionOperator).PreRun) // from handler/larkhandler/reaction/follow_react.go:35
-	reflecting.GetFunctionName((*FollowReactionOperator).Run)    // from handler/larkhandler/reaction/follow_react.go:47
-	reflecting.GetFunctionName((*RecordReactionOperator).PreRun) // from handler/larkhandler/reaction/record_reaction.go:36
-	reflecting.GetFunctionName((*RecordReactionOperator).Run)    // from handler/larkhandler/reaction/record_reaction.go:48
+	reflecting.GetFunctionName((*FollowReactionOperator).Run)    // from handler/larkhandler/reaction/follow_react.go:48
+	reflecting.GetFunctionName((*RecordReactionOperator).PreRun) // from handler/larkhandler/reaction/record_reaction.go:37
+	reflecting.GetFunctionName((*RecordReactionOperator).Run)    // from handler/larkhandler/reaction/record_reaction.go:50
 }
