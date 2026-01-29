@@ -131,6 +131,14 @@ func (g *MultiSeriesLineGraph[X, Y]) AddData(x X, y Y, seriesField string) *Mult
 		XField:      x,
 		SeriesField: seriesField,
 	})
+	if len(g.Axes) > 0 && g.Axes[0].Range != nil {
+		if float64(y) < g.Axes[0].Range.Min {
+			g.Axes[0].Range.Min = float64(y)
+		}
+		if float64(y) > g.Axes[0].Range.Max {
+			g.Axes[0].Range.Max = float64(y)
+		}
+	}
 	return g
 }
 
