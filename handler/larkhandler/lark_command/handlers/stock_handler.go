@@ -82,6 +82,7 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 		}
 
 		cardContent, err = GetRealtimeGoldPriceGraph(ctx, st, et)
+		fmt.Println(cardContent.String())
 		if err != nil {
 			return err
 		}
@@ -99,12 +100,11 @@ func GoldHandler(ctx context.Context, data *larkim.P2MessageReceiveV1, metaData 
 		if err != nil {
 			return err
 		}
-
-	}
-
-	cardContent, err = GetHistoryGoldGraph(ctx, st, et)
-	if err != nil {
-		return err
+	} else {
+		cardContent, err = GetHistoryGoldGraph(ctx, st, et)
+		if err != nil {
+			return err
+		}
 	}
 
 	if metaData != nil && metaData.Refresh {
