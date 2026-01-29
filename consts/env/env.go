@@ -42,7 +42,7 @@ var MusicCardInThread = GetEnvWithDefaultGenerics("MUSIC_CARD_IN_THREAD", false,
 })
 
 var (
-	GrafanaBaseURL     = GetEnvWithDefault("GRAFANA_BASE_URL", "https://grafana.kmhomelab.cn/explore")
+	GrafanaBaseURL     = GetEnvWithDefault("GRAFANA_BASE_URL", "https://grafana.kmhomelab.cn:2443/explore")
 	JaegerDataSourceID = GetEnvWithDefault("JAEGER_DATA_SOURCE_ID", "1")
 )
 
