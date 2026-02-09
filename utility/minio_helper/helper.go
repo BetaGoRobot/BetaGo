@@ -204,7 +204,7 @@ func (m *MinioManager) SetContentType(contentType ct.ContentType) *MinioManager 
 //	@update 2025-04-28 21:07:40
 func (m *MinioManager) SetV4() *MinioManager {
 	m.span.SetAttributes(attribute.Key("stack").String("V4"))
-	m.domain = "kutt.kmhomelab.online:2443"
+	m.domain = "kutt.kmhomelab.cn:2443"
 	return m
 }
 
@@ -216,7 +216,7 @@ func (m *MinioManager) SetV4() *MinioManager {
 //	@update 2025-04-28 21:07:40
 func (m *MinioManager) SetV6() *MinioManager {
 	m.span.SetAttributes(attribute.Key("stack").String("V6"))
-	m.domain = "kutt.kmhomelab.cn"
+	m.domain = "kutt.kmhomelab.cn:2443"
 	return m
 }
 
