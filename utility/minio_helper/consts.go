@@ -26,12 +26,12 @@ func init() {
 		useSSLInternal = false
 		useSSLExternal = true
 		endPointInternal = "localhost:19000"
-		endPointExternal = "minioapi.kmhomelab.online:2443"
+		endPointExternal = "minioapi.kmhomelab.cn:2443"
 	} else {
 		useSSLInternal = false
 		useSSLExternal = true
 		endPointInternal = "minio:9000"
-		endPointExternal = "minioapi.kmhomelab.online:2443"
+		endPointExternal = "minioapi.kmhomelab.cn:2443"
 	}
 	minioClientInternal, err = minio.New(endPointInternal, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
