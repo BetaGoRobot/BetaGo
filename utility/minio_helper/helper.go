@@ -2,6 +2,7 @@ package miniohelper
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"io"
 	"net/url"
@@ -204,7 +205,7 @@ func (m *MinioManager) SetContentType(contentType ct.ContentType) *MinioManager 
 //	@update 2025-04-28 21:07:40
 func (m *MinioManager) SetV4() *MinioManager {
 	m.span.SetAttributes(attribute.Key("stack").String("V4"))
-	m.domain = "kutt.kevinmatt.top"
+	m.domain = "kutt.kmhomelab.online:2443"
 	return m
 }
 
@@ -216,7 +217,7 @@ func (m *MinioManager) SetV4() *MinioManager {
 //	@update 2025-04-28 21:07:40
 func (m *MinioManager) SetV6() *MinioManager {
 	m.span.SetAttributes(attribute.Key("stack").String("V6"))
-	m.domain = "kutt.kmhomelab.cn:2443"
+	m.domain = "kutt.kmhomelab.cn"
 	return m
 }
 
@@ -287,6 +288,44 @@ func (m *MinioManager) Upload() (u *url.URL, err error) {
 	return
 }
 
+// UploadWithB64Data  上传文件并返回文件的b64
+//
+//	@receiver m *MinioManager
+//	@return u *url.URL
+//	@return err error
+//	@author heyuhengmatt
+//	@update 2024-05-13 01:55:04
+func (m *MinioManager) UploadWithB64Data() (u *url.URL, b64Data string, err error) {
+	u = new(url.URL)
+	defer m.span.End()
+	if m.file != nil {
+		defer m.file.Close()
+	}
+	opts := minio.PutObjectOptions{
+		ContentType: m.contentType.String(),
+	}
+	if m.expiration != nil {
+		opts.Expires = *m.expiration
+	}
+	if !m.overwrite {
+		u, b64Data, err = m.TryGetFileWithB64()
+		if err != nil {
+			u, b64Data, err = m.UploadFileOverwriteWithB64(opts)
+			if err != nil {
+				return
+			}
+		}
+	} else {
+		u, b64Data, err = m.UploadFileOverwriteWithB64(opts)
+		if err != nil {
+			return
+		}
+	}
+
+	m.addTraceCached(true)
+	return
+}
+
 func (m *MinioManager) UploadFileOverwrite(opts minio.PutObjectOptions) (u *url.URL, err error) {
 	m.addTraceCached(false)
 	if m.inputTransFunc != nil {
@@ -301,6 +340,31 @@ func (m *MinioManager) UploadFileOverwrite(opts minio.PutObjectOptions) (u *url.
 	return m.PresignURL()
 }
 
+func (m *MinioManager) UploadFileOverwriteWithB64(opts minio.PutObjectOptions) (u *url.URL, b64Data string, err error) {
+	m.addTraceCached(false)
+	if m.inputTransFunc != nil {
+		m.inputTransFunc(m)
+	}
+	logs.L().Ctx(m).Warn("tryGetFile failed", zap.Error(err))
+	err = m.UploadFile(opts)
+	if err != nil {
+		logs.L().Ctx(m).Error("uploadFile failed", zap.Error(err))
+		return
+	}
+	u, err = m.PresignURL()
+	if err != nil {
+		return
+	}
+
+	// 先粗糙的写，直接每次下载一遍..
+	// 我已经想好了理想的方式：先从URL拿到data，然后这个data不变，所有的Reader位置都新建一个，这样就不会重复下载了
+	b64Data, err = m.B64Data()
+	if err != nil {
+		return
+	}
+	return u, b64Data, nil
+}
+
 // 此函数会修改入参，不返回err外的值
 func (m *MinioManager) TryGetFile() (shareURL *url.URL, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(m, reflecting.GetCurrentFunc())
@@ -311,6 +375,26 @@ func (m *MinioManager) TryGetFile() (shareURL *url.URL, err error) {
 		return m.PresignURL()
 	}
 	return nil, errors.New("file not exists")
+}
+
+// 此函数会修改入参，不返回err外的值
+func (m *MinioManager) TryGetFileWithB64() (shareURL *url.URL, b64Data string, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(m, reflecting.GetCurrentFunc())
+	defer span.End()
+	defer func() { span.RecordError(err) }()
+
+	if MinioCheckFileExists(ctx, m.bucketName, m.objName) {
+		shareURL, err = m.PresignURL()
+		if err != nil {
+			return
+		}
+		b64Data, err = m.B64Data()
+		if err != nil {
+			return
+		}
+		return
+	}
+	return nil, "", errors.New("file not exists")
 }
 
 func (m *MinioManager) UploadFile(opts minio.PutObjectOptions) (err error) {
@@ -342,6 +426,32 @@ func (m *MinioManager) PresignURL() (u *url.URL, err error) {
 		m.span.SetAttributes(attribute.String("presigned_url_shortened", u.String()))
 	}
 	return
+}
+
+func (m *MinioManager) B64Data() (b64Str string, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(m, reflecting.GetCurrentFunc())
+	defer span.End()
+	defer func() { span.RecordError(err) }()
+
+	r, err := downloadObjReader(ctx, m.bucketName, m.objName)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+	rawData, err := io.ReadAll(r)
+	if err != nil {
+		logs.L().Ctx(m).Error("Read object data failed", zap.Error(err))
+		return
+	}
+	b64Data := base64.StdEncoding.EncodeToString(rawData)
+	sb := strings.Builder{}
+	sb.Grow(len(b64Data) + 20)
+	sb.WriteString("data:")
+	sb.WriteString(m.contentType.String())
+	sb.WriteString(";base64,")
+	sb.WriteString(b64Data)
+	b64Str = sb.String()
+	return b64Str, nil
 }
 
 // Run 启动上传

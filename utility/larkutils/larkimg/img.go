@@ -38,7 +38,7 @@ import (
 //	@return err error
 //	@author kevinmatthe
 //	@update 2025-04-27 20:15:38
-func DownImgFromMsgSync(ctx context.Context, msgID, fileType, fileKey string) (url string, err error) {
+func DownImgFromMsgSync(ctx context.Context, msgID, fileType, fileKey string) (b64Data string, err error) {
 	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
 	span.SetAttributes(
 		attribute.Key("msgID").String(msgID),
@@ -70,7 +70,8 @@ func DownImgFromMsgSync(ctx context.Context, msgID, fileType, fileKey string) (u
 		return
 	}
 
-	u, err := miniohelper.
+	// 上传到minio
+	_, b64Data, err = miniohelper.
 		Client().
 		SetContext(ctx).
 		SetBucketName("larkchat").
@@ -79,15 +80,14 @@ func DownImgFromMsgSync(ctx context.Context, msgID, fileType, fileKey string) (u
 		SetContentType(ct.ContentType(contentType)).
 		SetNeedAKA(true).
 		SetV4().
-		Upload()
+		UploadWithB64Data()
 	if err != nil {
 		logs.L().Ctx(ctx).Warn("upload pic to minio error", zap.String("file_key", fileKey), zap.String("file_type", fileType))
 		return
 	}
 	logs.L().Ctx(ctx).Info("upload pic to minio success", zap.String("file_key", fileKey),
-		zap.String("file_type", fileType),
-		zap.String("url", u.String()))
-	url = u.String()
+		zap.String("file_type", fileType))
+	// url = u.String()
 	return
 }
 

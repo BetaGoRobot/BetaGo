@@ -36,12 +36,44 @@ func presignObjInner(ctx context.Context, bucketName, objName string) (u *url.UR
 	defer span.End()
 	defer func() { span.RecordError(err) }()
 
-	u, err = minioClientExternal.PresignedGetObject(ctx, bucketName, objName, env.OSS_EXPIRATION_TIME, nil)
+	u, err = minioClientInternal.PresignedGetObject(ctx, bucketName, objName, env.OSS_EXPIRATION_TIME, nil)
 	if err != nil {
 		logs.L().Ctx(ctx).Error("PresignedGetObject failed", zap.Error(err))
 		return
 	}
 	return
+}
+
+func downloadObj(ctx context.Context, bucketName, objName string) (data []byte, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+	defer func() { span.RecordError(err) }()
+
+	obj, err := minioClientInternal.GetObject(ctx, bucketName, objName, minio.GetObjectOptions{})
+	if err != nil {
+		logs.L().Ctx(ctx).Error("GetObject failed", zap.Error(err))
+		return
+	}
+	defer obj.Close()
+	data, err = io.ReadAll(obj)
+	if err != nil {
+		logs.L().Ctx(ctx).Error("Read object data failed", zap.Error(err))
+		return
+	}
+	return
+}
+
+func downloadObjReader(ctx context.Context, bucketName, objName string) (r io.ReadCloser, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+	defer func() { span.RecordError(err) }()
+
+	obj, err := minioClientInternal.GetObject(ctx, bucketName, objName, minio.GetObjectOptions{})
+	if err != nil {
+		logs.L().Ctx(ctx).Error("GetObject failed", zap.Error(err))
+		return
+	}
+	return obj, nil
 }
 
 func shortenURL(ctx context.Context, u *url.URL) *url.URL {
