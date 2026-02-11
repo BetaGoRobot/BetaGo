@@ -43,13 +43,21 @@ func GenUUIDCode(srcKey, specificKey string, length int) string {
 //	@param text
 //	@param msgID
 func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, msgID, suffix string, replyInThread bool) (err error) {
-	_, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+	defer func() { span.RecordError(err) }()
+
+	// 先把卡片发送了，再记录日志和指标，避免指标记录的耗时过程拖慢整个请求
+	resp, err := doSendCard(ctx, msgID, suffix, cardContent, replyInThread)
+	if err != nil {
+		logs.L().Ctx(ctx).Error("doSendCard failed", zap.Error(err))
+		return
+	}
+
 	span.SetAttributes(attribute.Key("msgID").String(msgID))
 	for k, v := range cardContent.Data.TemplateVariable {
 		span.SetAttributes(attribute.Key(k).String(fmt.Sprintf("%v", v)))
 	}
-	defer span.End()
-	defer func() { span.RecordError(err) }()
 	logs.L().Ctx(ctx).Info(
 		"reply card",
 		zap.String("msgID", msgID),
@@ -57,8 +65,14 @@ func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 		zap.Bool("replyInThread", replyInThread),
 		zap.String("cardContent", cardContent.String()),
 	)
+	go RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
+	return
+}
 
-	resp, err := lark.LarkClient.Im.V1.Message.Reply(
+func doSendCard(ctx context.Context, msgID, suffix string, cardContent *templates.TemplateCardContent, replyInThread bool) (resp *larkim.ReplyMessageResp, err error) {
+	ctx, span := otel.LarkRobotOtelTracer.Start(ctx, reflecting.GetCurrentFunc())
+	defer span.End()
+	resp, err = lark.LarkClient.Im.V1.Message.Reply(
 		ctx, larkim.NewReplyMessageReqBuilder().
 			MessageId(msgID).
 			Body(
@@ -75,9 +89,8 @@ func ReplyCard(ctx context.Context, cardContent *templates.TemplateCardContent, 
 		return
 	}
 	if !resp.Success() {
-		return errors.New(resp.Error())
+		return resp, errors.New(resp.Error())
 	}
-	go RecordReplyMessage2Opensearch(ctx, resp, cardContent.GetVariables()...)
 	return
 }
 

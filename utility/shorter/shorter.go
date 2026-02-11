@@ -69,9 +69,9 @@ func GenAKA(ctx context.Context, u *url.URL) (newURL *url.URL) {
 		SetHeader("X-API-KEY", os.Getenv("KUTT_API_KEY")).
 		SetHeader("Content-Type", "application/json").
 		SetBody(reqBody).
-		Post("https://kutt.kmhomelab.cn/api/links")
+		Post("https://kutt.kmhomelab.cn:2443/api/links")
 	if err != nil || (r.StatusCode() != 200 && r.StatusCode() != 201) {
-		logs.L().Ctx(ctx).Error("Post failed", zap.Error(err), zap.Int("status_code", r.StatusCode()))
+		logs.L().Ctx(ctx).Error("Post failed", zap.Error(err), zap.Int("status_code", r.StatusCode()), zap.String("body", string(r.Body())))
 		return
 	}
 	resp := &KuttResp{}
