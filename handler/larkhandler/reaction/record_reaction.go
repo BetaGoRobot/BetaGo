@@ -66,6 +66,7 @@ func (r *RecordReactionOperator) Run(ctx context.Context, event *larkim.P2Messag
 	database.GetDbConnection().Create(&database.InteractionStats{
 		OpenID:     *event.Event.UserId.OpenId,
 		GuildID:    chatID,
+		MsgID:      *event.Event.MessageId,
 		UserName:   *userInfo.Name,
 		ActionType: consts.LarkInteractionAddReaction,
 	})
