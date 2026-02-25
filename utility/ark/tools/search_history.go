@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"strings"
 
 	"github.com/BetaGoRobot/BetaGo/utility/ark/embedding"
 	"github.com/BetaGoRobot/BetaGo/utility/history"
@@ -9,11 +10,11 @@ import (
 )
 
 type SearchArgs struct {
-	Keywords  []string `json:"keywords"`
-	TopK      int      `json:"top_k"`
-	StartTime string   `json:"start_time"`
-	EndTime   string   `json:"end_time"`
-	UserID    string   `json:"user_id"`
+	Keywords  string `json:"keywords"`
+	TopK      int    `json:"top_k"`
+	StartTime string `json:"start_time"`
+	EndTime   string `json:"end_time"`
+	UserID    string `json:"user_id"`
 }
 
 func HybridSearch(ctx context.Context, meta *FunctionCallMeta, argStr string) (res any, err error) {
@@ -24,7 +25,7 @@ func HybridSearch(ctx context.Context, meta *FunctionCallMeta, argStr string) (r
 	}
 	res, err = history.HybridSearch(ctx,
 		history.HybridSearchRequest{
-			QueryText: args.Keywords,
+			QueryText: strings.Split(args.Keywords, ","),
 			TopK:      args.TopK,
 			UserID:    args.UserID,
 			ChatID:    meta.ChatID,

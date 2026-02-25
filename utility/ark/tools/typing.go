@@ -22,13 +22,7 @@ func registerHistorySearch() {
 	params := NewParameters("object").
 		AddProperty("keywords", &Property{
 			Type:        "array",
-			Description: "需要检索的关键词列表",
-			Items: []*Property{
-				{
-					Type:        "string",
-					Description: "关键词",
-				},
-			},
+			Description: "需要检索的关键词列表,英文逗号隔开",
 		}).
 		AddProperty("user_id", &Property{
 			Type:        "string",
