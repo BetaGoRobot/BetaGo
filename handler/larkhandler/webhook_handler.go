@@ -169,7 +169,7 @@ func GetCardMusicByPage(ctx context.Context, musicID string, page int) *template
 		AddVariable("lyrics", lyrics).
 		AddVariable("title", songDetail.Name).
 		AddVariable("sub_title", songDetail.Ar[0].Name).
-		AddVariable("imgkey", imageKey).
+		AddVariable("imgkey", map[string]any{"img_key": imageKey}).
 		AddVariable("player_url", playerURL).
 		AddVariable("full_lyrics_button", map[string]string{"type": "lyrics", "id": musicID}).
 		AddVariable("refresh_id", map[string]string{"type": "refresh", "id": musicID})
